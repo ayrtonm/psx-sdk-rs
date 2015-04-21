@@ -13,10 +13,10 @@ pub static TEST: [u32; 3] = [
 
 #[no_mangle]
 pub fn main() {
-    let c = 0xabcd1234u32 as *mut u8;
+    let c = 0xabcd1234u32 as *mut u32;
 
     unsafe {
-        *c = 0;
+        *c = TEST[2];
     }
 }
 

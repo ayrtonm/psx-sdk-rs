@@ -1,19 +1,13 @@
 MEMORY
 {
-    /* RAM through the KSEG0 region: 2MB */
-    RAM (rwx) : ORIGIN = 0x80000000, LENGTH = 0x200000
+    /* RAM through the KSEG0 region: 2MB minus 64K reserved for the BIOS */
+    RAM (rwx) : ORIGIN = 0x80000000 + 0x10000, LENGTH = 0x200000 - 0x10000
 }
 
 ENTRY(main);
 
 SECTIONS
 {
-        /* The first 64KB are reserved for the BIOS */
-        .bios :
-	{
-		. = 0x10000;
-	} > RAM
-
 	.text :
 	{
 		*(.text*)
