@@ -5,7 +5,6 @@ RUSTC = rustc
 CROSS = /opt/psx-tools/bin/mipsel-unknown-elf-
 LD = $(CROSS)ld
 CC = $(CROSS)gcc
-OBJCPY = $(CROSS)objcopy
 
 RUSTFLAGS = -O -L lib/ --target mipsel-unknown-linux-gnu -C soft-float
 RUSTFLAGS += -C lto -C target-cpu=mips32 -C relocation-model=static
