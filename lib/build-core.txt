@@ -1,4 +1,0 @@
-We need the libcore crate (and only libcore) from the rust
-distribution. To build it just run this command in this directory:
-
-rustc -O -C target-cpu=mips32 -C soft-float -C no-stack-check --target mipsel-unknown-linux-gnu -C relocation-model=static /path/to/rust/src/libcore/lib.rs

@@ -1,25 +1,12 @@
+#![feature(lang_items)]
 #![feature(no_std,core)]
 #![no_std]
-#![crate_type = "staticlib"]
-#![feature(lang_items)]
+#![crate_type = "rlib"]
+#![crate_name = "psx"]
 
 extern crate core;
 
-pub static TEST: [u32; 3] = [
-    0,
-    1,
-    2
-];
-
-#[no_mangle]
-pub fn main() {
-    let c = 0xabcd1234u32 as *mut u32;
-
-    unsafe {
-        *c = TEST[2];
-    }
-}
-
+// Various lang items required by rustc
 #[lang = "stack_exhausted"]
 extern fn stack_exhausted() {}
 
