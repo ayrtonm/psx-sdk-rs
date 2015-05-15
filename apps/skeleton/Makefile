@@ -1,4 +1,4 @@
 NAME = skeleton
 
 include ../../config.mk
-include ../common.mk
+include ../app_common.mk

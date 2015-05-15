@@ -2,12 +2,19 @@
 #![no_std]
 
 use core::intrinsics::{volatile_store, volatile_load};
+use psx::uart::Uart;
 
+#[macro_use]
 extern crate core;
 extern crate psx;
 
 #[no_mangle]
 pub fn main() {
+    let uart = Uart::new();
+
+    for &b in b"\n\nHello world from rust!\n\n" {
+        uart.putc(b);
+    }
 
     // Clear command FIFO
     gp1_command(0x01000000);
@@ -29,13 +36,15 @@ pub fn main() {
     gp0_command(0x000000ff);
     gp0_command(0x01000100);
 
-    delay(5000000);
+    //delay(500000);
 }
 
+/// Send command on GPU port 0
 fn gp0_command(cmd: u32) {
     let cmd_reg = 0x1f801810u32 as *mut u32;
 
-    // Hack to avoid overflowing the GPU command FIFO
+    // Hack to avoid overflowing the command FIFO, I should check the
+    // ready status flag.
     delay(100);
 
     unsafe {
@@ -43,6 +52,7 @@ fn gp0_command(cmd: u32) {
     }
 }
 
+/// Send command on GPU port 1
 fn gp1_command(cmd: u32) {
     let reg = 0x1f801814u32 as *mut u32;
 
