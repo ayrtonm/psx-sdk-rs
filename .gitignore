@@ -1,5 +1,6 @@
 *.rlib
 *.elf
 *.o
+*.a
 *.psexe
 elf2psexe/target

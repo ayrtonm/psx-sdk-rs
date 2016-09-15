@@ -6,7 +6,7 @@
     "target_os": "psx",
     "os": "psx",
     "arch": "mips",
-    "cpu": "mips32",
+    "cpu": "mips2",
     "no-compiler-rt": true,
     "eliminate-frame-pointer": false,
     "morestack": false,

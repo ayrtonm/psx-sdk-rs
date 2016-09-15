@@ -16,7 +16,7 @@ SECTIONS
 	/* The PSX doesn't have an MMU so we don't really care about
 	 * RO vs RW
 	 */
-	.data ALIGN(4) :
+	.data :
 	{
 		*(.data*)
 		*(.rodata*)
@@ -25,7 +25,7 @@ SECTIONS
 	/* This section must be stored in the "memfill" part of the
 	 * header to be initialized to 0 at bootup by the BIOS/loader.
 	 */
-	.bss ALIGN(4) :
+	.bss :
 	{
 		*(.bss*)
 		*(COMMON)

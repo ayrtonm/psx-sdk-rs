@@ -11,24 +11,24 @@ impl Uart {
     }
 
     /// Send a character using the BIOS `putc` function
-    pub fn putc(&self, c: u8) {
+    pub fn putchar(c: u8) {
         unsafe {
-            asm!("j 0xa0\n\t\
-                  nop"
-                 :
-                 : "{$4}"(c as u32), "{$9}"(0x3c)
-                 :
-                 : );
+            bios_putchar(c)
         }
     }
 }
 
-impl fmt::Write for Uart {
+/*impl fmt::Write for Uart {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for &b in s.as_bytes() {
-            self.putc(b);
+            Uart::putchar(b);
         }
 
         Ok(())
     }
+}*/
+
+
+extern {
+    fn bios_putchar(b: u8);
 }

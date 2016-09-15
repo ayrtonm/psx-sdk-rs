@@ -3,6 +3,8 @@ RUSTC = rustc
 # Cross compilation toolchain used for linking
 CROSS = /opt/psx-tools/bin/mipsel-unknown-elf-
 LD = $(CROSS)ld
+AS = $(CROSS)as
+AR = $(CROSS)ar
 
 # Absolute path to this directory. It makes the rest of the Makefiles
 # simpler but it sucks a bit. We should be able to get this path

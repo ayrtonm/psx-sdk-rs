@@ -3,7 +3,9 @@ LDSCRIPT := $(SDK_ROOT)/psx.ld
 
 RUSTFLAGS += -L $(SDK_ROOT)/runtime
 
-RUSTLIBS := $(SDK_ROOT)/runtime/libpsx.rlib $(SDK_ROOT)/runtime/libcore.rlib
+RUSTLIBS := $(SDK_ROOT)/runtime/libpsx.rlib \
+            $(SDK_ROOT)/runtime/libcore.rlib \
+            $(SDK_ROOT)/runtime/libbios.a
 
 APP_SRC := $(shell find . -name '*.rs')
 
@@ -13,7 +15,7 @@ $(NAME).psexe: $(NAME).elf
 $(NAME).elf: $(LDSCRIPT) $(NAME).o
 	$(LD) --gc-sections -o $@ -T $(LDSCRIPT)  $(NAME).o $(RUSTLIBS)
 
-$(NAME).o: $(APP_SRC)
+$(NAME).o: $(APP_SRC) $(RUSTLIBS)
 	$(RUSTC) $(RUSTFLAGS) --emit obj -o $@ main.rs
 
 clean:

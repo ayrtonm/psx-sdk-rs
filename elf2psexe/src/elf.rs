@@ -112,7 +112,8 @@ impl ElfReader {
         if section_align != 0 && section_addr % section_align != 0 {
             // I think it's not possible (unless the ELF is completely
             // broken) but I'd rather make sure
-            panic!("bad section alignment");
+            panic!("bad section alignment: addr {:08x} align {}",
+                   section_addr, section_align);
         }
 
         // We only keep sections with the ALLOC attribute flag.
