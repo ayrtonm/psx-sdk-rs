@@ -32,9 +32,13 @@ fn main() {
         
         let pixel = (b1 as u16) | ((b2 as u16) << 8);
 
-        let r = (pixel & 0x1f) << 3;
-        let g = ((pixel >> 5) & 0x1f) << 3;
-        let b = ((pixel >> 10) & 0x1f) << 3;
+        let five_to_eight = |v: u16| {
+            (((v & 0x1f) << 3) | ((v >> 2) & 0x7)) as u8
+        };
+
+        let r = five_to_eight(pixel);
+        let g = five_to_eight(pixel >> 5);
+        let b = five_to_eight(pixel >> 10);
 
         p.channels_mut()[0] = r as u8;
         p.channels_mut()[1] = g as u8;
