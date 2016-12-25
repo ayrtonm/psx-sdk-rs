@@ -3,7 +3,7 @@ use std::path::Path;
 mod elf;
 mod psexe;
 
-struct Section {
+pub struct Section {
     base: u32,
     contents: SectionType,
 }
