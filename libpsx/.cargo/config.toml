@@ -2,5 +2,5 @@
 b = "build --release -Z build-std=core"
 
 [build]
-rustflags = ["-O", "-C", "soft-float", "-C", "link-args=--script=../psx.ld"]
-target = "../target.json"
+rustflags = ["-O", "-C", "soft-float"]
+target = "../mipsel-sony-psx.json"

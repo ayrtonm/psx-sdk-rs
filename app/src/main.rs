@@ -1,5 +1,6 @@
 #![feature(start,core_intrinsics)]
 #![no_std]
+#![no_main]
 
 use core::intrinsics::{volatile_store, volatile_load};
 use core::fmt::Write;
@@ -54,9 +55,9 @@ pub fn main() {
     // Shaded quad
     gp0_command(0x38000000);
     gp0_command(0x00000000);
-    gp0_command(0x00ff0000);
-    gp0_command(0x00000100);
     gp0_command(0x0000ff00);
+    gp0_command(0x00000100);
+    gp0_command(0x00ff0000);
     gp0_command(0x01000000);
     gp0_command(0x000000ff);
     gp0_command(0x01000100);

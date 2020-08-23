@@ -14,5 +14,6 @@
     "morestack": false,
     "dynamic-linking": false,
     "relocation-model": "static",
-    "function-sections": true
+    "function-sections": true,
+    "executables": true
 }
