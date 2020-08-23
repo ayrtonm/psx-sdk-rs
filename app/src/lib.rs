@@ -1,9 +1,8 @@
-#![feature(no_std,core)]
+#![feature(start,core_intrinsics)]
 #![no_std]
 
 use core::intrinsics::{volatile_store, volatile_load};
 use core::fmt::Write;
-use psx::uart::Uart;
 
 #[macro_use]
 extern crate core;
@@ -33,8 +32,8 @@ pub fn main() {
     //let _ = writeln!(uart, "Hello world from rust!");
 
     //for &b in b"\n\nHello world from rust!\n\n" {
-    Uart::putchar(b'$');
-    Uart::putchar(b'$');
+    //Uart::putchar(b'$');
+    //Uart::putchar(b'$');
     //Uart::putchar(b'$');
         //putchar(b);
     //}
@@ -82,10 +81,12 @@ fn gp0_command(cmd: u32) {
 fn gp1_command(cmd: u32) {
     let cmd_reg = 0x1f801814u32 as *mut u32;
 
+    delay(100);
     unsafe {
-        let v = volatile_load(cmd_reg);
+        //let v = volatile_load(cmd_reg);
 
-        volatile_store(cmd_reg, (v != cmd_reg as u32) as u32);
+        //volatile_store(cmd_reg, (v != cmd_reg as u32) as u32);
+        volatile_store(cmd_reg, cmd);
     }
 }
 

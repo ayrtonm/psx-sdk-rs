@@ -1,11 +1,9 @@
-#![feature(no_std,core,lang_items,asm)]
+#![feature(lang_items,asm,core_intrinsics)]
 #![no_std]
 #![crate_type = "rlib"]
 #![crate_name = "psx"]
 
 extern crate core;
-
-pub mod uart;
 
 #[no_mangle]
 pub extern fn memset(dst: *mut u8, b: i32, len: u32) -> *mut u8 {
@@ -19,11 +17,18 @@ pub extern fn memset(dst: *mut u8, b: i32, len: u32) -> *mut u8 {
 }
 
 // Various lang items required by rustc
-#[lang = "stack_exhausted"]
-extern fn stack_exhausted() {}
+//#[lang = "stack_exhausted"]
+//extern fn stack_exhausted() {}
 
 #[lang = "eh_personality"]
 extern fn eh_personality() {}
 
-#[lang = "panic_fmt"]
-fn panic_fmt() -> ! { loop {} }
+//#[lang = "panic_fmt"]
+//fn panic_fmt() -> ! { loop {} }
+use core::intrinsics;
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    intrinsics::abort()
+}

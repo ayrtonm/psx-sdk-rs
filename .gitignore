@@ -2,5 +2,10 @@
 *.elf
 *.o
 *.a
+*/*.o
+*/*.a
 *.psexe
-elf2psexe/target
+*/target
+Cargo.lock
+*/Cargo.lock
+mips_toolchain/*

@@ -1,0 +1,3 @@
+[build]
+rustflags = ["--emit", "obj", "-O", "-C", "soft-float", "-C", "link-args=--script=../psx.ld"]
+target = "../target.json"

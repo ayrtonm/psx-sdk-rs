@@ -1,0 +1,6 @@
+[alias]
+b = "build --release -Z build-std=core"
+
+[build]
+rustflags = ["-O", "-C", "soft-float", "-C", "link-args=--script=../psx.ld"]
+target = "../target.json"
