@@ -11,64 +11,45 @@ extern crate psx;
 
 #[no_mangle]
 pub fn main() {
-    //let mut uart = Uart::new();
-
-    // unsafe { bios_print_devices() };
-    // print_devices();
-    // unsafe { bios_putchar(b'$') };
-    // putchar(b'$');
-    // unsafe { bios_print_devices() };
-
-    // putchar(b'A');
-    // printf(b"test %d\n\0" as *const u8, 42);
-    
-    // unsafe { bios_puts(b"test %d\n\0" as *const u8); }
-
-    // putchar(b'A');
-    // putchar(b'B');
-    // putchar(b'C');
-
-    // printf(b"Foo %d\n\0" as *const u8, 128);
-
-    //let _ = writeln!(uart, "Hello world from rust!");
-
-    //for &b in b"\n\nHello world from rust!\n\n" {
-    //Uart::putchar(b'$');
-    //Uart::putchar(b'$');
-    //Uart::putchar(b'$');
-        //putchar(b);
-    //}
-    //
-
-    //uart.putchar(c);
-
-    // Clear command FIFO
-    gp1_command(0x01000000);
-    unsafe {
-        let x = bios_gpu_get_status();
-        if x != 0x14802000 {
-            gp1_command(0x03000001);
-        }
+    loop {
+        draw();
+        blink();
     }
+}
 
-    // Top left at 0,0
-    gp0_command(0xe3000000);
-    // Bottom right: 256x256
-    gp0_command(0xe4040100);
-    // Offset at 0,0
-    gp0_command(0xe5000000);
+#[inline(never)]
+fn draw() {
+    unsafe {
+        // Clear command FIFO
+        bios_gpu_gp1_command_word(0x01000000);
+        // Top left at 0,0
+        bios_gpu_command_word(0xe3000000);
+        // Bottom right: 256x256
+        bios_gpu_command_word(0xe4040100);
+        // Offset at 0,0
+        bios_gpu_command_word(0xe5000000);
+        // Shaded quad
+        let quad = [0x38000000,
+                    0x00000000,
+                    0x0000ff00,
+                    0x00000100,
+                    0x00ff0000,
+                    0x01000000,
+                    0x000000ff,
+                    0x01000100];
+        bios_gpu_command_word_and_params(&quad[0], 8);
+        load_delay_test();
+    }
+}
 
-    // Shaded quad
-    gp0_command(0x38000000);
-    gp0_command(0x00000000);
-    gp0_command(0x0000ff00);
-    gp0_command(0x00000100);
-    gp0_command(0x00ff0000);
-    gp0_command(0x01000000);
-    gp0_command(0x000000ff);
-    gp0_command(0x01000100);
-
-    //loop {}
+#[inline(never)]
+fn blink() {
+    delay(4000000);
+    gp1_command(0x01000000);
+    gp1_command(0x05000200);
+    delay(4000000);
+    gp1_command(0x01000000);
+    gp1_command(0x05000000);
 }
 
 /// Send command on GPU port 0
@@ -128,4 +109,8 @@ extern {
     fn bios_print_devices();
     fn bios_printf(s: *const u8, v: u32);
     fn bios_gpu_get_status() -> u32;
+    fn bios_gpu_gp1_command_word(cmd: u32);
+    fn bios_gpu_command_word(cmd: u32);
+    fn bios_gpu_command_word_and_params(src: *const u32, num: u32);
+    fn load_delay_test();
 }
