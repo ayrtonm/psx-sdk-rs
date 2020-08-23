@@ -44,6 +44,12 @@ pub fn main() {
 
     // Clear command FIFO
     gp1_command(0x01000000);
+    unsafe {
+        let x = bios_gpu_get_status();
+        if x != 0x14802000 {
+            gp1_command(0x03000001);
+        }
+    }
 
     // Top left at 0,0
     gp0_command(0xe3000000);
@@ -121,4 +127,5 @@ extern {
     fn bios_toupper(b: u8) -> u8;
     fn bios_print_devices();
     fn bios_printf(s: *const u8, v: u32);
+    fn bios_gpu_get_status() -> u32;
 }
