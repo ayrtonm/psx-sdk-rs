@@ -30,13 +30,13 @@ pub fn main() {
 fn draw(alpha: f32) {
     unsafe {
         // Clear command FIFO
-        bios_gpu_gp1_command_word(0x01000000);
+        libbios::gpu_gp1_command_word(0x01000000);
         // Top left at 0,0
-        bios_gpu_command_word(0xe3000000);
+        libbios::gpu_command_word(0xe3000000);
         // Bottom right: 256x256
-        bios_gpu_command_word(0xe4080100);
+        libbios::gpu_command_word(0xe4080100);
         // Offset at 0,0
-        bios_gpu_command_word(0xe5000000);
+        libbios::gpu_command_word(0xe5000000);
         // Shaded quad
         let alpha = (255.0* alpha / 1.0) as u32;
         let cmd = 0x38 << 24;
@@ -53,8 +53,8 @@ fn draw(alpha: f32) {
                     red, bottom_left,
                     black, bottom_right,
         ];
-        bios_gpu_command_word_and_params(&quad[0], 8);
-        load_delay_test();
+        libbios::gpu_command_word_and_params(&quad[0], 8);
+        libbios::load_delay_test();
     }
 }
 
@@ -94,33 +94,4 @@ fn delay(n: u32) {
             volatile_load(0 as *mut u32);
         }
     }
-}
-
-fn print_devices() {
-    unsafe {
-        bios_print_devices();
-    }
-}
-
-fn putchar(c: u8) {
-    unsafe {
-        bios_putchar(c);
-    }
-}
-
-fn printf(c: *const u8, v: u32) {
-    unsafe { bios_printf(c, v) };
-}
-
-extern {
-    fn bios_putchar(b: u8) -> u32;
-    fn bios_puts(s: *const u8) -> u32;
-    fn bios_toupper(b: u8) -> u8;
-    fn bios_print_devices();
-    fn bios_printf(s: *const u8, v: u32);
-    fn bios_gpu_get_status() -> u32;
-    fn bios_gpu_gp1_command_word(cmd: u32);
-    fn bios_gpu_command_word(cmd: u32);
-    fn bios_gpu_command_word_and_params(src: *const u32, num: u32);
-    fn load_delay_test();
 }
