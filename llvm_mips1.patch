@@ -79,7 +79,7 @@ index 0c6080258a3..ca5bd655a35 100644
 +bool MipsInstrInfo::SafeInLoadDelaySlot(const MachineInstr &MIInSlot, const MachineInstr &LoadMI) const {
 +  if (MIInSlot.isInlineAsm())
 +    return false;
-+  
++
 +  for (const MachineOperand &Op : LoadMI.defs()) {
 +    if (Op.isReg() && MIInSlot.readsRegister(Op.getReg()))
 +      return false;

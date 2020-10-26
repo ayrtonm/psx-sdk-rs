@@ -109,37 +109,4 @@ index 1d3e61c4992..6c3a5ac0cef 100644
 +    ("mipsel-sony-psx", mipsel_sony_psx),
      ("thumbv4t-none-eabi", thumbv4t_none_eabi),
  }
- 
-diff --git a/library/backtrace b/library/backtrace
-index 8b8ea53b56f..a6dd47bd588 160000
---- a/library/backtrace
-+++ b/library/backtrace
-@@ -1 +1 @@
--Subproject commit 8b8ea53b56f519dd7780defdd4254daaec892584
-+Subproject commit a6dd47bd588c882e735675a1379d2b61719fa380
-diff --git a/library/term/src/lib.rs b/library/term/src/lib.rs
-index 2116b433fce..0bd3ccaf275 100644
---- a/library/term/src/lib.rs
-+++ b/library/term/src/lib.rs
-@@ -29,7 +29,6 @@
- //! [ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code
- //! [win]: https://docs.microsoft.com/en-us/windows/console/character-mode-applications
- //! [ti]: https://en.wikipedia.org/wiki/Terminfo
--
- #![doc(
-     html_root_url = "https://doc.rust-lang.org/nightly/",
-     html_playground_url = "https://play.rust-lang.org/",
-diff --git a/src/llvm-project b/src/llvm-project
-index ee161745789..a30f6818113 160000
---- a/src/llvm-project
-+++ b/src/llvm-project
-@@ -1 +1 @@
--Subproject commit ee1617457899ef2eb55dcf7ee2758b4340b6533f
-+Subproject commit a30f6818113aadd79c9317c42ec29c09879699fc
-diff --git a/src/tools/cargo b/src/tools/cargo
-index dd83ae55c87..79b397d72c5 160000
---- a/src/tools/cargo
-+++ b/src/tools/cargo
-@@ -1 +1 @@
--Subproject commit dd83ae55c871d94f060524656abab62ec40b4c40
-+Subproject commit 79b397d72c557eb6444a2ba0dc00a211a226a35a
+
