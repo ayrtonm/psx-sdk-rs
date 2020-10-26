@@ -1,6 +1,6 @@
 [alias]
-b = "build --release -Z build-std=core"
+b = "build --release"
 
 [build]
-rustflags = ["-O", "-C", "soft-float"]
-target = "../mipsel-sony-psx.json"
+rustc = "psx_rustc"
+target = "mipsel-sony-psx"
