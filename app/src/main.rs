@@ -11,45 +11,55 @@ extern crate psx;
 
 #[no_mangle]
 pub fn main() {
+    let max_alpha = 1.0;
+    let min_alpha = 0.0;
+    let mut delta = 1.0 / 255.0;
+    let mut alpha = min_alpha;
+    let mut x: u8 = 0;
+    psx::memset(&mut x as *mut u8, 0, 0);
     loop {
-        draw();
+        draw(alpha);
+        alpha += delta;
+        if alpha > max_alpha || alpha < min_alpha {
+            delta *= -1.0;
+        };
         blink();
     }
 }
 
-#[inline(never)]
-fn draw() {
+fn draw(alpha: f32) {
     unsafe {
         // Clear command FIFO
         bios_gpu_gp1_command_word(0x01000000);
         // Top left at 0,0
         bios_gpu_command_word(0xe3000000);
         // Bottom right: 256x256
-        bios_gpu_command_word(0xe4040100);
+        bios_gpu_command_word(0xe4080100);
         // Offset at 0,0
         bios_gpu_command_word(0xe5000000);
         // Shaded quad
-        let quad = [0x38000000,
-                    0x00000000,
-                    0x0000ff00,
-                    0x00000100,
-                    0x00ff0000,
-                    0x01000000,
-                    0x000000ff,
-                    0x01000100];
+        let alpha = (255.0* alpha / 1.0) as u32;
+        let cmd = 0x38 << 24;
+        let top_left = 0x00000000;
+        let top_right = 0x00000100;
+        let bottom_left = 0x01000000;
+        let bottom_right = 0x01000100;
+        let black = 0x00_000000;
+        let blue = alpha << 16;
+        let green = alpha << 8;
+        let red = alpha;
+        let quad = [cmd | blue, top_left,
+                    green, top_right,
+                    red, bottom_left,
+                    black, bottom_right,
+        ];
         bios_gpu_command_word_and_params(&quad[0], 8);
         load_delay_test();
     }
 }
 
-#[inline(never)]
 fn blink() {
-    delay(4000000);
-    gp1_command(0x01000000);
-    gp1_command(0x05000200);
-    delay(4000000);
-    gp1_command(0x01000000);
-    gp1_command(0x05000000);
+    delay(20000);
 }
 
 /// Send command on GPU port 0

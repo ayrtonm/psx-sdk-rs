@@ -1,6 +1,7 @@
 [alias]
-b = "build --release"
+b = "build --release -Z build-std=core"
 
 [build]
-rustflags = ["-C", "linker=../mips_toolchain/ld", "-C", "link-args=--script=../mipsel-sony-psx.ld", "-O", "-C", "soft-float"]
-target = "../mipsel-sony-psx.json"
+rustc = "psx_rustc"
+rustflags = [ "-C", "linker=../mips_toolchain/ld"]
+target = "mipsel-sony-psx"
