@@ -1,0 +1,178 @@
+diff --git a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
+index aa8e298fa75..0ed671bb365 100644
+--- a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
++++ b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
+@@ -160,6 +160,7 @@ private:
+   bool buildProperJumpMI(MachineBasicBlock *MBB,
+                          MachineBasicBlock::iterator Pos, DebugLoc DL);
+   void expandToLongBranch(MBBInfo &Info);
++  bool handleLoadDelaySlot();
+   bool handleForbiddenSlot();
+   bool handlePossibleLongBranch();
+ 
+@@ -778,6 +779,46 @@ bool MipsBranchExpansion::handleForbiddenSlot() {
+   return Changed;
+ }
+ 
++bool MipsBranchExpansion::handleLoadDelaySlot() {
++  // Load delay slot hazards are only for MIPS1.
++  if (!STI->hasMips1() || STI->hasMips2())
++    return false;
++
++  bool Changed = false;
++
++  for (MachineFunction::iterator FI = MFp->begin(); FI != MFp->end(); ++FI) {
++    for (Iter I = FI->begin(); I != FI->end(); ++I) {
++
++      // Load delay slot hazard handling. Use lookahead over state.
++      if (!TII->HasLoadDelaySlot(*I))
++        continue;
++
++      Iter Inst;
++      bool LastInstInFunction =
++          std::next(I) == FI->end() && std::next(FI) == MFp->end();
++      if (!LastInstInFunction) {
++        std::pair<Iter, bool> Res = getNextMachineInstr(std::next(I), &*FI);
++        LastInstInFunction |= Res.second;
++        Inst = Res.first;
++      }
++
++      if (LastInstInFunction || !TII->SafeInLoadDelaySlot(*Inst, *I)) {
++
++        MachineBasicBlock::instr_iterator Iit = I->getIterator();
++        if (std::next(Iit) == FI->end() ||
++            std::next(Iit)->getOpcode() != Mips::NOP) {
++          Changed = true;
++          MIBundleBuilder(&*I).append(
++              BuildMI(*MFp, I->getDebugLoc(), TII->get(Mips::NOP)));
++          NumInsertedNops++;
++        }
++      }
++    }
++  }
++
++  return Changed;
++}
++
+ bool MipsBranchExpansion::handlePossibleLongBranch() {
+   if (STI->inMips16Mode() || !STI->enableLongBranchPass())
+     return false;
+@@ -857,8 +898,9 @@ bool MipsBranchExpansion::runOnMachineFunction(MachineFunction &MF) {
+   // Run these two at least once
+   bool longBranchChanged = handlePossibleLongBranch();
+   bool forbiddenSlotChanged = handleForbiddenSlot();
++  bool loadDelaySlotChanged = handleLoadDelaySlot();
+ 
+-  bool Changed = longBranchChanged || forbiddenSlotChanged;
++  bool Changed = longBranchChanged || forbiddenSlotChanged || loadDelaySlotChanged;
+ 
+   // Then run them alternatively while there are changes
+   while (forbiddenSlotChanged) {
+diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.cpp b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
+index 0c6080258a3..ca5bd655a35 100644
+--- a/llvm/lib/Target/Mips/MipsInstrInfo.cpp
++++ b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
+@@ -568,11 +568,39 @@ bool MipsInstrInfo::SafeInForbiddenSlot(const MachineInstr &MI) const {
+   return (MI.getDesc().TSFlags & MipsII::IsCTI) == 0;
+ }
+ 
++bool MipsInstrInfo::SafeInLoadDelaySlot(const MachineInstr &MIInSlot, const MachineInstr &LoadMI) const {
++  if (MIInSlot.isInlineAsm())
++    return false;
++  
++  for (const MachineOperand &Op : LoadMI.defs()) {
++    if (Op.isReg() && MIInSlot.readsRegister(Op.getReg()))
++      return false;
++  }
++
++  return true;
++}
++
+ /// Predicate for distingushing instructions that have forbidden slots.
+ bool MipsInstrInfo::HasForbiddenSlot(const MachineInstr &MI) const {
+   return (MI.getDesc().TSFlags & MipsII::HasForbiddenSlot) != 0;
+ }
+ 
++/// Predicate for distingushing instructions that have load delay slots.
++bool MipsInstrInfo::HasLoadDelaySlot(const MachineInstr &MI) const {
++  switch (MI.getOpcode()) {
++    case Mips::LB:
++    case Mips::LBu:
++    case Mips::LH:
++    case Mips::LHu:
++    case Mips::LW:
++    case Mips::LWR:
++    case Mips::LWL:
++      return true;
++    default:
++      return false;
++  }
++}
++
+ /// Return the number of bytes of code the specified instruction may be.
+ unsigned MipsInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
+   switch (MI.getOpcode()) {
+diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.h b/llvm/lib/Target/Mips/MipsInstrInfo.h
+index c96ed202df3..8b665e867f5 100644
+--- a/llvm/lib/Target/Mips/MipsInstrInfo.h
++++ b/llvm/lib/Target/Mips/MipsInstrInfo.h
+@@ -92,9 +92,15 @@ public:
+   /// Predicate to determine if an instruction can go in a forbidden slot.
+   bool SafeInForbiddenSlot(const MachineInstr &MI) const;
+ 
++  /// Predicate to determine if an instruction can go in a load delay slot.
++  bool SafeInLoadDelaySlot(const MachineInstr &MIInSlot, const MachineInstr &LoadMI) const;
++
+   /// Predicate to determine if an instruction has a forbidden slot.
+   bool HasForbiddenSlot(const MachineInstr &MI) const;
+ 
++  /// Predicate to determine if an instruction has a load delay slot.
++  bool HasLoadDelaySlot(const MachineInstr &MI) const;
++
+   /// Insert nop instruction when hazard condition is found
+   void insertNoop(MachineBasicBlock &MBB,
+                   MachineBasicBlock::iterator MI) const override;
+diff --git a/llvm/lib/Target/Mips/MipsSubtarget.cpp b/llvm/lib/Target/Mips/MipsSubtarget.cpp
+index ef4191cec3d..915634fec85 100644
+--- a/llvm/lib/Target/Mips/MipsSubtarget.cpp
++++ b/llvm/lib/Target/Mips/MipsSubtarget.cpp
+@@ -64,6 +64,7 @@ bool MipsSubtarget::MSAWarningPrinted = false;
+ bool MipsSubtarget::VirtWarningPrinted = false;
+ bool MipsSubtarget::CRCWarningPrinted = false;
+ bool MipsSubtarget::GINVWarningPrinted = false;
++bool MipsSubtarget::MIPS1WarningPrinted = false;
+ 
+ void MipsSubtarget::anchor() {}
+ 
+@@ -91,10 +92,13 @@ MipsSubtarget::MipsSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
+   if (MipsArchVersion == MipsDefault)
+     MipsArchVersion = Mips32;
+ 
+-  // Don't even attempt to generate code for MIPS-I and MIPS-V. They have not
+-  // been tested and currently exist for the integrated assembler only.
+-  if (MipsArchVersion == Mips1)
+-    report_fatal_error("Code generation for MIPS-I is not implemented", false);
++  // MIPS-I has not been tested.
++  if (MipsArchVersion == Mips1 && !MIPS1WarningPrinted) {
++    errs() << "warning: MIPS-I support is experimental\n";
++    MIPS1WarningPrinted = true;
++  }
++  // Don't even attempt to generate code for MIPS-V. It has not
++  // been tested and currently exists for the integrated assembler only.
+   if (MipsArchVersion == Mips5)
+     report_fatal_error("Code generation for MIPS-V is not implemented", false);
+ 
+diff --git a/llvm/lib/Target/Mips/MipsSubtarget.h b/llvm/lib/Target/Mips/MipsSubtarget.h
+index 26ee961fc95..4c29cef0b9a 100644
+--- a/llvm/lib/Target/Mips/MipsSubtarget.h
++++ b/llvm/lib/Target/Mips/MipsSubtarget.h
+@@ -59,6 +59,9 @@ class MipsSubtarget : public MipsGenSubtargetInfo {
+   // Used to avoid printing ginv warnings multiple times.
+   static bool GINVWarningPrinted;
+ 
++  // Used to avoid printing MIPS I warnings multiple times.
++  static bool MIPS1WarningPrinted;
++
+   // Used to avoid printing virt warnings multiple times.
+   static bool VirtWarningPrinted;
+ 

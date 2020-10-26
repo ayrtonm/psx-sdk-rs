@@ -1,0 +1,145 @@
+diff --git a/compiler/rustc_target/src/spec/mipsel_sony_psx.rs b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
+new file mode 100644
+index 00000000000..58c0321448a
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
+@@ -0,0 +1,55 @@
++use crate::spec::{
++    LinkArgs, LinkerFlavor, LldFlavor, PanicStrategy, RelocModel, Target, TargetOptions,
++};
++
++// The PSX has custom linker requirements.
++const LINKER_SCRIPT: &str = include_str!("./mipsel_sony_psx_linker_script.ld");
++
++// These options are mostly taken from the mipsel-sony-psp and msp430-none-elf
++// configurations with some changes specific to MIPS I.
++pub fn target() -> Target {
++    let mut pre_link_args = LinkArgs::new();
++    pre_link_args.insert(LinkerFlavor::Lld(LldFlavor::Ld), vec!["--emit-relocs".to_string()]);
++
++    Target {
++        llvm_target: "mipsel-sony-psx".to_string(),
++        target_endian: "little".to_string(),
++        pointer_width: 32,
++        target_c_int_width: "32".to_string(),
++        data_layout: "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64".to_string(),
++        arch: "mips".to_string(),
++        target_os: "none".to_string(),
++        target_env: "psx".to_string(),
++        target_vendor: "sony".to_string(),
++        linker_flavor: LinkerFlavor::Ld,
++
++        options: TargetOptions {
++            cpu: "mips1".to_string(),
++            executables: true,
++            linker: Some("ld".to_owned()),
++            linker_is_gnu: true,
++            relocation_model: RelocModel::Static,
++            eliminate_frame_pointer: false,
++            dynamic_linking: false,
++            function_sections: true,
++
++            // PSX doesn't natively support floats.
++            features: "+soft-float".to_string(),
++
++            // The MIPS I in the PSX doesn't have a SYNC instruction so we have
++            // to disable the Atomic* API.
++            // See https://github.com/rust-lang/rust/issues/54511 for more info.
++            max_atomic_width: Some(0),
++
++            // Taken from msp430-none-elf target configuration.
++            panic_strategy: PanicStrategy::Abort,
++            trap_unreachable: false,
++
++            // PSX does not support trap-on-condition instructions.
++            llvm_args: vec!["-mno-check-zero-division".to_string()],
++            pre_link_args,
++            link_script: Some(LINKER_SCRIPT.to_string()),
++            ..Default::default()
++        },
++    }
++}
+diff --git a/compiler/rustc_target/src/spec/mipsel_sony_psx_linker_script.ld b/compiler/rustc_target/src/spec/mipsel_sony_psx_linker_script.ld
+new file mode 100644
+index 00000000000..d9e91f9a66b
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/mipsel_sony_psx_linker_script.ld
+@@ -0,0 +1,33 @@
++MEMORY
++{
++    /* RAM through the KSEG0 region: 2MB minus 64K reserved for the BIOS */
++    RAM (rwx) : ORIGIN = 0x80000000 + 0x10000, LENGTH = 0x200000 - 0x10000
++}
++
++ENTRY(main);
++
++SECTIONS
++{
++	.text :
++	{
++		*(.text*)
++	} > RAM
++
++	/* The PSX doesn't have an MMU so we don't really care about
++	 * RO vs RW
++	 */
++	.data :
++	{
++		*(.data*)
++		*(.rodata*)
++	} > RAM
++
++	/* This section must be stored in the "memfill" part of the
++	 * header to be initialized to 0 at bootup by the BIOS/loader.
++	 */
++	.bss :
++	{
++		*(.bss*)
++		*(COMMON)
++	} > RAM
++}
+diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
+index 1d3e61c4992..6c3a5ac0cef 100644
+--- a/compiler/rustc_target/src/spec/mod.rs
++++ b/compiler/rustc_target/src/spec/mod.rs
+@@ -653,6 +653,7 @@ supported_targets! {
+     ("powerpc64-wrs-vxworks", powerpc64_wrs_vxworks),
+ 
+     ("mipsel-sony-psp", mipsel_sony_psp),
++    ("mipsel-sony-psx", mipsel_sony_psx),
+     ("thumbv4t-none-eabi", thumbv4t_none_eabi),
+ }
+ 
+diff --git a/library/backtrace b/library/backtrace
+index 8b8ea53b56f..a6dd47bd588 160000
+--- a/library/backtrace
++++ b/library/backtrace
+@@ -1 +1 @@
+-Subproject commit 8b8ea53b56f519dd7780defdd4254daaec892584
++Subproject commit a6dd47bd588c882e735675a1379d2b61719fa380
+diff --git a/library/term/src/lib.rs b/library/term/src/lib.rs
+index 2116b433fce..0bd3ccaf275 100644
+--- a/library/term/src/lib.rs
++++ b/library/term/src/lib.rs
+@@ -29,7 +29,6 @@
+ //! [ansi]: https://en.wikipedia.org/wiki/ANSI_escape_code
+ //! [win]: https://docs.microsoft.com/en-us/windows/console/character-mode-applications
+ //! [ti]: https://en.wikipedia.org/wiki/Terminfo
+-
+ #![doc(
+     html_root_url = "https://doc.rust-lang.org/nightly/",
+     html_playground_url = "https://play.rust-lang.org/",
+diff --git a/src/llvm-project b/src/llvm-project
+index ee161745789..a30f6818113 160000
+--- a/src/llvm-project
++++ b/src/llvm-project
+@@ -1 +1 @@
+-Subproject commit ee1617457899ef2eb55dcf7ee2758b4340b6533f
++Subproject commit a30f6818113aadd79c9317c42ec29c09879699fc
+diff --git a/src/tools/cargo b/src/tools/cargo
+index dd83ae55c87..79b397d72c5 160000
+--- a/src/tools/cargo
++++ b/src/tools/cargo
+@@ -1 +1 @@
+-Subproject commit dd83ae55c871d94f060524656abab62ec40b4c40
++Subproject commit 79b397d72c557eb6444a2ba0dc00a211a226a35a
