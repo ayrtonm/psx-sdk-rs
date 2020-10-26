@@ -48,15 +48,3 @@ use core::panic::PanicInfo;
 fn panic(_info: &PanicInfo) -> ! {
     intrinsics::abort()
 }
-
-extern {
-    fn asm_load_delay_test();
-}
-
-
-pub fn load_delay_test() {
-    unsafe {
-        asm_load_delay_test();
-    }
-}
-

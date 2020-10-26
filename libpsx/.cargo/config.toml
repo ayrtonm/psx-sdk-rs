@@ -1,0 +1,6 @@
+[alias]
+b = "build --release -Z build-std=core"
+
+[build]
+rustc = "psx_rustc"
+target = "mipsel-sony-psx"
