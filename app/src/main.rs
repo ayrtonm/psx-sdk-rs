@@ -7,7 +7,7 @@ use core::fmt::Write;
 
 #[macro_use]
 extern crate core;
-extern crate psx;
+extern crate libpsx;
 
 #[no_mangle]
 pub fn main() {
@@ -16,7 +16,7 @@ pub fn main() {
     let mut delta = 1.0 / 255.0;
     let mut alpha = min_alpha;
     let mut x: u8 = 0;
-    psx::memset(&mut x as *mut u8, 0, 0);
+    libpsx::memset(&mut x as *mut u8, 0, 0);
     loop {
         draw(alpha);
         alpha += delta;
@@ -30,13 +30,13 @@ pub fn main() {
 fn draw(alpha: f32) {
     unsafe {
         // Clear command FIFO
-        libbios::gpu_gp1_command_word(0x01000000);
+        libpsx::bios::gpu_gp1_command_word(0x01000000);
         // Top left at 0,0
-        libbios::gpu_command_word(0xe3000000);
+        libpsx::bios::gpu_command_word(0xe3000000);
         // Bottom right: 256x256
-        libbios::gpu_command_word(0xe4080100);
+        libpsx::bios::gpu_command_word(0xe4080100);
         // Offset at 0,0
-        libbios::gpu_command_word(0xe5000000);
+        libpsx::bios::gpu_command_word(0xe5000000);
         // Shaded quad
         let alpha = (255.0* alpha / 1.0) as u32;
         let cmd = 0x38 << 24;
@@ -53,8 +53,8 @@ fn draw(alpha: f32) {
                     red, bottom_left,
                     black, bottom_right,
         ];
-        libbios::gpu_command_word_and_params(&quad[0], 8);
-        libbios::load_delay_test();
+        libpsx::bios::gpu_command_word_and_params(&quad[0], 8);
+        libpsx::load_delay_test();
     }
 }
 

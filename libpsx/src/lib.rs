@@ -4,9 +4,11 @@
 // LLVM to optimize these function calls to themselves!
 #![no_builtins]
 #![crate_type = "rlib"]
-#![crate_name = "psx"]
+#![crate_name = "libpsx"]
 
 extern crate core;
+
+pub mod bios;
 
 #[no_mangle]
 pub extern fn memset(dst: *mut u8, b: i32, len: u32) -> *mut u8 {
@@ -46,3 +48,15 @@ use core::panic::PanicInfo;
 fn panic(_info: &PanicInfo) -> ! {
     intrinsics::abort()
 }
+
+extern {
+    fn asm_load_delay_test();
+}
+
+
+pub fn load_delay_test() {
+    unsafe {
+        asm_load_delay_test();
+    }
+}
+
