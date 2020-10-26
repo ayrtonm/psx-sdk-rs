@@ -34,6 +34,7 @@ $(PSX_AS): $(BINUTILS_CONFIG)
 	cp $(PSX_BINUTILS_BUILD)/ld/ld-new ld
 	cp $(PSX_BINUTILS_BUILD)/gas/as-new as
 	cp $(PSX_BINUTILS_BUILD)/binutils/ar ar
+	cp $(PSX_BINUTILS_BUILD)/binutils/objdump objdump
 
 ###################
 # Source download #
