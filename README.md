@@ -77,7 +77,9 @@ You'll also need a way to run custom "PS-EXE" executables on the
 console, I (simias) use an Xplorer-FX flashed with caetla 0.34 and the
 catflap4linux to control it.
 
-## TODO
+## Todo
 
  - Verify that the linker script (previously `psx.ld`, now built into rustc) is
    actually being used.
+ - The build script in libpsx (and possibly the toolchain Makefile) might not
+   work on windows because of the path separators
