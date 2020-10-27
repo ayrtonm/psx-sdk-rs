@@ -1,5 +1,6 @@
 [alias]
 b = "build --release -Z build-std=core"
+c = "clean"
 
 [build]
 rustc = "psx_rustc"

@@ -1,12 +1,12 @@
-#![feature(start,core_intrinsics)]
+#![feature(core_intrinsics)]
 #![no_std]
 #![no_main]
 
-use core::intrinsics::volatile_load;
-
+#[allow(unused_imports)]
 #[macro_use]
 extern crate core;
-extern crate libpsx;
+
+use core::intrinsics::volatile_load;
 
 #[no_mangle]
 pub fn main() {
@@ -49,11 +49,11 @@ fn draw(alpha: f32) {
                 red, bottom_left,
                 black, bottom_right,
     ];
-    libpsx::bios::gpu_command_word_and_params(&quad[0], 8);
+    libpsx::bios::gpu_command_word_params(&quad[0], 8);
 }
 
 fn blink() {
-    delay(20000);
+    delay(50000);
 }
 
 fn delay(n: u32) {

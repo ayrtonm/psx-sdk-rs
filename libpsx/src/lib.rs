@@ -1,4 +1,4 @@
-#![feature(lang_items,asm,core_intrinsics)]
+#![feature(lang_items, asm, core_intrinsics)]
 #![no_std]
 // This library defines the builtin functions, so it would be a shame for
 // LLVM to optimize these function calls to themselves!
@@ -11,7 +11,7 @@ extern crate core;
 pub mod bios;
 
 #[no_mangle]
-pub extern fn memset(dst: *mut u8, b: i32, len: u32) -> *mut u8 {
+pub extern "C" fn memset(dst: *mut u8, b: i32, len: u32) -> *mut u8 {
     for i in 0..len {
         unsafe {
             *dst.offset(i as isize) = b as u8;
@@ -22,8 +22,7 @@ pub extern fn memset(dst: *mut u8, b: i32, len: u32) -> *mut u8 {
 }
 
 #[no_mangle]
-pub unsafe extern fn memcpy(dest: *mut u8, src: *const u8,
-                            n: usize) -> *mut u8 {
+pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -> *mut u8 {
     let mut i = 0;
     while i < n {
         *dest.offset(i as isize) = *src.offset(i as isize);
@@ -37,7 +36,7 @@ pub unsafe extern fn memcpy(dest: *mut u8, src: *const u8,
 //extern fn stack_exhausted() {}
 
 #[lang = "eh_personality"]
-extern fn eh_personality() {}
+extern "C" fn eh_personality() {}
 
 //#[lang = "panic_fmt"]
 //fn panic_fmt() -> ! { loop {} }
