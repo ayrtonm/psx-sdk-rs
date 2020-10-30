@@ -1,5 +1,5 @@
 [alias]
-b = "build --release -Z build-std=core"
+b = "build -Z build-std=core,alloc"
 c = "clean"
 
 [build]

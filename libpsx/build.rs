@@ -21,6 +21,11 @@ fn create_bios_src() -> String {
                       .set nomacro\n\
                       .text\n";
     let bios_functions = [
+        "A(33h) malloc",
+        "A(34h) free",
+        "A(37h) calloc",
+        "A(38h) realloc",
+        "A(39h) init_heap",
         "A(3Fh) printf",
         "A(48h) gpu_gp1_command_word",
         "A(49h) gpu_command_word",

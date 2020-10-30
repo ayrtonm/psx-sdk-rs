@@ -4,6 +4,46 @@
 .set nomacro
 .text
 
+.section .text.asm_malloc
+.global asm_malloc
+.type asm_malloc, function
+
+asm_malloc:
+j 0xA0
+li $t1, 0x33
+
+.section .text.asm_free
+.global asm_free
+.type asm_free, function
+
+asm_free:
+j 0xA0
+li $t1, 0x34
+
+.section .text.asm_calloc
+.global asm_calloc
+.type asm_calloc, function
+
+asm_calloc:
+j 0xA0
+li $t1, 0x37
+
+.section .text.asm_realloc
+.global asm_realloc
+.type asm_realloc, function
+
+asm_realloc:
+j 0xA0
+li $t1, 0x38
+
+.section .text.asm_init_heap
+.global asm_init_heap
+.type asm_init_heap, function
+
+asm_init_heap:
+j 0xA0
+li $t1, 0x39
+
 .section .text.asm_printf
 .global asm_printf
 .type asm_printf, function
