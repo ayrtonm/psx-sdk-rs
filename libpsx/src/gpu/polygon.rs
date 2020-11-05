@@ -1,6 +1,6 @@
 use crate::bios;
 use crate::util::{concat, intercalate};
-use crate::constrain;
+use crate::{constrain, define, ret};
 use crate::gpu::color::{Color, Palette, Opacity};
 use crate::gpu::position::Position;
 
@@ -38,18 +38,17 @@ pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, op
         (4, Palette::Shaded(_), Opacity::Translucent) => 0x3A,
         (n, _, _) => unreachable!("Attempted to draw {}-sided polygon", n),
     };
-    match pal {
+    define!(ar1 := N + 1, ar2 := N + N);
+    let ar = match pal {
         Palette::Monochrome(color) => {
-            let mut ar: [u32; N + 1] = concat(&[(*color).into()], &pos.map(|p| p.into()));
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
+            ret!(ar1 = concat(&[(*color).into()], &pos.map(|p| p.into())))
         },
         Palette::Shaded(colors) => {
-            let mut ar: [u32; N + N] = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into()));
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
+            ret!(ar2 = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into())))
         },
-    }
+    };
+    ar[0] |= cmd << 24;
+    bios::gpu_command_word_params(&ar);
 }
 
 // Draws rectangles of a given width and height. This is preferred for rectangles aligned to the screen.
@@ -73,18 +72,13 @@ pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opac
     };
     let color = *color;
     let offset = *offset;
-    match special_size {
-        Some(_) => {
-            let mut ar = [color.into(), offset.into()];
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
-        },
-        None => {
-            let mut ar = [color.into(), offset.into(), (height as u32) << 16 | width as u32];
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
-        },
-    }
+    define!(ar2 := 2, ar3 := 3);
+    let ar = match special_size {
+        Some(_) => ret!(ar2 = [color.into(), offset.into()]),
+        None => ret!(ar3 = [color.into(), offset.into(), (height as u32) << 16 | width as u32]),
+    };
+    ar[0] |= cmd << 24;
+    bios::gpu_command_word_params(&ar);
 }
 
 pub fn draw_square(offset: &Position, length: u16, color: &Color, opacity: &Opacity) {

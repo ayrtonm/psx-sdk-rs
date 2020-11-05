@@ -1,6 +1,6 @@
 use crate::bios;
 use crate::util::{append, concat, intercalate, prepend};
-use crate::constrain;
+use crate::{constrain, define, ret};
 use crate::gpu::color::{Color, Palette, Opacity};
 use crate::gpu::position::Position;
 
@@ -29,30 +29,25 @@ fn internal_draw_line<const N: usize, const M: usize, const O: usize, const P: u
         (_, Palette::Shaded(_), Opacity::Opaque) => 0x58,
         (_, Palette::Shaded(_), Opacity::Translucent) => 0x5A,
     };
-    match (N, pal) {
+    define!(arm := M, arp := P, aro := O, arq := Q);
+    let ar = match (N, pal) {
         (2, Palette::Monochrome(color)) => {
-            let mut ar: [u32; M] = concat(&[(*color).into()], &pos.map(|p| p.into()));
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
+            ret!(arm = concat(&[(*color).into()], &pos.map(|p| p.into())))
         },
         (2, Palette::Shaded(colors)) => {
-            let mut ar: [u32; P] = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into()));
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
+            ret!(arp = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into())))
         },
         (_, Palette::Monochrome(color)) => {
             let temp: [u32; M] = prepend((*color).into(), &pos.map(|p| p.into()));
-            let mut ar: [u32; O] = append(0x5555_5555, &temp);
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
+            ret!(aro = append(0x5555_5555, &temp))
         },
         (_, Palette::Shaded(colors)) => {
             let temp: [u32; P] = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into()));
-            let mut ar: [u32; Q] = append(0x5555_5555, &temp);
-            ar[0] |= cmd << 24;
-            bios::gpu_command_word_params(&ar);
+            ret!(arq = append(0x5555_5555, &temp))
         },
     };
+    ar[0] |= cmd << 24;
+    bios::gpu_command_word_params(&ar);
 }
 
 pub fn draw_frame<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
@@ -65,6 +60,11 @@ pub fn draw_frame<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity
 }
 fn internal_draw_frame<const N: usize, const M: usize, const O: usize, const P: usize, const Q: usize, const R: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity) {
     constrain!(N > 2);
+    constrain!(M = N + 1);
+    constrain!(O = M + 1);
+    constrain!(P = M + 2);
+    constrain!(Q = M + M);
+    constrain!(R = Q + 1);
     let new_pos: &[Position; M] = &append(pos[0], &pos);
     let new_pal = &match pal {
         Palette::Monochrome(c) => Palette::Monochrome(*c),

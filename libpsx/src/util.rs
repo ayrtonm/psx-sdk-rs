@@ -1,6 +1,27 @@
 use core::intrinsics::{log2f32, truncf32, volatile_load};
 use crate::constrain;
 
+#[macro_export]
+macro_rules! define {
+    ($name:ident := $num:expr) => {
+        let mut $name: [u32; $num];
+    };
+    ($name1:ident := $num1:expr, $($name2:ident := $num2:expr),*) => {
+        define!($name1 := $num1);
+        define!($($name2 := $num2),*);
+    };
+}
+
+#[macro_export]
+macro_rules! ret {
+    ($name:ident = $val:expr) => {
+        {
+            $name = $val;
+            &mut $name[..]
+        }
+    };
+}
+
 pub trait Primitives {
     fn trunc(self) -> f32;
     fn fract(self) -> f32;

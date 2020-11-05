@@ -1,5 +1,5 @@
 #![feature(core_intrinsics)]
-#![feature(array_map, const_generics)]
+#![feature(array_map)]
 #![no_std]
 #![no_main]
 #![allow(unused_imports)]
