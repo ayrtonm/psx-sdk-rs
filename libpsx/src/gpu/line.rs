@@ -1,7 +1,7 @@
 use crate::bios;
 use crate::util::ArrayUtils;
 use crate::{constrain, define, ret};
-use crate::gpu::color::{Color, Palette, Opacity};
+use crate::gpu::color::{Palette, Opacity};
 use crate::gpu::position::Position;
 
 pub fn draw_line<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)

@@ -52,8 +52,8 @@ fn draw(theta: f32) {
 
     let col1 = [Color::aqua(), Color::mint(), Color::orange(), Color::indigo()];
     let col2: [Color; 8] = col1.intercalate(&col1);
-    let col3: [Color; 16] = col2.intercalate(&col2);
-    let col: [Color; 32] = col3.intercalate(&col3);
+    let col3 = col2.intercalate::<16>(&col2);
+    let col = col3.intercalate::<32>(&col3);
     let pal = Palette::Shaded(col);
     draw_frame(&pos, &pal, &Opacity::Opaque);
 }

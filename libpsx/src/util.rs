@@ -47,34 +47,36 @@ pub fn delay(n: u32) {
     }
 }
 
-pub trait ArrayUtils<T> {
-    fn append<const S: usize>(&self, a: T) -> [T; S];
-    fn prepend<const S: usize>(&self, a: T) -> [T; S];
-    fn intercalate<const S: usize>(&self, other: &Self) -> [T; S];
-    fn concat<const M: usize, const S: usize>(&self, other: &[T; M]) -> [T; S];
+pub trait ArrayUtils {
+    type Item;
+    fn append<const S: usize>(&self, a: Self::Item) -> [Self::Item; S];
+    fn prepend<const S: usize>(&self, a: Self::Item) -> [Self::Item; S];
+    fn intercalate<const S: usize>(&self, other: &Self) -> [Self::Item; S];
+    fn concat<const M: usize, const S: usize>(&self, other: &[Self::Item; M]) -> [Self::Item; S];
 }
 
-impl<T: Copy + Default, const N: usize> ArrayUtils<T> for [T; N] {
-    fn append<const S: usize>(&self, a: T) -> [T; S] {
+impl<T: Copy + Default, const N: usize> ArrayUtils for [T; N] {
+    type Item = T;
+    fn append<const S: usize>(&self, a: Self::Item) -> [Self::Item; S] {
         constrain!(N + 1 = S);
         self.concat(&[a])
     }
-    fn prepend<const S: usize>(&self, a: T) -> [T; S] {
+    fn prepend<const S: usize>(&self, a: Self::Item) -> [Self::Item; S] {
         constrain!(N + 1 = S);
         [a].concat(self)
     }
-    fn intercalate<const S: usize>(&self, other: &Self) -> [T; S] {
+    fn intercalate<const S: usize>(&self, other: &Self) -> [Self::Item; S] {
         constrain!(N + N = S);
-        let mut ar: [T; S] = [Default::default(); S];
+        let mut ar = [Default::default(); S];
         for i in 0..N {
             ar[i * 2] = self[i];
             ar[(i * 2) + 1] = other[i];
         }
         ar
     }
-    fn concat<const M: usize, const S: usize>(&self, other: &[T; M]) -> [T; S] {
+    fn concat<const M: usize, const S: usize>(&self, other: &[Self::Item; M]) -> [Self::Item; S] {
         constrain!(N + M = S);
-        let mut ar: [T; S] = [Default::default(); S];
+        let mut ar = [Default::default(); S];
         ar[..N].copy_from_slice(self);
         ar[N..].copy_from_slice(other);
         ar
