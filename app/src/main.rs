@@ -13,7 +13,7 @@ use libpsx::gpu::polygon::{draw_polygon, draw_square};
 use libpsx::gpu::line::{draw_line, draw_frame};
 
 use libpsx::allocator::BiosAllocator;
-use libpsx::util::{concat, delay, intercalate};
+use libpsx::util::{ArrayUtils, delay};
 
 #[no_mangle]
 pub fn main() {
@@ -41,23 +41,25 @@ pub fn main() {
 }
 
 fn draw(theta: f32) {
-    // Shaded quad
     let size = 128;
     let center = Position::new(128, 128);
     let offset = Position::new(64, 64);
-    let pos1 = Position::rectangle(offset, size, size)
-                       .map(|p| rotate_point(p, theta, center));
-    let pos2 = Position::rectangle(offset, size, size)
-                        .map(|p| rotate_point(p, theta + 45.0, center));
-    let pos: [Position; 8] = intercalate(&pos1, &pos2);
+    let rect = Position::rectangle(offset, size, size);
+    let pos1 = rect.map(|p| rotate_point(p, theta, center));
+    let pos2: [Position; 8] = pos1.intercalate(&pos1.map(|p| rotate_point(p, 45.0, center)));
+    let pos3: [Position; 16] = pos2.intercalate(&pos2.map(|p| rotate_point(p, 22.5, center)));
+    let pos: [Position; 32] = pos3.intercalate(&pos3.map(|p| rotate_point(p, 11.25, center)));
+
     let col1 = [Color::aqua(), Color::mint(), Color::orange(), Color::indigo()];
-    let col2 = [Color::red(), Color::green(), Color::blue(), Color::white()];
-    let pal = Palette::Shaded(concat(&col1, &col2));
+    let col2: [Color; 8] = col1.intercalate(&col1);
+    let col3: [Color; 16] = col2.intercalate(&col2);
+    let col: [Color; 32] = col3.intercalate(&col3);
+    let pal = Palette::Shaded(col);
     draw_frame(&pos, &pal, &Opacity::Opaque);
 }
 
 fn blink() {
-    delay(50000);
+    delay(100000);
 }
 
 // Does the GTE expose trig functions directly?
@@ -67,6 +69,9 @@ fn sin(mut x: f32) -> f32 {
     }
     while x < 0.0 {
         x += 360.0;
+    }
+    while x > 360.0 {
+        x -= 360.0;
     }
     if x <= 180.0 {
         approx_sin(x)

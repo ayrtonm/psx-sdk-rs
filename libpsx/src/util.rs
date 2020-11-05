@@ -47,28 +47,36 @@ pub fn delay(n: u32) {
     }
 }
 
-pub fn prepend<T: Copy + Default, const N: usize, const S: usize>(a: T, b: &[T; N]) -> [T; S] {
-    constrain!(N + 1 = S);
-    concat(&[a], b)
-}
-pub fn append<T: Copy + Default, const N: usize, const S: usize>(a: T, b: &[T; N]) -> [T; S] {
-    constrain!(N + 1 = S);
-    concat(b, &[a])
-}
-pub fn concat<T: Copy + Default, const N: usize, const M: usize, const S: usize>(a: &[T; N], b: &[T; M]) -> [T; S] {
-    constrain!(N + M = S);
-    let mut ar: [T; S] = [Default::default(); S];
-    ar[..N].copy_from_slice(a);
-    ar[N..].copy_from_slice(b);
-    ar
+pub trait ArrayUtils<T> {
+    fn append<const S: usize>(&self, a: T) -> [T; S];
+    fn prepend<const S: usize>(&self, a: T) -> [T; S];
+    fn intercalate<const S: usize>(&self, other: &Self) -> [T; S];
+    fn concat<const M: usize, const S: usize>(&self, other: &[T; M]) -> [T; S];
 }
 
-pub fn intercalate<T: Copy + Default, const N: usize, const M: usize>(a: &[T; N], b: &[T; N]) -> [T; M] {
-    constrain!(N + N = M);
-    let mut ar: [T; M] = [Default::default(); M];
-    for i in 0..N {
-        ar[i * 2] = a[i];
-        ar[(i * 2) + 1] = b[i];
+impl<T: Copy + Default, const N: usize> ArrayUtils<T> for [T; N] {
+    fn append<const S: usize>(&self, a: T) -> [T; S] {
+        constrain!(N + 1 = S);
+        self.concat(&[a])
     }
-    ar
+    fn prepend<const S: usize>(&self, a: T) -> [T; S] {
+        constrain!(N + 1 = S);
+        [a].concat(self)
+    }
+    fn intercalate<const S: usize>(&self, other: &Self) -> [T; S] {
+        constrain!(N + N = S);
+        let mut ar: [T; S] = [Default::default(); S];
+        for i in 0..N {
+            ar[i * 2] = self[i];
+            ar[(i * 2) + 1] = other[i];
+        }
+        ar
+    }
+    fn concat<const M: usize, const S: usize>(&self, other: &[T; M]) -> [T; S] {
+        constrain!(N + M = S);
+        let mut ar: [T; S] = [Default::default(); S];
+        ar[..N].copy_from_slice(self);
+        ar[N..].copy_from_slice(other);
+        ar
+    }
 }

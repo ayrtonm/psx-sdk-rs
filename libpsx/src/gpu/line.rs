@@ -1,5 +1,5 @@
 use crate::bios;
-use crate::util::{append, concat, intercalate, prepend};
+use crate::util::ArrayUtils;
 use crate::{constrain, define, ret};
 use crate::gpu::color::{Color, Palette, Opacity};
 use crate::gpu::position::Position;
@@ -32,18 +32,24 @@ fn internal_draw_line<const N: usize, const M: usize, const O: usize, const P: u
     define!(arm := M, arp := P, aro := O, arq := Q);
     let ar = match (N, pal) {
         (2, Palette::Monochrome(color)) => {
-            ret!(arm = concat(&[(*color).into()], &pos.map(|p| p.into())))
+            ret!(arm = pos.map(|p| p.into()).prepend((*color).into()))
         },
         (2, Palette::Shaded(colors)) => {
-            ret!(arp = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into())))
+            ret!(arp = {
+                colors.map(|c| c.into()).intercalate(&pos.map(|p| p.into()))
+            })
         },
         (_, Palette::Monochrome(color)) => {
-            let temp: [u32; M] = prepend((*color).into(), &pos.map(|p| p.into()));
-            ret!(aro = append(0x5555_5555, &temp))
+            ret!(aro = {
+                pos.map(|p| p.into())
+                   .prepend::<M>((*color).into())
+                   .append(0x5555_5555)
+            })
         },
         (_, Palette::Shaded(colors)) => {
-            let temp: [u32; P] = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into()));
-            ret!(arq = append(0x5555_5555, &temp))
+            ret!(arq = {
+                colors.map(|c| c.into()).intercalate::<P>(&pos.map(|p| p.into())).append(0x5555_5555)
+            })
         },
     };
     ar[0] |= cmd << 24;
@@ -65,13 +71,10 @@ fn internal_draw_frame<const N: usize, const M: usize, const O: usize, const P: 
     constrain!(P = M + 2);
     constrain!(Q = M + M);
     constrain!(R = Q + 1);
-    let new_pos: &[Position; M] = &append(pos[0], &pos);
+    let new_pos: &[Position; M] = &pos.append(pos[0]);
     let new_pal = &match pal {
         Palette::Monochrome(c) => Palette::Monochrome(*c),
-        Palette::Shaded(colors) => {
-            let new_colors: [Color; M] = append(colors[0], colors);
-            Palette::Shaded(new_colors)
-        },
+        Palette::Shaded(colors) => Palette::Shaded(colors.append(colors[0])),
     };
     internal_draw_line::<M, O, P, Q, R>(new_pos, new_pal, opacity);
 }

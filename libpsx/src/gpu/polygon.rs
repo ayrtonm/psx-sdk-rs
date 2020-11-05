@@ -1,5 +1,5 @@
 use crate::bios;
-use crate::util::{concat, intercalate};
+use crate::util::ArrayUtils;
 use crate::{constrain, define, ret};
 use crate::gpu::color::{Color, Palette, Opacity};
 use crate::gpu::position::Position;
@@ -41,10 +41,14 @@ pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, op
     define!(ar1 := N + 1, ar2 := N + N);
     let ar = match pal {
         Palette::Monochrome(color) => {
-            ret!(ar1 = concat(&[(*color).into()], &pos.map(|p| p.into())))
+            ret!(ar1 = {
+                pos.map(|p| p.into()).prepend((*color).into())
+            })
         },
         Palette::Shaded(colors) => {
-            ret!(ar2 = intercalate(&colors.map(|c| c.into()), &pos.map(|p| p.into())))
+            ret!(ar2 = {
+                colors.map(|c| c.into()).intercalate(&pos.map(|p| p.into()))
+            })
         },
     };
     ar[0] |= cmd << 24;
