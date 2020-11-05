@@ -35,8 +35,7 @@ impl Region {
     }
 }
 
-fn main() {
-    let args: Vec<_> = std::env::args().collect();
+pub fn main(args: Vec<&str>) {
 
     if args.len() < 4 {
         println!("usage: elf2psexe <REGION> <elf-bin> <psx-bin>");

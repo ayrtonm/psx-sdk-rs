@@ -6,6 +6,7 @@
 */*.a
 *.psexe
 */target
+*/*/target
 Cargo.lock
 */Cargo.lock
 mips_toolchain/*
