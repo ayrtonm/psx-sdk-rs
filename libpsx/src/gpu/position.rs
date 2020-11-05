@@ -1,4 +1,5 @@
 #[derive(Clone, Copy, Default)]
+#[repr(packed(32))]
 pub struct Position {
     x: u16,
     y: u16,
@@ -6,7 +7,7 @@ pub struct Position {
 
 impl From<Position> for u32 {
     fn from(p: Position) -> u32 {
-        (p.y as u32) << 16 | (p.x as u32)
+        (p.y() as u32) << 16 | (p.x() as u32)
     }
 }
 

@@ -11,7 +11,9 @@ pub enum Palette<const N: usize> {
     Shaded([Color; N]),
 }
 
+// TODO: Verify that `repr(packed(32))` can actually decrease code size here.
 #[derive(Clone, Copy, Default)]
+#[repr(packed(32))]
 pub struct Color {
     red: u8,
     green: u8,

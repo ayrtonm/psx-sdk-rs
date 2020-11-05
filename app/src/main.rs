@@ -16,7 +16,7 @@ use libpsx::allocator::BiosAllocator;
 use libpsx::util::{ArrayUtils, delay};
 
 #[no_mangle]
-pub fn main() {
+fn main() {
     BiosAllocator::init();
     let mut theta = 0.0;
     let delta = 1.0;

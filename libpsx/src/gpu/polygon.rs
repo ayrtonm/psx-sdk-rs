@@ -54,7 +54,7 @@ pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, op
     bios::gpu_command_word_params(&ar);
 }
 
-// Draws rectangles of a given width and height. This is preferred over `draw_polygon`.
+/// Draws rectangles of a given width and height. This is preferred over `draw_polygon`.
 pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opacity: &Opacity) {
     enum SpecialRect { Pixel, Small, Medium };
     let special_size = match (width, height) {
@@ -84,6 +84,7 @@ pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opac
     bios::gpu_command_word_params(&ar);
 }
 
+/// Draws a square of a given length on each side. This is equivalent to `draw_rect`.
 pub fn draw_square(offset: &Position, length: u16, color: &Color, opacity: &Opacity) {
     draw_rect(offset, length, length, color, opacity)
 }
