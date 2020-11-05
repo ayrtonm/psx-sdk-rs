@@ -4,6 +4,7 @@ use crate::{constrain, define, ret};
 use crate::gpu::color::{Color, Palette, Opacity};
 use crate::gpu::position::Position;
 
+// FIXME: See `gpu::draw_line`
 pub fn draw_polygon<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
     where [(); N + 1]:, [(); N + N]: {
     constrain!(N between 3 and 4);
@@ -23,6 +24,8 @@ pub fn draw_polygon<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opaci
     };
     draw_polygon_ll(&pos, &pal, opacity)
 }
+
+// FIXME: See `gpu::draw_line`
 pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
     where [(); N + 1]:, [(); N + N]: {
     constrain!(N between 3 and 4);
@@ -41,21 +44,17 @@ pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, op
     define!(ar1 := N + 1, ar2 := N + N);
     let ar = match pal {
         Palette::Monochrome(color) => {
-            ret!(ar1 = {
-                pos.map(|p| p.into()).prepend((*color).into())
-            })
+            ret!(ar1 = pos.map(|p| p.into()).prepend((*color).into()))
         },
         Palette::Shaded(colors) => {
-            ret!(ar2 = {
-                colors.map(|c| c.into()).intercalate(&pos.map(|p| p.into()))
-            })
+            ret!(ar2 = colors.map(|c| c.into()).intercalate(&pos.map(|p| p.into())))
         },
     };
     ar[0] |= cmd << 24;
     bios::gpu_command_word_params(&ar);
 }
 
-// Draws rectangles of a given width and height. This is preferred for rectangles aligned to the screen.
+// Draws rectangles of a given width and height. This is preferred over `draw_polygon`.
 pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opacity: &Opacity) {
     enum SpecialRect { Pixel, Small, Medium };
     let special_size = match (width, height) {
