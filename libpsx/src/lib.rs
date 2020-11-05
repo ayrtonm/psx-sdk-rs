@@ -77,19 +77,27 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
     0
 }
 
-// Various lang items required by rustc
-//#[lang = "stack_exhausted"]
-//extern fn stack_exhausted() {}
-
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
 
-//#[lang = "panic_fmt"]
-//fn panic_fmt() -> ! { loop {} }
 use core::intrinsics;
 use core::panic::PanicInfo;
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     intrinsics::abort()
+}
+
+#[macro_export]
+macro_rules! exe {
+    () => {
+        mod executable {
+            #[no_mangle]
+            fn main() {
+                use libpsx::allocator::BiosAllocator;
+                BiosAllocator::init();
+                super::main()
+            }
+        }
+    };
 }

@@ -1,23 +1,20 @@
-#![feature(core_intrinsics)]
-#![feature(array_map)]
 #![no_std]
 #![no_main]
-#![allow(unused_imports)]
+#![feature(array_map)]
 
 #[macro_use]
 extern crate core;
 
+libpsx::exe!();
+
 use libpsx::gpu::color::{Palette, Color, Opacity};
 use libpsx::gpu::position::Position;
-use libpsx::gpu::polygon::{draw_polygon, draw_square};
-use libpsx::gpu::line::{draw_line, draw_frame};
+use libpsx::gpu::polygon::draw_square;
+use libpsx::gpu::line::draw_frame;
 
-use libpsx::allocator::BiosAllocator;
 use libpsx::util::{ArrayUtils, delay};
 
-#[no_mangle]
 fn main() {
-    BiosAllocator::init();
     let mut theta = 0.0;
     let delta = 1.0;
     let size = 256;
@@ -32,7 +29,7 @@ fn main() {
     loop {
         theta += delta;
         if theta > 360.0 {
-            theta = 0.0;
+            theta -= 360.0;
         };
         draw_square(&Position::zero(), size, &Color::black(), &Opacity::Opaque);
         draw(theta);
