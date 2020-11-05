@@ -1,5 +1,22 @@
-use alloc::vec::Vec;
-use core::intrinsics::volatile_load;
+use core::intrinsics::{log2f32, truncf32, volatile_load};
+use crate::constrain;
+
+pub trait Primitives {
+    fn trunc(self) -> f32;
+    fn fract(self) -> f32;
+    fn log2(self) -> f32;
+}
+impl Primitives for f32 {
+    fn trunc(self) -> f32 {
+        unsafe { truncf32(self) }
+    }
+    fn fract(self) -> f32 {
+        self - self.trunc()
+    }
+    fn log2(self) -> f32 {
+        return unsafe { log2f32(self) };
+    }
+}
 
 pub fn delay(n: u32) {
     for _ in 0..n {
@@ -9,19 +26,28 @@ pub fn delay(n: u32) {
     }
 }
 
-// Returns vec![u32::from(&a[0]), u32::from(&b[0]), u32::from(&a[1]), ...].
-pub fn intercalate<'a, 'b, T, U, const M: usize, const N: usize>(a: &'a [T; N], b: &'b [U; M]) -> Vec<u32>
-    where u32: From<&'a T>, u32: From<&'b U> {
-    a.iter().zip(b.iter()).flat_map(|(ai, bi)| vec![u32::from(ai), u32::from(bi)]).collect()
+pub fn prepend<T: Copy + Default, const N: usize, const S: usize>(a: T, b: &[T; N]) -> [T; S] {
+    constrain!(N + 1 = S);
+    concat(&[a], b)
+}
+pub fn append<T: Copy + Default, const N: usize, const S: usize>(a: T, b: &[T; N]) -> [T; S] {
+    constrain!(N + 1 = S);
+    concat(b, &[a])
+}
+pub fn concat<T: Copy + Default, const N: usize, const M: usize, const S: usize>(a: &[T; N], b: &[T; M]) -> [T; S] {
+    constrain!(N + M = S);
+    let mut ar: [T; S] = [Default::default(); S];
+    ar[..N].copy_from_slice(a);
+    ar[N..].copy_from_slice(b);
+    ar
 }
 
-// Prepends a in its u32 form to b in its u32 form.
-pub fn prepend<'a, 'b, T, U, const N: usize>(a: &'a T, b: &'b [U; N]) -> Vec<u32>
-    where u32: From<&'a T>, u32: From<&'b U> {
-    let mut v = Vec::with_capacity(b.len() + 1);
-    v.push(u32::from(a));
-    for bi in b {
-        v.push(u32::from(bi));
+pub fn intercalate<T: Copy + Default, const N: usize, const M: usize>(a: &[T; N], b: &[T; N]) -> [T; M] {
+    constrain!(N + N = M);
+    let mut ar: [T; M] = [Default::default(); M];
+    for i in 0..N {
+        ar[i * 2] = a[i];
+        ar[(i * 2) + 1] = b[i];
     }
-    v
+    ar
 }

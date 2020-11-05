@@ -9,3 +9,4 @@
 Cargo.lock
 */Cargo.lock
 mips_toolchain/*
+rust/

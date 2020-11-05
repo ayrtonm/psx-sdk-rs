@@ -1,6 +1,11 @@
-#![feature(lang_items, asm, core_intrinsics)]
-#![feature(min_const_generics, array_map)]
+#![feature(lang_items, core_intrinsics)]
 #![feature(alloc_error_handler)]
+// These are unstable/unfinished features that aren't strictly necessary
+#![allow(incomplete_features)]
+#![feature(const_generics)]
+#![feature(const_evaluatable_checked)]
+#![feature(array_map)]
+#![feature(const_panic)]
 #![no_std]
 // This library defines the builtin functions, so it would be a shame for
 // LLVM to optimize these function calls to themselves!
@@ -9,13 +14,14 @@
 #![crate_name = "libpsx"]
 
 extern crate core;
-#[macro_use]
 extern crate alloc;
 
 pub mod bios;
 pub mod gpu;
 pub mod allocator;
 pub mod util;
+#[macro_use]
+pub(crate) mod constrain;
 
 #[no_mangle]
 pub unsafe extern "C" fn memcpy(dest: *mut u8, src: *const u8, n: usize) -> *mut u8 {

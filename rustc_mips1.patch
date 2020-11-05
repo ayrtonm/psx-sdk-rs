@@ -107,6 +107,7 @@ index 1d3e61c4992..6c3a5ac0cef 100644
  
      ("mipsel-sony-psp", mipsel_sony_psp),
 +    ("mipsel-sony-psx", mipsel_sony_psx),
+     ("mipsel-unknown-none", mipsel_unknown_none),
      ("thumbv4t-none-eabi", thumbv4t_none_eabi),
  }
 
