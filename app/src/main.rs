@@ -2,17 +2,14 @@
 #![no_main]
 #![feature(array_map)]
 
-#[macro_use]
-extern crate core;
-
 libpsx::exe!();
 
-use libpsx::gpu::color::{Palette, Color, Opacity};
-use libpsx::gpu::position::Position;
-use libpsx::gpu::polygon::draw_square;
+use libpsx::gpu::color::{Color, Opacity, Palette};
 use libpsx::gpu::line::draw_frame;
+use libpsx::gpu::polygon::draw_square;
+use libpsx::gpu::position::Position;
 
-use libpsx::util::{ArrayUtils, delay};
+use libpsx::util::{delay, ArrayUtils};
 
 fn main() {
     let mut theta = 0.0;
@@ -47,7 +44,12 @@ fn draw(theta: f32) {
     let pos3: [Position; 16] = pos2.intercalate(&pos2.map(|p| rotate_point(p, 22.5, center)));
     let pos: [Position; 32] = pos3.intercalate(&pos3.map(|p| rotate_point(p, 11.25, center)));
 
-    let col1 = [Color::aqua(), Color::mint(), Color::orange(), Color::indigo()];
+    let col1 = [
+        Color::aqua(),
+        Color::mint(),
+        Color::orange(),
+        Color::indigo(),
+    ];
     let col2: [Color; 8] = col1.intercalate(&col1);
     let col3 = col2.intercalate::<16>(&col2);
     let col = col3.intercalate::<32>(&col3);

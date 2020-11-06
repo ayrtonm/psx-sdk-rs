@@ -90,14 +90,28 @@ fn panic(_info: &PanicInfo) -> ! {
 
 #[macro_export]
 macro_rules! exe {
-    () => {
+    ($addr:expr, $size:expr) => {
         mod executable {
             #[no_mangle]
             fn main() {
                 use libpsx::allocator::BiosAllocator;
-                BiosAllocator::init();
+                BiosAllocator::init($addr, $size);
                 super::main()
             }
         }
     };
+    (no heap) => {
+        mod executable {
+            #[no_mangle]
+            fn main() {
+                super::main()
+            }
+        }
+    };
+    // 8 MB allocated in Expansion Region 1
+    (big heap) => { libpsx::exe!(0x1F00_0000, 8192 * 1024); };
+    // 1 KB allocated in Scratchpad (D-Cache used as Fast RAM)
+    (fast heap) => { libpsx::exe!(0x1F80_0000, 1024); };
+    // 2 MB allocated in Expansion Region 3
+    () => { libpsx::exe!(0x1FA0_0000, 2048 * 1024); };
 }

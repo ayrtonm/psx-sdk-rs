@@ -5,8 +5,8 @@ use crate::bios;
 pub struct BiosAllocator;
 
 impl BiosAllocator {
-    pub fn init() {
-        bios::init_heap(0x1F00_0000, 8 * 1024);
+    pub fn init(addr: usize, size: usize) {
+        bios::init_heap(addr, size);
     }
 }
 
