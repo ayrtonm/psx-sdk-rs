@@ -12,19 +12,39 @@ pub mod vram;
 // or whether this should only provide an interface to read/write the GPU settings
 // TODO: Think about whether this should be must_use or not
 //#[must_use]
+#[derive(Clone, Copy)]
 pub struct Ctxt<S: Screen> {
-    gpustat: u32,
     display: PhantomData<S>,
 }
 
+#[derive(Clone, Copy)]
 pub struct Disabled;
+#[derive(Clone, Copy)]
 pub struct Enabled;
 
-pub trait Screen {}
-impl Screen for Disabled {}
-impl Screen for Enabled {}
+pub trait Screen {
+    type Not: Screen;
+    const CMD: u32;
+    fn toggle() -> PhantomData::<Self::Not> {
+        bios::gpu_gp1_command_word(Self::CMD);
+        PhantomData::<Self::Not>
+    }
+}
+impl Screen for Disabled {
+    type Not = Enabled;
+    const CMD: u32 = 0x0300_0000;
+}
+impl Screen for Enabled {
+    type Not = Disabled;
+    const CMD: u32 = 0x0300_0001;
+}
 
 impl<S: Screen> Ctxt<S> {
+    pub fn toggle_display(self) -> Ctxt<S::Not> {
+        Ctxt::<S::Not> {
+            display: S::toggle(),
+        }
+    }
     pub fn reset_gpu(self) -> Ctxt<Disabled> {
         bios::gpu_gp1_command_word(0x0000_0000);
         Ctxt::new()
@@ -45,33 +65,18 @@ impl<S: Screen> Ctxt<S> {
 
 impl Ctxt<Disabled> {
     pub fn new() -> Self {
-        const DEFAULT_GPUSTAT: u32 = 0x1480_2000;
+        //const DEFAULT_GPUSTAT: u32 = 0x1480_2000;
         Ctxt::<Disabled> {
-            gpustat: DEFAULT_GPUSTAT,
             display: PhantomData::<Disabled>,
         }
     }
     pub fn display_on(self) -> Ctxt<Enabled> {
-        bios::gpu_gp1_command_word(0x0300_0000);
-        Ctxt::<Enabled> {
-            gpustat: self.gpustat,
-            display: PhantomData::<Enabled>,
-        }
-    }
-    pub fn toggle_display(self) -> Ctxt<Enabled> {
-        self.display_on()
+        self.toggle_display()
     }
 }
 
 impl Ctxt<Enabled> {
     pub fn display_off(self) -> Ctxt<Disabled> {
-        bios::gpu_gp1_command_word(0x0300_0001);
-        Ctxt::<Disabled> {
-            gpustat: self.gpustat,
-            display: PhantomData::<Disabled>,
-        }
-    }
-    pub fn toggle_display(self) -> Ctxt<Disabled> {
-        self.display_off()
+        self.toggle_display()
     }
 }
