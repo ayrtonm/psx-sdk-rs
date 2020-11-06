@@ -82,3 +82,7 @@ impl<T: Copy + Default, const N: usize> ArrayUtils for [T; N] {
         ar
     }
 }
+
+pub fn zero_extend(x: (u16, u16)) -> (u32, u32) {
+    (x.0 as u32, x.1 as u32)
+}

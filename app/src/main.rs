@@ -4,6 +4,7 @@
 
 libpsx::exe!();
 
+use libpsx::gpu::Ctxt;
 use libpsx::gpu::color::{Color, Opacity, Palette};
 use libpsx::gpu::line::draw_frame;
 use libpsx::gpu::polygon::draw_square;
@@ -15,8 +16,9 @@ fn main() {
     let mut theta = 0.0;
     let delta = 1.0;
     let size = 256;
+    let ctxt = Ctxt::new();
     // Clear command FIFO
-    libpsx::bios::gpu_gp1_command_word(0x01000000);
+    ctxt.reset_buffer().display_on().start_display(0,0);
     // Top left at 0,0
     libpsx::bios::gpu_command_word(0xe3000000);
     // Bottom right: 256x256

@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! constrain {
-    () => {
+    (header) => {
             use core::mem::size_of;
             trait Constrain<const N: usize, const M: usize> {
                 const ASSERT: bool;
@@ -13,13 +13,12 @@ macro_rules! constrain {
     };
     ($N:tt) => {
         {
-            type NonZST = u32;
             size_of::<[NonZST; $N]>()
         }
     };
     ($N:tt + $M:tt = $S:tt) => {
         {
-            constrain!();
+            constrain!(header);
             impl<const N: usize, const M: usize, const S: usize> Constrain<N, M> for [NonZST; S] {
                 const ASSERT: bool = constrain!(N) + constrain!(M) == constrain!(S);
             }
@@ -31,7 +30,7 @@ macro_rules! constrain {
     ($S:tt = $N:tt - $M:tt) => { constrain!($S + $M = $N) };
     ($N:tt + $M:tt < $S:tt) => {
         {
-            constrain!();
+            constrain!(header);
             impl<const N: usize, const M: usize, const S: usize> Constrain<N, M> for [NonZST; S] {
                 const ASSERT: bool = constrain!(N) + constrain!(M) < constrain!(S);
             }
@@ -40,7 +39,7 @@ macro_rules! constrain {
     };
     ($N:tt + $M:tt <= $S:tt) => {
         {
-            constrain!();
+            constrain!(header);
             impl<const N: usize, const M: usize, const S: usize> Constrain<N, M> for [NonZST; S] {
                 const ASSERT: bool = constrain!(N) + constrain!(M) <= constrain!(S);
             }
