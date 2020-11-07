@@ -1,5 +1,6 @@
 use core::marker::PhantomData;
 use crate::bios;
+use crate::constrain;
 use crate::util::zero_extend;
 
 pub mod color;
@@ -53,13 +54,37 @@ impl<S: Screen> Ctxt<S> {
         bios::gpu_gp1_command_word(0x0100_0000);
         self
     }
-    pub fn start_display(self, pos: (u16, u16)) -> Self {
-        let cmd = 0x05 << 24;
-        let mut pos = zero_extend(pos);
-        pos.0 &= 0b11_1111_1111;
-        pos.1 &= 0b01_1111_1111;
-        bios::gpu_gp1_command_word(cmd | pos.0 | pos.1 << 10);
+    fn xy_cmd<const CMD: usize, const XMASK: u16, const YMASK: u16, const YSHIFT: u32>(self, mut x: u16, mut y: u16) -> Self {
+        constrain!(CMD < 0x100);
+        let cmd = (CMD as u32) << 24;
+        x &= (1 << XMASK) - 1;
+        y &= (1 << YMASK) - 1;
+        bios::gpu_command_word(cmd | x as u32 | (y as u32) << YSHIFT);
         self
+    }
+    fn xy_gp1_cmd<const CMD: usize, const XMASK: u16, const YMASK: u16, const YSHIFT: u32>(self, mut x: u16, mut y: u16) -> Self {
+        constrain!(CMD < 0x100);
+        let cmd = (CMD as u32) << 24;
+        x &= (1 << XMASK) - 1;
+        y &= (1 << YMASK) - 1;
+        bios::gpu_gp1_command_word(cmd | x as u32 | (y as u32) << YSHIFT);
+        self
+    }
+    // Calls GP0(E3h)
+    pub fn draw_start(self, x: u16, y: u16) -> Self {
+        self.xy_cmd::<0xe3, 10, 9, 10>(x, y)
+    }
+    // Calls GP0(E4h)
+    pub fn draw_end(self, x: u16, y: u16) -> Self {
+        self.xy_cmd::<0xe4, 10, 9, 10>(x, y)
+    }
+    // Calls GP0(E5h)
+    pub fn draw_offset(self, x: u16, y: u16) -> Self {
+        self.xy_cmd::<0xe5, 11, 11, 11>(x, y)
+    }
+    // Calls GP1(05h)
+    pub fn display_start(self, mut x: u16, mut y: u16) -> Self {
+        self.xy_gp1_cmd::<0x05, 10, 9, 10>(x, y)
     }
 }
 

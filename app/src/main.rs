@@ -4,7 +4,7 @@
 
 libpsx::exe!();
 
-use libpsx::gpu::{Ctxt, Screen};
+use libpsx::gpu::Ctxt;
 use libpsx::gpu::color::{Color, Opacity, Palette};
 use libpsx::gpu::line::draw_frame;
 use libpsx::gpu::polygon::draw_square;
@@ -17,27 +17,19 @@ fn main() {
     let delta = 1.0;
     let size = 256;
     let ctxt = Ctxt::new();
-    // Clear command FIFO
-    let ctxt = ctxt.reset_buffer().display_on();
-    // Top left at 0,0
-    libpsx::bios::gpu_command_word(0xe3000000);
-    // Bottom right: 256x256
-    libpsx::bios::gpu_command_word(0xe4080100);
-    // Offset at 0,0
-    libpsx::bios::gpu_command_word(0xe5000000);
+    let mut ctxt = ctxt.reset_buffer().display_on();
     loop {
         theta += delta;
         if theta > 360.0 {
             theta -= 360.0;
         };
         draw_square(&Position::zero(), size, &Color::black(), &Opacity::Opaque);
-        draw(theta, ctxt);
+        draw(theta);
         blink();
     }
 }
 
-fn draw<S: Screen>(theta: f32, ctxt: Ctxt<S>) {
-    ctxt.toggle_display();
+fn draw(theta: f32) {
     let size = 128;
     let center = Position::new(128, 128);
     let offset = Position::new(64, 64);
