@@ -91,6 +91,10 @@ fn panic(_info: &PanicInfo) -> ! {
 #[macro_export]
 macro_rules! exe {
     ($addr:expr, $size:expr) => {
+        extern crate alloc;
+        // TODO: import everything in `alloc` that's relevant to the PSX
+        use alloc::vec::Vec;
+        use alloc::boxed::Box;
         mod executable {
             #[no_mangle]
             fn main() {
