@@ -2,7 +2,7 @@ use crate::bios;
 use crate::util::ArrayUtils;
 use crate::{constrain, define, ret};
 use crate::gpu::color::{Palette, Opacity};
-use crate::gpu::position::Position;
+use crate::gpu::position::Polygon;
 
 // FIXME: Remove this absurd API when consts can be constrained in a sane way in rust.
 // `constrain` is adapted from https://github.com/rust-lang/rust/issues/74674#issuecomment-662954029.
@@ -11,15 +11,16 @@ use crate::gpu::position::Position;
 // only the required consts and uses where-clauses to implicitly add the constrained parameters to
 // the public API. This is very restrictive though, so composing generic functions get's kinda ugly.
 // See https://hackmd.io/OZG_XiLFRs2Xmw5s39jRzA for details.
-pub fn draw_line<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
+pub fn draw_line<const N: usize>(pos: &Polygon<N>, pal: &Palette<N>, opacity: Option<&Opacity>)
     where [(); N + 1]:,
           [(); N + 2]:,
           [(); N + N]:,
           [(); N + N + 1]: {
+    let opacity = opacity.unwrap_or(&Opacity::Opaque);
     internal_draw_line::<N, {N + 1}, {N + 2}, {N + N}, {N + N + 1}>(pos, pal, opacity);
 }
 
-fn internal_draw_line<const N: usize, const M: usize, const O: usize, const P: usize, const Q: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity) {
+fn internal_draw_line<const N: usize, const M: usize, const O: usize, const P: usize, const Q: usize>(pos: &Polygon<N>, pal: &Palette<N>, opacity: &Opacity) {
     constrain!(N > 1);
     constrain!(M = N + 1);
     constrain!(O = N + 2);
@@ -61,23 +62,24 @@ fn internal_draw_line<const N: usize, const M: usize, const O: usize, const P: u
 }
 
 // FIXME: See `draw_line`
-pub fn draw_frame<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
+pub fn draw_frame<const N: usize>(pos: &Polygon<N>, pal: &Palette<N>, opacity: Option<&Opacity>)
     where [(); N + 1]:,
           [(); N + 2]:,
           [(); N + 3]:,
           [(); N + N + 2]:,
           [(); N + N + 3]: {
+    let opacity = opacity.unwrap_or(&Opacity::Opaque);
     internal_draw_frame::<N, {N + 1}, {N + 2}, {N + 3}, {N + N + 2}, {N + N + 3}>(pos, pal, opacity);
 }
 
-fn internal_draw_frame<const N: usize, const M: usize, const O: usize, const P: usize, const Q: usize, const R: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity) {
+fn internal_draw_frame<const N: usize, const M: usize, const O: usize, const P: usize, const Q: usize, const R: usize>(pos: &Polygon<N>, pal: &Palette<N>, opacity: &Opacity) {
     constrain!(N > 2);
     constrain!(M = N + 1);
     constrain!(O = M + 1);
     constrain!(P = M + 2);
     constrain!(Q = M + M);
     constrain!(R = Q + 1);
-    let new_pos: &[Position; M] = &pos.append(pos[0]);
+    let new_pos: &Polygon<M> = &pos.append(pos[0]);
     let new_pal = &match pal {
         Palette::Monochrome(c) => Palette::Monochrome(*c),
         Palette::Shaded(colors) => Palette::Shaded(colors.append(colors[0])),

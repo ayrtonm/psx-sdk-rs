@@ -27,6 +27,7 @@ fn create_bios_src() -> String {
         "A(38h) realloc",
         "A(39h) init_heap",
         "A(3Fh) printf",
+        "A(47h) gpu_send_dma",
         "A(48h) gpu_gp1_command_word",
         "A(49h) gpu_command_word",
         "A(4Ah) gpu_command_word_params",

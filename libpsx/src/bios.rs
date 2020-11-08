@@ -10,6 +10,7 @@ extern "C" {
     fn asm_gpu_gp1_command_word(cmd: u32);
     fn asm_gpu_command_word(cmd: u32);
     fn asm_gpu_command_word_params(src: *const u32, num: usize);
+    fn asm_gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32);
 }
 
 pub fn malloc(size: usize) -> *mut u8 {
@@ -68,4 +69,10 @@ pub fn gpu_command_word_params(src: &[u32]) {
 
 pub fn gpu_get_status() -> u32 {
     unsafe { asm_gpu_get_status() }
+}
+
+pub fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
+    unsafe {
+        asm_gpu_send_dma(xdst, ydst, xsiz, ysize, src)
+    }
 }

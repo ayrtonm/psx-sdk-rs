@@ -5,6 +5,8 @@ pub struct Position {
     y: u16,
 }
 
+pub type Polygon<const N: usize> = [Position; N];
+
 impl From<Position> for u32 {
     fn from(p: Position) -> u32 {
         (p.y() as u32) << 16 | (p.x() as u32)
@@ -24,7 +26,7 @@ impl Position {
     pub const fn zero() -> Self {
         Position::new(0, 0)
     }
-    pub const fn rectangle(offset: Position, width: u16, height: u16) -> [Position; 4] {
+    pub const fn rectangle(offset: Position, width: u16, height: u16) -> Polygon<4> {
         [offset,
          Position::new(offset.x() + width, offset.y()),
          Position::new(offset.x() + width, offset.y() + height),

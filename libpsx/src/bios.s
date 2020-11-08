@@ -52,6 +52,14 @@ asm_printf:
 j 0xA0
 li $t1, 0x3F
 
+.section .text.asm_gpu_send_dma
+.global asm_gpu_send_dma
+.type asm_gpu_send_dma, function
+
+asm_gpu_send_dma:
+j 0xA0
+li $t1, 0x47
+
 .section .text.asm_gpu_gp1_command_word
 .global asm_gpu_gp1_command_word
 .type asm_gpu_gp1_command_word, function

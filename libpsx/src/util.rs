@@ -2,6 +2,18 @@ use core::intrinsics::{log2f32, truncf32, volatile_load};
 use crate::constrain;
 
 #[macro_export]
+macro_rules! typestate {
+    ($enum:ident := $variant:ident) => {
+        pub trait $enum { }
+        impl $enum for $variant { }
+    };
+    ($enum:ident := $variant1:ident, $($variants:ident),*) => {
+        impl $enum for $variant1 { }
+        typestate!($enum := $($variants),*);
+    };
+}
+
+#[macro_export]
 macro_rules! define {
     ($name:ident := $num:expr) => {
         let mut $name: [u32; $num];
@@ -81,8 +93,4 @@ impl<T: Copy + Default, const N: usize> ArrayUtils for [T; N] {
         ar[N..].copy_from_slice(other);
         ar
     }
-}
-
-pub fn zero_extend(x: (u16, u16)) -> (u32, u32) {
-    (x.0 as u32, x.1 as u32)
 }

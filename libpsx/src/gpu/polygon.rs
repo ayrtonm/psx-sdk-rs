@@ -2,31 +2,36 @@ use crate::bios;
 use crate::util::ArrayUtils;
 use crate::{constrain, define, ret};
 use crate::gpu::color::{Color, Palette, Opacity};
-use crate::gpu::position::Position;
+use crate::gpu::position::{Polygon, Position};
 
 // FIXME: See `gpu::draw_line`
-pub fn draw_polygon<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
+pub fn draw_polygon<const N: usize>(pos: &Polygon<N>, pal: &Palette<N>, opacity: Option<&Opacity>)
     where [(); N + 1]:, [(); N + N]: {
     constrain!(N between 3 and 4);
+    let opacity = opacity.unwrap_or(&Opacity::Opaque);
     let mut pos = *pos;
-    let temp_pos = pos[2];
-    pos[2] = pos[3];
-    pos[3] = temp_pos;
+    if N == 4 {
+        let temp_pos = pos[2];
+        pos[2] = pos[3];
+        pos[3] = temp_pos;
+    }
     let pal = match pal {
         Palette::Monochrome(c) => Palette::Monochrome(*c),
         Palette::Shaded(colors) => {
             let mut colors = *colors;
-            let temp_col = colors[2];
-            colors[2] = colors[3];
-            colors[3] = temp_col;
+            if N == 4 {
+                let temp_col = colors[2];
+                colors[2] = colors[3];
+                colors[3] = temp_col;
+            }
             Palette::Shaded(colors)
         },
     };
-    draw_polygon_ll(&pos, &pal, opacity)
+    draw_polygon_low_level(&pos, &pal, opacity)
 }
 
 // FIXME: See `gpu::draw_line`
-pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, opacity: &Opacity)
+pub fn draw_polygon_low_level<const N: usize>(pos: &Polygon<N>, pal: &Palette<N>, opacity: &Opacity)
     where [(); N + 1]:, [(); N + N]: {
     constrain!(N between 3 and 4);
     let cmd = match (N, pal, opacity) {
@@ -55,7 +60,8 @@ pub fn draw_polygon_ll<const N: usize>(pos: &[Position; N], pal: &Palette<N>, op
 }
 
 /// Draws rectangles of a given width and height. This is preferred over `draw_polygon`.
-pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opacity: &Opacity) {
+pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opacity: Option<&Opacity>) {
+    let opacity = opacity.unwrap_or(&Opacity::Opaque);
     enum SpecialRect { Pixel, Small, Medium };
     let special_size = match (width, height) {
         (1, 1) => Some(SpecialRect::Pixel),
@@ -84,7 +90,16 @@ pub fn draw_rect(offset: &Position, width: u16, height: u16, color: &Color, opac
     bios::gpu_command_word_params(&ar);
 }
 
+pub fn draw_triangle(pos: &Polygon<3>, pal: &Palette<3>, opacity: Option<&Opacity>) {
+    let opacity = opacity.unwrap_or(&Opacity::Opaque);
+    draw_polygon_low_level(pos, pal, opacity)
+}
+
+pub fn draw_quad(pos: &Polygon<4>, pal: &Palette<4>, opacity: Option<&Opacity>) {
+    draw_polygon(pos, pal, opacity)
+}
+
 /// Draws a square of a given length on each side. This is equivalent to `draw_rect`.
-pub fn draw_square(offset: &Position, length: u16, color: &Color, opacity: &Opacity) {
+pub fn draw_square(offset: &Position, length: u16, color: &Color, opacity: Option<&Opacity>) {
     draw_rect(offset, length, length, color, opacity)
 }
