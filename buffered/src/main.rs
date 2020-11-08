@@ -20,7 +20,7 @@ fn main() {
 
     let colors = [Color::indigo(), Color::aqua(), Color::orange(), Color::mint()];
     let pal = Palette::Shaded(colors);
-    let quad = Position::rectangle(Position::zero(), 80, 60);
+    let quad = Position::rectangle(Position::zero(), 64, 64);
     let mut offset = 0;
     loop {
         offset += 1;

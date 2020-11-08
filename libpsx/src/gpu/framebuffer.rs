@@ -37,7 +37,10 @@ impl Framebuffer {
         fb
     }
     fn init(&self) {
-        self.ctxt.display_env.on();
+        self.ctxt.display_env
+            .horizontal(0, self.res.h)
+            .vertical(0, self.res.v)
+            .on();
     }
     pub fn swap(&mut self) {
         match self.display {
@@ -60,21 +63,13 @@ impl Framebuffer {
         }
     }
     fn display(&self, buffer_data: BufferData) {
-        let hres = self.res.h;
-        let vres = self.res.v;
-        //let hres = (&self.res.h).into();
-        //let vres = (&self.res.v).into();
         self.ctxt
             .display_env
-            .horizontal(0, hres)
-            .vertical(0, vres)
             .start(buffer_data.0, buffer_data.1);
     }
     fn draw(&self, buffer_data: BufferData) {
         let hres = self.res.h;
         let vres = self.res.v;
-        //let hres: u32 = (&self.res.h).into();
-        //let vres: u32 = (&self.res.v).into();
         self.ctxt
             .draw_env
             .start(buffer_data.0, buffer_data.1)
