@@ -1,7 +1,8 @@
+type Component = u32;
 #[derive(Clone, Copy, Default)]
 pub struct Position {
-    x: u32,
-    y: u32,
+    x: Component,
+    y: Component,
 }
 
 pub type Polygon<const N: usize> = [Position; N];
@@ -13,7 +14,7 @@ impl From<Position> for u32 {
 }
 
 impl Position {
-    pub const fn new(mut x: u32, mut y: u32) -> Self {
+    pub const fn new(x: Component, y: Component) -> Self {
         //x &= (1 << 16) - 1;
         //y &= (1 << 16) - 1;
         Position { x, y }
@@ -27,7 +28,7 @@ impl Position {
     pub const fn zero() -> Self {
         Position::new(0, 0)
     }
-    pub const fn rect(offset: Position, width: u32, height: u32) -> Polygon<4> {
+    pub const fn rect(offset: Position, width: Component, height: Component) -> Polygon<4> {
         [offset,
          Position::new(offset.x() + width, offset.y()),
          Position::new(offset.x() + width, offset.y() + height),

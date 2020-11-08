@@ -28,7 +28,7 @@ impl From<Color> for u32 {
 }
 
 impl Color {
-    pub fn new(mut red: Component, mut green: Component, mut blue: Component) -> Self {
+    pub fn new(red: Component, green: Component, blue: Component) -> Self {
         //red &= (1 << 8) - 1;
         //green &= (1 << 8) - 1;
         //blue &= (1 << 8) - 1;
