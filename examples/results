@@ -1,0 +1,79 @@
+u32, u32 repr(packed(32))
+-----------
+app/ 14502B
+buffered/ 4528B
+
+u32, u32
+-----------
+app/ 13358B
+buffered/ 4140B
+
+u16, u16, repr(packed(32))
+-----------
+app/ 14302B
+buffered/ 3316B
+
+u16, u16
+-----------
+app/ 15966B
+buffered/ 4004B
+
+-----------
+app/ 15966B
+buffered/ 4004B
+square/ 5608B
+
+-----------
+app/ 15966B
+buffered/ 4004B
+square/ 5464B
+
+-----------
+app/ 15966B
+buffered/ 4000B
+square/ 5464B
+
+-----------
+app/ 15966B
+buffered/ 4000B
+square/ 5464B
+
+-----------
+app/ 13358B
+buffered/ 4136B
+square/ 5700B
+
+color repr(packed(32))
+-----------
+app/ 13342B
+buffered/ 4120B
+square/ 5684B
+
+color no repr(packed(32)), component u8
+-----------
+app/ 13358B
+buffered/ 4136B
+square/ 5700B
+
+component u32
+-----------
+app/ 14890B
+buffered/ 5816B
+square/ 6776B
+
+component u16
+-----------
+app/ 12242B
+buffered/ 4760B
+square/ 5888B
+
+-----------
+app/ 12242B
+buffered/ 4760B
+square/ 5888B
+
+-----------
+app/ 12226B
+buffered/ 4744B
+square/ 5872B
+

@@ -1,0 +1,9 @@
+[alias]
+b = "build --release -Z build-std=core,alloc"
+c = "clean"
+ch = "check -Z build-std=core,alloc"
+
+[build]
+rustc = "psx_rustc"
+rustflags = [ "-C", "linker=../../mips_toolchain/ld"]
+target = "mipsel-sony-psx"

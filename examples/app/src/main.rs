@@ -5,9 +5,8 @@
 libpsx::exe!();
 
 use libpsx::gpu::Ctxt;
-use libpsx::gpu::color::{Color, Opacity, Palette};
-use libpsx::gpu::line::draw_frame;
-use libpsx::gpu::polygon::draw_square;
+use libpsx::gpu::color::{Color, Palette};
+use libpsx::gpu::draw;
 use libpsx::gpu::position::Position;
 
 use libpsx::util::{delay, ArrayUtils};
@@ -17,13 +16,14 @@ fn main() {
     let delta = 1.0;
     let size = 256;
     let ctxt = Ctxt::new();
-    let mut ctxt = ctxt.reset_buffer().display_on();
+    ctxt.reset_buffer();
+    ctxt.display_env.on();
     loop {
         theta += delta;
         if theta > 360.0 {
             theta -= 360.0;
         };
-        draw_square(&Position::zero(), size, &Color::black(), &Opacity::Opaque);
+        draw::square(&Position::zero(), size, &Color::black(), None);
         draw(theta);
         blink();
     }
@@ -33,7 +33,7 @@ fn draw(theta: f32) {
     let size = 128;
     let center = Position::new(128, 128);
     let offset = Position::new(64, 64);
-    let rect = Position::rectangle(offset, size, size);
+    let rect = Position::rect(offset, size, size);
     let pos1 = rect.map(|p| rotate_point(p, theta, center));
     let pos2: [Position; 8] = pos1.intercalate(&pos1.map(|p| rotate_point(p, 45.0, center)));
     let pos3: [Position; 16] = pos2.intercalate(&pos2.map(|p| rotate_point(p, 22.5, center)));
@@ -49,7 +49,7 @@ fn draw(theta: f32) {
     let col3 = col2.intercalate::<16>(&col2);
     let col = col3.intercalate::<32>(&col3);
     let pal = Palette::Shaded(col);
-    draw_frame(&pos, &pal, &Opacity::Opaque);
+    draw::frame(&pos, &pal, None);
 }
 
 fn blink() {
@@ -87,5 +87,5 @@ fn rotate_point(p: Position, theta: f32, c: Position) -> Position {
     let yp = dy * cos(theta) + dx * sin(theta);
     let xf = xp + c.x() as f32;
     let yf = yp + c.y() as f32;
-    Position::new(xf as u16, yf as u16)
+    Position::new(xf as u32, yf as u32)
 }

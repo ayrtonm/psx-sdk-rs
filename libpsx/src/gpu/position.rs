@@ -1,8 +1,7 @@
 #[derive(Clone, Copy, Default)]
-#[repr(packed(32))]
 pub struct Position {
-    x: u16,
-    y: u16,
+    x: u32,
+    y: u32,
 }
 
 pub type Polygon<const N: usize> = [Position; N];
@@ -14,19 +13,21 @@ impl From<Position> for u32 {
 }
 
 impl Position {
-    pub const fn new(x: u16, y: u16) -> Self {
+    pub const fn new(mut x: u32, mut y: u32) -> Self {
+        //x &= (1 << 16) - 1;
+        //y &= (1 << 16) - 1;
         Position { x, y }
     }
-    pub const fn x(&self) -> u16 {
+    pub const fn x(&self) -> u32 {
         self.x
     }
-    pub const fn y(&self) -> u16 {
+    pub const fn y(&self) -> u32 {
         self.y
     }
     pub const fn zero() -> Self {
         Position::new(0, 0)
     }
-    pub const fn rectangle(offset: Position, width: u16, height: u16) -> Polygon<4> {
+    pub const fn rect(offset: Position, width: u32, height: u32) -> Polygon<4> {
         [offset,
          Position::new(offset.x() + width, offset.y()),
          Position::new(offset.x() + width, offset.y() + height),

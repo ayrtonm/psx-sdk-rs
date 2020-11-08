@@ -5,5 +5,5 @@ ch = "check -Z build-std=core,alloc"
 
 [build]
 rustc = "psx_rustc"
-rustflags = [ "-C", "linker=../mips_toolchain/ld"]
+rustflags = [ "-C", "linker=../../mips_toolchain/ld"]
 target = "mipsel-sony-psx"

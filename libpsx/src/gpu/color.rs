@@ -1,13 +1,13 @@
 use core::num::FpCategory;
 use crate::util::Primitives;
 
-// TODO: Verify that `repr(packed(32))` can actually decrease code size here.
+type Component = u16;
 #[derive(Clone, Copy, Default)]
-#[repr(packed(32))]
+//#[repr(packed(32))]
 pub struct Color {
-    red: u8,
-    green: u8,
-    blue: u8,
+    red: Component,
+    green: Component,
+    blue: Component,
 }
 
 pub enum Opacity {
@@ -28,7 +28,10 @@ impl From<Color> for u32 {
 }
 
 impl Color {
-    pub fn new(red: u8, green: u8, blue: u8) -> Self {
+    pub fn new(mut red: Component, mut green: Component, mut blue: Component) -> Self {
+        //red &= (1 << 8) - 1;
+        //green &= (1 << 8) - 1;
+        //blue &= (1 << 8) - 1;
         Color { red, green, blue }
     }
     pub fn red() -> Self { Color::new(255, 0, 0) }
@@ -56,7 +59,7 @@ impl Color {
         Color::new(red, green, blue)
     }
     fn map<F>(&self, f: F) -> Self
-        where F: Fn(u8) -> u8 {
+        where F: Fn(Component) -> Component {
         Color::new(f(self.red), f(self.green), f(self.blue))
     }
     // Halves the intensity of each component. This is preferred over `scale(0.5)`.
@@ -84,7 +87,7 @@ impl Color {
                         i32::MIN..=-1 => (n..0).fold(*self, |color, _| color.halve()),
                     }
                 } else {
-                    self.map(|c| ((c as f32) * alpha) as u8)
+                    self.map(|c| ((c as f32) * alpha) as Component)
                 }
             },
             _ => Color::white(),
