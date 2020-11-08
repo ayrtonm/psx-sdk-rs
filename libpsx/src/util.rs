@@ -1,4 +1,5 @@
-use core::intrinsics::{log2f32, truncf32, volatile_load};
+//use core::intrinsics::{log2f32, truncf32};
+use core::intrinsics::volatile_load;
 use crate::constrain;
 
 #[macro_export]
@@ -34,22 +35,22 @@ macro_rules! ret {
     };
 }
 
-pub trait Primitives {
-    fn trunc(self) -> f32;
-    fn fract(self) -> f32;
-    fn log2(self) -> f32;
-}
-impl Primitives for f32 {
-    fn trunc(self) -> f32 {
-        unsafe { truncf32(self) }
-    }
-    fn fract(self) -> f32 {
-        self - self.trunc()
-    }
-    fn log2(self) -> f32 {
-        return unsafe { log2f32(self) };
-    }
-}
+//pub trait Primitives {
+//    fn trunc(self) -> f32;
+//    fn fract(self) -> f32;
+//    fn log2(self) -> f32;
+//}
+//impl Primitives for f32 {
+//    fn trunc(self) -> f32 {
+//        unsafe { truncf32(self) }
+//    }
+//    fn fract(self) -> f32 {
+//        self - self.trunc()
+//    }
+//    fn log2(self) -> f32 {
+//        return unsafe { log2f32(self) };
+//    }
+//}
 
 pub fn delay(n: u32) {
     for _ in 0..n {

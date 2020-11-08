@@ -18,7 +18,7 @@ fn main() {
     let mut fb = Framebuffer::new(ctxt, (0, 0), (320, 0), res);
 
     let mut cols = [Color::red(), Color::green(), Color::blue(), Color::yellow()];
-    let rect = Position::rect(Position::new(80, 60), 160, 120);
+    let rect = Position::rect(Position::new(60, 60), 120, 120);
     loop {
         let pal = Palette::Shaded(cols);
         cols.rotate_right(1);

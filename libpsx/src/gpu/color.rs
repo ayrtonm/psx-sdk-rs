@@ -1,5 +1,5 @@
-use core::num::FpCategory;
-use crate::util::Primitives;
+//use core::num::FpCategory;
+//use crate::util::Primitives;
 
 type Component = u16;
 #[derive(Clone, Copy, Default)]
@@ -74,23 +74,23 @@ impl Color {
         self.halve().sum(&other.halve())
     }
     // Scales each component by alpha. `halve()` and `double()` are preferred for powers of 2.
-    pub fn scale(&self, alpha: f32) -> Self {
-        match alpha.classify() {
-            FpCategory::Zero | FpCategory::Subnormal => Color::black(),
-            FpCategory::Normal => {
-                let log2alpha = alpha.log2();
-                if log2alpha.fract() == 0.0 {
-                    let n = log2alpha.trunc() as i32;
-                    match n {
-                        0 => *self,
-                        1..=i32::MAX => (0..n).fold(*self, |color, _| color.double()),
-                        i32::MIN..=-1 => (n..0).fold(*self, |color, _| color.halve()),
-                    }
-                } else {
-                    self.map(|c| ((c as f32) * alpha) as Component)
-                }
-            },
-            _ => Color::white(),
-        }
-    }
+    //pub fn scale(&self, alpha: f32) -> Self {
+    //    match alpha.classify() {
+    //        FpCategory::Zero | FpCategory::Subnormal => Color::black(),
+    //        FpCategory::Normal => {
+    //            let log2alpha = alpha.log2();
+    //            if log2alpha.fract() == 0.0 {
+    //                let n = log2alpha.trunc() as i32;
+    //                match n {
+    //                    0 => *self,
+    //                    1..=i32::MAX => (0..n).fold(*self, |color, _| color.double()),
+    //                    i32::MIN..=-1 => (n..0).fold(*self, |color, _| color.halve()),
+    //                }
+    //            } else {
+    //                self.map(|c| ((c as f32) * alpha) as Component)
+    //            }
+    //        },
+    //        _ => Color::white(),
+    //    }
+    //}
 }
