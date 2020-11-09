@@ -11,4 +11,4 @@ Cargo.lock
 */Cargo.lock
 mips_toolchain/*
 rust/
-libpsx/PSn00bSDK
+psxdev/*

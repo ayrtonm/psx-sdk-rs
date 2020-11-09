@@ -1,4 +1,4 @@
-use crate::bios;
+//use crate::bios;
 use crate::constrain;
 
 pub mod color;
@@ -24,6 +24,7 @@ pub enum Hres { H256, H320, H368, H512, H640 }
 pub enum Vres { V240, V480 }
 pub enum Vmode { NTSC, PAL }
 pub enum Depth { Lo, Hi }
+pub enum DmaSource { Off, FIFO, CPU, GPU }
 
 impl Res {
     pub fn new(h: Hres, v: Vres) -> Self {
@@ -66,12 +67,32 @@ impl Ctxt {
     }
     // Calls GP1(00h)
     pub fn reset_gpu(&self) -> &Self {
-        bios::gpu_gp1_command_word(0x0000_0000);
+        //bios::gpu_gp1_command_word(0x0000_0000);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, 0);
+        }
         self
     }
     // Calls GP1(01h)
     pub fn reset_buffer(&self) -> &Self {
-        bios::gpu_gp1_command_word(0x0100_0000);
+        //bios::gpu_gp1_command_word(0x0100_0000);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, 0x0100_0000);
+        }
+        self
+    }
+    pub fn dma(&self, dir: DmaSource) -> &Self {
+        let source = match dir {
+            DmaSource::Off => 0,
+            DmaSource::FIFO => 1,
+            DmaSource::CPU => 2,
+            DmaSource::GPU => 3,
+
+        };
+        //bios::gpu_gp1_command_word(0x0400_0000 | source);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, 0x0400_0000 | source);
+        }
         self
     }
 }
@@ -82,11 +103,17 @@ impl DisplayEnv {
     }
     // Calls GP1(03h)
     pub fn on(&self) -> &Self {
-        bios::gpu_gp1_command_word(0x0300_0000);
+        //bios::gpu_gp1_command_word(0x0300_0000);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, 0x0300_0000);
+        }
         self
     }
     pub fn off(&self) -> &Self {
-        bios::gpu_gp1_command_word(0x0300_0001);
+        //bios::gpu_gp1_command_word(0x0300_0001);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, 0x0300_0001);
+        }
         self
     }
     // Calls GP1(05h)
@@ -130,7 +157,10 @@ impl DisplayEnv {
         } else {
             0
         };
-        bios::gpu_gp1_command_word(cmd | hres | vres | vmode | depth | interlace);
+        //bios::gpu_gp1_command_word(cmd | hres | vres | vmode | depth | interlace);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, cmd | hres | vres | vmode | depth | interlace);
+        }
         self
     }
     fn gpu_gp1_cmd<const CMD: usize, const XMASK: u32, const YMASK: u32, const YSHIFT: u32>(&self, mut x: u32, mut y: u32) -> &Self {
@@ -138,7 +168,10 @@ impl DisplayEnv {
         let cmd = (CMD as u32) << 24;
         x &= (1 << XMASK) - 1;
         y &= (1 << YMASK) - 1;
-        bios::gpu_gp1_command_word(cmd | x | y << YSHIFT);
+        //bios::gpu_gp1_command_word(cmd | x | y << YSHIFT);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1814 as *mut u32, cmd | x | y << YSHIFT);
+        }
         self
     }
 }
@@ -164,7 +197,10 @@ impl DrawEnv {
         let cmd = (CMD as u32) << 24;
         x &= (1 << XMASK) - 1;
         y &= (1 << YMASK) - 1;
-        bios::gpu_command_word(cmd | x | y << YSHIFT);
+        //bios::gpu_command_word(cmd | x | y << YSHIFT);
+        unsafe {
+            core::intrinsics::volatile_store(0x1f80_1810 as *mut u32, cmd | x | y << YSHIFT);
+        }
         self
     }
 }
