@@ -60,10 +60,12 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
         self.gp0.borrow_mut().start(buffer.0, buffer.1);
         self.gp0.borrow_mut().end(buffer.0 + hres, buffer.1 + vres);
         self.gp0.borrow_mut().offset(buffer.0, buffer.1);
-        self.gp0.borrow_mut().draw_rect(&Vertex::zero(), hres as Length, vres as Length, &Color::black());
     }
     fn display(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
+        let hres = u32::from(&self.res.0);
+        let vres = u32::from(&self.res.1);
         self.gp1.borrow_mut().start(buffer.0, buffer.1);
+        self.gp0.borrow_mut().draw_rect(&Vertex::zero(), hres as Length, vres as Length, &Color::black());
     }
 }

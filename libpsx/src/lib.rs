@@ -7,9 +7,19 @@ pub mod gpu;
 mod context;
 mod macros;
 
+use core::intrinsics::volatile_load;
+use core::panic::PanicInfo;
+
 pub use context::IOCX;
 
-use core::panic::PanicInfo;
+pub fn delay(n: u32) {
+    for _ in 0..n {
+        unsafe {
+            volatile_load(0 as *mut u32);
+        }
+    }
+}
+
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop { }
