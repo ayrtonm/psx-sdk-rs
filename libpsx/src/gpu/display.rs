@@ -1,5 +1,5 @@
 use crate::gpu::DisplayEnv;
-use super::{Hres, Vres, Vmode, Depth, DmaSource};
+use crate::gpu::res::{Hres, Vres, Vmode, Depth, DmaSource};
 
 impl DisplayEnv {
     // Calls DisplayEnv(00h)

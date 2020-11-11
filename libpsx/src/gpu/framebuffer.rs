@@ -1,6 +1,6 @@
 use core::cell::RefCell;
-use super::{Component, Res, Vmode, Depth};
 use crate::gpu::{DrawEnv, DisplayEnv};
+use crate::gpu::res::{Component, Res, Vmode, Depth};
 use crate::gpu::vertex::{Length, Vertex};
 use crate::gpu::color::Color;
 

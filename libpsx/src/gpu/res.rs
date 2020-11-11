@@ -1,10 +1,6 @@
-mod draw;
-mod display;
-pub mod framebuffer;
-
 // This refers to the same `Component` alias in libpsx::gpu::vertex, but the
 // types may not match for performance reasons
-type Component = u32;
+pub type Component = u32;
 
 //pub struct Res {
 //    h: Hres,
