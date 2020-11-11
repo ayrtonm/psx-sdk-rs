@@ -1,42 +1,28 @@
-//use core::num::FpCategory;
-//use crate::util::Primitives;
-
-type Component = u16;
-#[derive(Clone, Copy, Default)]
-//#[repr(packed(32))]
+type Component = u8;
 pub struct Color {
     red: Component,
     green: Component,
     blue: Component,
 }
 
-pub enum Opacity {
-    Opaque,
-    Translucent,
-}
+pub type Palette<'a, const N: usize> = &'a [Color; N];
 
-pub enum Palette<const N: usize> {
-    Monochrome(Color),
-    Shaded([Color; N]),
-}
-
-
-impl From<Color> for u32 {
-    fn from(c: Color) -> u32 {
-        (c.blue as u32) << 16 | (c.green as u32) << 8 | (c.red as u32)
+impl From<&Color> for u32 {
+    fn from(color: &Color) -> u32 {
+        (color.blue as u32) << 16 | (color.green as u32) << 8 | (color.red as u32)
     }
 }
 
 impl Color {
-    pub fn new(red: Component, green: Component, blue: Component) -> Self {
-        //red &= (1 << 8) - 1;
-        //green &= (1 << 8) - 1;
-        //blue &= (1 << 8) - 1;
+    pub const fn new(red: Component, green: Component, blue: Component) -> Self {
         Color { red, green, blue }
     }
-    pub fn red() -> Self { Color::new(255, 0, 0) }
-    pub fn green() -> Self { Color::new(0, 255, 0) }
-    pub fn blue() -> Self { Color::new(0, 0, 255) }
+    pub const fn red() -> Self { Color::new(255, 0, 0) }
+    pub const fn green() -> Self { Color::new(0, 255, 0) }
+    pub const fn blue() -> Self { Color::new(0, 0, 255) }
+
+    pub const fn black() -> Self { Color::new(0, 0, 0) }
+    pub const fn white() -> Self { Color::new(255, 255, 255) }
 
     pub fn yellow() -> Self { Color::red().sum(&Color::green()) }
     pub fn cyan() -> Self { Color::green().sum(&Color::blue()) }
@@ -49,9 +35,6 @@ impl Color {
     pub fn indigo() -> Self { Color::blue().average(&Color::violet()) }
     pub fn pink() -> Self { Color::red().average(&Color::violet()) }
 
-    pub fn black() -> Self { Color::new(0, 0, 0) }
-    pub fn white() -> Self { Color::new(255, 255, 255) }
-
     pub fn sum(&self, other: &Self) -> Self {
         let red = self.red + other.red;
         let green = self.green + other.green;
@@ -62,35 +45,15 @@ impl Color {
         where F: Fn(Component) -> Component {
         Color::new(f(self.red), f(self.green), f(self.blue))
     }
-    // Halves the intensity of each component. This is preferred over `scale(0.5)`.
+    // Halves the intensity of each component.
     pub fn halve(&self) -> Self {
         self.map(|c| c >> 1)
     }
-    // Doubles the intensity of each component. This is preferred over `scale(2.0)`.
+    // Doubles the intensity of each component.
     pub fn double(&self) -> Self {
         self.map(|c| c << 1)
     }
     pub fn average(&self, other: &Self) -> Self {
         self.halve().sum(&other.halve())
     }
-    // Scales each component by alpha. `halve()` and `double()` are preferred for powers of 2.
-    //pub fn scale(&self, alpha: f32) -> Self {
-    //    match alpha.classify() {
-    //        FpCategory::Zero | FpCategory::Subnormal => Color::black(),
-    //        FpCategory::Normal => {
-    //            let log2alpha = alpha.log2();
-    //            if log2alpha.fract() == 0.0 {
-    //                let n = log2alpha.trunc() as i32;
-    //                match n {
-    //                    0 => *self,
-    //                    1..=i32::MAX => (0..n).fold(*self, |color, _| color.double()),
-    //                    i32::MIN..=-1 => (n..0).fold(*self, |color, _| color.halve()),
-    //                }
-    //            } else {
-    //                self.map(|c| ((c as f32) * alpha) as Component)
-    //            }
-    //        },
-    //        _ => Color::white(),
-    //    }
-    //}
 }

@@ -16,16 +16,7 @@ impl BiosAllocator {
 unsafe impl GlobalAlloc for BiosAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let ptr = bios::malloc(layout.size());
-        // TODO: test for errors
-        //use crate::gpu::position::*;
-        //use crate::gpu::color::*;
-        //use crate::gpu::polygon::*;
-        //if ptr == core::ptr::null_mut() {
-        //    draw_square(&Position::zero(), 16, &Color::red(), &Opacity::Opaque);
-        //} else {
-        //    let p = Position::new(16,0);
-        //    draw_square(&p, 16, &Color::green(), &Opacity::Opaque);
-        //};
+        // TODO: test `ptr` for errors
         ptr
     }
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
