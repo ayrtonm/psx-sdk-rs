@@ -9,7 +9,8 @@ use libpsx::gpu::color::Color;
 use libpsx::gpu::env::{Hres, Vres};
 use libpsx::gpu::env::framebuffer::Framebuffer;
 
-#[no_mangle]
+libpsx::exe!();
+
 fn main() {
     let gp0 = unsafe {
         RefCell::new(IOCX.take_gp0().unwrap())
@@ -25,7 +26,10 @@ fn main() {
     loop {
         offset += 1;
         delay(100000);
-        gp0.borrow_mut().draw_rect(&Vertex::new(0, offset), 64, 64, &Color::aqua());
+        gp0.borrow_mut().draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
+        if offset == 240 - 64 {
+            offset = 0;
+        }
         fb.swap();
     }
 }

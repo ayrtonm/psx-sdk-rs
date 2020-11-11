@@ -14,24 +14,24 @@ fn main() {
     // Skip `psx`
     args.next();
 
-    let profile = &if let Some(profile) = args.next() {
-        if profile == "-h" {
-            println!("Usage: cargo psx [profile] [region]");
+    let region = &if let Some(region) = args.next() {
+        if region == "-h" {
+            println!("Usage: cargo psx [region] [profile]");
             println!("Profiles: release (default), debug");
             println!("Regions: NA (default), E or J");
             return;
 
         } else {
-            profile
+            region
         }
     } else {
-        "release".to_string()
+        "NA".to_string()
     };
 
-    let region = &if let Some(region) = args.next() {
-        region
+    let profile = &if let Some(profile) = args.next() {
+        profile
     } else {
-        "NA".to_string()
+        "release".to_string()
     };
 
     match crate_name() {
