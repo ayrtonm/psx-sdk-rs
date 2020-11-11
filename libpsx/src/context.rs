@@ -1,4 +1,4 @@
-use crate::gpu::{DrawEnv, DisplayEnv, GpuRead, GpuStat};
+use crate::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
 
 pub struct IOCtxt {
     draw_env: Option<DrawEnv>,
@@ -11,12 +11,15 @@ impl IOCtxt {
     pub fn take_draw_env(&mut self) -> Option<DrawEnv> {
         self.draw_env.take()
     }
+
     pub fn take_display_env(&mut self) -> Option<DisplayEnv> {
         self.display_env.take()
     }
+
     pub fn replace_draw_env(&mut self, draw_env: Option<DrawEnv>) {
         self.draw_env = draw_env;
     }
+
     pub fn replace_display_env(&mut self, display_env: Option<DisplayEnv>) {
         self.display_env = display_env;
     }

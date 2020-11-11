@@ -7,11 +7,31 @@ pub type Component = u32;
 //    v: Vres,
 //}
 
-pub enum Hres { H256, H320, H368, H512, H640 }
-pub enum Vres { V240, V480 }
-pub enum Vmode { NTSC, PAL }
-pub enum Depth { Lo, Hi }
-pub enum DmaSource { Off, FIFO, CPU, GPU }
+pub enum Hres {
+    H256,
+    H320,
+    H368,
+    H512,
+    H640,
+}
+pub enum Vres {
+    V240,
+    V480,
+}
+pub enum Vmode {
+    NTSC,
+    PAL,
+}
+pub enum Depth {
+    Lo,
+    Hi,
+}
+pub enum DmaSource {
+    Off,
+    FIFO,
+    CPU,
+    GPU,
+}
 
 pub type Res = (Hres, Vres);
 //impl Res {

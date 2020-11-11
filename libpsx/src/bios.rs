@@ -16,33 +16,23 @@ extern "C" {
 }
 
 pub fn malloc(size: usize) -> *mut u8 {
-    unsafe {
-        asm_malloc(size)
-    }
+    unsafe { asm_malloc(size) }
 }
 
 pub fn free(buf: *mut u8) {
-    unsafe {
-        asm_free(buf)
-    }
+    unsafe { asm_free(buf) }
 }
 
 pub fn calloc(sizex: usize, sizey: usize) -> *const u8 {
-    unsafe {
-        asm_calloc(sizex, sizey)
-    }
+    unsafe { asm_calloc(sizex, sizey) }
 }
 
 pub fn realloc(old_buf: *const u8, new_size: usize) {
-    unsafe {
-        asm_realloc(old_buf, new_size)
-    }
+    unsafe { asm_realloc(old_buf, new_size) }
 }
 
 pub fn init_heap(addr: usize, size: usize) {
-    unsafe {
-        asm_init_heap(addr, size)
-    }
+    unsafe { asm_init_heap(addr, size) }
 }
 
 pub fn printf(c: *const u8, v: u32) {
@@ -52,9 +42,7 @@ pub fn printf(c: *const u8, v: u32) {
 }
 
 pub fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
-    unsafe {
-        asm_gpu_send_dma(xdst, ydst, xsiz, ysize, src)
-    }
+    unsafe { asm_gpu_send_dma(xdst, ydst, xsiz, ysize, src) }
 }
 
 pub fn gpu_display_env_command_word(cmd: u32) {

@@ -15,7 +15,11 @@ format_strings = false
 tab_spaces = 4
 imports_indent = "Visual"
 imports_layout = "Mixed"
-indent_style = "Visual"
+
+#still not totally sold on this option, but at least the spacing is consistent
+indent_style = "Block"
+#indent_style = "Visual"
+
 match_arm_blocks = true
 match_block_trailing_comma = true
 trailing_comma = "Vertical"
@@ -43,3 +47,6 @@ fn_args_layout = "Compressed"
 #removed_nested_parens = true
 #space_before_fn_sig_paren = false
 #space_around_attr_eq = true
+
+# build.rs has some long strings that get formatted regardless of what `format_strings` equals
+ignore = [ "build.rs" ]

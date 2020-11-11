@@ -4,8 +4,8 @@
 #![feature(min_const_generics)]
 
 pub mod bios;
-pub mod gpu;
 mod context;
+pub mod gpu;
 mod macros;
 
 use core::intrinsics::volatile_load;
@@ -35,5 +35,5 @@ macro_rules! exe {
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    loop { }
+    loop {}
 }

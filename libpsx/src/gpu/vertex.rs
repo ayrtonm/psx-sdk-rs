@@ -20,12 +20,15 @@ impl Vertex {
     pub const fn new(x: Component, y: Component) -> Self {
         Vertex { x, y }
     }
+
     pub const fn x(&self) -> Component {
         self.x
     }
+
     pub const fn y(&self) -> Component {
         self.y
     }
+
     pub const fn zero() -> Self {
         Vertex::new(0, 0)
     }
