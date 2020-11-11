@@ -1,42 +1,54 @@
-use crate::gpu::{GP0, GP1};
+use crate::gpu::{DrawEnv, DisplayEnv, GpuRead, GpuStat};
 
 pub struct IOCtxt {
-    gp0: Option<GP0>,
-    gp1: Option<GP1>,
+    draw_env: Option<DrawEnv>,
+    display_env: Option<DisplayEnv>,
+    gpu_read: Option<GpuRead>,
+    gpu_stat: Option<GpuStat>,
 }
 
 impl IOCtxt {
-    pub fn take_gp0(&mut self) -> Option<GP0> {
-        self.gp0.take()
+    pub fn take_draw_env(&mut self) -> Option<DrawEnv> {
+        self.draw_env.take()
     }
-    pub fn take_gp1(&mut self) -> Option<GP1> {
-        self.gp1.take()
+    pub fn take_display_env(&mut self) -> Option<DisplayEnv> {
+        self.display_env.take()
     }
-    pub fn replace_gp0(&mut self, gp0: Option<GP0>) {
-        self.gp0 = gp0;
+    pub fn replace_draw_env(&mut self, draw_env: Option<DrawEnv>) {
+        self.draw_env = draw_env;
     }
-    pub fn replace_gp1(&mut self, gp1: Option<GP1>) {
-        self.gp1 = gp1;
+    pub fn replace_display_env(&mut self, display_env: Option<DisplayEnv>) {
+        self.display_env = display_env;
     }
 }
 
-impl Drop for GP0 {
+impl Drop for DrawEnv {
     fn drop(&mut self) {
         unsafe {
-            IOCX.replace_gp0(Some(GP0));
+            IOCX.replace_draw_env(Some(DrawEnv));
         }
     }
 }
 
-impl Drop for GP1 {
+impl Drop for DisplayEnv {
     fn drop(&mut self) {
         unsafe {
-            IOCX.replace_gp1(Some(GP1));
+            IOCX.replace_display_env(Some(DisplayEnv));
         }
     }
 }
 
 pub static mut IOCX: IOCtxt = IOCtxt {
-    gp0: Some(GP0),
-    gp1: Some(GP1),
+    draw_env: Some(DrawEnv),
+    display_env: Some(DisplayEnv),
+    gpu_read: Some(GpuRead),
+    gpu_stat: Some(GpuStat),
 };
+
+pub mod gpu {
+    use crate::{ro_register, wo_register};
+    ro_register!(GpuRead, 0x1F80_1810);
+    ro_register!(GpuStat, 0x1F80_1814);
+    wo_register!(DrawEnv, 0x1F80_1810);
+    wo_register!(DisplayEnv, 0x1F80_1814);
+}

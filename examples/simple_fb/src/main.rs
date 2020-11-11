@@ -12,21 +12,21 @@ use libpsx::gpu::env::framebuffer::Framebuffer;
 libpsx::exe!();
 
 fn main() {
-    let gp0 = unsafe {
-        RefCell::new(IOCX.take_gp0().unwrap())
+    let draw_env = unsafe {
+        RefCell::new(IOCX.take_draw_env().unwrap())
     };
-    let gp1 = unsafe {
-        RefCell::new(IOCX.take_gp1().unwrap())
+    let display_env = unsafe {
+        RefCell::new(IOCX.take_display_env().unwrap())
     };
     let res = (Hres::H320, Vres::V240);
     let buf0 = (0, 0);
     let buf1 = (0, 240);
-    let mut fb = Framebuffer::new(&gp0, &gp1, buf0, buf1, res);
+    let mut fb = Framebuffer::new(&draw_env, &display_env, buf0, buf1, res);
     let mut offset = 0;
     loop {
         offset += 1;
         delay(100000);
-        gp0.borrow_mut().draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
+        draw_env.borrow_mut().draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
         if offset == 240 - 64 {
             offset = 0;
         }

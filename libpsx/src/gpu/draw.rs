@@ -1,10 +1,10 @@
-use crate::gpu::GP0;
+use crate::gpu::DrawEnv;
 use crate::gpu::color::{Color, Palette};
 use crate::gpu::vertex::{Vertex, Polygon, Point, Line, PolyLine, Length};
 
 type ShadedPolyLine<'a,'b,'c> = &'a mut dyn Iterator<Item = (&'a Color, &'b Vertex)>;
 
-impl GP0 {
+impl DrawEnv {
     const TERMINATION_CODE: u32 = 0x5555_5555;
     pub fn draw_triangle(&mut self, p: Polygon<3>, c: &Color) {
         self.draw::<0x20>(p, c);
@@ -38,11 +38,11 @@ impl GP0 {
     }
     pub fn draw_polyline(&mut self, l: PolyLine, c: &Color) {
         self.draw::<0x48>(l, c);
-        self.write(GP0::TERMINATION_CODE);
+        self.write(DrawEnv::TERMINATION_CODE);
     }
     pub fn draw_polyline_transparent(&mut self, l: PolyLine, c: &Color) {
         self.draw::<0x4A>(l, c);
-        self.write(GP0::TERMINATION_CODE);
+        self.write(DrawEnv::TERMINATION_CODE);
     }
     pub fn draw_shaded_line(&mut self, l: Line, c: Palette<2>) {
         self.draw_shaded::<0x50>(&mut c.iter().zip(l.iter()));
@@ -52,11 +52,11 @@ impl GP0 {
     }
     pub fn draw_shaded_polyline(&mut self, l: ShadedPolyLine) {
         self.draw_shaded::<0x58>(l);
-        self.write(GP0::TERMINATION_CODE);
+        self.write(DrawEnv::TERMINATION_CODE);
     }
     pub fn draw_shaded_polyline_transparent(&mut self, l: ShadedPolyLine) {
         self.draw_shaded::<0x5A>(l);
-        self.write(GP0::TERMINATION_CODE);
+        self.write(DrawEnv::TERMINATION_CODE);
     }
     pub fn draw_rect(&mut self, offset: Point, w: Length, h: Length, c: &Color) {
         self.write((0x60 << 24) | u32::from(c));

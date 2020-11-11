@@ -1,4 +1,10 @@
 #[macro_export]
+macro_rules! register_def {
+    ($name:ident) => {
+        pub struct $name;
+    }
+}
+#[macro_export]
 macro_rules! register_addr {
     ($name:ident, $addr:expr) => {
         impl $name {
@@ -41,6 +47,7 @@ macro_rules! register_write {
 #[macro_export]
 macro_rules! ro_register {
     ($name:ident, $addr:expr) => {
+        crate::register_def!($name);
         crate::register_addr!($name, $addr);
         crate::register_read!($name, $addr);
     }
@@ -49,6 +56,7 @@ macro_rules! ro_register {
 #[macro_export]
 macro_rules! wo_register {
     ($name:ident, $addr:expr) => {
+        crate::register_def!($name);
         crate::register_addr!($name, $addr);
         crate::register_write!($name, $addr);
     }
@@ -57,6 +65,7 @@ macro_rules! wo_register {
 #[macro_export]
 macro_rules! rw_register {
     ($name:ident, $addr:expr) => {
+        crate::register_def!($name);
         crate::register_addr!($name, $addr);
         crate::register_read!($name, $addr);
         crate::register_write!($name, $addr);

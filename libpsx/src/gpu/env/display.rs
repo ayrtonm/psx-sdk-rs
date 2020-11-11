@@ -1,24 +1,24 @@
-use crate::gpu::GP1;
+use crate::gpu::DisplayEnv;
 use super::{Hres, Vres, Vmode, Depth, DmaSource};
 
-impl GP1 {
-    // Calls GP1(00h)
+impl DisplayEnv {
+    // Calls DisplayEnv(00h)
     pub fn reset_gpu(&mut self) {
         self.write(0);
     }
-    // Calls GP1(01h)
+    // Calls DisplayEnv(01h)
     pub fn reset_buffer(&mut self) {
         self.write(1);
     }
-    // Calls GP1(03h)
+    // Calls DisplayEnv(03h)
     pub fn on(&mut self) {
         self.write(0x0300_0000);
     }
-    // Calls GP1(03h)
+    // Calls DisplayEnv(03h)
     pub fn off(&mut self) {
         self.write(0x0300_0001);
     }
-    // Calls GP1(04h)
+    // Calls DisplayEnv(04h)
     pub fn dma(&mut self, dir: DmaSource) {
         let source = match dir {
             DmaSource::Off => 0,
@@ -29,19 +29,19 @@ impl GP1 {
         };
         self.write((0x04 << 24) | source);
     }
-    // Calls GP1(05h)
+    // Calls DisplayEnv(05h)
     pub fn start(&mut self, x: u32, y: u32) {
         self.generic_cmd::<0x05, 10, 9, 10>(x, y);
     }
-    // Calls GP1(06h)
+    // Calls DisplayEnv(06h)
     pub fn horizontal(&mut self, x1: u32, x2: u32) {
         self.generic_cmd::<0x06, 12, 12, 12>(x1, x2);
     }
-    // Calls GP1(07h)
+    // Calls DisplayEnv(07h)
     pub fn vertical(&mut self, y1: u32, y2: u32) {
         self.generic_cmd::<0x07, 10, 10, 10>(y1, y2);
     }
-    // Calls GP1(08h)
+    // Calls DisplayEnv(08h)
     pub fn mode(&mut self, hres: &Hres, vres: &Vres, vmode: Vmode, depth: Depth, interlace: bool) {
         let cmd = 0x08 << 24;
         let hres = match hres {
