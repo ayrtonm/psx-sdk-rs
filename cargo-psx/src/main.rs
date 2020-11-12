@@ -51,6 +51,7 @@ fn main() {
     let (region, mut cargo_args) = extract_key_value("--region", args);
     let region = region.unwrap_or("NA".to_string());
     let (skip_build, cargo_args) = extract_flag("--skip-build", cargo_args);
+    let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
@@ -77,20 +78,22 @@ fn main() {
         }
     }
 
-    let metadata = MetadataCommand::new().exec().unwrap();
-    let profile = env::args()
-        .any(|arg| arg == "--release")
-        .then_some("release")
-        .unwrap_or("debug");
+    if !skip_pack {
+        let metadata = MetadataCommand::new().exec().unwrap();
+        let profile = env::args()
+            .any(|arg| arg == "--release")
+            .then_some("release")
+            .unwrap_or("debug");
 
-    let target_dir = metadata.target_directory.join(target_triple).join(profile);
-    for pkg in metadata.packages {
-        for target in pkg.targets {
-            if target.kind.iter().any(|k| k == "bin") {
-                let elf = &target_dir.join(&target.name).to_str().unwrap().to_string();
-                let psexe = &format!("{}{}", &target.name, ".psexe");
-                let convert_args = vec![region.as_str(), elf, psexe];
-                elf2psexe::main(convert_args);
+        let target_dir = metadata.target_directory.join(target_triple).join(profile);
+        for pkg in metadata.packages {
+            for target in pkg.targets {
+                if target.kind.iter().any(|k| k == "bin") {
+                    let elf = &target_dir.join(&target.name).to_str().unwrap().to_string();
+                    let psexe = &format!("{}{}", &target.name, ".psexe");
+                    let convert_args = vec![region.as_str(), elf, psexe];
+                    elf2psexe::main(convert_args);
+                }
             }
         }
     }
