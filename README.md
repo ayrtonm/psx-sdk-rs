@@ -43,11 +43,10 @@ build a MIPS assembler and a linker targetting `mipsel-unknown-elf`.
     ./x.py build --stage 1 compiler/rustc
     ```
 
-6. Optionally install and rename the rust compiler:
+6. Install a new toolchain with the compiler:
 
     ```
-    sudo cp build/x86_64-unknown-linux-gnu/stage1/bin/rustc /usr/local/bin/psx_rustc
-    sudo cp -r build/x86_64-unknown-linux-gnu/stage1/lib/* /usr/local/lib/
+    rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1
     ```
 
 Building the MIPS toolchain is as simple as running `cd mips_toolchain` then

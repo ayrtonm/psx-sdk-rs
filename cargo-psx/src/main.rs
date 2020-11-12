@@ -71,13 +71,13 @@ fn main() {
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
         let mut build = Command::new("cargo")
+            .arg("+psx")
             .arg("build")
             .arg("-Z")
             .arg("build-std=core,alloc")
             .arg("--target")
             .arg(target_triple)
-            // Change rustc and the linker to sensible defaults and make configuration easier
-            .env("RUSTC", "psx_rustc")
+            // Set the linker in a more sensible way
             .env("RUSTFLAGS", "-C linker=../../mips_toolchain/ld")
             .args(cargo_args)
             .stdin(Stdio::inherit())
