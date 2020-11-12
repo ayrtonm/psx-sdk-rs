@@ -90,4 +90,4 @@ catflap4linux to control it.
 ## Todo
 
  - Update TODO list given the recent overhaul in libpsx
- - Fix step #6 of the build instructions to avoid cluttering `/usr/local/lib` when updating rustc
+ - Figure out how to compile and use rust-lld
