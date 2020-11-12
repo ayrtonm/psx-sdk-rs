@@ -182,10 +182,10 @@ impl PsxWriter {
         let cur_size = self.psexe.metadata().unwrap().len();
         let frac_size = (self.psexe.metadata().unwrap().len() / 0x800);
         let new_size = (frac_size * 0x800) + 0x800;
-        println!("{:?}", object_size);
-        println!("{:?}", cur_size);
-        println!("{:?}", frac_size);
-        println!("{:?}", new_size);
+        //println!("{:?}", object_size);
+        //println!("{:?}", cur_size);
+        //println!("{:?}", frac_size);
+        //println!("{:?}", new_size);
         self.psexe.set_len(new_size);
     }
 

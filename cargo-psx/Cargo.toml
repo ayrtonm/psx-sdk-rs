@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 elf2psexe = { path = "elf2psexe" }
-#toml = "0.5.7"
+cargo_metadata = "0.12.0"

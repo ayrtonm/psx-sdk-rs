@@ -37,15 +37,15 @@ impl Region {
 
 pub fn main(args: Vec<&str>) {
 
-    if args.len() < 4 {
+    if args.len() < 3 {
         println!("usage: elf2psexe <REGION> <elf-bin> <psx-bin>");
         println!("Valid regions: NA, E or J");
         panic!("Missing argument");
     }
 
-    let region = Region::from_str(&args[1]);
-    let elfpath = &args[2];
-    let psexepath = &args[3];
+    let region = Region::from_str(&args[0]);
+    let elfpath = &args[1];
+    let psexepath = &args[2];
 
     let elf = elf::ElfReader::new(Path::new(elfpath));
 
