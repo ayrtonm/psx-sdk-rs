@@ -90,7 +90,5 @@ catflap4linux to control it.
 
 ## Todo
 
- - Verify that the linker script (previously `psx.ld`, now built into rustc) is
-   actually being used.
- - The build script in libpsx (and possibly the toolchain Makefile) might not
-   work on windows because of the path separators
+ - Update TODO list given the recent overhaul in libpsx
+ - Fix step #6 of the build instructions to avoid cluttering `/usr/local/lib` when updating rustc
