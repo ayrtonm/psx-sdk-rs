@@ -4,7 +4,7 @@ use std::env;
 use std::process::{self, Command, Stdio};
 use cargo_metadata::MetadataCommand;
 
-fn extract_option(args: Vec<String>, key: &str) -> (Option<String>, Vec<String>) {
+fn extract_flag(key: &str, args: Vec<String>) -> (Option<String>, Vec<String>) {
     // Splits arguments at key argument
     let mut temp_iter = args.split(|arg| arg == key);
     // Gets all arguments before key
@@ -24,11 +24,12 @@ fn extract_option(args: Vec<String>, key: &str) -> (Option<String>, Vec<String>)
 fn main() {
     // Skips `cargo psx`
     let args = env::args().skip(2).collect::<Vec<String>>();
-    let (region, mut cargo_args) = extract_option(args, "--region");
+    let (region, mut cargo_args) = extract_flag("--region", args);
     let region = region.unwrap_or("NA".to_string());
-    let skip_build = cargo_args.iter().cloned().filter(|arg| arg == "--skip-build").count() == 1;
+    let skip_key = "--skip-build";
+    let skip_build = cargo_args.iter().cloned().filter(|arg| arg == skip_key).count() == 1;
     if skip_build {
-        cargo_args = cargo_args.split(|arg| arg == "--skip-build").flatten().cloned().collect::<Vec<String>>();
+        cargo_args = cargo_args.split(|arg| arg == skip_key).flatten().cloned().collect::<Vec<String>>();
     }
 
 
