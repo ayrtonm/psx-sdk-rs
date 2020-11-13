@@ -20,12 +20,13 @@ build a MIPS assembler and a linker targetting `mipsel-unknown-elf`.
 
     ```
     cp config.toml.example config.toml
+    sed -i 's/#lld = false/lld = true/' config.toml
     ```
 
 3. Patch the rust compiler:
 
     ```
-    git apply ../rustc_mips1.patch
+    git apply ../rustc_psx.patch
     ```
 
 4. Patch LLVM:
@@ -54,21 +55,10 @@ Building the MIPS toolchain is as simple as running `cd mips_toolchain` then
 only `ld`, `as`, `ar` and `objdump` are copied to the main toolchain directory.
 
 ## Building the demo
-The `app/` directory contains a demo with some nice animation to verify the
-compiler is working as xpected. Passing `-Z build-std=core` to cargo is required
-to compile PlayStation executables, so `app/.cargo/config.toml` sets this by
-default under the alias `cargo b`. The `rustc` option may also need to be
-changed to point to the patched rust compiler if it's not in your `$PATH`.
-
-Note `build-std` requires that the rust source code be present in the same
-directory where it was compiled. If you'd like to avoid `build-std`, another
-option might be to download the [core
-source](https://docs.rs/rust-libcore/0.0.3/core/) and add it as a dependency
-though the kinks are still being worked out with this method.
-
-After compiling with cargo, the executable needs to be converted from ELF to the
-PS-EXE format used on the console using the `elf2psexe` utility or by running
-`app/finish.sh`.
+```
+cd examples/rotating_square
+cargo psx --release
+```
 
 ## Program template
 ```rust

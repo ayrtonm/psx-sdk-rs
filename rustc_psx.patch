@@ -19,20 +19,20 @@ index 00000000000..58c0321448a
 +
 +    Target {
 +        llvm_target: "mipsel-sony-psx".to_string(),
-+        target_endian: "little".to_string(),
 +        pointer_width: 32,
-+        target_c_int_width: "32".to_string(),
 +        data_layout: "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64".to_string(),
 +        arch: "mips".to_string(),
-+        target_os: "none".to_string(),
-+        target_env: "psx".to_string(),
-+        target_vendor: "sony".to_string(),
-+        linker_flavor: LinkerFlavor::Ld,
 +
 +        options: TargetOptions {
++            endian: "little".to_string(),
++            c_int_width: "32".to_string(),
++            os: "none".to_string(),
++            env: "psx".to_string(),
++            vendor: "sony".to_string(),
++            linker_flavor: LinkerFlavor::Lld(LldFlavor::Ld),
 +            cpu: "mips1".to_string(),
 +            executables: true,
-+            linker: Some("ld".to_owned()),
++            linker: Some("rust-lld".to_owned()),
 +            linker_is_gnu: true,
 +            relocation_model: RelocModel::Static,
 +            eliminate_frame_pointer: false,
@@ -64,7 +64,7 @@ new file mode 100644
 index 00000000000..d9e91f9a66b
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/mipsel_sony_psx_linker_script.ld
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,35 @@
 +MEMORY
 +{
 +    /* RAM through the KSEG0 region: 2MB minus 64K reserved for the BIOS */
@@ -97,6 +97,8 @@ index 00000000000..d9e91f9a66b
 +		*(.bss*)
 +		*(COMMON)
 +	} > RAM
++   .MIPS.abiflags : { KEEP(*(.MIPS.abiflags)) } > RAM
++   .reginfo : { KEEP(*(.reginfo)) } > RAM
 +}
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
 index 1d3e61c4992..6c3a5ac0cef 100644

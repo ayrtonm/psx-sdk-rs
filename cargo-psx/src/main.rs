@@ -49,36 +49,37 @@ fn main() {
     // Skips `cargo psx`
     let args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
-        // TODO: print help message with all flags here
         println!("cargo-psx");
         println!("Builds with cargo then repackages the ELF as a PSEXE\n");
         println!("USAGE:");
         println!("  cargo psx [OPTIONS]\n");
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
+        println!("  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)");
         println!("  --region <REGION>    Sets the game region to J, E or NA (default)");
-        println!("  --skip-build         Skips the build and only packages an existing ELF into PSEXE");
-        println!("  --skip-pack          Skips packing and only builds an ELF");
+        println!("  --skip-build         Skips building and only packages an existing ELF into a PSEXE");
+        println!("  --skip-pack          Skips packaging and only builds an ELF");
         println!("\n");
         println!("Run `cargo build -h` for build options");
         return
     };
-    let (region, mut cargo_args) = extract_key_value("--region", args);
-    let region = region.unwrap_or("NA".to_string());
+    let (region, cargo_args) = extract_key_value("--region", args);
+    let (toolchain_name, cargo_args) = extract_key_value("--toolchain", cargo_args);
     let (skip_build, cargo_args) = extract_flag("--skip-build", cargo_args);
     let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
+
+    let region = region.unwrap_or("NA".to_string());
+    let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
         let mut build = Command::new("cargo")
-            .arg("+psx")
+            .arg("+".to_string() + &toolchain_name)
             .arg("build")
             .arg("-Z")
             .arg("build-std=core,alloc")
             .arg("--target")
             .arg(target_triple)
-            // Set the linker in a more sensible way
-            .env("RUSTFLAGS", "-C linker=../../mips_toolchain/ld")
             .args(cargo_args)
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
