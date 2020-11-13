@@ -4,6 +4,7 @@
 // These are not strictly necessary for writing a std library for the PSX, but they simplify things
 #![feature(min_const_generics)]
 #![feature(asm)]
+#![feature(naked_functions)]
 
 pub mod allocator;
 pub mod bios;

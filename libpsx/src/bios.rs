@@ -11,6 +11,7 @@ extern "C" {
 
     fn asm_gpu_gp1_command_word(cmd: u32);
     fn asm_gpu_command_word(cmd: u32);
+    #[inline(never)]
     fn asm_gpu_command_word_params(src: *const u32, num: usize);
     fn asm_gpu_get_status() -> u32;
 }
@@ -57,12 +58,20 @@ pub fn gpu_command_word(cmd: u32) {
     }
 }
 
+#[inline(never)]
 pub fn gpu_command_word_params(src: &[u32]) {
-    unsafe {
-        asm!("j 0xA0
-              li $t1, 0x4A");
-        asm_gpu_command_word_params(src.as_ptr(), src.len());
+    #[naked]
+    #[inline(never)]
+    extern "C" fn f(src: *const u32, num: usize) {
+        unsafe {
+            asm!("li $t1, 0x4A
+                  j 0xA0");
+        }
     }
+    f(src.as_ptr(), src.len());
+    //unsafe {
+    //    asm_gpu_command_word_params(src.as_ptr(), src.len());
+    //}
 }
 
 pub fn gpu_get_status() -> u32 {
