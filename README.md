@@ -88,7 +88,3 @@ fn main() {
 You'll also need a way to run custom "PS-EXE" executables on the
 console, I (simias) use an Xplorer-FX flashed with caetla 0.34 and the
 catflap4linux to control it.
-
-## Todo
-
- - Update TODO list given the recent overhaul

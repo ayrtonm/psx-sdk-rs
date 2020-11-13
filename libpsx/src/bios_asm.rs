@@ -1,3 +1,4 @@
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_malloc(size: usize) -> *mut u8 {
@@ -9,6 +10,7 @@ pub extern "C" fn asm_malloc(size: usize) -> *mut u8 {
     }
     ret
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_free(buf: *mut u8) {
@@ -18,6 +20,7 @@ pub extern "C" fn asm_free(buf: *mut u8) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_calloc(sizex: usize, sizey: usize) -> *const u8 {
@@ -29,6 +32,7 @@ pub extern "C" fn asm_calloc(sizex: usize, sizey: usize) -> *const u8 {
     }
     ret
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_realloc(old_buf: *const u8, new_size: usize) {
@@ -38,6 +42,7 @@ pub extern "C" fn asm_realloc(old_buf: *const u8, new_size: usize) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_init_heap(addr: usize, size: usize) {
@@ -47,6 +52,7 @@ pub extern "C" fn asm_init_heap(addr: usize, size: usize) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_printf(s: *const u8, v: u32) {
@@ -56,6 +62,7 @@ pub extern "C" fn asm_printf(s: *const u8, v: u32) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
@@ -65,6 +72,7 @@ pub extern "C" fn asm_gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, 
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_gpu_gp1_command_word(cmd: u32) {
@@ -74,6 +82,7 @@ pub extern "C" fn asm_gpu_gp1_command_word(cmd: u32) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_gpu_command_word(cmd: u32) {
@@ -83,6 +92,7 @@ pub extern "C" fn asm_gpu_command_word(cmd: u32) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_gpu_command_word_params(src: *const u32, num: usize) {
@@ -92,6 +102,7 @@ pub extern "C" fn asm_gpu_command_word_params(src: *const u32, num: usize) {
                lateout("$2") _);
     }
 }
+#[allow(unused_variables)]
 #[naked]
 #[inline(never)]
 pub extern "C" fn asm_gpu_get_status() -> u32 {

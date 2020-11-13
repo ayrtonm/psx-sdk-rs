@@ -8,15 +8,13 @@
 
 pub mod allocator;
 pub mod bios;
-mod context;
+pub mod registers;
 pub mod gpu;
 mod macros;
 mod bios_asm;
 
 use core::intrinsics::volatile_load;
 use core::panic::PanicInfo;
-
-pub use context::IOCX;
 
 pub fn delay(n: u32) {
     for _ in 0..n {
@@ -29,10 +27,43 @@ pub fn delay(n: u32) {
 #[macro_export]
 macro_rules! exe {
     () => {
+        use crate::executable::Ctxt;
         mod executable {
+            use libpsx::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
+            pub struct Ctxt {
+                draw_env: Option<DrawEnv>,
+                display_env: Option<DisplayEnv>,
+                gpu_read: Option<GpuRead>,
+                gpu_stat: Option<GpuStat>,
+            }
+
+            impl Ctxt {
+                pub fn take_draw_env(&mut self) -> Option<DrawEnv> {
+                    self.draw_env.take()
+                }
+
+                pub fn take_display_env(&mut self) -> Option<DisplayEnv> {
+                    self.display_env.take()
+                }
+
+                pub fn replace_draw_env(&mut self, draw_env: Option<DrawEnv>) {
+                    self.draw_env = draw_env;
+                }
+
+                pub fn replace_display_env(&mut self, display_env: Option<DisplayEnv>) {
+                    self.display_env = display_env;
+                }
+            }
+
+            const ctxt: Ctxt = Ctxt {
+                draw_env: Some(DrawEnv),
+                display_env: Some(DisplayEnv),
+                gpu_read: Some(GpuRead),
+                gpu_stat: Some(GpuStat),
+            };
             #[no_mangle]
             fn main() {
-                super::main()
+                super::main(ctxt)
             }
         }
     };

@@ -3,7 +3,6 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use libpsx::IOCX;
 use libpsx::gpu::vertex::Vertex;
 use libpsx::gpu::color::Color;
 use libpsx::gpu::framebuffer::Framebuffer;
@@ -11,15 +10,13 @@ use libpsx::gpu::res::{Hres, Vres};
 
 libpsx::exe!();
 
-fn main() {
+fn main(mut ctxt: Ctxt) {
+    // This will give an error since there should only be one instance of IOCtxt
+    //let fake_ctxt = crate::executable::IOCX;
     let mut theta = 0.0;
     let delta = 0.0625;
-    let draw_env = unsafe {
-        &RefCell::new(IOCX.take_draw_env().unwrap())
-    };
-    let display_env = unsafe {
-        &RefCell::new(IOCX.take_display_env().unwrap())
-    };
+    let draw_env = &RefCell::new(ctxt.take_draw_env().unwrap());
+    let display_env = &RefCell::new(ctxt.take_display_env().unwrap());
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);

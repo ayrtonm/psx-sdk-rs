@@ -7,4 +7,4 @@ pub mod res;
 pub mod vertex;
 pub mod vram;
 
-pub use super::context::gpu::*;
+pub use super::registers::gpu::*;

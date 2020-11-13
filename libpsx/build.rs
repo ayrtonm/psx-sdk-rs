@@ -6,6 +6,7 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     let j_stmt = &format!("j 0x{}0", &fn_desc[0..1]);
     let returns = fn_sig.contains("->");
     let mut ret = String::new();
+    ret.push_str("#[allow(unused_variables)]\n");
     ret.push_str("#[naked]\n");
     ret.push_str("#[inline(never)]\n");
     ret.push_str("pub extern \"C\" fn asm_"); ret.push_str(fn_sig); ret.push_str(" {\n");
@@ -47,5 +48,5 @@ fn main() {
     ];
     let src_file = "src/bios_asm.rs";
     let src = bios_functions.iter().fold(String::new(), |s, f| s + &mk_bios_fn(f));
-    fs::write(src_file, src);
+    fs::write(src_file, src).unwrap();
 }
