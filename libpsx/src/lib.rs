@@ -3,6 +3,7 @@
 #![feature(alloc_error_handler)]
 // These are not strictly necessary for writing a std library for the PSX, but they simplify things
 #![feature(min_const_generics)]
+#![feature(asm)]
 
 pub mod allocator;
 pub mod bios;

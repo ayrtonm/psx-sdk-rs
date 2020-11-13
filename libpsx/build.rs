@@ -50,7 +50,7 @@ fn main() {
     let ar_bin = &format!("{}/ar", mips_dir);
     fs::write(src_file, create_bios_src()).expect("Unable to write to file");
     Command::new(as_bin)
-        .args(&["-O2", "-o", obj_file, src_file])
+        .args(&["-O2", "-msoft-float", "-mabi=32", "-o", obj_file, src_file])
         .status()
         .unwrap();
     Command::new(ar_bin)

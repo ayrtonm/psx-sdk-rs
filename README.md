@@ -16,11 +16,12 @@ build a MIPS assembler and a linker targetting `mipsel-unknown-elf`.
     cd rust
     ```
 
-2. Configure the build settings:
+2. Configure the build script to use `rust-lld` and (optionally) incremental compilation:
 
     ```
     cp config.toml.example config.toml
     sed -i 's/#lld = false/lld = true/' config.toml
+    sed -i 's/#incremental = false/incremental = true/' config.toml
     ```
 
 3. Patch the rust compiler:

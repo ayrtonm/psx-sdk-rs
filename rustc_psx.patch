@@ -97,8 +97,11 @@ index 00000000000..d9e91f9a66b
 +		*(.bss*)
 +		*(COMMON)
 +	} > RAM
-+   .MIPS.abiflags : { KEEP(*(.MIPS.abiflags)) } > RAM
-+   .reginfo : { KEEP(*(.reginfo)) } > RAM
++   /DISCARD/ :
++   {
++       *(.MIPS.abiflags)
++       *(.reginfo)
++   }
 +}
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
 index 1d3e61c4992..6c3a5ac0cef 100644
