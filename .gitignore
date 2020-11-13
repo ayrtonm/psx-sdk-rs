@@ -13,3 +13,4 @@ mips_toolchain/*
 rust/
 psxdev/*
 */*.s
+*.s

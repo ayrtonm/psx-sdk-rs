@@ -4,8 +4,7 @@ This is a basic SDK to run custom Rust code on a Playstation 1. You'll need to
 build the rust compiler from source with a patched version of LLVM. Building the
 compiler and LLVM is computationally expensive, so it may take quite a bit of
 time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
-for building the rust compiler and LLVM for more specifics. You'll also need to
-build a MIPS assembler and a linker targetting `mipsel-unknown-elf`.
+for building the rust compiler and LLVM for more specifics.
 
 ## Building the compiler
 
@@ -45,23 +44,35 @@ build a MIPS assembler and a linker targetting `mipsel-unknown-elf`.
     ./x.py build --stage 1 compiler/rustc
     ```
 
-6. Install a new toolchain with the compiler:
+6. Create a new toolchain with the patched compiler:
 
     ```
     rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1
     ```
 
-Building the MIPS toolchain is as simple as running `cd mips_toolchain` then
-`make`. By default the Makefile builds all the usual binutils binaries, although
-only `ld`, `as`, `ar` and `objdump` are copied to the main toolchain directory.
+    where `psx` is the name for the new toolchain.
 
+## Installing cargo-psx
+
+```
+cd cargo-psx
+cargo install --path .
+```
+    
 ## Building the demo
+
 ```
 cd examples/rotating_square
 cargo psx --release
 ```
 
+This defaults to building an ELF using a toolchain named `psx` and repackaging
+it into a PSEXE with region `NA`. Note that building without `--release` (in
+debug mode) is possible, but will probably be unusable slow. See `cargo psx -h`
+for more options.
+
 ## Program template
+
 ```rust
 #![no_std]
 #![no_main]
@@ -72,7 +83,7 @@ fn main() {
 }
 ```
 
-## Running executables on hardware
+## Optionally running executables on hardware
 
 You'll also need a way to run custom "PS-EXE" executables on the
 console, I (simias) use an Xplorer-FX flashed with caetla 0.34 and the
@@ -80,5 +91,4 @@ catflap4linux to control it.
 
 ## Todo
 
- - Update TODO list given the recent overhaul in libpsx
- - Figure out how to compile and use rust-lld
+ - Update TODO list given the recent overhaul
