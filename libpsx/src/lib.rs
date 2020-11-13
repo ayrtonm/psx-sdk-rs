@@ -11,6 +11,7 @@ pub mod bios;
 mod context;
 pub mod gpu;
 mod macros;
+mod bios_asm;
 
 use core::intrinsics::volatile_load;
 use core::panic::PanicInfo;

@@ -1,62 +1,51 @@
-use std::env;
 use std::fs;
-use std::process::Command;
 
-fn wrap_bios_function(fn_desc: &str) -> String {
-    let name = &fn_desc[7..];
-    let header = format!(".section .text.asm_{0}\n\
-                          .global asm_{0}\n\
-                          .type asm_{0}, function\n\
-                          \n\
-                          asm_{0}:\n", name);
-    let fn_call = format!("j 0x{}0\n", &fn_desc[0..1]);
-    let specify_fn = format!("li $t1, 0x{}\n", &fn_desc[2..4]);
-    format!("{}{}{}\n", header, fn_call, specify_fn)
+fn mk_bios_fn(fn_desc: &str) -> String {
+    let fn_sig = &fn_desc[7..fn_desc.len() - 1];
+    let li_stmt = &format!("li $9, 0x{}", &fn_desc[2..4]);
+    let j_stmt = &format!("j 0x{}0", &fn_desc[0..1]);
+    let returns = fn_sig.contains("->");
+    let mut ret = String::new();
+    ret.push_str("#[naked]\n");
+    ret.push_str("#[inline(never)]\n");
+    ret.push_str("pub extern \"C\" fn asm_"); ret.push_str(fn_sig); ret.push_str(" {\n");
+    if returns {
+        let ret_ty = fn_sig.split("->").skip(1).next().unwrap();
+        ret.push_str("    let ret:");
+        ret.push_str(ret_ty);
+        ret.push_str(";\n");
+    }
+    ret.push_str("    unsafe {\n");
+    ret.push_str("        asm!(\""); ret.push_str(li_stmt); ret.push_str("\n");
+    ret.push_str("              ");  ret.push_str(j_stmt);  ret.push_str("\",\n");
+    ret.push_str("               lateout(\"$2\") ");
+    if returns {
+        ret.push_str("ret);\n");
+    } else {
+        ret.push_str("_);\n");
+    }
+    ret.push_str("    }\n");
+    if returns {
+        ret.push_str("    ret\n");
+    }
+    ret.push_str("}\n");
+    ret
 }
-
-fn create_bios_src() -> String {
-    let src_header = ".set mips1\n\
-                      .set noreorder\n\
-                      .set noat\n\
-                      .set nomacro\n\
-                      .text\n";
-    let bios_functions = [
-        "A(33h) malloc",
-        "A(34h) free",
-        "A(37h) calloc",
-        "A(38h) realloc",
-        "A(39h) init_heap",
-        "A(3Fh) printf",
-        "A(47h) gpu_send_dma",
-        "A(48h) gpu_gp1_command_word",
-        "A(49h) gpu_command_word",
-        "A(4Ah) gpu_command_word_params",
-        "A(4Dh) gpu_get_status",
-    ];
-    let src_body: String = bios_functions.iter()
-                                         .map(|f| wrap_bios_function(f))
-                                         .collect();
-    format!("{}\n{}", src_header, src_body)
-}
-
 fn main() {
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let mips_dir = "../mips_toolchain";
-    let lib_name = "bios";
-    let src_file = &format!("src/{}.s", lib_name);
-    let obj_file = &format!("{}/{}.o", out_dir, lib_name);
-    let ar_file = &format!("{}/lib{}.a", out_dir, lib_name);
-    let as_bin = &format!("{}/as", mips_dir);
-    let ar_bin = &format!("{}/ar", mips_dir);
-    fs::write(src_file, create_bios_src()).expect("Unable to write to file");
-    Command::new(as_bin)
-        .args(&["-O2", "-msoft-float", "-mabi=32", "-o", obj_file, src_file])
-        .status()
-        .unwrap();
-    Command::new(ar_bin)
-        .args(&["rcs", ar_file, obj_file])
-        .status()
-        .unwrap();
-    println!("cargo:rustc-link-lib=static={}", lib_name);
-    println!("cargo:rustc-link-search={}", out_dir);
+    let bios_functions = [
+        "A(33h) malloc(size: usize) -> *mut u8;",
+        "A(34h) free(buf: *mut u8);",
+        "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
+        "A(38h) realloc(old_buf: *const u8, new_size: usize);",
+        "A(39h) init_heap(addr: usize, size: usize);",
+        "A(3Fh) printf(s: *const u8, v: u32);",
+        "A(47h) gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32);",
+        "A(48h) gpu_gp1_command_word(cmd: u32);",
+        "A(49h) gpu_command_word(cmd: u32);",
+        "A(4Ah) gpu_command_word_params(src: *const u32, num: usize);",
+        "A(4Dh) gpu_get_status() -> u32;",
+    ];
+    let src_file = "src/bios_asm.rs";
+    let src = bios_functions.iter().fold(String::new(), |s, f| s + &mk_bios_fn(f));
+    fs::write(src_file, src);
 }

@@ -12,3 +12,4 @@ Cargo.lock
 mips_toolchain/*
 rust/
 psxdev/*
+*/*.s
