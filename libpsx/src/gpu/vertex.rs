@@ -32,19 +32,29 @@ impl Vertex {
     pub const fn zero() -> Self {
         Vertex::new(0, 0)
     }
+
     pub fn shift(&self, x: Component, y: Component) -> Self {
         Vertex::new(self.x() + x, self.y() + y)
     }
+
     pub fn copy(&self) -> Self {
         Vertex::new(self.x(), self.y())
     }
+
     // TODO: Change definition of `Polygon` to make this more consistent
     pub fn rect(center: &Vertex, width: Component, height: Component) -> [Vertex; 4] {
         let hw = width >> 1;
         let hh = height >> 1;
-        [center.shift(-hw, -hh), center.shift(-hw, hh), center.shift(hw, -hh), center.shift(hw, hh)]
-        //[offset.copy(), offset.shift(width, 0), offset.shift(0, height), offset.shift(width, height)]
+        [
+            center.shift(-hw, -hh),
+            center.shift(-hw, hh),
+            center.shift(hw, -hh),
+            center.shift(hw, hh),
+        ]
+        //[offset.copy(), offset.shift(width, 0), offset.shift(0, height),
+        //[offset.copy(), offset.shift(width, height)]
     }
+
     // TODO: see `Vertex::rect`
     pub fn square(center: &Vertex, length: Component) -> [Vertex; 4] {
         Vertex::rect(center, length, length)

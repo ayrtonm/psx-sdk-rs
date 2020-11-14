@@ -12,13 +12,15 @@ impl BiosAllocator {
 
 // TODO: Make this impl interrupt-free as seen here
 // https://docs.rust-embedded.org/book/collections/
-// This'll probably require some small bits of assembly and glue to modify interrupts
+// This'll probably require some small bits of assembly and glue to modify
+// interrupts
 unsafe impl GlobalAlloc for BiosAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let ptr = bios::malloc(layout.size());
         // TODO: test `ptr` for errors
         ptr
     }
+
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
         bios::free(ptr)
     }
@@ -28,4 +30,6 @@ unsafe impl GlobalAlloc for BiosAllocator {
 pub static HEAP: BiosAllocator = BiosAllocator;
 
 #[alloc_error_handler]
-fn on_oom(_layout: Layout) -> ! { loop { } }
+fn on_oom(_layout: Layout) -> ! {
+    loop {}
+}

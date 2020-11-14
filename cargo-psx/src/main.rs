@@ -57,7 +57,9 @@ fn main() {
         println!("  --help, -h           Prints help information");
         println!("  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)");
         println!("  --region <REGION>    Sets the game region to J, E or NA (default)");
-        println!("  --skip-build         Skips building and only packages an existing ELF into a PSEXE");
+        println!(
+            "  --skip-build         Skips building and only packages an existing ELF into a PSEXE"
+        );
         println!("  --skip-pack          Skips packaging and only builds an ELF");
         println!("\n");
         println!("Run `cargo build -h` for build options");

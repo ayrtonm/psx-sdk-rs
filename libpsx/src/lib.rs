@@ -8,9 +8,9 @@
 
 pub mod allocator;
 pub mod bios;
-pub mod registers;
 pub mod gpu;
 mod macros;
+pub mod registers;
 
 use core::intrinsics::volatile_load;
 use core::panic::PanicInfo;
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
         let a = *s1.offset(i as isize);
         let b = *s2.offset(i as isize);
         if a != b {
-            return a as i32 - b as i32;
+            return a as i32 - b as i32
         }
         i += 1;
     }

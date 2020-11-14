@@ -11,7 +11,7 @@ use libpsx::gpu::res::{Hres, Vres};
 libpsx::exe!();
 
 fn main(mut ctxt: Ctxt) {
-    // This will give an error since there should only be one instance of IOCtxt
+    // This will give an error since there should only be one instance of Ctxt
     //let fake_ctxt = crate::executable::ctxt;
     let mut theta = 0.0;
     let delta = 0.0625;

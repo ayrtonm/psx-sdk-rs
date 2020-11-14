@@ -6,8 +6,8 @@ pub mod gpu {
     wo_register!(DisplayEnv, 0x1F80_1814);
 }
 
-// This `Pickup` trait was an interesting, but bad idea. I'll leave here in case I think of a
-// sensible way to implement it.
+// This `Pickup` trait was an interesting, but bad idea. I'll leave here in case
+// I think of a sensible way to implement it.
 //pub trait Pickup {
 //    fn pickup(&mut self);
 //}
