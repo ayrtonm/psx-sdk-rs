@@ -12,16 +12,16 @@ libpsx::exe!();
 
 fn main(mut ctxt: Ctxt) {
     // This will give an error since there should only be one instance of IOCtxt
-    //let fake_ctxt = crate::executable::IOCX;
+    //let fake_ctxt = crate::executable::ctxt;
     let mut theta = 0.0;
     let delta = 0.0625;
-    let draw_env = &RefCell::new(ctxt.take_draw_env().unwrap());
-    let display_env = &RefCell::new(ctxt.take_display_env().unwrap());
+    let draw_env = RefCell::new(ctxt.take_draw_env().unwrap());
+    let display_env = RefCell::new(ctxt.take_display_env().unwrap());
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);
     display_env.borrow_mut().reset_gpu();
-    let mut fb = Framebuffer::new(draw_env, display_env, buf0, buf1, res);
+    let mut fb = Framebuffer::new(&draw_env, &display_env, buf0, buf1, res);
     loop {
         theta += delta;
         while theta > 360.0 {

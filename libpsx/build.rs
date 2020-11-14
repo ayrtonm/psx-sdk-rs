@@ -9,7 +9,7 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     ret.push_str("#[allow(unused_variables)]\n");
     ret.push_str("#[naked]\n");
     ret.push_str("#[inline(never)]\n");
-    ret.push_str("pub extern \"C\" fn asm_"); ret.push_str(fn_sig); ret.push_str(" {\n");
+    ret.push_str("pub extern \"C\" fn "); ret.push_str(fn_sig); ret.push_str(" {\n");
     if returns {
         let ret_ty = fn_sig.split("->").skip(1).next().unwrap();
         ret.push_str("    let ret:");
@@ -46,7 +46,7 @@ fn main() {
         "A(4Ah) gpu_command_word_params(src: *const u32, num: usize);",
         "A(4Dh) gpu_get_status() -> u32;",
     ];
-    let src_file = "src/bios_asm.rs";
+    let src_file = "src/bios.rs";
     let src = bios_functions.iter().fold(String::new(), |s, f| s + &mk_bios_fn(f));
     fs::write(src_file, src).unwrap();
 }

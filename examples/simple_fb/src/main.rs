@@ -3,7 +3,7 @@
 
 use core::cell::RefCell;
 
-use libpsx::{IOCX, delay};
+use libpsx::delay;
 use libpsx::gpu::vertex::Vertex;
 use libpsx::gpu::color::Color;
 use libpsx::gpu::res::{Hres, Vres};
@@ -11,13 +11,9 @@ use libpsx::gpu::framebuffer::Framebuffer;
 
 libpsx::exe!();
 
-fn main() {
-    let draw_env = unsafe {
-        RefCell::new(IOCX.take_draw_env().unwrap())
-    };
-    let display_env = unsafe {
-        RefCell::new(IOCX.take_display_env().unwrap())
-    };
+fn main(mut ctxt: Ctxt) {
+    let draw_env = RefCell::new(ctxt.take_draw_env().unwrap());
+    let display_env = RefCell::new(ctxt.take_display_env().unwrap());
     let res = (Hres::H320, Vres::V240);
     let buf0 = (0, 0);
     let buf1 = (0, 240);

@@ -1,45 +1,116 @@
-use crate::bios_asm::*;
-
-pub fn malloc(size: usize) -> *mut u8 {
-    asm_malloc(size)
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn malloc(size: usize) -> *mut u8 {
+    let ret: *mut u8;
+    unsafe {
+        asm!("li $9, 0x33
+              j 0xA0",
+               lateout("$2") ret);
+    }
+    ret
 }
-
-pub fn free(buf: *mut u8) {
-    asm_free(buf)
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn free(buf: *mut u8) {
+    unsafe {
+        asm!("li $9, 0x34
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn calloc(sizex: usize, sizey: usize) -> *const u8 {
-    asm_calloc(sizex, sizey)
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn calloc(sizex: usize, sizey: usize) -> *const u8 {
+    let ret: *const u8;
+    unsafe {
+        asm!("li $9, 0x37
+              j 0xA0",
+               lateout("$2") ret);
+    }
+    ret
 }
-
-pub fn realloc(old_buf: *const u8, new_size: usize) {
-    asm_realloc(old_buf, new_size)
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn realloc(old_buf: *const u8, new_size: usize) {
+    unsafe {
+        asm!("li $9, 0x38
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn init_heap(addr: usize, size: usize) {
-    asm_init_heap(addr, size)
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn init_heap(addr: usize, size: usize) {
+    unsafe {
+        asm!("li $9, 0x39
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn printf(c: *const u8, v: u32) {
-    asm_printf(c, v);
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn printf(s: *const u8, v: u32) {
+    unsafe {
+        asm!("li $9, 0x3F
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
-    asm_gpu_send_dma(xdst, ydst, xsiz, ysize, src)
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
+    unsafe {
+        asm!("li $9, 0x47
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn gpu_gp1_command_word(cmd: u32) {
-    asm_gpu_gp1_command_word(cmd);
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn gpu_gp1_command_word(cmd: u32) {
+    unsafe {
+        asm!("li $9, 0x48
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn gpu_command_word(cmd: u32) {
-    asm_gpu_command_word(cmd);
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn gpu_command_word(cmd: u32) {
+    unsafe {
+        asm!("li $9, 0x49
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn gpu_command_word_params(src: &[u32]) {
-    asm_gpu_command_word_params(src.as_ptr(), src.len());
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn gpu_command_word_params(src: *const u32, num: usize) {
+    unsafe {
+        asm!("li $9, 0x4A
+              j 0xA0",
+               lateout("$2") _);
+    }
 }
-
-pub fn gpu_get_status() -> u32 {
-    asm_gpu_get_status()
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn gpu_get_status() -> u32 {
+    let ret: u32;
+    unsafe {
+        asm!("li $9, 0x4D
+              j 0xA0",
+               lateout("$2") ret);
+    }
+    ret
 }

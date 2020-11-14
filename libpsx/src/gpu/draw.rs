@@ -32,16 +32,17 @@ impl DrawEnv {
     }
 
     pub fn draw_shaded_quad(&mut self, p: Polygon<4>, c: Palette<4>) {
-        let ar = [u32::from(&c[0]) | 0x38 << 24,
-                  (&p[0]).into(),
-                  (&c[1]).into(),
-                  (&p[1]).into(),
-                  (&c[2]).into(),
-                  (&p[2]).into(),
-                  (&c[3]).into(),
-                  (&p[3]).into()];
-            crate::bios::gpu_command_word_params(&ar);
-        //self.draw_shaded::<0x38>(&mut c.iter().zip(p.iter()));
+        //let ar = [u32::from(&c[0]) | 0x38 << 24,
+        //          (&p[0]).into(),
+        //          (&c[1]).into(),
+        //          (&p[1]).into(),
+        //          (&c[2]).into(),
+        //          (&p[2]).into(),
+        //          (&c[3]).into(),
+        //          (&p[3]).into()];
+        //    let ar = &ar;
+        //    crate::bios::gpu_command_word_params(ar.as_ptr(), ar.len());
+        self.draw_shaded::<0x38>(&mut c.iter().zip(p.iter()));
     }
 
     pub fn draw_shaded_quad_transparent(&mut self, p: Polygon<4>, c: Palette<4>) {
