@@ -79,9 +79,11 @@ for more options.
 
 libpsx::exe!();
 
-fn main() {
+fn main(mut ctxt: Ctxt) {
 }
 ```
+
+Note the modified `main` interface. See `examples` for more details.
 
 ## Optionally running executables on hardware
 
