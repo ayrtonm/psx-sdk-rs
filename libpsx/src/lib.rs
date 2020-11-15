@@ -28,6 +28,7 @@ pub fn delay(n: u32) {
 #[macro_export]
 macro_rules! exe {
     () => {
+        #[cfg(not(doc))]
         use crate::executable::Ctxt;
         pub mod executable {
             #[cfg(not(doc))]
@@ -66,8 +67,10 @@ macro_rules! exe {
                 gpu_read: Some(GpuRead),
                 gpu_stat: Some(GpuStat),
             };
+            //TODO: remove link_section (or change to .text) for regular .psexe's
             #[cfg(not(doc))]
             #[no_mangle]
+            //#[link_section = ".comment"]
             fn main() {
                 super::main(ctxt)
             }
@@ -138,4 +141,6 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
 }
 
 #[cfg(doc)]
-exe!();
+mod docs;
+#[cfg(doc)]
+pub use crate::docs::executable::{Ctxt, main};
