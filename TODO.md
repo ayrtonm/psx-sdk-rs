@@ -35,6 +35,9 @@ everything...). Very roughly in order of priority.
 - [ ] Add MDEC support
 - [ ] Add memory card support
 - [ ] Add CDROM/ISO support
+    - [ ] via kernel
+        - [ ] fix `load_exe` demo
+    - [ ] via IO registers
 
 ## cargo-psx
 

@@ -91,6 +91,10 @@ impl DrawEnv {
         self.write((h as u32) << 16 | (w as u32));
     }
 
+    pub fn draw_square(&mut self, offset: Point, l: Length, c: &Color) {
+        self.draw_rect(offset, l, l, c)
+    }
+
     fn draw<const CMD: u32>(&mut self, l: PolyLine, c: &Color) {
         self.write((CMD << 24) | u32::from(c));
         for v in l {

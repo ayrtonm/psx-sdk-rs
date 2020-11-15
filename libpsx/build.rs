@@ -46,6 +46,14 @@ fn main() {
         "A(49h) gpu_command_word(cmd: u32);",
         "A(4Ah) gpu_command_word_params(src: *const u32, num: usize);",
         "A(4Dh) gpu_get_status() -> u32;",
+
+        "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
+
+        "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
+        "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",
+        "A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);",
+        "A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);",
+        "A(44h) flush_cache();",
     ];
     let src_file = "src/bios.rs";
     let src = bios_functions.iter().fold(String::new(), |s, f| s + &mk_bios_fn(f));
