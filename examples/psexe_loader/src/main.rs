@@ -2,11 +2,15 @@
 #![no_main]
 #![feature(core_intrinsics, asm)]
 
+mod huffman_code;
+use huffman_code::{CODES, SYMBOLS};
+
 libpsx::exe!();
 
-#[link_section = ".comment"]
+#[link_section = ".exe_loader"]
 fn main(mut _ctxt: Ctxt) {
-    let bytes = include_bytes!("../rotating_square.psexe");
+    //let bytes = include_bytes!("../rotating_square.psexe");
+    let bytes = &load_game();
     fn read_word(ar: &[u8]) -> u32 {
         ar[0] as u32 | (ar[1] as u32) << 8 | (ar[2] as u32) << 16 | (ar[3] as u32) << 24
     }
@@ -30,4 +34,29 @@ fn main(mut _ctxt: Ctxt) {
               lui $3, 0x8001
               jr $3");
     }
+}
+
+#[link_section = ".exe_loader"]
+fn load_game() -> [u8; 14336] {
+    let compressed_exe = include_bytes!("../rotating_square.psexe.hzip");
+    let mut exe = [0; 14336];
+    let mut i = 0;
+    let mut possible_code_len = 0;
+    let mut possible_code;
+    for w in compressed_exe.chunks(2) {
+        let mut stream = (w[0] as u32) | (w[1] as u32) << 8;
+        while stream != 0 {
+            stream <<= 1;
+            possible_code_len += 1;
+            possible_code = (stream >> 16) as u16 | (1 << possible_code_len);
+            CODES.iter().position(|&code| code == possible_code).map(|idx| {
+                let symbol = SYMBOLS[idx];
+                exe[i] = symbol;
+                i += 1;
+                possible_code_len = 0;
+                stream &= 0x0000_ffff;
+            });
+        }
+    }
+    exe
 }

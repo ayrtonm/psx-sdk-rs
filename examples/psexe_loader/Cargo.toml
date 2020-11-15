@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 libpsx = { path = "../../libpsx" }
+#decompress = { path = "decompress" }
