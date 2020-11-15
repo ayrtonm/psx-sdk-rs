@@ -5,7 +5,6 @@
 #![feature(min_const_generics)]
 #![feature(asm)]
 #![feature(naked_functions)]
-
 #![feature(doc_cfg)]
 
 pub mod allocator;
@@ -31,10 +30,10 @@ macro_rules! exe {
         #[cfg(not(doc))]
         use crate::executable::Ctxt;
         pub mod executable {
+            #[cfg(doc)]
+            use crate::registers::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
             #[cfg(not(doc))]
             use libpsx::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
-            #[cfg(doc)]
-            use crate::registers::gpu::{DrawEnv, DisplayEnv, GpuStat, GpuRead};
             pub struct Ctxt {
                 draw_env: Option<DrawEnv>,
                 display_env: Option<DisplayEnv>,
@@ -75,8 +74,7 @@ macro_rules! exe {
                 super::main(ctxt)
             }
             #[cfg(doc)]
-            pub fn main(mut ctxt: Ctxt) {
-            }
+            pub fn main(mut ctxt: Ctxt) {}
         }
     };
 }
@@ -143,4 +141,4 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
 #[cfg(doc)]
 mod docs;
 #[cfg(doc)]
-pub use crate::docs::executable::{Ctxt, main};
+pub use crate::docs::executable::{main, Ctxt};

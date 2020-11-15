@@ -26,7 +26,7 @@ impl PsxWriter {
         }
     }
 
-    pub fn dump(mut self, entry: u32, mut sections: Vec<Section>) {
+    pub fn dump(mut self, entry: u32, mut sections: Vec<Section>, no_pad: bool) {
         // Magic
         self.write(b"PS-X EXE");
 
@@ -75,7 +75,11 @@ impl PsxWriter {
                 _ => panic!("No progbits section found!"),
             };
 
-        let object_size = (((end_addr - base) as f32) / 0x800 as f32).ceil() as u32 * 0x800;
+        let object_size = if no_pad {
+            end_addr - base
+        } else {
+            (((end_addr - base) as f32) / 0x800 as f32).ceil() as u32 * 0x800
+        };
         // Arbitrarily refuse object files greater than 1MB. The PSX
         // only has 2MB of RAM, most executables are a few hundred KBs
         // at most.
@@ -178,8 +182,10 @@ impl PsxWriter {
         }
         //TODO: handle case where `cur_size` is a multiple of 0x800
         let cur_size = self.psexe.metadata().expect("Could not get the new PSEXE's metadata").len();
-        let padded_size = (((cur_size as f32) / (0x800 as f32)).ceil() as u64) * 0x800;
-        self.psexe.set_len(padded_size).expect("Unable to pad the new PSEXE");
+        if !no_pad {
+            let padded_size = (((cur_size as f32) / (0x800 as f32)).ceil() as u64) * 0x800;
+            self.psexe.set_len(padded_size).expect("Unable to pad the new PSEXE");
+        };
     }
 
     fn write(&mut self, v: &[u8]) {

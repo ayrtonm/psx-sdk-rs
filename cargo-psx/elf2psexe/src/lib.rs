@@ -35,7 +35,7 @@ impl Region {
     }
 }
 
-pub fn main(args: Vec<&str>) {
+pub fn main(args: Vec<&str>, no_pad: bool) {
 
     if args.len() < 3 {
         println!("usage: elf2psexe <REGION> <elf-bin> <psx-bin>");
@@ -54,5 +54,5 @@ pub fn main(args: Vec<&str>) {
 
     let psexe = psexe::PsxWriter::new(Path::new(psexepath), region);
 
-    psexe.dump(entry, sections);
+    psexe.dump(entry, sections, no_pad);
 }

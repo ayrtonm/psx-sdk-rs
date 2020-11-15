@@ -4,9 +4,10 @@ impl DrawEnv {
     fn generic_cmd<const CMD: u32, const XMASK: u32, const YMASK: u32, const SHIFT: u32>(
         &mut self, mut x: u32, mut y: u32,
     ) {
-        //TODO: make this a compile-time config
-        x &= (1 << XMASK) - 1;
-        y &= (1 << YMASK) - 1;
+        if cfg!(debug_assertions) {
+            x &= (1 << XMASK) - 1;
+            y &= (1 << YMASK) - 1;
+        }
         self.write((CMD << 24) | x | (y << SHIFT));
     }
 

@@ -73,6 +73,7 @@ fn main() {
     let (toolchain_name, cargo_args) = extract_key_value("--toolchain", cargo_args);
     let (skip_build, cargo_args) = extract_flag("--skip-build", cargo_args);
     let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
+    let (no_pad, cargo_args) = extract_flag("--no-pad", cargo_args);
 
     let region = region.unwrap_or("NA".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
@@ -120,7 +121,7 @@ fn main() {
                         .to_string();
                     let psexe = &format!("{}{}", &target.name, ".psexe");
                     let convert_args = vec![region.as_str(), elf, psexe];
-                    elf2psexe::main(convert_args);
+                    elf2psexe::main(convert_args, no_pad);
                 }
             }
         }
