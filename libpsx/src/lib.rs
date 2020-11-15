@@ -6,6 +6,8 @@
 #![feature(asm)]
 #![feature(naked_functions)]
 
+#![feature(doc_cfg)]
+
 pub mod allocator;
 pub mod bios;
 pub mod gpu;
@@ -27,8 +29,11 @@ pub fn delay(n: u32) {
 macro_rules! exe {
     () => {
         use crate::executable::Ctxt;
-        mod executable {
+        pub mod executable {
+            #[cfg(not(doc))]
             use libpsx::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
+            #[cfg(doc)]
+            use crate::registers::gpu::{DrawEnv, DisplayEnv, GpuStat, GpuRead};
             pub struct Ctxt {
                 draw_env: Option<DrawEnv>,
                 display_env: Option<DisplayEnv>,
@@ -54,15 +59,20 @@ macro_rules! exe {
                 }
             }
 
+            #[cfg(not(doc))]
             const ctxt: Ctxt = Ctxt {
                 draw_env: Some(DrawEnv),
                 display_env: Some(DisplayEnv),
                 gpu_read: Some(GpuRead),
                 gpu_stat: Some(GpuStat),
             };
+            #[cfg(not(doc))]
             #[no_mangle]
             fn main() {
                 super::main(ctxt)
+            }
+            #[cfg(doc)]
+            pub fn main(mut ctxt: Ctxt) {
             }
         }
     };
@@ -126,3 +136,6 @@ pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
     }
     0
 }
+
+#[cfg(doc)]
+exe!();
