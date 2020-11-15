@@ -70,7 +70,7 @@ macro_rules! exe {
             //TODO: remove link_section (or change to .text) for regular .psexe's
             #[cfg(not(doc))]
             #[no_mangle]
-            //#[link_section = ".comment"]
+            #[link_section = ".comment"]
             fn main() {
                 super::main(ctxt)
             }
