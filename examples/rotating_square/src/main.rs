@@ -15,8 +15,8 @@ fn main(mut ctxt: Ctxt) {
     //let fake_ctxt = crate::executable::ctxt;
     let mut theta = 0.0;
     let delta = 0.0625;
-    let draw_env = RefCell::new(ctxt.take_draw_env().unwrap());
-    let display_env = RefCell::new(ctxt.take_display_env().unwrap());
+    let draw_env = RefCell::new(ctxt.take_draw_env().expect("DrawEnv has been taken"));
+    let display_env = RefCell::new(ctxt.take_display_env().expect("DisplayEnv has been taken"));
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);

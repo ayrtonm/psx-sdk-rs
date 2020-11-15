@@ -12,8 +12,8 @@ use libpsx::gpu::framebuffer::Framebuffer;
 libpsx::exe!();
 
 fn main(mut ctxt: Ctxt) {
-    let draw_env = RefCell::new(ctxt.take_draw_env().unwrap());
-    let display_env = RefCell::new(ctxt.take_display_env().unwrap());
+    let draw_env = RefCell::new(ctxt.take_draw_env().expect("DrawEnv has been taken"));
+    let display_env = RefCell::new(ctxt.take_display_env().expect("DisplaEnv has been taken"));
     let res = (Hres::H320, Vres::V240);
     let buf0 = (0, 0);
     let buf1 = (0, 240);

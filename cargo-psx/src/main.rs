@@ -22,7 +22,7 @@ fn extract_key_value(key: &str, args: Vec<String>) -> (Option<String>, Vec<Strin
     // Gets all arguments before key
     let cargo_args = temp_iter
         .next()
-        .unwrap()
+        .expect("Args empty")
         .iter()
         .cloned()
         .collect::<Vec<String>>();
@@ -33,7 +33,11 @@ fn extract_key_value(key: &str, args: Vec<String>) -> (Option<String>, Vec<Strin
         Some(v) => {
             let mut it = v.iter();
             (
-                Some(it.next().unwrap().to_string()),
+                Some(
+                    it.next()
+                        .expect("`split` returned an empty iterator")
+                        .to_string(),
+                ),
                 cargo_args
                     .iter()
                     .chain(it)
@@ -87,9 +91,9 @@ fn main() {
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .spawn()
-            .unwrap();
+            .expect("`cargo build` failed to start");
 
-        let status = build.wait().unwrap();
+        let status = build.wait().expect("`cargo build` wasn't running");
         if !status.success() {
             let code = status.code().unwrap_or(1);
             process::exit(code);
@@ -97,7 +101,9 @@ fn main() {
     }
 
     if !skip_pack {
-        let metadata = MetadataCommand::new().exec().unwrap();
+        let metadata = MetadataCommand::new()
+            .exec()
+            .expect("Could not parse cargo metadata");
         let profile = env::args()
             .any(|arg| arg == "--release")
             .then_some("release")
@@ -107,7 +113,11 @@ fn main() {
         for pkg in metadata.packages {
             for target in pkg.targets {
                 if target.kind.iter().any(|k| k == "bin") {
-                    let elf = &target_dir.join(&target.name).to_str().unwrap().to_string();
+                    let elf = &target_dir
+                        .join(&target.name)
+                        .to_str()
+                        .expect("Could not convert ELF path to UTF-8")
+                        .to_string();
                     let psexe = &format!("{}{}", &target.name, ".psexe");
                     let convert_args = vec![region.as_str(), elf, psexe];
                     elf2psexe::main(convert_args);
