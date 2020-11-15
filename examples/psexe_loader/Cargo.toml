@@ -1,5 +1,5 @@
 [package]
-name = "decompress"
+name = "psexe_loader"
 version = "0.1.0"
 authors = ["Ayrton <a.munoz3327@gmail.com>"]
 edition = "2018"
