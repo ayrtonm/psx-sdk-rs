@@ -5,7 +5,7 @@
 This is a very preliminary list of things missing in libpsx (almost
 everything...). Very roughly in order of priority.
 
-- [ ] Replace all `unwrap` with `expect`
+- [x] Replace all `unwrap` with `expect`
 - [ ] Add controller support
 - [ ] Finish GPU support
   - [ ] Add texture support
@@ -43,7 +43,7 @@ everything...). Very roughly in order of priority.
 
 This is a list of pending features for cargo-psx in a pretty random order.
 
-- [ ] Replace all `unwrap` with `expect`
+- [x] Replace all `unwrap` with `expect`
 - [x] Pad psexe size to multiple of 0x800
     - [ ] Fix the case where the file size is already a multiple of 0x800
 - [ ] Figure out the multi-psexe story for large binaries

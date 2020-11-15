@@ -68,7 +68,7 @@ cargo psx --release
 
 This defaults to building an ELF using a toolchain named `psx` and repackaging
 it into a PSEXE with region `NA`. Note that building without `--release` (in
-debug mode) is possible, but will probably be unusable slow. See `cargo psx -h`
+debug mode) is possible, but will probably be unusably slow. See `cargo psx -h`
 for more options.
 
 ## Program template

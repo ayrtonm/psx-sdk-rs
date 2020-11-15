@@ -75,9 +75,7 @@ impl PsxWriter {
                 _ => panic!("No progbits section found!"),
             };
 
-        //TODO: handle case where `end_addr - base` is a multiple of 0x800
-        //let object_size = end_addr - base;
-        let object_size = (((end_addr - base) / 0x800) * 0x800) + 0x800;
+        let object_size = (((end_addr - base) as f32) / 0x800 as f32).ceil() as u32 * 0x800;
         // Arbitrarily refuse object files greater than 1MB. The PSX
         // only has 2MB of RAM, most executables are a few hundred KBs
         // at most.
@@ -179,14 +177,9 @@ impl PsxWriter {
             offset = base + data.len() as u32;
         }
         //TODO: handle case where `cur_size` is a multiple of 0x800
-        let cur_size = self.psexe.metadata().unwrap().len();
-        let frac_size = (self.psexe.metadata().unwrap().len() / 0x800);
-        let new_size = (frac_size * 0x800) + 0x800;
-        //println!("{:?}", object_size);
-        //println!("{:?}", cur_size);
-        //println!("{:?}", frac_size);
-        //println!("{:?}", new_size);
-        self.psexe.set_len(new_size);
+        let cur_size = self.psexe.metadata().expect("Could not get the new PSEXE's metadata").len();
+        let padded_size = (((cur_size as f32) / (0x800 as f32)).ceil() as u64) * 0x800;
+        self.psexe.set_len(padded_size).expect("Unable to pad the new PSEXE");
     }
 
     fn write(&mut self, v: &[u8]) {
