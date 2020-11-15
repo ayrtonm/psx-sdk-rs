@@ -6,7 +6,7 @@ libpsx::exe!();
 
 #[link_section = ".comment"]
 fn main(mut _ctxt: Ctxt) {
-    let bytes = include_bytes!("../../rotating_square/rotating_square.psexe");
+    let bytes = include_bytes!("../rotating_square.psexe");
     fn read_word(ar: &[u8]) -> u32 {
         ar[0] as u32 | (ar[1] as u32) << 8 | (ar[2] as u32) << 16 | (ar[3] as u32) << 24
     }
