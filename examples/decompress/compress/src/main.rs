@@ -74,9 +74,14 @@ fn main() {
         writeable_data.push((data >> 8) as u8);
     }
     let mut s = String::new();
-    s.push_str("let v = [\n");
+    s.push_str("let codes = [\n");
     for c in &code {
-        s.push_str(&format!("    ({:#04x?}, {:#x}),\n", c.symbol, c.code));
+        s.push_str(&format!("    {:#x},\n", c.code));
+    }
+    s.push_str("];\n");
+    s.push_str("let symbols = [\n");
+    for c in &code {
+        s.push_str(&format!("    {:#04x?},\n", c.symbol));
     }
     s.push_str("];");
     std::fs::write("../rotating_square.psexe.hf", writeable_data).unwrap();
