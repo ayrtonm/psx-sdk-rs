@@ -69,23 +69,26 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
         let buffer = self.buffer_data(buffer);
         let hres: Component = (&self.res.0).into();
         let vres: Component = (&self.res.1).into();
-        self.draw_env.borrow_mut().start(buffer.0.into(), buffer.1.into());
+        self.draw_env
+            .borrow_mut()
+            .start(buffer.0.into(), buffer.1.into());
         self.draw_env
             .borrow_mut()
             .end(buffer.0 + hres, buffer.1 + vres);
-        self.draw_env.borrow_mut().offset(buffer.0.into(), buffer.1.into());
+        self.draw_env
+            .borrow_mut()
+            .offset(buffer.0.into(), buffer.1.into());
     }
 
     fn display(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
         let hres = (&self.res.0).into();
         let vres = (&self.res.1).into();
-        self.display_env.borrow_mut().start(buffer.0.into(), buffer.1.into());
-        self.draw_env.borrow_mut().draw_rect(
-            &Vertex::zero(),
-            hres,
-            vres,
-            &Color::black(),
-        );
+        self.display_env
+            .borrow_mut()
+            .start(buffer.0.into(), buffer.1.into());
+        self.draw_env
+            .borrow_mut()
+            .draw_rect(&Vertex::zero(), hres, vres, &Color::black());
     }
 }

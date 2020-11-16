@@ -1,5 +1,5 @@
-use crate::gpu::DrawEnv;
 use crate::gpu::vertex::Component;
+use crate::gpu::DrawEnv;
 
 impl DrawEnv {
     // Calls DrawEnv(E3h)
@@ -17,7 +17,12 @@ impl DrawEnv {
         self.generic_cmd::<0xE5, 11, 11, 11>(x, y)
     }
 
-    fn generic_cmd<const CMD: u8, const XMASK: Component, const YMASK: Component, const SHIFT: Component>(
+    fn generic_cmd<
+        const CMD: u8,
+        const XMASK: Component,
+        const YMASK: Component,
+        const SHIFT: Component,
+    >(
         &mut self, mut x: Component, mut y: Component,
     ) {
         if cfg!(debug_assertions) {

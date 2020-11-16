@@ -1,5 +1,5 @@
-use crate::gpu::vertex::Component;
 use crate::gpu::res::{Depth, DmaSource, Hres, Vmode, Vres};
+use crate::gpu::vertex::Component;
 use crate::gpu::DisplayEnv;
 
 impl DisplayEnv {
@@ -77,7 +77,12 @@ impl DisplayEnv {
         self.write(cmd | hres | vres | vmode | depth | interlace);
     }
 
-    fn generic_cmd<const CMD: u8, const XMASK: Component, const YMASK: Component, const SHIFT: Component>(
+    fn generic_cmd<
+        const CMD: u8,
+        const XMASK: Component,
+        const YMASK: Component,
+        const SHIFT: Component,
+    >(
         &mut self, mut x: Component, mut y: Component,
     ) {
         if cfg!(debug_assertions) {

@@ -45,7 +45,6 @@ macro_rules! exe {
         libpsx::exe!(0, 0);
     };
     ($heap_addr:expr, $heap_size:expr) => {
-
         #[cfg(not(doc))]
         use crate::executable::Ctxt;
 

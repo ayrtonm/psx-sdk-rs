@@ -80,11 +80,7 @@ fn main() {
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
-    let build_std = if no_alloc {
-        "core"
-    } else {
-        "core,alloc"
-    };
+    let build_std = if no_alloc { "core" } else { "core,alloc" };
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {

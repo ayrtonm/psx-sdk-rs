@@ -1,5 +1,5 @@
 use crate::gpu::color::{Color, Palette};
-use crate::gpu::vertex::{Component, Line, Triangle, Quad, PolyLine, Vertex};
+use crate::gpu::vertex::{Component, Line, PolyLine, Quad, Triangle, Vertex};
 use crate::gpu::DrawEnv;
 
 type ShadedPolyLine<'a, 'b, 'c> = &'a mut dyn Iterator<Item = (&'a Color, &'b Vertex)>;
