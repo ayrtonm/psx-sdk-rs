@@ -1,4 +1,4 @@
 use crate::exe;
 
 #[cfg(doc)]
-exe!();
+exe!(0, 0);
