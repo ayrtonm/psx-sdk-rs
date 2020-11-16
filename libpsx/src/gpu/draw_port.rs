@@ -1,11 +1,11 @@
 use crate::gpu::color::{Color, Palette};
 use crate::gpu::vertex::{Component, Line, PolyLine, Quad, Triangle, Vertex};
-use crate::gpu::DrawEnv;
+use crate::gpu::DrawPort;
 use crate::macros::RegisterWrite;
 
 type ShadedPolyLine<'a, 'b, 'c> = &'a mut dyn Iterator<Item = (&'a Color, &'b Vertex)>;
 
-impl DrawEnv {
+impl DrawPort {
     const TERMINATION_CODE: u32 = 0x5555_5555;
 
     fn serialize((x, y): (u16, u16)) -> u32 {
@@ -16,31 +16,31 @@ impl DrawEnv {
         let cmd = 0xC0 << 24;
         let cmd_params = [
             cmd,
-            DrawEnv::serialize(src),
-            DrawEnv::serialize(dst),
-            DrawEnv::serialize(size),
+            DrawPort::serialize(src),
+            DrawPort::serialize(dst),
+            DrawPort::serialize(size),
         ];
         self.write_slice(&cmd_params);
     }
 
     pub fn rect_to_vram(&mut self, dest: (u16, u16), size: (u16, u16), data: &[u32]) {
         let cmd = 0xA0 << 24;
-        let cmd_params = [cmd, DrawEnv::serialize(dest), DrawEnv::serialize(size)];
+        let cmd_params = [cmd, DrawPort::serialize(dest), DrawPort::serialize(size)];
         self.write_slice(&cmd_params);
         self.write_slice(data);
     }
 
-    // Calls DrawEnv(E3h)
+    // Calls DrawPort(E3h)
     pub fn start(&mut self, x: Component, y: Component) {
         self.generic_cmd::<0xE3, 10, 9, 10>(x, y)
     }
 
-    // Calls DrawEnv(E4h)
+    // Calls DrawPort(E4h)
     pub fn end(&mut self, x: Component, y: Component) {
         self.generic_cmd::<0xE4, 10, 9, 10>(x, y)
     }
 
-    // Calls DrawEnv(E5h)
+    // Calls DrawPort(E5h)
     pub fn offset(&mut self, x: Component, y: Component) {
         self.generic_cmd::<0xE5, 11, 11, 11>(x, y)
     }
@@ -105,12 +105,12 @@ impl DrawEnv {
 
     pub fn draw_polyline(&mut self, l: PolyLine, c: &Color) {
         self.draw::<0x48>(l, c);
-        self.write(DrawEnv::TERMINATION_CODE);
+        self.write(DrawPort::TERMINATION_CODE);
     }
 
     pub fn draw_polyline_transparent(&mut self, l: PolyLine, c: &Color) {
         self.draw::<0x4A>(l, c);
-        self.write(DrawEnv::TERMINATION_CODE);
+        self.write(DrawPort::TERMINATION_CODE);
     }
 
     pub fn draw_shaded_line(&mut self, l: Line, c: Palette<2>) {
@@ -123,12 +123,12 @@ impl DrawEnv {
 
     pub fn draw_shaded_polyline(&mut self, l: ShadedPolyLine) {
         self.draw_shaded::<0x58>(l);
-        self.write(DrawEnv::TERMINATION_CODE);
+        self.write(DrawPort::TERMINATION_CODE);
     }
 
     pub fn draw_shaded_polyline_transparent(&mut self, l: ShadedPolyLine) {
         self.draw_shaded::<0x5A>(l);
-        self.write(DrawEnv::TERMINATION_CODE);
+        self.write(DrawPort::TERMINATION_CODE);
     }
 
     pub fn draw_rect(&mut self, offset: &Vertex, w: Component, h: Component, c: &Color) {

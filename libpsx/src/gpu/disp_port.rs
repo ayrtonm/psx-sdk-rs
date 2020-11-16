@@ -1,29 +1,29 @@
 use crate::gpu::vertex::Component;
-use crate::gpu::{Depth, DisplayEnv, DmaSource, Hres, Vmode, Vres};
+use crate::gpu::{Depth, DispPort, DmaSource, Hres, Vmode, Vres};
 use crate::macros::RegisterWrite;
 
-impl DisplayEnv {
-    // Calls DisplayEnv(00h)
+impl DispPort {
+    // Calls DispPort(00h)
     pub fn reset_gpu(&mut self) {
         self.write(0);
     }
 
-    // Calls DisplayEnv(01h)
+    // Calls DispPort(01h)
     pub fn reset_buffer(&mut self) {
         self.write(1);
     }
 
-    // Calls DisplayEnv(03h)
+    // Calls DispPort(03h)
     pub fn on(&mut self) {
         self.write(0x0300_0000);
     }
 
-    // Calls DisplayEnv(03h)
+    // Calls DispPort(03h)
     pub fn off(&mut self) {
         self.write(0x0300_0001);
     }
 
-    // Calls DisplayEnv(04h)
+    // Calls DispPort(04h)
     pub fn dma(&mut self, dir: DmaSource) {
         let source = match dir {
             DmaSource::Off => 0,
@@ -34,22 +34,22 @@ impl DisplayEnv {
         self.write((0x04 << 24) | source);
     }
 
-    // Calls DisplayEnv(05h)
+    // Calls DispPort(05h)
     pub fn start(&mut self, x: Component, y: Component) {
         self.generic_cmd::<0x05, 10, 9, 10>(x, y);
     }
 
-    // Calls DisplayEnv(06h)
+    // Calls DispPort(06h)
     pub fn horizontal(&mut self, x1: Component, x2: Component) {
         self.generic_cmd::<0x06, 12, 12, 12>(x1, x2);
     }
 
-    // Calls DisplayEnv(07h)
+    // Calls DispPort(07h)
     pub fn vertical(&mut self, y1: Component, y2: Component) {
         self.generic_cmd::<0x07, 10, 10, 10>(y1, y2);
     }
 
-    // Calls DisplayEnv(08h)
+    // Calls DispPort(08h)
     pub fn mode(&mut self, hres: &Hres, vres: &Vres, vmode: Vmode, depth: Depth, interlace: bool) {
         let cmd = 0x08 << 24;
         let hres = match hres {

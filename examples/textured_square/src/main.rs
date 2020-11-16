@@ -11,13 +11,13 @@ use libpsx::gpu::{Hres, Vres};
 libpsx::exe!();
 
 fn main(mut ctxt: Ctxt) {
-    let draw_env = RefCell::new(ctxt.take_draw_env().expect("DrawEnv has been taken"));
-    let display_env = RefCell::new(ctxt.take_display_env().expect("DisplayEnv has been taken"));
+    let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(ctxt.take_disp_port().expect("DispPort has been taken"));
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);
-    display_env.borrow_mut().reset_gpu();
-    let mut fb = Framebuffer::new(&draw_env, &display_env, buf0, buf1, res);
+    disp_port.borrow_mut().reset_gpu();
+    let mut fb = Framebuffer::new(&draw_port, &disp_port, buf0, buf1, res);
     const N: usize = 4;
     let mut data = [0; N];
     for i in 0..N {
@@ -26,10 +26,10 @@ fn main(mut ctxt: Ctxt) {
             data[i] = core::intrinsics::volatile_load(addr as *const u32);
         }
     }
-    draw_env.borrow_mut().rect_to_vram((320, 0), (320, 240), &data);
+    draw_port.borrow_mut().rect_to_vram((320, 0), (320, 240), &data);
     loop {
-         //draw_env.borrow_mut().draw_rect(&Vertex::zero(), 320, 240, &Color::blue());
-         draw_env.borrow_mut().draw_rect_textured(&Vertex::zero(), 160, 120, 0x7F0F_0005);
+         //draw_port.borrow_mut().draw_rect(&Vertex::zero(), 320, 240, &Color::blue());
+         draw_port.borrow_mut().draw_rect_textured(&Vertex::zero(), 160, 120, 0x7F0F_0005);
          fb.swap();
     }
 }

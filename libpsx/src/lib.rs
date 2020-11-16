@@ -59,39 +59,39 @@ macro_rules! exe {
         pub mod executable {
 
             #[cfg(doc)]
-            use crate::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
+            use crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat};
             #[cfg(not(doc))]
-            use libpsx::gpu::{DisplayEnv, DrawEnv, GpuRead, GpuStat};
+            use libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat};
 
             pub struct Ctxt {
-                draw_env: Option<DrawEnv>,
-                display_env: Option<DisplayEnv>,
+                draw_port: Option<DrawPort>,
+                disp_port: Option<DispPort>,
                 gpu_read: Option<GpuRead>,
                 gpu_stat: Option<GpuStat>,
             }
 
             impl Ctxt {
-                pub fn take_draw_env(&mut self) -> Option<DrawEnv> {
-                    self.draw_env.take()
+                pub fn take_draw_port(&mut self) -> Option<DrawPort> {
+                    self.draw_port.take()
                 }
 
-                pub fn take_display_env(&mut self) -> Option<DisplayEnv> {
-                    self.display_env.take()
+                pub fn take_disp_port(&mut self) -> Option<DispPort> {
+                    self.disp_port.take()
                 }
 
-                pub fn replace_draw_env(&mut self, draw_env: Option<DrawEnv>) {
-                    self.draw_env = draw_env;
+                pub fn replace_draw_port(&mut self, draw_port: Option<DrawPort>) {
+                    self.draw_port = draw_port;
                 }
 
-                pub fn replace_display_env(&mut self, display_env: Option<DisplayEnv>) {
-                    self.display_env = display_env;
+                pub fn replace_disp_port(&mut self, disp_port: Option<DispPort>) {
+                    self.disp_port = disp_port;
                 }
             }
 
             #[cfg(not(doc))]
             const ctxt: Ctxt = Ctxt {
-                draw_env: Some(DrawEnv),
-                display_env: Some(DisplayEnv),
+                draw_port: Some(DrawPort),
+                disp_port: Some(DispPort),
                 gpu_read: Some(GpuRead),
                 gpu_stat: Some(GpuStat),
             };

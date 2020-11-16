@@ -15,20 +15,20 @@ fn main(mut ctxt: Ctxt) {
     //let fake_ctxt = crate::executable::ctxt;
     let mut theta = 0.0;
     let delta = 0.0625;
-    let draw_env = RefCell::new(ctxt.take_draw_env().expect("DrawEnv has been taken"));
-    let display_env = RefCell::new(ctxt.take_display_env().expect("DisplayEnv has been taken"));
+    let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(ctxt.take_disp_port().expect("DispPort has been taken"));
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);
-    display_env.borrow_mut().reset_gpu();
-    let mut fb = Framebuffer::new(&draw_env, &display_env, buf0, buf1, res);
+    disp_port.borrow_mut().reset_gpu();
+    let mut fb = Framebuffer::new(&draw_port, &disp_port, buf0, buf1, res);
     loop {
         theta += delta;
         while theta > 360.0 {
             theta -= 360.0;
         }
         let (quad, pal) =  draw(theta);
-        draw_env.borrow_mut().draw_shaded_quad(&quad, &pal);
+        draw_port.borrow_mut().draw_shaded_quad(&quad, &pal);
         fb.swap();
     }
 }
