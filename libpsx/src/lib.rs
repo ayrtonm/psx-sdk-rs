@@ -12,7 +12,6 @@ pub mod bios;
 pub mod dma;
 pub mod gpu;
 mod macros;
-pub mod registers;
 
 use core::intrinsics::volatile_load;
 use core::panic::PanicInfo;

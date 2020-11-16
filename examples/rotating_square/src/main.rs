@@ -71,5 +71,5 @@ fn rotate_point(p: Vertex, theta: f32, c: &Vertex) -> Vertex {
     let yp = dy * cos(theta) + dx * sin(theta);
     let xf = xp + c.x() as f32;
     let yf = yp + c.y() as f32;
-    Vertex::new(xf as i16, yf as i16)
+    Vertex::new(xf as u16, yf as u16)
 }

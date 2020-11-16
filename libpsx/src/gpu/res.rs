@@ -46,8 +46,8 @@ pub type Res = (Hres, Vres);
 //    }
 //}
 
-impl From<&Hres> for u32 {
-    fn from(h: &Hres) -> u32 {
+impl From<&Hres> for Component {
+    fn from(h: &Hres) -> Component {
         match h {
             Hres::H256 => 256,
             Hres::H320 => 320,
@@ -58,8 +58,8 @@ impl From<&Hres> for u32 {
     }
 }
 
-impl From<&Vres> for u32 {
-    fn from(v: &Vres) -> u32 {
+impl From<&Vres> for Component {
+    fn from(v: &Vres) -> Component {
         match v {
             Vres::V240 => 240,
             Vres::V480 => 480,
