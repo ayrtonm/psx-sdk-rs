@@ -96,14 +96,26 @@ pub trait Control: Update {
         };
         self.update_bits(9..=10, bits);
     }
-    fn start(&mut self) {
+    fn start(&mut self) -> Transfer<Self> {
         self.update(24, 1);
         if let Some(Mode::Immediate) = self.sync_mode() {
             self.update(28, 1);
         }
+        Transfer { control: self }
     }
     fn busy(&self) -> bool {
         self.read().bit(24) == 1
+    }
+}
+
+#[must_use]
+pub struct Transfer<'a, C: Control + ?Sized> {
+    control: &'a C,
+}
+
+impl<C: Control> Transfer<'_, C> {
+    pub fn wait(&self) {
+        while self.control.busy() {}
     }
 }
 

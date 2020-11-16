@@ -45,8 +45,7 @@ fn main(mut ctxt: Ctxt) {
         dma.control.set_step(Step::Forward);
         dma.control.set_chopping(false);
         dma.control.set_sync_mode(Mode::Immediate);
-        dma.control.start();
-        while dma.control.busy() {}
+        dma.control.start().wait();
         fb.swap();
     }
 }
