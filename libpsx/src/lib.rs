@@ -42,7 +42,7 @@ macro_rules! exe {
         libpsx::exe!(0x1FA0_0000, 2048 * 1024);
     };
     (no heap) => {
-        todo!("implement me")
+        libpsx::exe!(0, 0);
     };
     ($heap_addr:expr, $heap_size:expr) => {
 
@@ -95,7 +95,9 @@ macro_rules! exe {
             //#[link_section = ".exe"]
             fn main() {
                 #[cfg(not(doc))]
-                libpsx::bios::init_heap($heap_addr, $heap_size);
+                if $heap_size != 0 {
+                    libpsx::bios::init_heap($heap_addr, $heap_size);
+                }
                 super::main(ctxt)
             }
 

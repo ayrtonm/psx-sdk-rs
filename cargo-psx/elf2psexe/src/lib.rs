@@ -28,8 +28,8 @@ impl Region {
     fn from_str(s: &str) -> Region {
         match s {
             "NA" => Region::NorthAmerica,
-            "E"  => Region::Europe,
-            "J"  => Region::Japan,
+            "EU"  => Region::Europe,
+            "JP"  => Region::Japan,
             _    => panic!("Invalid region {}", s)
         }
     }
@@ -39,7 +39,7 @@ pub fn main(args: Vec<&str>, no_pad: bool) {
 
     if args.len() < 3 {
         println!("usage: elf2psexe <REGION> <elf-bin> <psx-bin>");
-        println!("Valid regions: NA, E or J");
+        println!("Valid regions: NA, EU or JP");
         panic!("Missing argument");
     }
 

@@ -60,11 +60,12 @@ fn main() {
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
         println!("  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)");
-        println!("  --region <REGION>    Sets the game region to J, E or NA (default)");
+        println!("  --region <REGION>    Sets the game region to NA, EU or JP (default)");
         println!(
             "  --skip-build         Skips building and only packages an existing ELF into a PSEXE"
         );
         println!("  --skip-pack          Skips packaging and only builds an ELF");
+        println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
         println!("\n");
         println!("Run `cargo build -h` for build options");
         return
@@ -75,7 +76,7 @@ fn main() {
     let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
     let (no_pad, cargo_args) = extract_flag("--no-pad", cargo_args);
 
-    let region = region.unwrap_or("NA".to_string());
+    let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
 
     let target_triple = "mipsel-sony-psx";

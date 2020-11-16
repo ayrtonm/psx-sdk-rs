@@ -7,9 +7,10 @@ everything...). Very roughly in order of priority.
 
 - [x] Use allocator
     - [x] Add call to heap init in `libpsx::exe`
-    - [ ] Add a `no heap` option
+    - [x] Add a `no heap` option
     - [ ] Add a real alloc-free option (`no heap` w/o building alloc)
 - [ ] Add DMA channels
+    - [ ] GPU DMA
 - [ ] Finish GPU support
   - [ ] Support DMA
   - [ ] Add texture support
