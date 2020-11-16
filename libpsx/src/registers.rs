@@ -16,17 +16,17 @@ impl BitTwiddle for u32 {
     }
 }
 
-pub trait RegisterAddr {
+pub trait Addr {
     const ADDRESS: u32;
 }
 
-pub trait RegisterRead: RegisterAddr {
+pub trait Read: Addr {
     fn read(&self) -> u32 {
         unsafe { core::intrinsics::volatile_load(Self::ADDRESS as *const u32) }
     }
 }
 
-pub trait RegisterWrite: RegisterAddr {
+pub trait Write: Addr {
     fn write(&mut self, value: u32) {
         unsafe { core::intrinsics::volatile_store(Self::ADDRESS as *mut u32, value) }
     }
@@ -38,12 +38,23 @@ pub trait RegisterWrite: RegisterAddr {
     }
 }
 
+pub trait Update: Read + Write {
+    fn update(&mut self, idx: usize, value: u32) {
+        // TODO: add some debug checks here
+        let current_value = self.read();
+        let new_value = current_value.clear(idx) | (value << idx);
+        self.write(new_value);
+    }
+}
+
+impl<T: Read + Write> Update for T {}
+
 #[macro_export]
 macro_rules! ro_register {
     ($name:ident, $addr:expr) => {
         pub struct $name;
-        impl crate::registers::RegisterAddr for $name { const ADDRESS: u32 = $addr; }
-        impl crate::registers::RegisterRead for $name {}
+        impl crate::registers::Addr for $name { const ADDRESS: u32 = $addr; }
+        impl crate::registers::Read for $name {}
     };
 }
 
@@ -51,8 +62,8 @@ macro_rules! ro_register {
 macro_rules! wo_register {
     ($name:ident, $addr:expr) => {
         pub struct $name;
-        impl crate::registers::RegisterAddr for $name { const ADDRESS: u32 = $addr; }
-        impl crate::registers::RegisterWrite for $name {}
+        impl crate::registers::Addr for $name { const ADDRESS: u32 = $addr; }
+        impl crate::registers::Write for $name {}
     };
 }
 
@@ -60,8 +71,8 @@ macro_rules! wo_register {
 macro_rules! rw_register {
     ($name:ident, $addr:expr) => {
         pub struct $name;
-        impl crate::registers::RegisterAddr for $name { const ADDRESS: u32 = $addr; }
-        impl crate::registers::RegisterRead for $name {}
-        impl crate::registers::RegisterWrite for $name {}
+        impl crate::registers::Addr for $name { const ADDRESS: u32 = $addr; }
+        impl crate::registers::Read for $name {}
+        impl crate::registers::Write for $name {}
     };
 }

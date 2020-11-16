@@ -1,4 +1,4 @@
-use crate::registers::{BitTwiddle, RegisterRead, RegisterWrite};
+use crate::registers::{Read, Write, Update};
 use crate::rw_register;
 
 rw_register!(GpuDmaAddr, 0x1F80_10A0);
@@ -22,7 +22,7 @@ pub enum Step {
     Backward,
 }
 
-pub trait DmaAddr: RegisterRead + RegisterWrite {
+pub trait DmaAddr: Read + Write {
     fn read_address(&mut self) -> u32 {
         self.read()
     }
@@ -35,7 +35,7 @@ pub trait DmaAddr: RegisterRead + RegisterWrite {
     }
 }
 
-pub trait DmaBlock: RegisterRead + RegisterWrite {
+pub trait DmaBlock: Read + Write {
     // Note that this depends on sync mode, meaning that the channel may not
     // necessarily be in the given block mode
     fn set_blocks(&mut self, dma_blocks: Blocks) {
@@ -57,15 +57,13 @@ pub trait DmaBlock: RegisterRead + RegisterWrite {
     }
 }
 
-pub trait DmaControl: RegisterRead + RegisterWrite {
+pub trait DmaControl: Update {
     fn set_direction(&mut self, direction: Direction) {
         let bit = match direction {
             Direction::ToRam => 0,
             Direction::FromRam => 1,
         };
-        let current_value = self.read();
-        let new_value = current_value.clear(0) | bit;
-        self.write(new_value);
+        self.update(0, bit);
     }
 
     fn set_step(&mut self, step: Step) {
@@ -73,11 +71,20 @@ pub trait DmaControl: RegisterRead + RegisterWrite {
             Step::Forward => 0,
             Step::Backward => 1,
         };
-        let current_value = self.read();
-        let new_value = current_value.clear(1) | (bit << 1);
-        self.write(new_value);
+        self.update(1, bit);
+    }
+    fn set_chopping(&mut self, chop: bool) {
+        if chop {
+            self.enable_chopping();
+        } else {
+            self.disable_chopping();
+        }
     }
     fn enable_chopping(&mut self) {
+        self.update(8, 1);
+    }
+    fn disable_chopping(&mut self) {
+        self.update(8, 0);
     }
 }
 
