@@ -114,8 +114,12 @@ pub struct Transfer<'a, C: Control + ?Sized> {
 }
 
 impl<C: Control> Transfer<'_, C> {
+    pub fn busy(&self) -> bool {
+        self.control.busy()
+    }
+
     pub fn wait(&self) {
-        while self.control.busy() {}
+        while self.busy() {}
     }
 }
 

@@ -3,9 +3,9 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use libpsx::gpu::vertex::{Vertex, Component};
 use libpsx::gpu::color::Color;
 use libpsx::gpu::framebuffer::Framebuffer;
+use libpsx::gpu::vertex::{Component, Vertex};
 use libpsx::gpu::{Hres, Vres};
 
 libpsx::exe!();
@@ -27,7 +27,7 @@ fn main(mut ctxt: Ctxt) {
         while theta > 360.0 {
             theta -= 360.0;
         }
-        let (quad, pal) =  draw(theta);
+        let (quad, pal) = draw(theta);
         draw_port.borrow_mut().draw_shaded_quad(&quad, &pal);
         fb.swap();
     }
@@ -37,7 +37,12 @@ fn draw(theta: f32) -> ([Vertex; 4], [Color; 4]) {
     let center = &Vertex::new(160, 120);
     let size = 128;
     let square = Vertex::square(center, size).map(|p| rotate_point(p, theta, center));
-    let palette = [Color::aqua(), Color::mint(), Color::indigo(), Color::orange()];
+    let palette = [
+        Color::aqua(),
+        Color::mint(),
+        Color::indigo(),
+        Color::orange(),
+    ];
     (square, palette)
 }
 

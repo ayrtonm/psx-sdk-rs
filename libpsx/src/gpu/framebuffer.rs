@@ -38,7 +38,7 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
         };
         fb.draw(Buffer::Two);
         fb.display(Buffer::One);
-        disp_port.borrow_mut().on();
+        fb.disp_port.borrow_mut().on();
         fb
     }
 

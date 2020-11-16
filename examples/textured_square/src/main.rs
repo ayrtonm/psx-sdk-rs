@@ -3,9 +3,9 @@
 #![feature(core_intrinsics)]
 
 use core::cell::RefCell;
-use libpsx::gpu::vertex::Vertex;
 use libpsx::gpu::color::Color;
 use libpsx::gpu::framebuffer::Framebuffer;
+use libpsx::gpu::vertex::Vertex;
 use libpsx::gpu::{Hres, Vres};
 
 libpsx::exe!();
@@ -26,10 +26,14 @@ fn main(mut ctxt: Ctxt) {
             data[i] = core::intrinsics::volatile_load(addr as *const u32);
         }
     }
-    draw_port.borrow_mut().rect_to_vram((320, 0), (320, 240), &data);
+    draw_port
+        .borrow_mut()
+        .rect_to_vram((320, 0), (320, 240), &data);
     loop {
-         //draw_port.borrow_mut().draw_rect(&Vertex::zero(), 320, 240, &Color::blue());
-         draw_port.borrow_mut().draw_rect_textured(&Vertex::zero(), 160, 120, 0x7F0F_0005);
-         fb.swap();
+        //draw_port.borrow_mut().draw_rect(&Vertex::zero(), 320, 240, &Color::blue());
+        draw_port
+            .borrow_mut()
+            .draw_rect_textured(&Vertex::zero(), 160, 120, 0x7F0F_0005);
+        fb.swap();
     }
 }

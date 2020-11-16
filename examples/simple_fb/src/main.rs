@@ -4,10 +4,10 @@
 use core::cell::RefCell;
 
 use libpsx::delay;
-use libpsx::gpu::vertex::Vertex;
 use libpsx::gpu::color::Color;
-use libpsx::gpu::{Hres, Vres};
 use libpsx::gpu::framebuffer::Framebuffer;
+use libpsx::gpu::vertex::Vertex;
+use libpsx::gpu::{Hres, Vres};
 
 libpsx::exe!();
 
@@ -22,7 +22,9 @@ fn main(mut ctxt: Ctxt) {
     loop {
         offset += 1;
         delay(100000);
-        draw_port.borrow_mut().draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
+        draw_port
+            .borrow_mut()
+            .draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
         if offset == 240 - 64 {
             offset = 0;
         }
