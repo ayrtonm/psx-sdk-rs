@@ -1,6 +1,6 @@
 use crate::gpu::vertex::Component;
 use crate::gpu::{Depth, DispPort, DmaSource, Hres, Vmode, Vres};
-use crate::macros::RegisterWrite;
+use crate::registers::RegisterWrite;
 
 impl DispPort {
     // Calls DispPort(00h)

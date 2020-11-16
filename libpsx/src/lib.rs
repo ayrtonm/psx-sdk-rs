@@ -12,7 +12,7 @@ pub mod bios;
 mod builtins;
 pub mod dma;
 pub mod gpu;
-mod macros;
+mod registers;
 
 #[cfg(doc)]
 mod docs;
@@ -28,6 +28,11 @@ pub fn delay(n: u32) {
             volatile_load(0 as *mut u32);
         }
     }
+}
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
 }
 
 #[macro_export]
@@ -112,9 +117,4 @@ macro_rules! exe {
             pub fn main(mut ctxt: Ctxt) {}
         }
     };
-}
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    loop {}
 }

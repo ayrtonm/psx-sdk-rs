@@ -1,7 +1,7 @@
 use crate::gpu::color::{Color, Palette};
 use crate::gpu::vertex::{Component, Line, PolyLine, Quad, Triangle, Vertex};
 use crate::gpu::DrawPort;
-use crate::macros::RegisterWrite;
+use crate::registers::RegisterWrite;
 
 type ShadedPolyLine<'a, 'b, 'c> = &'a mut dyn Iterator<Item = (&'a Color, &'b Vertex)>;
 
