@@ -3,7 +3,7 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use libpsx::gpu::vertex::Vertex;
+use libpsx::gpu::vertex::{Vertex, Component};
 use libpsx::gpu::color::Color;
 use libpsx::gpu::framebuffer::Framebuffer;
 use libpsx::gpu::res::{Hres, Vres};
@@ -71,5 +71,5 @@ fn rotate_point(p: Vertex, theta: f32, c: &Vertex) -> Vertex {
     let yp = dy * cos(theta) + dx * sin(theta);
     let xf = xp + c.x() as f32;
     let yf = yp + c.y() as f32;
-    Vertex::new(xf as u16, yf as u16)
+    Vertex::new(xf as Component, yf as Component)
 }

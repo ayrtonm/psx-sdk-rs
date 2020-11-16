@@ -1,5 +1,5 @@
 use crate::gpu::color::{Color, Palette};
-use crate::gpu::vertex::{Length, Line, Triangle, Quad, PolyLine, Vertex};
+use crate::gpu::vertex::{Component, Line, Triangle, Quad, PolyLine, Vertex};
 use crate::gpu::DrawEnv;
 
 type ShadedPolyLine<'a, 'b, 'c> = &'a mut dyn Iterator<Item = (&'a Color, &'b Vertex)>;
@@ -75,21 +75,21 @@ impl DrawEnv {
         self.write(DrawEnv::TERMINATION_CODE);
     }
 
-    pub fn draw_rect(&mut self, offset: &Vertex, w: Length, h: Length, c: &Color) {
+    pub fn draw_rect(&mut self, offset: &Vertex, w: Component, h: Component, c: &Color) {
         self.write((0x60 << 24) | u32::from(c));
         self.write(offset.into());
         self.write((h as u32) << 16 | (w as u32));
     }
 
     // TODO: `tex` in the fn sig is temporary, come up with something sensible
-    pub fn draw_rect_textured(&mut self, offset: &Vertex, w: Length, h: Length, tex: u32) {
+    pub fn draw_rect_textured(&mut self, offset: &Vertex, w: Component, h: Component, tex: u32) {
         self.write(0x65 << 24);
         self.write(offset.into());
         self.write(tex);
         self.write((h as u32) << 16 | (w as u32));
     }
 
-    pub fn draw_square(&mut self, offset: &Vertex, l: Length, c: &Color) {
+    pub fn draw_square(&mut self, offset: &Vertex, l: Component, c: &Color) {
         self.draw_rect(offset, l, l, c)
     }
 

@@ -1,6 +1,6 @@
 use crate::gpu::color::Color;
-use crate::gpu::res::{Component, Depth, Res, Vmode};
-use crate::gpu::vertex::{Length, Vertex};
+use crate::gpu::res::{Depth, Res, Vmode};
+use crate::gpu::vertex::{Component, Vertex};
 use crate::gpu::{DisplayEnv, DrawEnv};
 use core::cell::RefCell;
 
@@ -25,8 +25,8 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
         two: BufferLocation, res: Res,
     ) -> Self
     {
-        display_env.borrow_mut().horizontal(0, u32::from(&res.0));
-        display_env.borrow_mut().vertical(0, u32::from(&res.1));
+        display_env.borrow_mut().horizontal(0, (&res.0).into());
+        display_env.borrow_mut().vertical(0, (&res.1).into());
         display_env
             .borrow_mut()
             .mode(&res.0, &res.1, Vmode::NTSC, Depth::Lo, false);
@@ -67,24 +67,24 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
 
     fn draw(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres = u32::from(&self.res.0);
-        let vres = u32::from(&self.res.1);
-        self.draw_env.borrow_mut().start(buffer.0, buffer.1);
+        let hres: Component = (&self.res.0).into();
+        let vres: Component = (&self.res.1).into();
+        self.draw_env.borrow_mut().start(buffer.0.into(), buffer.1.into());
         self.draw_env
             .borrow_mut()
             .end(buffer.0 + hres, buffer.1 + vres);
-        self.draw_env.borrow_mut().offset(buffer.0, buffer.1);
+        self.draw_env.borrow_mut().offset(buffer.0.into(), buffer.1.into());
     }
 
     fn display(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres = u32::from(&self.res.0);
-        let vres = u32::from(&self.res.1);
-        self.display_env.borrow_mut().start(buffer.0, buffer.1);
+        let hres = (&self.res.0).into();
+        let vres = (&self.res.1).into();
+        self.display_env.borrow_mut().start(buffer.0.into(), buffer.1.into());
         self.draw_env.borrow_mut().draw_rect(
             &Vertex::zero(),
-            hres as Length,
-            vres as Length,
+            hres,
+            vres,
             &Color::black(),
         );
     }

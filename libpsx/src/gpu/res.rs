@@ -1,11 +1,4 @@
-// This refers to the same `Component` alias in libpsx::gpu::vertex, but the
-// types may not match for performance reasons
-pub type Component = u32;
-
-//pub struct Res {
-//    h: Hres,
-//    v: Vres,
-//}
+use crate::gpu::vertex::Component;
 
 pub enum Hres {
     H256,
@@ -34,17 +27,6 @@ pub enum DmaSource {
 }
 
 pub type Res = (Hres, Vres);
-//impl Res {
-//    pub fn new(h: Hres, v: Vres) -> Self {
-//        Res { h, v }
-//    }
-//    pub fn h(&self) -> u32 {
-//        (&self.h).into()
-//    }
-//    pub fn v(&self) -> u32 {
-//        (&self.v).into()
-//    }
-//}
 
 impl From<&Hres> for Component {
     fn from(h: &Hres) -> Component {

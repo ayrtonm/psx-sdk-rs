@@ -1,4 +1,4 @@
-type Component = u16;
+pub type Component = u16;
 type SignedComponent = i16;
 pub struct Vertex {
     x: Component,
@@ -9,7 +9,6 @@ type Polygon<const N: usize> = [Vertex; N];
 pub type Line = Polygon<2>;
 pub type Triangle = Polygon<3>;
 pub type Quad = Polygon<4>;
-pub type Length = Component;
 
 pub type PolyLine<'a> = &'a [Vertex];
 
