@@ -66,7 +66,8 @@ fn main() {
         );
         println!("  --skip-pack          Skips packaging and only builds an ELF");
         println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
-        println!("\n");
+        println!("  --no-alloc           Avoids building the `alloc` crate");
+        println!("");
         println!("Run `cargo build -h` for build options");
         return
     };
@@ -75,9 +76,15 @@ fn main() {
     let (skip_build, cargo_args) = extract_flag("--skip-build", cargo_args);
     let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
     let (no_pad, cargo_args) = extract_flag("--no-pad", cargo_args);
+    let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
+    let build_std = if no_alloc {
+        "core"
+    } else {
+        "core,alloc"
+    };
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
@@ -85,7 +92,7 @@ fn main() {
             .arg("+".to_string() + &toolchain_name)
             .arg("build")
             .arg("-Z")
-            .arg("build-std=core,alloc")
+            .arg("build-std=".to_string() + &build_std)
             .arg("--target")
             .arg(target_triple)
             .args(cargo_args)
