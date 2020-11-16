@@ -88,6 +88,7 @@ fn main() {
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
+        // TODO: remove `RUSTFLAGS` env var after fixing rust-lld's alloc error
         let mut build = Command::new("cargo")
             .arg("+".to_string() + &toolchain_name)
             .arg("build")
@@ -96,6 +97,7 @@ fn main() {
             .arg("--target")
             .arg(target_triple)
             .args(cargo_args)
+            .env("RUSTFLAGS", "-C linker=../../mips_toolchain/ld")
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())

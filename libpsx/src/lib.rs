@@ -49,6 +49,14 @@ macro_rules! exe {
         #[cfg(not(doc))]
         use crate::executable::Ctxt;
 
+        // TODO: fix the linker error with rust-lld
+        extern crate alloc;
+        // TODO: add other common collections here
+        use alloc::borrow::Cow;
+        use alloc::boxed::Box;
+        use alloc::rc::Rc;
+        use alloc::vec::Vec;
+
         pub mod executable {
 
             #[cfg(doc)]

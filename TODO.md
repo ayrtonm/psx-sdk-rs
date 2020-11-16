@@ -8,7 +8,8 @@ everything...). Very roughly in order of priority.
 - [x] Use allocator
     - [x] Add call to heap init in `libpsx::exe`
     - [x] Add a `no heap` option
-    - [ ] Add a real alloc-free option (`no heap` w/o building alloc)
+    - [x] Add a real alloc-free option (`no heap` w/o building alloc)
+    - [ ] Fix linker error for `alloc` crate with rust-lld
 - [ ] Add DMA channels
     - [ ] GPU DMA
 - [ ] Finish GPU support
