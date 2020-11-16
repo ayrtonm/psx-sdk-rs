@@ -3,7 +3,7 @@ use crate::gpu::vertex::{Component, Line, PolyLine, Quad, Triangle, Vertex};
 use crate::gpu::DrawPort;
 use crate::registers::Write;
 
-type ShadedPolyLine<'a, 'b, 'c> = &'a mut dyn Iterator<Item = (&'a Color, &'b Vertex)>;
+type ShadedPolyLine<'a, 'b, 'c> = &'a mut dyn Iterator<Item = (&'b Color, &'c Vertex)>;
 
 impl DrawPort {
     const TERMINATION_CODE: u32 = 0x5555_5555;

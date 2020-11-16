@@ -64,15 +64,11 @@ macro_rules! exe {
         pub mod executable {
 
             #[cfg(doc)]
-            use {
-                crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
-                crate::dma::{GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
-            };
+            use {crate::dma::{Dma, GpuDma, GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
+                 crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat}};
             #[cfg(not(doc))]
-            use {
-                libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
-                libpsx::dma::{GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
-            };
+            use {libpsx::dma::{Dma, GpuDma, GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
+                 libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat}};
 
             pub struct Ctxt {
                 //GPU ports
@@ -82,9 +78,7 @@ macro_rules! exe {
                 gpu_stat: Option<GpuStat>,
 
                 //DMA channel registers
-                gpu_dma_addr: Option<GpuDmaAddr>,
-                gpu_dma_block: Option<GpuDmaBlock>,
-                gpu_dma_control: Option<GpuDmaControl>,
+                gpu_dma: Option<GpuDma>,
             }
 
             impl Ctxt {
@@ -96,12 +90,20 @@ macro_rules! exe {
                     self.disp_port.take()
                 }
 
+                pub fn take_gpu_dma(&mut self) -> Option<GpuDma> {
+                    self.gpu_dma.take()
+                }
+
                 pub fn replace_draw_port(&mut self, draw_port: Option<DrawPort>) {
                     self.draw_port = draw_port;
                 }
 
                 pub fn replace_disp_port(&mut self, disp_port: Option<DispPort>) {
                     self.disp_port = disp_port;
+                }
+
+                pub fn replace_gpu_dma(&mut self, gpu_dma: Option<GpuDma>) {
+                    self.gpu_dma = gpu_dma;
                 }
             }
 
@@ -111,9 +113,12 @@ macro_rules! exe {
                 disp_port: Some(DispPort),
                 gpu_read: Some(GpuRead),
                 gpu_stat: Some(GpuStat),
-                gpu_dma_addr: Some(GpuDmaAddr),
-                gpu_dma_block: Some(GpuDmaBlock),
-                gpu_dma_control: Some(GpuDmaControl),
+
+                gpu_dma: Some(Dma {
+                    addr: GpuDmaAddr,
+                    block: GpuDmaBlock,
+                    control: GpuDmaControl,
+                }),
             };
 
             //TODO: remove link_section (or change to .text) for regular .psexe's

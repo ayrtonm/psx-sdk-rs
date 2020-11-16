@@ -1,4 +1,4 @@
-use crate::registers::{Read, Write, Update};
+use crate::registers::{BitTwiddle, Read, Update, Write};
 use crate::rw_register;
 
 rw_register!(GpuDmaAddr, 0x1F80_10A0);
@@ -48,16 +48,14 @@ pub trait DmaBlock: Read + Write {
         //TODO: add debug mode checks
         match dma_blocks {
             Blocks::Words(words) => {
-                let words = if words == 0x1_0000 {
-                    0
-                } else {
-                    words.into()
+                let words = match words {
+                    0..=0xFFFF => words.into(),
+                    0x1_0000 => 0,
+                    _ => unreachable!("Number of words can't exceed 0x1_0000"),
                 };
                 self.write(words);
             },
-            Blocks::Blocks { words, blocks } => {
-                self.write(words as u32 | ((blocks as u32) << 16))
-            },
+            Blocks::Blocks { words, blocks } => self.write(words as u32 | ((blocks as u32) << 16)),
             Blocks::LinkedList => self.write(0),
         }
     }
@@ -80,12 +78,17 @@ pub trait DmaControl: Update {
         self.update(1, bit);
     }
     fn set_chopping(&mut self, chop: bool) {
-        let bit = if chop {
-            1
-        } else {
-            0
-        };
+        let bit = if chop { 1 } else { 0 };
         self.update(8, bit);
+    }
+    fn sync_mode(&self) -> Option<Mode> {
+        let value = self.read();
+        match value.bits(9..=10) {
+            0 => Some(Mode::Immediate),
+            1 => Some(Mode::Request),
+            2 => Some(Mode::LinkedList),
+            _ => None,
+        }
     }
     fn set_sync_mode(&mut self, mode: Mode) {
         let bits = match mode {
@@ -95,7 +98,24 @@ pub trait DmaControl: Update {
         };
         self.update_bits(9..=10, bits);
     }
+    fn start(&mut self) {
+        self.update(24, 1);
+        if let Some(Mode::Immediate) = self.sync_mode() {
+            self.update(28, 1);
+        }
+    }
+    fn busy(&self) -> bool {
+        self.read().bit(24) == 1
+    }
 }
+
+pub struct Dma<A: DmaAddr, B: DmaBlock, C: DmaControl> {
+    pub addr: A,
+    pub block: B,
+    pub control: C,
+}
+
+pub type GpuDma = Dma<GpuDmaAddr, GpuDmaBlock, GpuDmaControl>;
 
 impl DmaAddr for GpuDmaAddr {}
 impl DmaBlock for GpuDmaBlock {}
