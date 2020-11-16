@@ -5,9 +5,10 @@
 This is a very preliminary list of things missing in libpsx (almost
 everything...). Very roughly in order of priority.
 
-- [ ] Use allocator
-    - [ ] Add call to heap init in `libpsx::exe`
-    - [ ] Add a real alloc-free option
+- [x] Use allocator
+    - [x] Add call to heap init in `libpsx::exe`
+    - [ ] Add a `no heap` option
+    - [ ] Add a real alloc-free option (`no heap` w/o building alloc)
 - [ ] Add DMA channels
 - [ ] Finish GPU support
   - [ ] Support DMA

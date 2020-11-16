@@ -26,7 +26,11 @@ pub fn delay(n: u32) {
 
 #[macro_export]
 macro_rules! exe {
-    () => {
+    (big heap) => { libpsx::exe!(0x1F00_0000, 8192 * 1024); };
+    (fast heap) => { libpsx::exe!(0x1F80_0000, 1024); };
+    () => { libpsx::exe!(0x1FA0_0000, 2048 * 1024); };
+    (no heap) => { todo!("implement me") };
+    ($heap_addr:expr, $heap_size:expr) => {
         #[cfg(not(doc))]
         use crate::executable::Ctxt;
         pub mod executable {
@@ -71,6 +75,7 @@ macro_rules! exe {
             #[no_mangle]
             //#[link_section = ".exe"]
             fn main() {
+                libpsx::bios::init_heap($heap_addr, $heap_size);
                 super::main(ctxt)
             }
             #[cfg(doc)]
