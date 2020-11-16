@@ -37,17 +37,17 @@ fn panic(_info: &PanicInfo) -> ! {
 
 #[macro_export]
 macro_rules! exe {
-    (big heap) => {
-        libpsx::exe!(0x1F00_0000, 8192 * 1024);
-    };
-    (fast heap) => {
-        libpsx::exe!(0x1F80_0000, 1024);
-    };
     () => {
         libpsx::exe!(0x1FA0_0000, 2048 * 1024);
     };
     (no heap) => {
         libpsx::exe!(0, 0);
+    };
+    (big heap) => {
+        libpsx::exe!(0x1F00_0000, 8192 * 1024);
+    };
+    (fast heap) => {
+        libpsx::exe!(0x1F80_0000, 1024);
     };
     ($heap_addr:expr, $heap_size:expr) => {
         #[cfg(not(doc))]
@@ -64,15 +64,27 @@ macro_rules! exe {
         pub mod executable {
 
             #[cfg(doc)]
-            use crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat};
+            use {
+                crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
+                crate::dma::{GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
+            };
             #[cfg(not(doc))]
-            use libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat};
+            use {
+                libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
+                libpsx::dma::{GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
+            };
 
             pub struct Ctxt {
+                //GPU ports
                 draw_port: Option<DrawPort>,
                 disp_port: Option<DispPort>,
                 gpu_read: Option<GpuRead>,
                 gpu_stat: Option<GpuStat>,
+
+                //DMA channel registers
+                gpu_dma_addr: Option<GpuDmaAddr>,
+                gpu_dma_block: Option<GpuDmaBlock>,
+                gpu_dma_control: Option<GpuDmaControl>,
             }
 
             impl Ctxt {
@@ -99,6 +111,9 @@ macro_rules! exe {
                 disp_port: Some(DispPort),
                 gpu_read: Some(GpuRead),
                 gpu_stat: Some(GpuStat),
+                gpu_dma_addr: Some(GpuDmaAddr),
+                gpu_dma_block: Some(GpuDmaBlock),
+                gpu_dma_control: Some(GpuDmaControl),
             };
 
             //TODO: remove link_section (or change to .text) for regular .psexe's

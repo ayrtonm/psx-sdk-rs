@@ -1,17 +1,20 @@
+use core::intrinsics::{volatile_load, volatile_store};
+use core::ops::RangeInclusive;
+
 pub trait BitTwiddle {
-    fn set(&self, idx: usize) -> u32;
-    fn clear(&self, idx: usize) -> u32;
-    fn toggle(&self, idx: usize) -> u32;
+    fn set(&self, idx: u32) -> u32;
+    fn clear(&self, idx: u32) -> u32;
+    fn toggle(&self, idx: u32) -> u32;
 }
 
 impl BitTwiddle for u32 {
-    fn set(&self, idx: usize) -> u32 {
+    fn set(&self, idx: u32) -> u32 {
         *self | (1 << idx)
     }
-    fn clear(&self, idx: usize) -> u32 {
+    fn clear(&self, idx: u32) -> u32 {
         *self & !(1 << idx)
     }
-    fn toggle(&self, idx: usize) -> u32 {
+    fn toggle(&self, idx: u32) -> u32 {
         *self ^ (1 << idx)
     }
 }
@@ -22,13 +25,13 @@ pub trait Addr {
 
 pub trait Read: Addr {
     fn read(&self) -> u32 {
-        unsafe { core::intrinsics::volatile_load(Self::ADDRESS as *const u32) }
+        unsafe { volatile_load(Self::ADDRESS as *const u32) }
     }
 }
 
 pub trait Write: Addr {
     fn write(&mut self, value: u32) {
-        unsafe { core::intrinsics::volatile_store(Self::ADDRESS as *mut u32, value) }
+        unsafe { volatile_store(Self::ADDRESS as *mut u32, value) }
     }
 
     fn write_slice(&mut self, values: &[u32]) {
@@ -39,10 +42,22 @@ pub trait Write: Addr {
 }
 
 pub trait Update: Read + Write {
-    fn update(&mut self, idx: usize, value: u32) {
-        // TODO: add some debug checks here
+    // TODO: add some debug checks to these functions
+    fn update(&mut self, idx: u32, value: u32) {
         let current_value = self.read();
         let new_value = current_value.clear(idx) | (value << idx);
+        self.write(new_value);
+    }
+    fn update_bits(&mut self, idx_range: RangeInclusive<usize>, value: u32) {
+        let current_value = self.read();
+        // For example update_bits(2..=4, x)
+        // lower mask 0000...00011
+        // upper mask 0000...01111
+        // mask       0000...01100
+        let lower_mask = (1 << idx_range.start()) - 1;
+        let upper_mask = (1 << idx_range.end()) - 1;
+        let mask = upper_mask ^ lower_mask;
+        let new_value = current_value & !(mask << idx_range.start()) | (value << idx_range.start());
         self.write(new_value);
     }
 }

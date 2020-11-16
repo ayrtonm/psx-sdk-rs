@@ -22,6 +22,12 @@ pub enum Step {
     Backward,
 }
 
+pub enum Mode {
+    Immediate,
+    Request,
+    LinkedList,
+}
+
 pub trait DmaAddr: Read + Write {
     fn read_address(&mut self) -> u32 {
         self.read()
@@ -39,11 +45,11 @@ pub trait DmaBlock: Read + Write {
     // Note that this depends on sync mode, meaning that the channel may not
     // necessarily be in the given block mode
     fn set_blocks(&mut self, dma_blocks: Blocks) {
+        //TODO: add debug mode checks
         match dma_blocks {
             Blocks::Words(words) => {
-                // TODO: I should be doing the opposite here
-                let words = if words == 0 {
-                    0x0001_0000
+                let words = if words == 0x1_0000 {
+                    0
                 } else {
                     words.into()
                 };
@@ -74,17 +80,20 @@ pub trait DmaControl: Update {
         self.update(1, bit);
     }
     fn set_chopping(&mut self, chop: bool) {
-        if chop {
-            self.enable_chopping();
+        let bit = if chop {
+            1
         } else {
-            self.disable_chopping();
-        }
+            0
+        };
+        self.update(8, bit);
     }
-    fn enable_chopping(&mut self) {
-        self.update(8, 1);
-    }
-    fn disable_chopping(&mut self) {
-        self.update(8, 0);
+    fn set_sync_mode(&mut self, mode: Mode) {
+        let bits = match mode {
+            Mode::Immediate => 0,
+            Mode::Request => 1,
+            Mode::LinkedList => 2,
+        };
+        self.update_bits(9..=10, bits);
     }
 }
 
