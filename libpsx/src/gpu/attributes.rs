@@ -1,5 +1,6 @@
 use crate::gpu::vertex::Component;
 use crate::gpu::DrawEnv;
+use crate::macros::RegisterWrite;
 
 impl DrawEnv {
     // Calls DrawEnv(E3h)

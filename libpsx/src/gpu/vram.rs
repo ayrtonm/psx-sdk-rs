@@ -1,4 +1,5 @@
 use crate::gpu::DrawEnv;
+use crate::macros::RegisterWrite;
 
 impl DrawEnv {
     fn serialize((x, y): (u16, u16)) -> u32 {

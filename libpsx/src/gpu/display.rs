@@ -1,6 +1,7 @@
 use crate::gpu::res::{Depth, DmaSource, Hres, Vmode, Vres};
 use crate::gpu::vertex::Component;
 use crate::gpu::DisplayEnv;
+use crate::macros::RegisterWrite;
 
 impl DisplayEnv {
     // Calls DisplayEnv(00h)
