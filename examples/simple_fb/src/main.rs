@@ -6,7 +6,7 @@ use core::cell::RefCell;
 use libpsx::delay;
 use libpsx::gpu::vertex::Vertex;
 use libpsx::gpu::color::Color;
-use libpsx::gpu::res::{Hres, Vres};
+use libpsx::gpu::{Hres, Vres};
 use libpsx::gpu::framebuffer::Framebuffer;
 
 libpsx::exe!();

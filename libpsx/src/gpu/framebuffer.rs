@@ -1,7 +1,6 @@
 use crate::gpu::color::Color;
-use crate::gpu::res::{Depth, Res, Vmode};
 use crate::gpu::vertex::{Component, Vertex};
-use crate::gpu::{DisplayEnv, DrawEnv};
+use crate::gpu::{Depth, DisplayEnv, DrawEnv, Res, Vmode};
 use core::cell::RefCell;
 
 type BufferLocation = (Component, Component);
