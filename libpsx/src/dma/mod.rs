@@ -2,8 +2,8 @@ use crate::registers::{BitTwiddle, Read, Update, Write};
 
 pub enum BlockLen {
     // TODO: this should be u32 since 0x10000 is valid and gets mapped to 0u16
-    Words(u32),
-    Blocks { words: u32, blocks: u32 },
+    Words(usize),
+    Blocks { words: usize, blocks: usize },
     LinkedList,
 }
 
@@ -24,11 +24,12 @@ pub enum Mode {
 }
 
 pub trait Addr: Read + Write {
-    fn read_address(&mut self) -> u32 {
+    fn get(&mut self) -> u32 {
         self.read()
     }
 
-    fn set_address(&mut self, mut address: u32) {
+    fn set(&mut self, address: *const u32) {
+        let mut address = address as u32;
         if cfg!(debug_assertions) {
             address &= 0x00FF_FFFF;
         }
@@ -39,12 +40,12 @@ pub trait Addr: Read + Write {
 pub trait Block: Read + Write {
     // Note that this depends on sync mode, meaning that the channel may not
     // necessarily be in the given block mode
-    fn set_blocks(&mut self, dma_blocks: BlockLen) {
+    fn set(&mut self, dma_blocks: BlockLen) {
         //TODO: add debug mode checks
         match dma_blocks {
             BlockLen::Words(words) => {
                 let words = match words {
-                    0..=0xFFFF => words.into(),
+                    0..=0xFFFF => words as u32,
                     0x1_0000 => 0,
                     _ => unreachable!("Number of words can't exceed 0x1_0000"),
                 };
