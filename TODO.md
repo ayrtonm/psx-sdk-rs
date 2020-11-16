@@ -5,9 +5,12 @@
 This is a very preliminary list of things missing in libpsx (almost
 everything...). Very roughly in order of priority.
 
-- [x] Replace all `unwrap` with `expect`
-- [ ] Add controller support
+- [ ] Use allocator
+    - [ ] Add call to heap init in `libpsx::exe`
+    - [ ] Add a real alloc-free option
+- [ ] Add DMA channels
 - [ ] Finish GPU support
+  - [ ] Support DMA
   - [ ] Add texture support
   - [ ] Finish VRAM copy functions
   - [ ] Add draw quad functions with logical vertex ordering
@@ -16,16 +19,16 @@ everything...). Very roughly in order of priority.
     - [ ] Consider a version with two-step swap (first call `draw` then `display`)
     - [ ] Allow setting color depth, video mode and interlacing
   - [ ] Support depth ordering tables
-  - [ ] Support DMA
   - [ ] Support timer
+- [ ] Add controller support
 - [ ] Add interrupt control
     - [ ] Make allocator impl interrupt-free
+- [ ] Add CDROM/ISO support
+    - [ ] via kernel
+        - [ ] fix `load_exe` demo
+    - [ ] via IO registers
 - [ ] Add thread support via kernel functions
     - [ ] Figure out how this connects to the Atomic API that was disabled in rustc
-- [ ] Add DMA channels
-- [ ] Use allocator
-    - [ ] Add call to heap init in `libpsx::exe`
-    - [ ] Add a real alloc-free option
 - [ ] Finish adding relevant kernel functions
     - [ ] Try inlining bios asm trampolines
 - [ ] Add relevant coprocessor 0 asm snippets
@@ -34,10 +37,7 @@ everything...). Very roughly in order of priority.
 - [ ] Add SPU support
 - [ ] Add MDEC support
 - [ ] Add memory card support
-- [ ] Add CDROM/ISO support
-    - [ ] via kernel
-        - [ ] fix `load_exe` demo
-    - [ ] via IO registers
+- [x] Replace all `unwrap` with `expect`
 
 ## cargo-psx
 
@@ -45,7 +45,7 @@ This is a list of pending features for cargo-psx in a pretty random order.
 
 - [x] Replace all `unwrap` with `expect`
 - [x] Pad psexe size to multiple of 0x800
-    - [ ] Fix the case where the file size is already a multiple of 0x800
+    - [x] Fix the case where the file size is already a multiple of 0x800
 - [ ] Figure out the multi-psexe story for large binaries
 - [ ] Decide whether to add rudimentary ISO support
 - [ ] Make build-std configurable for alloc-free binaries
