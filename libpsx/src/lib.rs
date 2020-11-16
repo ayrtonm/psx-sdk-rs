@@ -64,10 +64,10 @@ macro_rules! exe {
         pub mod executable {
 
             #[cfg(doc)]
-            use {crate::dma::{Dma, GpuDma, GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
+            use {crate::dma,
                  crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat}};
             #[cfg(not(doc))]
-            use {libpsx::dma::{Dma, GpuDma, GpuDmaAddr, GpuDmaBlock, GpuDmaControl},
+            use {libpsx::dma,
                  libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat}};
 
             pub struct Ctxt {
@@ -78,7 +78,7 @@ macro_rules! exe {
                 gpu_stat: Option<GpuStat>,
 
                 //DMA channel registers
-                gpu_dma: Option<GpuDma>,
+                gpu_dma: Option<dma::Gpu>,
             }
 
             impl Ctxt {
@@ -90,7 +90,7 @@ macro_rules! exe {
                     self.disp_port.take()
                 }
 
-                pub fn take_gpu_dma(&mut self) -> Option<GpuDma> {
+                pub fn take_gpu_dma(&mut self) -> Option<dma::Gpu> {
                     self.gpu_dma.take()
                 }
 
@@ -102,7 +102,7 @@ macro_rules! exe {
                     self.disp_port = disp_port;
                 }
 
-                pub fn replace_gpu_dma(&mut self, gpu_dma: Option<GpuDma>) {
+                pub fn replace_gpu_dma(&mut self, gpu_dma: Option<dma::Gpu>) {
                     self.gpu_dma = gpu_dma;
                 }
             }
@@ -114,10 +114,10 @@ macro_rules! exe {
                 gpu_read: Some(GpuRead),
                 gpu_stat: Some(GpuStat),
 
-                gpu_dma: Some(Dma {
-                    addr: GpuDmaAddr,
-                    block: GpuDmaBlock,
-                    control: GpuDmaControl,
+                gpu_dma: Some(dma::Channel {
+                    addr: dma::gpu::Addr,
+                    block: dma::gpu::Block,
+                    control: dma::gpu::Control,
                 }),
             };
 

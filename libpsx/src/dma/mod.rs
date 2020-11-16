@@ -1,11 +1,6 @@
 use crate::registers::{BitTwiddle, Read, Update, Write};
-use crate::rw_register;
 
-rw_register!(GpuDmaAddr, 0x1F80_10A0);
-rw_register!(GpuDmaBlock, 0x1F80_10A4);
-rw_register!(GpuDmaControl, 0x1F80_10A8);
-
-pub enum Blocks {
+pub enum BlockLen {
     // TODO: this should be u32 since 0x10000 is valid and gets mapped to 0u16
     Words(u32),
     Blocks { words: u32, blocks: u32 },
@@ -28,7 +23,7 @@ pub enum Mode {
     LinkedList,
 }
 
-pub trait DmaAddr: Read + Write {
+pub trait Addr: Read + Write {
     fn read_address(&mut self) -> u32 {
         self.read()
     }
@@ -41,13 +36,13 @@ pub trait DmaAddr: Read + Write {
     }
 }
 
-pub trait DmaBlock: Read + Write {
+pub trait Block: Read + Write {
     // Note that this depends on sync mode, meaning that the channel may not
     // necessarily be in the given block mode
-    fn set_blocks(&mut self, dma_blocks: Blocks) {
+    fn set_blocks(&mut self, dma_blocks: BlockLen) {
         //TODO: add debug mode checks
         match dma_blocks {
-            Blocks::Words(words) => {
+            BlockLen::Words(words) => {
                 let words = match words {
                     0..=0xFFFF => words.into(),
                     0x1_0000 => 0,
@@ -55,13 +50,15 @@ pub trait DmaBlock: Read + Write {
                 };
                 self.write(words);
             },
-            Blocks::Blocks { words, blocks } => self.write(words as u32 | ((blocks as u32) << 16)),
-            Blocks::LinkedList => self.write(0),
+            BlockLen::Blocks { words, blocks } => {
+                self.write(words as u32 | ((blocks as u32) << 16))
+            },
+            BlockLen::LinkedList => self.write(0),
         }
     }
 }
 
-pub trait DmaControl: Update {
+pub trait Control: Update {
     fn set_direction(&mut self, direction: Direction) {
         let bit = match direction {
             Direction::ToRam => 0,
@@ -109,14 +106,21 @@ pub trait DmaControl: Update {
     }
 }
 
-pub struct Dma<A: DmaAddr, B: DmaBlock, C: DmaControl> {
+pub struct Channel<A: Addr, B: Block, C: Control> {
     pub addr: A,
     pub block: B,
     pub control: C,
 }
 
-pub type GpuDma = Dma<GpuDmaAddr, GpuDmaBlock, GpuDmaControl>;
+pub type Gpu = Channel<gpu::Addr, gpu::Block, gpu::Control>;
 
-impl DmaAddr for GpuDmaAddr {}
-impl DmaBlock for GpuDmaBlock {}
-impl DmaControl for GpuDmaControl {}
+pub mod gpu {
+    use crate::rw_register;
+    rw_register!(Addr, 0x1F80_10A0);
+    rw_register!(Block, 0x1F80_10A4);
+    rw_register!(Control, 0x1F80_10A8);
+
+    impl super::Addr for Addr {}
+    impl super::Block for Block {}
+    impl super::Control for Control {}
+}
