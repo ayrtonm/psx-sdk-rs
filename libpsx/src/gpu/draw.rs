@@ -81,6 +81,15 @@ impl DrawEnv {
         self.write((h as u32) << 16 | (w as u32));
     }
 
+    // TODO: `tex` in the fn sig is temporary, come up with something sensible
+    pub fn draw_rect_textured(&mut self, offset: Point, w: Length, h: Length, tex: u32) {
+        self.write(0x65 << 24);
+        self.write(offset.into());
+        self.write(tex);
+        self.write((h as u32) << 16 | (w as u32));
+    }
+
+
     pub fn draw_square(&mut self, offset: Point, l: Length, c: &Color) {
         self.draw_rect(offset, l, l, c)
     }
