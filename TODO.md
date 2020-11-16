@@ -51,8 +51,8 @@ This is a list of pending features for cargo-psx in a pretty random order.
     - [x] Fix the case where the file size is already a multiple of 0x800
 - [ ] Figure out the multi-psexe story for large binaries
 - [ ] Decide whether to add rudimentary ISO support
-- [ ] Make build-std configurable for alloc-free binaries
-- [ ] Throw in `RUSTFLAGS` env variable and see if adding `RUSTC` makes sense
+- [x] Make build-std configurable for alloc-free binaries
+- [x] Throw in `RUSTFLAGS` env variable and see if adding `RUSTC` makes sense
 - [ ] Make output .psexe name configurable
-    - [ ] Add compiler profile (release/debug) to default names
-    - [ ] Consider adding region to default names
+    - [x] Add compiler profile (release/debug) to default names
+    - [x] Consider adding region to default names

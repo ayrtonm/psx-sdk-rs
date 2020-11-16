@@ -4,12 +4,6 @@ use crate::bios;
 
 pub struct BiosAllocator;
 
-impl BiosAllocator {
-    pub fn init(addr: usize, size: usize) {
-        bios::init_heap(addr, size);
-    }
-}
-
 // TODO: Make this impl interrupt-free as seen here
 // https://docs.rust-embedded.org/book/collections/
 // This'll probably require some small bits of assembly and glue to modify

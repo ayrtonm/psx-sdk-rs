@@ -125,7 +125,7 @@ fn main() {
                         .to_str()
                         .expect("Could not convert ELF path to UTF-8")
                         .to_string();
-                    let psexe = &format!("{}{}", &target.name, ".psexe");
+                    let psexe = &format!("{}_{}_{}{}", &target.name, profile, region, ".psexe");
                     let convert_args = vec![region.as_str(), elf, psexe];
                     elf2psexe::main(convert_args, no_pad);
                 }
