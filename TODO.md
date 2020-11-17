@@ -5,11 +5,9 @@
 This is a very preliminary list of things missing in libpsx (almost
 everything...). Very roughly in order of priority.
 
-- [x] Use allocator
-    - [x] Add call to heap init in `libpsx::exe`
-    - [x] Add a `no heap` option
-    - [x] Add a real alloc-free option (`no heap` w/o building alloc)
-    - [ ] Fix linker error for `alloc` crate with rust-lld
+- [ ] TIM texture loader
+- [ ] Add interrupt control
+    - [ ] Make allocator impl interrupt-free
 - [ ] Add DMA channels
     - [x] Basic GPU DMA channel
     - [ ] Other DMA channels
@@ -17,6 +15,9 @@ everything...). Very roughly in order of priority.
 - [ ] Finish GPU support
   - [x] Support DMA
   - [ ] Add texture support
+    - [x] Display texture in VRAM
+    - [ ] Decide how to structure Texcoord+CLUT arguments
+    - [ ] Display textured rectangles
   - [ ] Finish VRAM copy functions
   - [ ] Add draw quad functions with logical vertex ordering
   - [ ] Make framebuffer more flexible
@@ -25,9 +26,13 @@ everything...). Very roughly in order of priority.
     - [ ] Allow setting color depth, video mode and interlacing
   - [ ] Support depth ordering tables
   - [ ] Support timer
+- [x] Use allocator
+    - [x] Add call to heap init in `libpsx::exe`
+    - [x] Add a `no heap` option
+    - [x] Add a real alloc-free option (`no heap` w/o building alloc)
+    - [ ] Test collections (use GNU ld for now)
+    - [ ] Fix linker error for `alloc` crate with rust-lld
 - [ ] Add controller support
-- [ ] Add interrupt control
-    - [ ] Make allocator impl interrupt-free
 - [ ] Add CDROM/ISO support
     - [ ] via kernel
         - [ ] fix `load_exe` demo
@@ -42,19 +47,3 @@ everything...). Very roughly in order of priority.
 - [ ] Add SPU support
 - [ ] Add MDEC support
 - [ ] Add memory card support
-- [x] Replace all `unwrap` with `expect`
-
-## cargo-psx
-
-This is a list of pending features for cargo-psx in a pretty random order.
-
-- [x] Replace all `unwrap` with `expect`
-- [x] Pad psexe size to multiple of 0x800
-    - [x] Fix the case where the file size is already a multiple of 0x800
-- [ ] Figure out the multi-psexe story for large binaries
-- [ ] Decide whether to add rudimentary ISO support
-- [x] Make build-std configurable for alloc-free binaries
-- [x] Throw in `RUSTFLAGS` env variable and see if adding `RUSTC` makes sense
-- [ ] Make output .psexe name configurable
-    - [x] Add compiler profile (release/debug) to default names
-    - [x] Consider adding region to default names

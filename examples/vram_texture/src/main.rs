@@ -28,7 +28,7 @@ fn main(mut ctxt: Ctxt) {
     let ferris = include_bytes!("../ferris.tim");
     let mut ferris = ferris[0x14..]
         .chunks(4)
-        .map(|c| u32::from_le_bytes(c.try_into().unwrap()));
+        .map(|c| u32::from_le_bytes(c.try_into().expect("Couldn't convert 4-byte chunk to u32")));
 
     draw_port
         .borrow_mut()
