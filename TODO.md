@@ -11,9 +11,11 @@ everything...). Very roughly in order of priority.
     - [x] Add a real alloc-free option (`no heap` w/o building alloc)
     - [ ] Fix linker error for `alloc` crate with rust-lld
 - [ ] Add DMA channels
-    - [ ] GPU DMA
+    - [x] Basic GPU DMA channel
+    - [ ] Other DMA channels
+    - [ ] DMA control/interrupt registers
 - [ ] Finish GPU support
-  - [ ] Support DMA
+  - [x] Support DMA
   - [ ] Add texture support
   - [ ] Finish VRAM copy functions
   - [ ] Add draw quad functions with logical vertex ordering

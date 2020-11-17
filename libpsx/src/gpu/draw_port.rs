@@ -23,11 +23,15 @@ impl DrawPort {
         self.write_slice(&cmd_params);
     }
 
-    pub fn rect_to_vram(&mut self, dest: (u16, u16), size: (u16, u16), data: &[u32]) {
+    // TODO: decide on an API for this
+    pub fn rect_to_vram(&mut self, dest: (u16, u16), size: (u16, u16), data: &mut dyn Iterator<Item = u32>) {
+    //pub fn rect_to_vram(&mut self, dest: (u16, u16), size: (u16, u16), data: &[u32]) {
         let cmd = 0xA0 << 24;
         let cmd_params = [cmd, DrawPort::serialize(dest), DrawPort::serialize(size)];
         self.write_slice(&cmd_params);
-        self.write_slice(data);
+        data.for_each(|x| {
+            self.write(x);
+        });
     }
 
     // Calls DrawPort(E3h)

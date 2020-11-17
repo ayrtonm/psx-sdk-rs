@@ -36,14 +36,14 @@ fn main(mut ctxt: Ctxt) {
 
     let mut theta = 0.0;
     let delta = 0.0625;
-    for _ in 0..1 {
+    loop {
         theta += delta;
         while theta > 360.0 {
             theta -= 360.0;
         }
         do_transfer(&mut dma, theta);
+        fb.swap();
     }
-    fb.swap();
 }
 
 fn do_transfer(dma: &mut dma::Gpu, theta: f32) {
