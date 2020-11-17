@@ -1,11 +1,16 @@
-// This refers to the same `Component` alias in libpsx::gpu::vertex, but the
-// types may not match for performance reasons
-pub type Component = u32;
+use crate::gpu::vertex::Component;
+use crate::{ro_register, wo_register};
 
-//pub struct Res {
-//    h: Hres,
-//    v: Vres,
-//}
+pub mod color;
+pub mod disp_port;
+pub mod draw_port;
+pub mod framebuffer;
+pub mod vertex;
+
+ro_register!(GpuRead, 0x1F80_1810);
+ro_register!(GpuStat, 0x1F80_1814);
+wo_register!(DrawPort, 0x1F80_1810);
+wo_register!(DispPort, 0x1F80_1814);
 
 pub enum Hres {
     H256,
@@ -34,20 +39,9 @@ pub enum DmaSource {
 }
 
 pub type Res = (Hres, Vres);
-//impl Res {
-//    pub fn new(h: Hres, v: Vres) -> Self {
-//        Res { h, v }
-//    }
-//    pub fn h(&self) -> u32 {
-//        (&self.h).into()
-//    }
-//    pub fn v(&self) -> u32 {
-//        (&self.v).into()
-//    }
-//}
 
-impl From<&Hres> for u32 {
-    fn from(h: &Hres) -> u32 {
+impl From<&Hres> for Component {
+    fn from(h: &Hres) -> Component {
         match h {
             Hres::H256 => 256,
             Hres::H320 => 320,
@@ -58,8 +52,8 @@ impl From<&Hres> for u32 {
     }
 }
 
-impl From<&Vres> for u32 {
-    fn from(v: &Vres) -> u32 {
+impl From<&Vres> for Component {
+    fn from(v: &Vres) -> Component {
         match v {
             Vres::V240 => 240,
             Vres::V480 => 480,

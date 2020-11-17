@@ -14,5 +14,5 @@ rust/
 psxdev/*
 */*.s
 *.s
-examples/results
+examples/filesizes
 */*/*/target

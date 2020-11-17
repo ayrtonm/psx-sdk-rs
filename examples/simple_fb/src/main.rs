@@ -3,26 +3,28 @@
 
 use core::cell::RefCell;
 
-use libpsx::delay;
-use libpsx::gpu::vertex::Vertex;
-use libpsx::gpu::color::Color;
-use libpsx::gpu::res::{Hres, Vres};
-use libpsx::gpu::framebuffer::Framebuffer;
+use psx::delay;
+use psx::gpu::color::Color;
+use psx::gpu::framebuffer::Framebuffer;
+use psx::gpu::vertex::Vertex;
+use psx::gpu::{Hres, Vres};
 
-libpsx::exe!();
+psx::exe!();
 
-fn main(mut ctxt: Ctxt) {
-    let draw_env = RefCell::new(ctxt.take_draw_env().unwrap());
-    let display_env = RefCell::new(ctxt.take_display_env().unwrap());
+fn main(mut io: IO) {
+    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(io.take_disp_port().expect("DisplaEnv has been taken"));
     let res = (Hres::H320, Vres::V240);
     let buf0 = (0, 0);
     let buf1 = (0, 240);
-    let mut fb = Framebuffer::new(&draw_env, &display_env, buf0, buf1, res);
+    let mut fb = Framebuffer::new(&draw_port, &disp_port, buf0, buf1, res);
     let mut offset = 0;
     loop {
         offset += 1;
         delay(100000);
-        draw_env.borrow_mut().draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
+        draw_port
+            .borrow_mut()
+            .draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
         if offset == 240 - 64 {
             offset = 0;
         }

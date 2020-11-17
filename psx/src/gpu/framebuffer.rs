@@ -1,7 +1,6 @@
 use crate::gpu::color::Color;
-use crate::gpu::res::{Component, Depth, Res, Vmode};
-use crate::gpu::vertex::{Length, Vertex};
-use crate::gpu::{DisplayEnv, DrawEnv};
+use crate::gpu::vertex::{Component, Vertex};
+use crate::gpu::{Depth, DispPort, DrawPort, Res, Vmode};
 use core::cell::RefCell;
 
 type BufferLocation = (Component, Component);
@@ -12,8 +11,8 @@ enum Buffer {
 }
 
 pub struct Framebuffer<'a, 'b> {
-    draw_env: &'a RefCell<DrawEnv>,
-    display_env: &'b RefCell<DisplayEnv>,
+    draw_port: &'a RefCell<DrawPort>,
+    disp_port: &'b RefCell<DispPort>,
     display: Buffer,
     buffers: (BufferLocation, BufferLocation),
     res: Res,
@@ -21,25 +20,25 @@ pub struct Framebuffer<'a, 'b> {
 
 impl<'a, 'b> Framebuffer<'a, 'b> {
     pub fn new(
-        draw_env: &'a RefCell<DrawEnv>, display_env: &'b RefCell<DisplayEnv>, one: BufferLocation,
+        draw_port: &'a RefCell<DrawPort>, disp_port: &'b RefCell<DispPort>, one: BufferLocation,
         two: BufferLocation, res: Res,
     ) -> Self
     {
-        display_env.borrow_mut().horizontal(0, u32::from(&res.0));
-        display_env.borrow_mut().vertical(0, u32::from(&res.1));
-        display_env
+        disp_port.borrow_mut().horizontal(0, (&res.0).into());
+        disp_port.borrow_mut().vertical(0, (&res.1).into());
+        disp_port
             .borrow_mut()
             .mode(&res.0, &res.1, Vmode::NTSC, Depth::Lo, false);
         let mut fb = Framebuffer {
-            draw_env,
-            display_env,
+            draw_port,
+            disp_port,
             display: Buffer::One,
             buffers: (one, two),
             res,
         };
         fb.draw(Buffer::Two);
         fb.display(Buffer::One);
-        display_env.borrow_mut().on();
+        fb.disp_port.borrow_mut().on();
         fb
     }
 
@@ -67,25 +66,28 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
 
     fn draw(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres = u32::from(&self.res.0);
-        let vres = u32::from(&self.res.1);
-        self.draw_env.borrow_mut().start(buffer.0, buffer.1);
-        self.draw_env
+        let hres: Component = (&self.res.0).into();
+        let vres: Component = (&self.res.1).into();
+        self.draw_port
+            .borrow_mut()
+            .start(buffer.0.into(), buffer.1.into());
+        self.draw_port
             .borrow_mut()
             .end(buffer.0 + hres, buffer.1 + vres);
-        self.draw_env.borrow_mut().offset(buffer.0, buffer.1);
+        self.draw_port
+            .borrow_mut()
+            .offset(buffer.0.into(), buffer.1.into());
     }
 
     fn display(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres = u32::from(&self.res.0);
-        let vres = u32::from(&self.res.1);
-        self.display_env.borrow_mut().start(buffer.0, buffer.1);
-        self.draw_env.borrow_mut().draw_rect(
-            &Vertex::zero(),
-            hres as Length,
-            vres as Length,
-            &Color::black(),
-        );
+        let hres = (&self.res.0).into();
+        let vres = (&self.res.1).into();
+        self.disp_port
+            .borrow_mut()
+            .start(buffer.0.into(), buffer.1.into());
+        self.draw_port
+            .borrow_mut()
+            .draw_rect(&Vertex::zero(), hres, vres, &Color::black());
     }
 }

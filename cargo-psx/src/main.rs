@@ -22,7 +22,7 @@ fn extract_key_value(key: &str, args: Vec<String>) -> (Option<String>, Vec<Strin
     // Gets all arguments before key
     let cargo_args = temp_iter
         .next()
-        .unwrap()
+        .expect("Args empty")
         .iter()
         .cloned()
         .collect::<Vec<String>>();
@@ -33,7 +33,11 @@ fn extract_key_value(key: &str, args: Vec<String>) -> (Option<String>, Vec<Strin
         Some(v) => {
             let mut it = v.iter();
             (
-                Some(it.next().unwrap().to_string()),
+                Some(
+                    it.next()
+                        .expect("`split` returned an empty iterator")
+                        .to_string(),
+                ),
                 cargo_args
                     .iter()
                     .chain(it)
@@ -56,12 +60,14 @@ fn main() {
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
         println!("  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)");
-        println!("  --region <REGION>    Sets the game region to J, E or NA (default)");
+        println!("  --region <REGION>    Sets the game region to NA, EU or JP (default)");
         println!(
             "  --skip-build         Skips building and only packages an existing ELF into a PSEXE"
         );
         println!("  --skip-pack          Skips packaging and only builds an ELF");
-        println!("\n");
+        println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
+        println!("  --no-alloc           Avoids building the `alloc` crate");
+        println!("");
         println!("Run `cargo build -h` for build options");
         return
     };
@@ -69,27 +75,32 @@ fn main() {
     let (toolchain_name, cargo_args) = extract_key_value("--toolchain", cargo_args);
     let (skip_build, cargo_args) = extract_flag("--skip-build", cargo_args);
     let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
+    let (no_pad, cargo_args) = extract_flag("--no-pad", cargo_args);
+    let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
 
-    let region = region.unwrap_or("NA".to_string());
+    let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
+    let build_std = if no_alloc { "core" } else { "core,alloc" };
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
+        // TODO: remove `RUSTFLAGS` env var after fixing rust-lld's alloc error
         let mut build = Command::new("cargo")
             .arg("+".to_string() + &toolchain_name)
             .arg("build")
             .arg("-Z")
-            .arg("build-std=core,alloc")
+            .arg("build-std=".to_string() + &build_std)
             .arg("--target")
             .arg(target_triple)
             .args(cargo_args)
+            .env("RUSTFLAGS", "-C linker=../../mips_toolchain/ld")
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .spawn()
-            .unwrap();
+            .expect("`cargo build` failed to start");
 
-        let status = build.wait().unwrap();
+        let status = build.wait().expect("`cargo build` wasn't running");
         if !status.success() {
             let code = status.code().unwrap_or(1);
             process::exit(code);
@@ -97,7 +108,9 @@ fn main() {
     }
 
     if !skip_pack {
-        let metadata = MetadataCommand::new().exec().unwrap();
+        let metadata = MetadataCommand::new()
+            .exec()
+            .expect("Could not parse cargo metadata");
         let profile = env::args()
             .any(|arg| arg == "--release")
             .then_some("release")
@@ -107,10 +120,14 @@ fn main() {
         for pkg in metadata.packages {
             for target in pkg.targets {
                 if target.kind.iter().any(|k| k == "bin") {
-                    let elf = &target_dir.join(&target.name).to_str().unwrap().to_string();
-                    let psexe = &format!("{}{}", &target.name, ".psexe");
+                    let elf = &target_dir
+                        .join(&target.name)
+                        .to_str()
+                        .expect("Could not convert ELF path to UTF-8")
+                        .to_string();
+                    let psexe = &format!("{}_{}_{}{}", &target.name, profile, region, ".psexe");
                     let convert_args = vec![region.as_str(), elf, psexe];
-                    elf2psexe::main(convert_args);
+                    elf2psexe::main(convert_args, no_pad);
                 }
             }
         }

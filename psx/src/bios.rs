@@ -126,3 +126,71 @@ pub extern "C" fn gpu_get_status() -> u32 {
     }
     ret
 }
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn file_open(filename: *const u8, accessmode: u32) -> u8 {
+    let ret: u8;
+    unsafe {
+        asm!("li $9, 0x00
+              j 0xA0",
+               lateout("$2") ret);
+    }
+    ret
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn load_exe_header(filename: *const u8, headerbuf: *mut u8) {
+    unsafe {
+        asm!("li $9, 0x41
+              j 0xA0",
+               lateout("$2") _);
+    }
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn load_exe_file(filename: *const u8, headerbuf: *mut u8) {
+    unsafe {
+        asm!("li $9, 0x42
+              j 0xA0",
+               lateout("$2") _);
+    }
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32) {
+    unsafe {
+        asm!("li $9, 0x43
+              j 0xA0",
+               lateout("$2") _);
+    }
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32) {
+    unsafe {
+        asm!("li $9, 0x51
+              j 0xA0",
+               lateout("$2") _);
+    }
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn flush_cache() {
+    unsafe {
+        asm!("li $9, 0x44
+              j 0xA0",
+               lateout("$2") _);
+    }
+}

@@ -1,14 +1,26 @@
 # Todo
 
-## libpsx
+## psx
 
-This is a very preliminary list of things missing in libpsx (almost
+This is a very preliminary list of things missing in psx (almost
 everything...). Very roughly in order of priority.
 
-- [ ] Replace all `unwrap` with `expect`
-- [ ] Add controller support
+- [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
+- [ ] Add interrupt control
+    - [x] Interrupt enable/disable
+    - [ ] Interrupt acknowledge/status
+    - [x] Make allocator impl interrupt-free
+- [ ] TIM texture loader
+- [ ] Add DMA channels
+    - [x] Basic GPU DMA channel
+    - [ ] Other DMA channels
+    - [ ] DMA control/interrupt registers
 - [ ] Finish GPU support
+  - [x] Support DMA
   - [ ] Add texture support
+    - [x] Display texture in VRAM
+    - [ ] Decide how to structure Texcoord+CLUT arguments
+    - [ ] Display textured rectangles
   - [ ] Finish VRAM copy functions
   - [ ] Add draw quad functions with logical vertex ordering
   - [ ] Make framebuffer more flexible
@@ -16,16 +28,20 @@ everything...). Very roughly in order of priority.
     - [ ] Consider a version with two-step swap (first call `draw` then `display`)
     - [ ] Allow setting color depth, video mode and interlacing
   - [ ] Support depth ordering tables
-  - [ ] Support DMA
   - [ ] Support timer
-- [ ] Add interrupt control
-    - [ ] Make allocator impl interrupt-free
+- [x] Use allocator
+    - [x] Add call to heap init in `psx::exe`
+    - [x] Add a `no heap` option
+    - [x] Add a real alloc-free option (`no heap` w/o building alloc)
+    - [ ] Test collections (use GNU ld for now)
+    - [ ] Fix linker error for `alloc` crate with rust-lld
+- [ ] Add controller support
+- [ ] Add CDROM/ISO support
+    - [ ] via kernel
+        - [ ] fix `load_exe` demo
+    - [ ] via IO registers
 - [ ] Add thread support via kernel functions
     - [ ] Figure out how this connects to the Atomic API that was disabled in rustc
-- [ ] Add DMA channels
-- [ ] Use allocator
-    - [ ] Add call to heap init in `libpsx::exe`
-    - [ ] Add a real alloc-free option
 - [ ] Finish adding relevant kernel functions
     - [ ] Try inlining bios asm trampolines
 - [ ] Add relevant coprocessor 0 asm snippets
@@ -34,19 +50,4 @@ everything...). Very roughly in order of priority.
 - [ ] Add SPU support
 - [ ] Add MDEC support
 - [ ] Add memory card support
-- [ ] Add CDROM/ISO support
-
-## cargo-psx
-
-This is a list of pending features for cargo-psx in a pretty random order.
-
-- [ ] Replace all `unwrap` with `expect`
-- [x] Pad psexe size to multiple of 0x800
-    - [ ] Fix the case where the file size is already a multiple of 0x800
-- [ ] Figure out the multi-psexe story for large binaries
-- [ ] Decide whether to add rudimentary ISO support
-- [ ] Make build-std configurable for alloc-free binaries
-- [ ] Throw in `RUSTFLAGS` env variable and see if adding `RUSTC` makes sense
-- [ ] Make output .psexe name configurable
-    - [ ] Add compiler profile (release/debug) to default names
-    - [ ] Consider adding region to default names
+- [ ] Add a panic payload

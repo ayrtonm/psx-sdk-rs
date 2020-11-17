@@ -1,7 +1,7 @@
-echo "-----------" >> results
+echo "-----------" >> filesizes
 for i in */
     do cd $i;
-    cargo psx --release | rg Text | awk '{print $3}' | xargs echo $i >> ../results
+    cargo psx --release --no-pad | rg Text | awk '{print $3}' | xargs echo $i >> ../filesizes
     cd ..
 done
-echo "" >> results
+echo "" >> filesizes

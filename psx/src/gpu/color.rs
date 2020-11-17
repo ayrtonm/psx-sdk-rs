@@ -1,8 +1,8 @@
-type Component = u8;
+type Intensity = u8;
 pub struct Color {
-    red: Component,
-    green: Component,
-    blue: Component,
+    red: Intensity,
+    green: Intensity,
+    blue: Intensity,
 }
 
 pub type Palette<'a, const N: usize> = &'a [Color; N];
@@ -14,7 +14,7 @@ impl From<&Color> for u32 {
 }
 
 impl Color {
-    pub const fn new(red: Component, green: Component, blue: Component) -> Self {
+    pub const fn new(red: Intensity, green: Intensity, blue: Intensity) -> Self {
         Color { red, green, blue }
     }
 
@@ -82,7 +82,7 @@ impl Color {
     }
 
     fn map<F>(&self, f: F) -> Self
-    where F: Fn(Component) -> Component {
+    where F: Fn(Intensity) -> Intensity {
         Color::new(f(self.red), f(self.green), f(self.blue))
     }
 
