@@ -6,7 +6,6 @@ This is a very preliminary list of things missing in psx (almost
 everything...). Very roughly in order of priority.
 
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
-- [ ] Use OnceCell/Lazy for `Ctxt`. Currently `Ctxt` can't be created, but it's components can which ruins the point of modifying the main interface to restrict the number of instances.
 - [ ] Add interrupt control
     - [x] Interrupt enable/disable
     - [ ] Interrupt acknowledge/status
@@ -51,3 +50,4 @@ everything...). Very roughly in order of priority.
 - [ ] Add SPU support
 - [ ] Add MDEC support
 - [ ] Add memory card support
+- [ ] Add a panic payload

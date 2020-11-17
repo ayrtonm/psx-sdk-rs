@@ -4,7 +4,7 @@
 
 psx::exe!();
 
-fn main(mut _ctxt: Ctxt) {
+fn main(mut _io: IO) {
     unsafe {
         asm!(
             "lui $3, 0xbfc0

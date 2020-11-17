@@ -10,13 +10,13 @@ use psx::gpu::{Hres, Vres};
 
 psx::exe!();
 
-fn main(mut ctxt: Ctxt) {
-    // This will give an error since there should only be one instance of Ctxt
-    //let fake_ctxt = crate::executable::ctxt;
+fn main(mut io: IO) {
+    // This will give an error since there should only be one instance of IO
+    //let fake_io = crate::executable::io;
     let mut theta = 0.0;
     let delta = 0.0625;
-    let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));
-    let disp_port = RefCell::new(ctxt.take_disp_port().expect("DispPort has been taken"));
+    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);

@@ -21,9 +21,9 @@ fn mk_framebuffer<'a, 'b>(
     Framebuffer::new(draw_port, disp_port, buf0, buf1, res)
 }
 
-fn main(mut ctxt: Ctxt) {
-    let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));
-    let disp_port = RefCell::new(ctxt.take_disp_port().expect("DispPort has been taken"));
+fn main(mut io: IO) {
+    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
     mk_framebuffer(&draw_port, &disp_port);
     let ferris = include_bytes!("../ferris.tim");
     let mut ferris = ferris[0x14..]

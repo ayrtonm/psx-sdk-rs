@@ -11,9 +11,9 @@ use psx::gpu::{Hres, Vres};
 
 psx::exe!();
 
-fn main(mut ctxt: Ctxt) {
-    let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));
-    let disp_port = RefCell::new(ctxt.take_disp_port().expect("DisplaEnv has been taken"));
+fn main(mut io: IO) {
+    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(io.take_disp_port().expect("DisplaEnv has been taken"));
     let res = (Hres::H320, Vres::V240);
     let buf0 = (0, 0);
     let buf1 = (0, 240);

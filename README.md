@@ -79,7 +79,7 @@ for more options.
 
 psx::exe!();
 
-fn main(mut ctxt: Ctxt) {
+fn main(mut io: IO) {
 }
 ```
 

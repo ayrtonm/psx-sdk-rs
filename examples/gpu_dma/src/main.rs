@@ -23,10 +23,10 @@ fn mk_framebuffer<'a, 'b>(
     Framebuffer::new(draw_port, disp_port, buf0, buf1, res)
 }
 
-fn main(mut ctxt: Ctxt) {
-    let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));
-    let disp_port = RefCell::new(ctxt.take_disp_port().expect("DispPort has been taken"));
-    let mut dma = ctxt.take_gpu_dma().expect("GPU DMA has been taken");
+fn main(mut io: IO) {
+    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
+    let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
+    let mut dma = io.take_gpu_dma().expect("GPU DMA has been taken");
     let mut fb = mk_framebuffer(&draw_port, &disp_port);
 
     dma.control.set_direction(Direction::FromRam);

@@ -80,7 +80,12 @@ impl<T: Read + Write> Update for T {}
 #[macro_export]
 macro_rules! ro_register {
     ($name:ident, $addr:expr) => {
-        pub struct $name;
+        pub struct $name(());
+        impl $name {
+            pub unsafe fn new() -> Self {
+                $name(())
+            }
+        }
         impl crate::registers::Addr for $name {
             const ADDRESS: u32 = $addr;
         }
@@ -91,7 +96,12 @@ macro_rules! ro_register {
 #[macro_export]
 macro_rules! wo_register {
     ($name:ident, $addr:expr) => {
-        pub struct $name;
+        pub struct $name(());
+        impl $name {
+            pub unsafe fn new() -> Self {
+                $name(())
+            }
+        }
         impl crate::registers::Addr for $name {
             const ADDRESS: u32 = $addr;
         }
@@ -102,7 +112,12 @@ macro_rules! wo_register {
 #[macro_export]
 macro_rules! rw_register {
     ($name:ident, $addr:expr) => {
-        pub struct $name;
+        pub struct $name(());
+        impl $name {
+            pub unsafe fn new() -> Self {
+                $name(())
+            }
+        }
         impl crate::registers::Addr for $name {
             const ADDRESS: u32 = $addr;
         }
