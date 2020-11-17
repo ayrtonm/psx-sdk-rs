@@ -39,16 +39,16 @@ fn panic(_info: &PanicInfo) -> ! {
 #[macro_export]
 macro_rules! exe {
     () => {
-        libpsx::exe!(0x1FA0_0000, 2048 * 1024);
+        psx::exe!(0x1FA0_0000, 2048 * 1024);
     };
     (no heap) => {
-        libpsx::exe!(0, 0);
+        psx::exe!(0, 0);
     };
     (big heap) => {
-        libpsx::exe!(0x1F00_0000, 8192 * 1024);
+        psx::exe!(0x1F00_0000, 8192 * 1024);
     };
     (fast heap) => {
-        libpsx::exe!(0x1F80_0000, 1024);
+        psx::exe!(0x1F80_0000, 1024);
     };
     ($heap_addr:expr, $heap_size:expr) => {
         #[cfg(not(doc))]
@@ -69,9 +69,9 @@ macro_rules! exe {
                  crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
                  crate::interrupt};
             #[cfg(not(doc))]
-            use {libpsx::dma,
-                 libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
-                 libpsx::interrupt};
+            use {psx::dma,
+                 psx::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
+                 psx::interrupt};
 
             pub struct Ctxt {
                 //GPU ports
@@ -144,7 +144,7 @@ macro_rules! exe {
             fn main() {
                 #[cfg(not(doc))]
                 if $heap_size != 0 {
-                    libpsx::bios::init_heap($heap_addr, $heap_size);
+                    psx::bios::init_heap($heap_addr, $heap_size);
                 }
                 super::main(ctxt)
             }

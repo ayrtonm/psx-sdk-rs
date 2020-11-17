@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(asm)]
 
-libpsx::exe!();
+psx::exe!();
 
 fn main(mut _ctxt: Ctxt) {
     unsafe {

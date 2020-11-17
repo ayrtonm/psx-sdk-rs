@@ -1,15 +1,16 @@
 # Todo
 
-## libpsx
+## psx
 
-This is a very preliminary list of things missing in libpsx (almost
+This is a very preliminary list of things missing in psx (almost
 everything...). Very roughly in order of priority.
 
-- [ ] Use OnceCell/Lazy for Ctxt
+- [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
+- [ ] Use OnceCell/Lazy for `Ctxt`. Currently `Ctxt` can't be created, but it's components can which ruins the point of modifying the main interface to restrict the number of instances.
 - [ ] Add interrupt control
     - [x] Interrupt enable/disable
     - [ ] Interrupt acknowledge/status
-    - [ ] Make allocator impl interrupt-free
+    - [x] Make allocator impl interrupt-free
 - [ ] TIM texture loader
 - [ ] Add DMA channels
     - [x] Basic GPU DMA channel
@@ -30,7 +31,7 @@ everything...). Very roughly in order of priority.
   - [ ] Support depth ordering tables
   - [ ] Support timer
 - [x] Use allocator
-    - [x] Add call to heap init in `libpsx::exe`
+    - [x] Add call to heap init in `psx::exe`
     - [x] Add a `no heap` option
     - [x] Add a real alloc-free option (`no heap` w/o building alloc)
     - [ ] Test collections (use GNU ld for now)

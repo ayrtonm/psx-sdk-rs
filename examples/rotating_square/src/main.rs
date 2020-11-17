@@ -3,12 +3,12 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use libpsx::gpu::color::Color;
-use libpsx::gpu::framebuffer::Framebuffer;
-use libpsx::gpu::vertex::{Component, Vertex};
-use libpsx::gpu::{Hres, Vres};
+use psx::gpu::color::Color;
+use psx::gpu::framebuffer::Framebuffer;
+use psx::gpu::vertex::{Component, Vertex};
+use psx::gpu::{Hres, Vres};
 
-libpsx::exe!();
+psx::exe!();
 
 fn main(mut ctxt: Ctxt) {
     // This will give an error since there should only be one instance of Ctxt

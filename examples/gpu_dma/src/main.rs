@@ -3,14 +3,14 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use libpsx::dma;
-use libpsx::dma::{Addr, Block, BlockLen, Control, Direction, Mode, Step};
-use libpsx::gpu::color::Color;
-use libpsx::gpu::framebuffer::Framebuffer;
-use libpsx::gpu::vertex::{Component, Vertex};
-use libpsx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
+use psx::dma;
+use psx::dma::{Addr, Block, BlockLen, Control, Direction, Mode, Step};
+use psx::gpu::color::Color;
+use psx::gpu::framebuffer::Framebuffer;
+use psx::gpu::vertex::{Component, Vertex};
+use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
 
-libpsx::exe!();
+psx::exe!();
 
 fn mk_framebuffer<'a, 'b>(
     draw_port: &'a RefCell<DrawPort>, disp_port: &'b RefCell<DispPort>,

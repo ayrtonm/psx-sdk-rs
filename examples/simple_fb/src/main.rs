@@ -3,13 +3,13 @@
 
 use core::cell::RefCell;
 
-use libpsx::delay;
-use libpsx::gpu::color::Color;
-use libpsx::gpu::framebuffer::Framebuffer;
-use libpsx::gpu::vertex::Vertex;
-use libpsx::gpu::{Hres, Vres};
+use psx::delay;
+use psx::gpu::color::Color;
+use psx::gpu::framebuffer::Framebuffer;
+use psx::gpu::vertex::Vertex;
+use psx::gpu::{Hres, Vres};
 
-libpsx::exe!();
+psx::exe!();
 
 fn main(mut ctxt: Ctxt) {
     let draw_port = RefCell::new(ctxt.take_draw_port().expect("DrawPort has been taken"));

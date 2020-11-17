@@ -77,7 +77,7 @@ for more options.
 #![no_std]
 #![no_main]
 
-libpsx::exe!();
+psx::exe!();
 
 fn main(mut ctxt: Ctxt) {
 }

@@ -5,10 +5,10 @@
 use core::cell::RefCell;
 use core::convert::TryInto;
 
-use libpsx::gpu::framebuffer::Framebuffer;
-use libpsx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
+use psx::gpu::framebuffer::Framebuffer;
+use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
 
-libpsx::exe!();
+psx::exe!();
 
 fn mk_framebuffer<'a, 'b>(
     draw_port: &'a RefCell<DrawPort>, disp_port: &'b RefCell<DispPort>,

@@ -4,7 +4,7 @@ use crate::bios;
 
 pub struct BiosAllocator;
 
-// This is temporary, see if there's a way to libpsx::interrupt::Mask::free
+// This is temporary, see if there's a way to psx::interrupt::Mask::free
 // instead w/o relying on UB
 mod interrupt {
     pub fn free<F, R>(f: F) -> R
