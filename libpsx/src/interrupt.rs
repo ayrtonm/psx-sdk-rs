@@ -1,7 +1,7 @@
 use crate::registers::{Update, Write};
 use crate::rw_register;
 
-rw_register!(IntMask, 0x1F80_1074);
+rw_register!(Mask, 0x1F80_1074);
 
 pub enum Interrupts<'a> {
     All,
@@ -22,7 +22,7 @@ pub enum IRQ {
     Controller2,
 }
 
-impl IntMask {
+impl Mask {
     pub fn enable(&mut self, interrupts: Interrupts) {
         match interrupts {
             Interrupts::All => self.write(0x0000_07FF),

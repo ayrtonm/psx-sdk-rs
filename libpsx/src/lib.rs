@@ -54,22 +54,24 @@ macro_rules! exe {
         #[cfg(not(doc))]
         use crate::executable::Ctxt;
 
-        // TODO: fix the linker error with rust-lld
-        extern crate alloc;
-        // TODO: add other common collections here
-        use alloc::borrow::Cow;
-        use alloc::boxed::Box;
-        use alloc::rc::Rc;
-        use alloc::vec::Vec;
+        //// TODO: fix the linker error with rust-lld
+        //extern crate alloc;
+        //// TODO: add other common collections here
+        //use alloc::borrow::Cow;
+        //use alloc::boxed::Box;
+        //use alloc::rc::Rc;
+        //use alloc::vec::Vec;
 
         pub mod executable {
 
             #[cfg(doc)]
             use {crate::dma,
-                 crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat}};
+                 crate::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
+                 crate::interrupt};
             #[cfg(not(doc))]
             use {libpsx::dma,
-                 libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat}};
+                 libpsx::gpu::{DispPort, DrawPort, GpuRead, GpuStat},
+                 libpsx::interrupt};
 
             pub struct Ctxt {
                 //GPU ports
@@ -80,6 +82,9 @@ macro_rules! exe {
 
                 //DMA channel registers
                 gpu_dma: Option<dma::Gpu>,
+
+                //Interrupt registers
+                int_mask: Option<interrupt::Mask>,
             }
 
             impl Ctxt {
@@ -95,6 +100,10 @@ macro_rules! exe {
                     self.gpu_dma.take()
                 }
 
+                pub fn take_int_mask(&mut self) -> Option<interrupt::Mask> {
+                    self.int_mask.take()
+                }
+
                 pub fn replace_draw_port(&mut self, draw_port: Option<DrawPort>) {
                     self.draw_port = draw_port;
                 }
@@ -105,6 +114,10 @@ macro_rules! exe {
 
                 pub fn replace_gpu_dma(&mut self, gpu_dma: Option<dma::Gpu>) {
                     self.gpu_dma = gpu_dma;
+                }
+
+                pub fn replace_int_mask(&mut self, int_mask: Option<interrupt::Mask>) {
+                    self.int_mask = int_mask;
                 }
             }
 
@@ -120,6 +133,8 @@ macro_rules! exe {
                     block: dma::gpu::Block,
                     control: dma::gpu::Control,
                 }),
+
+                int_mask: Some(interrupt::Mask),
             };
 
             //TODO: remove link_section (or change to .text) for regular .psexe's
