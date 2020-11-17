@@ -5,9 +5,12 @@
 This is a very preliminary list of things missing in libpsx (almost
 everything...). Very roughly in order of priority.
 
-- [ ] TIM texture loader
+- [ ] Use OnceCell/Lazy for Ctxt
 - [ ] Add interrupt control
+    - [x] Interrupt enable/disable
+    - [ ] Interrupt acknowledge/status
     - [ ] Make allocator impl interrupt-free
+- [ ] TIM texture loader
 - [ ] Add DMA channels
     - [x] Basic GPU DMA channel
     - [ ] Other DMA channels

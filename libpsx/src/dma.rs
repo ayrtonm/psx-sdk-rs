@@ -65,7 +65,7 @@ pub trait Control: Update {
             Direction::ToRam => 0,
             Direction::FromRam => 1,
         };
-        self.update(0, bit);
+        self.update(|val| val.clear(0) | bit);
     }
 
     fn set_step(&mut self, step: Step) {
@@ -73,11 +73,11 @@ pub trait Control: Update {
             Step::Forward => 0,
             Step::Backward => 1,
         };
-        self.update(1, bit);
+        self.update(|val| val.clear(1) | (bit << 1));
     }
     fn set_chopping(&mut self, chop: bool) {
         let bit = if chop { 1 } else { 0 };
-        self.update(8, bit);
+        self.update(|val| val.clear(8) | (bit << 8));
     }
     fn sync_mode(&self) -> Option<Mode> {
         let value = self.read();
@@ -97,9 +97,9 @@ pub trait Control: Update {
         self.update_bits(9..=10, bits);
     }
     fn start(&mut self) -> Transfer<Self> {
-        self.update(24, 1);
+        self.update(|val| val.set(24));
         if let Some(Mode::Immediate) = self.sync_mode() {
-            self.update(28, 1);
+            self.update(|val| val.set(28));
         }
         Transfer { control: self }
     }

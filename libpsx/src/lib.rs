@@ -12,6 +12,7 @@ pub mod bios;
 mod builtins;
 pub mod dma;
 pub mod gpu;
+pub mod interrupt;
 mod registers;
 
 #[cfg(doc)]

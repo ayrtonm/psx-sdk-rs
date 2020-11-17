@@ -55,12 +55,12 @@ pub trait Write: Addr {
 }
 
 pub trait Update: Read + Write {
-    // TODO: add some debug checks to these functions
-    fn update(&mut self, idx: u32, value: u32) {
+    fn update<F: FnOnce(u32) -> u32>(&mut self, f: F) {
         let current_value = self.read();
-        let new_value = current_value.clear(idx) | (value << idx);
+        let new_value = f(current_value);
         self.write(new_value);
     }
+    // TODO: add some debug checks to this function
     fn update_bits(&mut self, idx_range: RangeInclusive<u32>, value: u32) {
         let current_value = self.read();
         // For example update_bits(2..=4, x)

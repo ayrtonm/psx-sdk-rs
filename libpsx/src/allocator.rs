@@ -1,6 +1,7 @@
 use core::alloc::{GlobalAlloc, Layout};
 
 use crate::bios;
+use crate::interrupt;
 
 pub struct BiosAllocator;
 
@@ -10,9 +11,11 @@ pub struct BiosAllocator;
 // interrupts
 unsafe impl GlobalAlloc for BiosAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        //interrupt::free(|| {
         let ptr = bios::malloc(layout.size());
-        // TODO: test `ptr` for errors
+        //    // TODO: test `ptr` for errors
         ptr
+        //})
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
