@@ -40,12 +40,14 @@ fn main(mut io: IO) {
 }
 
 fn decompress<const N: usize>() -> [u32; N] {
-    //TODO: handle possible misalignment
-    let compressed_exe = unsafe { include_bytes!("../ferris.tim.hzip").align_to::<u32>().1 };
+    // TODO: handle possible misalignment
+    let compressed_exe = unsafe { include_bytes!("../ferris.tim.zip").align_to::<u32>().1 };
+    let decompressed_len = compressed_exe[0] as usize;
     let mut ret = [0; N];
-    //TODO: handle possible misalignment
+    // TODO: handle possible misalignment
     let exe = unsafe { ret.align_to_mut::<u8>().1 };
     let mut possible_code = 0;
+    let mut possible_code_len = 0;
     let mut i = 0;
     for &w in compressed_exe {
         let mut remaining_bits = 32;
@@ -54,12 +56,16 @@ fn decompress<const N: usize>() -> [u32; N] {
             stream <<= 1;
             remaining_bits -= 1;
             possible_code = (stream >> 32) as u32;
+            possible_code_len += 1;
             (&CODES)
                 .binary_search(&possible_code)
                 .map(|idx| {
-                    exe[i] = SYMBOLS[idx];
-                    i += 1;
-                    stream &= 0x0000_0000_FFFF_FFFF;
+                    if i < decompressed_len {
+                        exe[i] = SYMBOLS[idx];
+                        i += 1;
+                        stream &= 0x0000_0000_FFFF_FFFF;
+                        possible_code_len = 0;
+                    }
                 })
                 .ok();
         }

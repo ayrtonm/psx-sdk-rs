@@ -10,6 +10,7 @@ enum Node<T> {
 
 type Code = u32;
 const CODE_TY: &'static str = std::intrinsics::type_name::<Code>();
+// TODO: try out 16-bit symbols
 type Symbol = u8;
 const SYMBOL_TY: &'static str = std::intrinsics::type_name::<Symbol>();
 // Prefix-free codes can't be compared for equality
@@ -105,6 +106,9 @@ fn output_code(file_name: String, entries: &mut Vec<Entry>) {
     ));
     entries.sort_by_key(|e| e.code);
     for entry in entries.iter() {
+        // TODO: is this right? prefix-free codes can't be compared without knowing the
+        // length but it seems the decompressor is comparing them without any
+        // issues
         s.push_str(&format!("    {:#x},\n", remove_prefix(entry.code).0));
     }
     s.push_str("];\n");
