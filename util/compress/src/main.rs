@@ -20,8 +20,7 @@ impl<T> Node<T> {
 
 type Code = u32;
 const CODE_TY: &'static str = std::intrinsics::type_name::<Code>();
-// TODO: try out 16-bit symbols
-type Symbol = u8;
+type Symbol = u32;
 const SYMBOL_TY: &'static str = std::intrinsics::type_name::<Symbol>();
 // Prefix-free codes can't be compared for equality
 struct PrefixFreeCode(Code);
@@ -201,14 +200,11 @@ fn compress(entries: &Vec<Entry>, input: SymbolStream) -> Vec<u8> {
 }
 
 fn main() {
-    let exe = unsafe {
-        include_bytes!("../ferris.tim")
-            .align_to::<Symbol>()
-            .1
-            .iter()
-            .collect::<Vec<_>>()
-    };
-    let mut symbol_counts = count_symbols(&mut exe.iter().cloned());
+    let exe = include_bytes!("../ferris.tim")
+        .chunks(size_of::<Symbol>())
+        .map(|x| Symbol::from_le_bytes(x.try_into().unwrap()))
+        .collect::<Vec<Symbol>>();
+    let mut symbol_counts = count_symbols(&mut exe.iter());
     build_tree(&mut symbol_counts);
     let mut entries = assign_codes(symbol_counts.pop().expect("No nodes in tree").node, None);
     assert!(
@@ -216,17 +212,14 @@ fn main() {
         "Tree contained more than one root"
     );
     output_code("codes.rs".to_string(), &mut entries);
-    let output_stream = compress(&entries, &mut exe.iter().cloned());
-    fn log2(x: usize) -> usize {
-        (size_of::<usize>() * 8) - x.leading_zeros() as usize - 1
-    }
-    let num_symbols = exe.len() >> log2(size_of::<Symbol>());
+    let output_stream = compress(&entries, &mut exe.iter());
+    let num_symbols = exe.len();
     let header = (num_symbols as u32).to_le_bytes();
     let zipped_file = header
         .iter()
         .chain(output_stream.iter())
         .cloned()
-        .collect::<Vec<_>>();
+        .collect::<Vec<u8>>();
     std::fs::write("ferris.tim.zip", zipped_file)
         .expect("Couldn't write compressed stream to file");
 }

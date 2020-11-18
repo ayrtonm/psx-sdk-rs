@@ -5,7 +5,6 @@
 #![feature(min_const_generics)]
 
 use core::cell::RefCell;
-use core::mem::size_of;
 
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
@@ -42,18 +41,19 @@ fn main(mut io: IO) {
 
 fn decompress<const N: usize>() -> [u32; N] {
     // TODO: handle possible misalignment
-    let compressed_exe = unsafe { include_bytes!("../ferris.tim.zip").align_to::<u32>().1 };
-    fn log2(x: usize) -> usize {
-        (size_of::<usize>() * 8) - x.leading_zeros() as usize - 1
-    }
-    let decompressed_len = (compressed_exe[0] << log2(size_of::<Symbol>())) as usize;
+    let (a, compressed_exe, b) = unsafe { include_bytes!("../ferris.tim.zip").align_to::<u32>() };
+    assert_eq!(a.len(), 0);
+    assert_eq!(b.len(), 0);
+    let decompressed_len = compressed_exe[0] as usize;
     let mut ret = [0; N];
     // TODO: handle possible misalignment
-    let exe = unsafe { ret.align_to_mut::<Symbol>().1 };
+    let (a, exe, b) = unsafe { ret.align_to_mut::<Symbol>() };
+    assert_eq!(a.len(), 0);
+    assert_eq!(b.len(), 0);
     let mut possible_code = 0;
     let mut possible_code_len = 0;
     let mut i = 0;
-    for &w in compressed_exe {
+    for &w in &compressed_exe[1..] {
         let mut remaining_bits = 32;
         let mut stream = w as u64 | ((possible_code as u64) << 32);
         while remaining_bits != 0 {
