@@ -3,6 +3,7 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
+use core::mem::transmute;
 
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
@@ -38,18 +39,15 @@ fn main(mut io: IO) {
 }
 
 fn decompress() -> [u32; 32773] {
-    let compressed_exe = include_bytes!("../ferris.tim.hzip");
+    let compressed_exe =
+        unsafe { transmute::<_, [u32; 7187]>(*include_bytes!("../ferris.tim.hzip")) };
     let mut exe = [0; 131092];
     let mut possible_code_len = 0;
     let mut possible_code = 0;
     let mut i = 0;
-    for w in compressed_exe.chunks(4) {
+    for &w in &compressed_exe {
         let mut remaining_bits = 32;
-        let mut stream = (w[0] as u64)
-            | (w[1] as u64) << 8
-            | (w[2] as u64) << 16
-            | (w[3] as u64) << 24
-            | ((possible_code as u64) << 32);
+        let mut stream = w as u64 | ((possible_code as u64) << 32);
         while remaining_bits != 0 {
             stream <<= 1;
             remaining_bits -= 1;
@@ -68,7 +66,5 @@ fn decompress() -> [u32; 32773] {
         }
         possible_code = (stream >> 32) as u32;
     }
-    unsafe {
-        core::mem::transmute::<_, [u32; 32773]>(exe)
-    }
+    unsafe { transmute::<_, [u32; 32773]>(exe) }
 }
