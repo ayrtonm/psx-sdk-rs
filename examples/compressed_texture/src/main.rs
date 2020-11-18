@@ -40,15 +40,14 @@ fn main(mut io: IO) {
 }
 
 fn decompress<const N: usize>() -> [u32; N] {
-    let compressed_exe = include_bytes!("../ferris.tim.hzip");
-    let ptr = &compressed_exe[0] as *const u8 as *const u32;
+    //TODO: handle possible misalignment
     let compressed_exe = unsafe {
-        core::slice::from_raw_parts::<u32>(ptr, compressed_exe.len() >> 2)
+        include_bytes!("../ferris.tim.hzip").align_to::<u32>().1
     };
     let mut ret = [0; N];
-    let ptr = &mut ret[0] as *mut u32 as *mut u8;
+    //TODO: handle possible misalignment
     let exe = unsafe {
-        core::slice::from_raw_parts_mut::<u8>(ptr, N * 4)
+        ret.align_to_mut::<u8>().1
     };
     let mut possible_code = 0;
     let mut i = 0;
