@@ -1,9 +1,10 @@
 #![no_std]
 #![no_main]
 #![feature(array_map)]
+#![feature(core_intrinsics)]
+#![feature(min_const_generics)]
 
 use core::cell::RefCell;
-use core::mem::transmute;
 
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
@@ -29,7 +30,7 @@ fn main(mut io: IO) {
     let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
     let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
     mk_framebuffer(&draw_port, &disp_port);
-    let ferris = decompress();
+    let ferris = decompress::<32773>();
     let mut ferris = ferris[5..].into_iter().cloned();
 
     draw_port
@@ -38,20 +39,25 @@ fn main(mut io: IO) {
     loop {}
 }
 
-fn decompress() -> [u32; 32773] {
-    let compressed_exe =
-        unsafe { transmute::<_, [u32; 7187]>(*include_bytes!("../ferris.tim.hzip")) };
-    let mut exe = [0; 131092];
-    let mut possible_code_len = 0;
+fn decompress<const N: usize>() -> [u32; N] {
+    let compressed_exe = include_bytes!("../ferris.tim.hzip");
+    let ptr = &compressed_exe[0] as *const u8 as *const u32;
+    let compressed_exe = unsafe {
+        core::slice::from_raw_parts::<u32>(ptr, compressed_exe.len() >> 2)
+    };
+    let mut ret = [0; N];
+    let ptr = &mut ret[0] as *mut u32 as *mut u8;
+    let exe = unsafe {
+        core::slice::from_raw_parts_mut::<u8>(ptr, N * 4)
+    };
     let mut possible_code = 0;
     let mut i = 0;
-    for &w in &compressed_exe {
+    for &w in compressed_exe {
         let mut remaining_bits = 32;
         let mut stream = w as u64 | ((possible_code as u64) << 32);
         while remaining_bits != 0 {
             stream <<= 1;
             remaining_bits -= 1;
-            possible_code_len += 1;
             possible_code = (stream >> 32) as u32;
             CODES
                 .iter()
@@ -60,11 +66,10 @@ fn decompress() -> [u32; 32773] {
                     let symbol = SYMBOLS[idx];
                     exe[i] = symbol;
                     i += 1;
-                    possible_code_len = 0;
                     stream &= 0x0000_0000_FFFF_FFFF;
                 });
         }
         possible_code = (stream >> 32) as u32;
     }
-    unsafe { transmute::<_, [u32; 32773]>(exe) }
+    ret
 }
