@@ -5,12 +5,13 @@
 #![feature(min_const_generics)]
 
 use core::cell::RefCell;
+use core::mem::size_of;
 
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
 
 mod huffman_code;
-use crate::huffman_code::{CODES, SYMBOLS};
+use crate::huffman_code::{Symbol, CODES, SYMBOLS};
 
 psx::exe!();
 
@@ -42,10 +43,13 @@ fn main(mut io: IO) {
 fn decompress<const N: usize>() -> [u32; N] {
     // TODO: handle possible misalignment
     let compressed_exe = unsafe { include_bytes!("../ferris.tim.zip").align_to::<u32>().1 };
-    let decompressed_len = compressed_exe[0] as usize;
+    fn log2(x: usize) -> usize {
+        (size_of::<usize>() * 8) - x.leading_zeros() as usize - 1
+    }
+    let decompressed_len = (compressed_exe[0] << log2(size_of::<Symbol>())) as usize;
     let mut ret = [0; N];
     // TODO: handle possible misalignment
-    let exe = unsafe { ret.align_to_mut::<u8>().1 };
+    let exe = unsafe { ret.align_to_mut::<Symbol>().1 };
     let mut possible_code = 0;
     let mut possible_code_len = 0;
     let mut i = 0;

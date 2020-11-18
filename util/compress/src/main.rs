@@ -8,6 +8,16 @@ enum Node<T> {
     Branch(Box<Node<T>>, Box<Node<T>>),
 }
 
+impl<T> Node<T> {
+    pub fn get(&self) -> Option<&T> {
+        if let Node::Leaf(t) = self {
+            Some(t)
+        } else {
+            None
+        }
+    }
+}
+
 type Code = u32;
 const CODE_TY: &'static str = std::intrinsics::type_name::<Code>();
 // TODO: try out 16-bit symbols
@@ -34,15 +44,33 @@ struct Entry {
 fn count_symbols(input: SymbolStream) -> Vec<SymbolCount> {
     let mut pairs = Vec::new();
     let input = input.cloned().collect::<Vec<Symbol>>();
-    for symbol in 0..=(1 << (size_of::<Symbol>() * 8)) {
-        let count = input.iter().filter(|&&s| usize::from(s) == symbol).count();
-        if count > 0 {
-            pairs.push(SymbolCount {
-                node: Node::Leaf(symbol.try_into().unwrap()),
-                count,
-            });
-        }
+    for i in input {
+        let insert = pairs
+            .iter_mut()
+            .find(|p: &&mut SymbolCount| p.node.get().map(|&x| x) == i.try_into().ok())
+            .map_or_else(
+                || {
+                    Some(SymbolCount {
+                        node: Node::Leaf(i.try_into().unwrap()),
+                        count: 1,
+                    })
+                },
+                |p: &mut SymbolCount| {
+                    p.count += 1;
+                    None
+                },
+            );
+        insert.map(|new_pair| pairs.push(new_pair));
     }
+    //for symbol in 0..=(1 << (size_of::<Symbol>() * 8)) {
+    //    let count = input.iter().filter(|&&s| usize::from(s) == symbol).count();
+    //    if count > 0 {
+    //        pairs.push(SymbolCount {
+    //            node: Node::Leaf(symbol.try_into().unwrap()),
+    //            count,
+    //        });
+    //    }
+    //}
     pairs
 }
 
@@ -99,6 +127,7 @@ fn output_code(file_name: String, entries: &mut Vec<Entry>) {
     //}
     //s.push_str("    init\n");
     //s.push_str("}};");
+    s.push_str(&format!("pub type Symbol = {};\n", SYMBOL_TY));
     s.push_str(&format!(
         "pub const CODES: [{}; {}] = [\n",
         CODE_TY,
@@ -113,8 +142,7 @@ fn output_code(file_name: String, entries: &mut Vec<Entry>) {
     }
     s.push_str("];\n");
     s.push_str(&format!(
-        "pub const SYMBOLS: [{}; {}] = [\n",
-        SYMBOL_TY,
+        "pub const SYMBOLS: [Symbol; {}] = [\n",
         entries.len()
     ));
     for entry in entries.iter() {
@@ -173,7 +201,13 @@ fn compress(entries: &Vec<Entry>, input: SymbolStream) -> Vec<u8> {
 }
 
 fn main() {
-    let exe = include_bytes!("../ferris.tim").iter().collect::<Vec<_>>();
+    let exe = unsafe {
+        include_bytes!("../ferris.tim")
+            .align_to::<Symbol>()
+            .1
+            .iter()
+            .collect::<Vec<_>>()
+    };
     let mut symbol_counts = count_symbols(&mut exe.iter().cloned());
     build_tree(&mut symbol_counts);
     let mut entries = assign_codes(symbol_counts.pop().expect("No nodes in tree").node, None);
