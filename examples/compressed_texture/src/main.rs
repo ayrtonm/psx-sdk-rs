@@ -3,7 +3,6 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use core::convert::TryInto;
 
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
@@ -14,7 +13,8 @@ use crate::huffman_code::{CODES, SYMBOLS};
 psx::exe!();
 
 fn mk_framebuffer<'a, 'b>(
-    draw_port: &'a RefCell<DrawPort>, disp_port: &'b RefCell<DispPort>,
+    draw_port: &'a RefCell<DrawPort>,
+    disp_port: &'b RefCell<DispPort>,
 ) -> Framebuffer<'a, 'b> {
     let buf0 = (0, 0);
     let buf1 = (0, 240);
@@ -29,9 +29,7 @@ fn main(mut io: IO) {
     let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
     mk_framebuffer(&draw_port, &disp_port);
     let ferris = decompress();
-    let mut ferris = ferris[0x14..]
-        .chunks(4)
-        .map(|c| u32::from_le_bytes(c.try_into().expect("Couldn't convert 4-byte chunk to u32")));
+    let mut ferris = ferris[5..].into_iter().cloned();
 
     draw_port
         .borrow_mut()
@@ -39,7 +37,7 @@ fn main(mut io: IO) {
     loop {}
 }
 
-fn decompress() -> [u8; 131092] {
+fn decompress() -> [u32; 32773] {
     let compressed_exe = include_bytes!("../ferris.tim.hzip");
     let mut exe = [0; 131092];
     let mut possible_code_len = 0;
@@ -47,21 +45,30 @@ fn decompress() -> [u8; 131092] {
     let mut i = 0;
     for w in compressed_exe.chunks(4) {
         let mut remaining_bits = 32;
-        let mut stream = (w[0] as u64) | (w[1] as u64) << 8 | (w[2] as u64) << 16 | (w[3] as u64) << 24 | ((possible_code as u64) << 32);
+        let mut stream = (w[0] as u64)
+            | (w[1] as u64) << 8
+            | (w[2] as u64) << 16
+            | (w[3] as u64) << 24
+            | ((possible_code as u64) << 32);
         while remaining_bits != 0 {
             stream <<= 1;
             remaining_bits -= 1;
             possible_code_len += 1;
             possible_code = (stream >> 32) as u32;
-            CODES.iter().position(|&code| code == possible_code).map(|idx| {
-                let symbol = SYMBOLS[idx];
-                exe[i] = symbol;
-                i += 1;
-                possible_code_len = 0;
-                stream &= 0x0000_0000_FFFF_FFFF;
-            });
+            CODES
+                .iter()
+                .position(|&code| code == possible_code)
+                .map(|idx| {
+                    let symbol = SYMBOLS[idx];
+                    exe[i] = symbol;
+                    i += 1;
+                    possible_code_len = 0;
+                    stream &= 0x0000_0000_FFFF_FFFF;
+                });
         }
         possible_code = (stream >> 32) as u32;
     }
-    exe
+    unsafe {
+        core::mem::transmute::<_, [u32; 32773]>(exe)
+    }
 }
