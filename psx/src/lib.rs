@@ -15,6 +15,8 @@ pub mod gpu;
 pub mod interrupt;
 pub mod io;
 mod registers;
+#[macro_use]
+pub mod unzip;
 
 use core::intrinsics::volatile_load;
 use core::panic::PanicInfo;
