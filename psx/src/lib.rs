@@ -14,8 +14,9 @@ pub mod dma;
 pub mod gpu;
 pub mod interrupt;
 pub mod io;
-mod registers;
 #[macro_use]
+mod macros;
+mod registers;
 pub mod unzip;
 
 use core::intrinsics::volatile_load;
@@ -27,27 +28,6 @@ pub fn delay(n: u32) {
             volatile_load(0 as *mut u32);
         }
     }
-}
-
-// TODO: There should be a better way to implement `slice_to_array` for u8, u16, u32, etc.
-pub const fn u8_array<const N: usize>(slice: &[u8]) -> [u8; N] {
-    let mut ar = [0; N];
-    let mut i = 0;
-    while i < N {
-        ar[i] = slice[i];
-        i += 1;
-    }
-    ar
-}
-
-pub const fn u32_array<const N: usize>(slice: &[u32]) -> [u32; N] {
-    let mut ar = [0; N];
-    let mut i = 0;
-    while i < N {
-        ar[i] = slice[i];
-        i += 1;
-    }
-    ar
 }
 
 #[panic_handler]

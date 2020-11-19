@@ -3,8 +3,8 @@
 #![feature(array_map)]
 
 use core::cell::RefCell;
-use core::convert::TryInto;
 
+use psx::include_u32;
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
 
@@ -25,13 +25,10 @@ fn main(mut io: IO) {
     let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
     let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
     mk_framebuffer(&draw_port, &disp_port);
-    let ferris = include_bytes!("../ferris.tim");
-    let mut ferris = ferris[0x14..]
-        .chunks(4)
-        .map(|c| u32::from_le_bytes(c.try_into().expect("Couldn't convert 4-byte chunk to u32")));
+    let ferris = include_u32!("../ferris.tim");
 
     draw_port
         .borrow_mut()
-        .rect_to_vram((0, 0), (256, 256), &mut ferris);
+        .rect_to_vram((0, 0), (256, 256), &ferris);
     loop {}
 }

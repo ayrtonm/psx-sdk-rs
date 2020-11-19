@@ -6,11 +6,11 @@ pub struct Vertex {
 }
 
 type Polygon<const N: usize> = [Vertex; N];
-pub type Line = Polygon<2>;
+pub type Segment = Polygon<2>;
 pub type Triangle = Polygon<3>;
 pub type Quad = Polygon<4>;
 
-pub type PolyLine<'a> = &'a [Vertex];
+pub type Line<'a> = &'a [Vertex];
 
 impl From<&Vertex> for u32 {
     fn from(vertex: &Vertex) -> u32 {
