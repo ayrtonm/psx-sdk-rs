@@ -1,4 +1,4 @@
-#![feature(box_patterns, core_intrinsics, const_type_name, negative_impls)]
+#![feature(box_patterns, negative_impls)]
 use std::convert::TryInto;
 use std::mem::size_of;
 
@@ -19,9 +19,7 @@ impl<T> Node<T> {
 }
 
 type Code = u32;
-const CODE_TY: &'static str = std::intrinsics::type_name::<Code>();
 type Symbol = u32;
-const SYMBOL_TY: &'static str = std::intrinsics::type_name::<Symbol>();
 // Prefix-free codes can't be compared for equality
 struct PrefixFreeCode(Code);
 impl !Eq for PrefixFreeCode {}
@@ -149,19 +147,25 @@ fn compress(entries: &Vec<Entry>, input: SymbolStream) -> Vec<u8> {
 }
 
 fn main() {
-    let exe = include_bytes!("../ferris.tim")
+    let mut args = std::env::args().skip(1);
+    let input = args.next().expect("Expected an input file");
+    let output = args.next().expect("Expected an output file");
+    let original = std::fs::read(input)
+        .expect("Couldn't read uncompressed file")
         .chunks(size_of::<Symbol>())
         .map(|x| Symbol::from_le_bytes(x.try_into().unwrap()))
         .collect::<Vec<Symbol>>();
-    let mut symbol_counts = count_symbols(&mut exe.iter());
+    let mut symbol_counts = count_symbols(&mut original.iter());
     build_tree(&mut symbol_counts);
     let mut entries = assign_codes(symbol_counts.pop().expect("No nodes in tree").node, None);
     assert!(
         symbol_counts.pop().is_none(),
         "Tree contained more than one root"
     );
-    let output_stream = compress(&entries, &mut exe.iter());
-    let num_symbols = exe.len();
+    let output_stream = compress(&entries, &mut original.iter());
+    // This is required to be able to use binary search in the decompressor
+    entries.sort_by_key(|e| e.code);
+    let num_symbols = original.len();
     let header = [
         (num_symbols as u32).to_le_bytes(),
         (entries.len() as u32).to_le_bytes(),
@@ -191,6 +195,6 @@ fn main() {
         .chain(output_stream.iter())
         .cloned()
         .collect::<Vec<u8>>();
-    std::fs::write("ferris.tim.zip", zipped_file)
+    std::fs::write(output, zipped_file)
         .expect("Couldn't write compressed stream to file");
 }
