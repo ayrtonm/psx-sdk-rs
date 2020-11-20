@@ -88,14 +88,27 @@ macro_rules! unzip {
     }
 }
 
-// Figure out a way to use this with both `unzip` and `unzip_now`
 #[macro_export]
 macro_rules! tim {
     ($data:expr) => {
         {
+            use core::borrow::Borrow;
             use core::lazy::Lazy;
             use psx::tim::TIM;
-            Lazy::new(|| TIM::new(&*$data))
+            trait MaybeLazy<T> {
+                fn maybe_lazy(&self) -> &T;
+            }
+            impl<T> MaybeLazy<T> for Lazy<T> {
+                fn maybe_lazy(&self) -> &T {
+                    self.borrow()
+                }
+            }
+            impl<T: Borrow<[u32]>> MaybeLazy<T> for T {
+                fn maybe_lazy(&self) -> &T {
+                    &self
+                }
+            }
+            Lazy::new(|| TIM::new($data.maybe_lazy()))
         }
     }
 }

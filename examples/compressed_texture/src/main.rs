@@ -11,12 +11,15 @@ fn main(mut io: IO) {
     let mut draw_port = io.take_draw_port().expect("DrawPort has been taken");
     let mut disp_port = io.take_disp_port().expect("DispPort has been taken");
     disp_port.on();
-    // Size of the data in the unzipped .tim
+    // Get an array with a .TIM for Ferris, defer decompression
     let ferris = unzip!("../ferris.tim.zip");
-    let ferris = tim!(ferris);
+    // Get a TIM struct, defer parsing the TIM
+    let tim = tim!(ferris);
 
     let zero = Vertex::zero();
-    draw_port.rect_to_vram(zero, (256, 256), ferris.bit_map().body());
+    // Copy a &[u32] to VRAM
+    // This triggers parsing the TIM which triggers decompressing the file
+    draw_port.rect_to_vram(zero, (256, 256), tim.bit_map().body());
     // The following should error since zero is consumed above
     //draw_port.rect_to_vram(zero, (256, 256), &ferris[5..]);
     loop {}
