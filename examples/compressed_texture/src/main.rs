@@ -3,8 +3,7 @@
 #![feature(once_cell)]
 
 use psx::gpu::vertex::Vertex;
-use psx::{unzip, unzip_now};
-use psx::tim::TIM;
+use psx::{tim, unzip, unzip_now};
 
 psx::exe!();
 
@@ -14,10 +13,10 @@ fn main(mut io: IO) {
     disp_port.on();
     // Size of the data in the unzipped .tim
     let ferris = unzip!("../ferris.tim.zip");
-    let tim = TIM::new(&*ferris);
+    let ferris = tim!(ferris);
 
     let zero = Vertex::zero();
-    draw_port.rect_to_vram(zero, (256, 256), tim.bit_map().body());
+    draw_port.rect_to_vram(zero, (256, 256), ferris.bit_map().body());
     // The following should error since zero is consumed above
     //draw_port.rect_to_vram(zero, (256, 256), &ferris[5..]);
     loop {}

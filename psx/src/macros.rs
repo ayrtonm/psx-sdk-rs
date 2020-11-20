@@ -87,3 +87,15 @@ macro_rules! unzip {
         }
     }
 }
+
+// Figure out a way to use this with both `unzip` and `unzip_now`
+#[macro_export]
+macro_rules! tim {
+    ($data:expr) => {
+        {
+            use core::lazy::Lazy;
+            use psx::tim::TIM;
+            Lazy::new(|| TIM::new(&*$data))
+        }
+    }
+}
