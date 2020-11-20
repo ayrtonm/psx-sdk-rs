@@ -13,6 +13,7 @@ pub struct IO {
     gpu_dma: Option<dma::Gpu>,
 
     //Interrupt registers
+    int_stat: Option<interrupt::Stat>,
     int_mask: Option<interrupt::Mask>,
 }
 
@@ -34,6 +35,7 @@ impl IO {
                 control: dma::gpu::Control::new(),
             }),
 
+            int_stat: Some(interrupt::Stat::new()),
             int_mask: Some(interrupt::Mask::new()),
         }
     }
@@ -58,6 +60,10 @@ impl IO {
         self.gpu_dma.take()
     }
 
+    pub fn take_int_stat(&mut self) -> Option<interrupt::Stat> {
+        self.int_stat.take()
+    }
+
     pub fn take_int_mask(&mut self) -> Option<interrupt::Mask> {
         self.int_mask.take()
     }
@@ -80,6 +86,10 @@ impl IO {
 
     pub fn replace_gpu_dma(&mut self, gpu_dma: Option<dma::Gpu>) {
         self.gpu_dma = gpu_dma;
+    }
+
+    pub fn replace_int_stat(&mut self, int_stat: Option<interrupt::Stat>) {
+        self.int_stat = int_stat;
     }
 
     pub fn replace_int_mask(&mut self, int_mask: Option<interrupt::Mask>) {

@@ -1,5 +1,5 @@
 // This represents x in [0, 1024) and y in [0, 512)
-pub type Pixel = u16;
+pub type Pixel = i16;
 // This isn't quite right either since the difference of unsigned 16-bit numbers
 // can exceed an i16 but since valid values of x and y are restricted, it'll be
 // fine in those cases. I'll keep this priivate anyway to avoid confusion.
@@ -68,28 +68,41 @@ impl Vertex {
         Vertex::new(0, 0)
     }
 
-    pub fn shift(&self, x: PixelDiff, y: PixelDiff) -> Self {
-        let new_x = (self.x() as PixelDiff) + x;
-        let new_y = (self.y() as PixelDiff) + y;
-        Vertex::new(new_x as Pixel, new_y as Pixel)
+    pub fn shrink_x(&self, a: Pixel) -> Self {
+        Vertex::new(self.x() / a, self.y())
+    }
+
+    pub fn shrink_y(&self, a: Pixel) -> Self {
+        Vertex::new(self.x(), self.y() / a)
+    }
+
+    pub fn scale_x(&self, a: Pixel) -> Self {
+        Vertex::new(self.x() * a, self.y())
+    }
+
+    pub fn scale_y(&self, a: Pixel) -> Self {
+        Vertex::new(self.x(), self.y() * a)
+    }
+
+    pub fn shift(&self, v: &Self) -> Self {
+        Vertex::new(self.x() + v.x(), self.y() + v.y())
     }
 
     pub fn copy(&self) -> Self {
         Vertex::new(self.x(), self.y())
     }
 
-    pub fn rect(center: &Vertex, width: Pixel, height: Pixel) -> Quad {
-        let hw = (width >> 1) as PixelDiff;
-        let hh = (height >> 1) as PixelDiff;
+    pub fn rect(center: &Vertex, size: Vertex) -> Quad {
+        let half_size = size.shrink_x(2).shrink_y(2);
         [
-            center.shift(-hw, -hh),
-            center.shift(-hw, hh),
-            center.shift(hw, -hh),
-            center.shift(hw, hh),
+            center.shift(&half_size.scale_x(-1).scale_y(-1)),
+            center.shift(&half_size.scale_x(-1)),
+            center.shift(&half_size.scale_y(-1)),
+            center.shift(&half_size),
         ]
     }
 
     pub fn square(center: &Vertex, length: Pixel) -> Quad {
-        Vertex::rect(center, length, length)
+        Vertex::rect(center, Vertex::new(length, length))
     }
 }

@@ -6,9 +6,9 @@ This is a very preliminary list of things missing in psx (almost
 everything...). Very roughly in order of priority.
 
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
-- [ ] Add interrupt control
+- [x] Add interrupt control
     - [x] Interrupt enable/disable
-    - [ ] Interrupt acknowledge/status
+    - [x] Interrupt acknowledge/status
     - [x] Make allocator impl interrupt-free
 - [x] TIM texture loader
     - [ ] Verify that CLUTs work
@@ -26,7 +26,7 @@ everything...). Very roughly in order of priority.
     - [ ] Implement VRAM to CPU via DMA
   - [ ] Add draw quad functions with logical vertex ordering
   - [ ] Make framebuffer more flexible
-    - [ ] Add version without `RefCell`
+    - [x] Add version without `RefCell`
     - [ ] Consider a version with two-step swap (first call `draw` then `display`)
     - [ ] Allow setting color depth, video mode and interlacing
   - [ ] Support depth ordering tables

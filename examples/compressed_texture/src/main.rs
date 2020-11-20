@@ -19,7 +19,7 @@ fn main(mut io: IO) {
     let zero = Vertex::zero();
     // Copy a &[u32] to VRAM
     // This triggers parsing the TIM which triggers decompressing the file
-    draw_port.rect_to_vram(zero, (256, 256), tim.bit_map().body());
+    draw_port.rect_to_vram(zero, (256, 256), tim.bitmap().body());
     // The following should error since zero is consumed above
     //draw_port.rect_to_vram(zero, (256, 256), &ferris[5..]);
     loop {}

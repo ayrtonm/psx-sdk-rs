@@ -1,6 +1,7 @@
-use crate::registers::{Update, Write};
+use crate::registers::{BitTwiddle, Read, Update, Write};
 use crate::rw_register;
 
+rw_register!(Stat, 0x1F80_1070);
 rw_register!(Mask, 0x1F80_1074);
 
 pub enum Interrupts<'a> {
@@ -8,6 +9,7 @@ pub enum Interrupts<'a> {
     Subset(&'a mut dyn Iterator<Item = IRQ>),
 }
 
+#[derive(Clone, Copy)]
 pub enum IRQ {
     Vblank = 0,
     GPU,
@@ -20,6 +22,21 @@ pub enum IRQ {
     SIO,
     SPU,
     Controller2,
+}
+
+impl Stat {
+    pub fn ack(&mut self, irq: IRQ) {
+        self.update(|val| val.clear(irq as u32));
+    }
+
+    pub fn wait(&self, irq: IRQ) {
+        while self.read().bit(irq as u32) == 0 {}
+    }
+
+    pub fn ack_wait(&mut self, irq: IRQ) {
+        self.ack(irq);
+        self.wait(irq);
+    }
 }
 
 impl Mask {

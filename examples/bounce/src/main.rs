@@ -17,18 +17,22 @@ fn main(mut io: IO) {
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res);
-    let mut offset = 0;
-    let center = Vertex::new(200, 100);
+    let mut pos = Vertex::new(200, 100);
+    let mut vel = Vertex::new(4, 2);
+    let radius = 32;
     loop {
-        offset += 1;
-        draw_port
-            .draw_square((offset, offset), 64, &Color::aqua())
-            .draw_circle(&center, 32, &Color::orange())
-            .draw_circle(&center.shift(&Vertex::new(32, 32)), 24, &Color::indigo())
-            .draw_circle(&center.shift(&Vertex::new(-32, 64)), 32, &Color::mint());
-        if offset == 240 - 64 {
-            offset = 0;
+        draw_port.draw_shaded_quad(
+            &Vertex::rect(&Vertex::new(160, 120), Vertex::new(320, 240)),
+            &[Color::aqua(), Color::black(), Color::aqua(), Color::black()],
+        );
+        if pos.x() + radius >= 320 || pos.x() <= radius {
+            vel = vel.scale_x(-1);
         }
+        if pos.y() + radius >= 240 || pos.y() <= radius {
+            vel = vel.scale_y(-1);
+        }
+        pos = pos.shift(&vel);
+        draw_port.draw_circle(&pos, radius, &Color::orange());
         int_stat.ack_wait(IRQ::Vblank);
         fb.swap(&mut draw_port, &mut disp_port);
     }
@@ -49,7 +53,7 @@ impl DrawPrimitive for DrawPort {
             for j in 0..=2 * radius {
                 let a = i - radius;
                 let b = j - radius;
-                let rad_sq = (a * a + b * b) as f32;
+                let rad_sq = ((a * a) + (b * b)) as f32;
                 let circle = (radius * radius) as f32;
                 if rad_sq <= circle {
                     self.draw_pixel(center.shift(&Vertex::new(a, b)), color);

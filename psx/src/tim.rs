@@ -2,31 +2,31 @@ use crate::gpu::vertex::Pixel;
 
 pub struct TIM<'a> {
     bpp: u32,
-    bit_map: BitMap<'a>,
-    clut: Option<BitMap<'a>>,
+    bitmap: Bitmap<'a>,
+    clut: Option<Bitmap<'a>>,
 }
 
 impl<'a> TIM<'a> {
     pub fn new(src: &'a [u32]) -> Self {
-        let clut = ((src[1] & 8) != 0).then_some(BitMap::new(&src[2..]));
+        let clut = ((src[1] & 8) != 0).then_some(Bitmap::new(&src[2..]));
         let (offset, clut) = match clut {
             Some((offset, clut)) => (offset, Some(clut)),
             None => (2, None),
         };
-        let (_, bit_map) = BitMap::new(&src[offset..]);
+        let (_, bitmap) = Bitmap::new(&src[offset..]);
         TIM {
             bpp: src[1] & 3,
-            bit_map,
+            bitmap,
             clut,
         }
     }
 
-    pub fn bit_map(&self) -> &BitMap<'a> {
-        &self.bit_map
+    pub fn bitmap(&self) -> &Bitmap<'a> {
+        &self.bitmap
     }
 }
 
-pub struct BitMap<'a> {
+pub struct Bitmap<'a> {
     len: u32,
     origin_x: Pixel,
     origin_y: Pixel,
@@ -35,13 +35,13 @@ pub struct BitMap<'a> {
     body: &'a [u32],
 }
 
-impl<'a> BitMap<'a> {
+impl<'a> Bitmap<'a> {
     pub fn new(src: &'a [u32]) -> (usize, Self) {
         let len = src[0];
         let len_by_u32 = (len as usize) / 4;
         (
             len_by_u32,
-            BitMap {
+            Bitmap {
                 len,
                 origin_x: src[1] as Pixel,
                 origin_y: (src[1] >> 16) as Pixel,

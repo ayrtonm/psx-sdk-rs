@@ -6,6 +6,7 @@ use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::vertex::{Pixel, Vertex};
 use psx::gpu::{Hres, Vres};
+use psx::interrupt::{Interrupts, IRQ};
 
 psx::exe!();
 
@@ -13,9 +14,11 @@ fn main(mut io: IO) {
     // This will give an error since there should only be one instance of IO
     //let fake_io = crate::executable::io;
     let mut theta = 0.0;
-    let delta = 0.0625;
+    let delta = 1.0;
     let mut draw_port = io.take_draw_port().expect("DrawPort has been taken");
     let mut disp_port = io.take_disp_port().expect("DispPort has been taken");
+    let mut int_mask = io.take_int_mask().expect("interrupt::Mask has been taken");
+    let mut int_stat = io.take_int_stat().expect("interrupt::Stat has been taken");
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);
@@ -28,6 +31,7 @@ fn main(mut io: IO) {
         }
         let (quad, pal) = draw(theta);
         draw_port.draw_shaded_quad(&quad, &pal);
+        int_stat.ack_wait(IRQ::Vblank);
         fb.swap(&mut draw_port, &mut disp_port);
     }
 }

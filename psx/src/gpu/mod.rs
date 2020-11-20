@@ -23,6 +23,7 @@ pub enum Vres {
     V240,
     V480,
 }
+
 pub enum Vmode {
     NTSC,
     PAL,

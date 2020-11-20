@@ -1,7 +1,6 @@
 #![no_std]
 #![feature(core_intrinsics)]
 #![feature(alloc_error_handler)]
-// These are not strictly necessary for writing a std library for the PSX, but they simplify things
 #![feature(min_const_generics)]
 #![feature(asm)]
 #![feature(naked_functions)]
