@@ -5,7 +5,7 @@
 use core::cell::RefCell;
 use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
-use psx::gpu::vertex::{Component, Vertex};
+use psx::gpu::vertex::{Pixel, Vertex};
 use psx::gpu::{Hres, Vres};
 
 psx::exe!();
@@ -76,5 +76,5 @@ fn rotate_point(p: Vertex, theta: f32, c: &Vertex) -> Vertex {
     let yp = dy * cos(theta) + dx * sin(theta);
     let xf = xp + c.x() as f32;
     let yf = yp + c.y() as f32;
-    Vertex::new(xf as Component, yf as Component)
+    Vertex::new(xf as Pixel, yf as Pixel)
 }

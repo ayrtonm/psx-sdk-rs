@@ -6,7 +6,6 @@ use core::cell::RefCell;
 use psx::delay;
 use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
-use psx::gpu::vertex::Vertex;
 use psx::gpu::{Hres, Vres};
 
 psx::exe!();
@@ -24,7 +23,7 @@ fn main(mut io: IO) {
         delay(100000);
         draw_port
             .borrow_mut()
-            .draw_rect(&Vertex::new(offset, offset), 64, 64, &Color::aqua());
+            .draw_square((offset, offset), 64, &Color::aqua());
         if offset == 240 - 64 {
             offset = 0;
         }

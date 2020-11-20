@@ -4,9 +4,9 @@
 
 use core::cell::RefCell;
 
-use psx::include_u32;
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
+use psx::include_u32;
 
 psx::exe!();
 

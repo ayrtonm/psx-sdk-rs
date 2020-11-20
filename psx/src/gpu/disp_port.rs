@@ -1,4 +1,4 @@
-use crate::gpu::vertex::Component;
+use crate::gpu::vertex::Pixel;
 use crate::gpu::{Depth, DispPort, DmaSource, Hres, Vmode, Vres};
 use crate::registers::Write;
 
@@ -35,17 +35,17 @@ impl DispPort {
     }
 
     // Calls DispPort(05h)
-    pub fn start(&mut self, x: Component, y: Component) {
+    pub fn start(&mut self, x: Pixel, y: Pixel) {
         self.generic_cmd::<0x05, 10, 9, 10>(x, y);
     }
 
     // Calls DispPort(06h)
-    pub fn horizontal(&mut self, x1: Component, x2: Component) {
+    pub fn horizontal(&mut self, x1: Pixel, x2: Pixel) {
         self.generic_cmd::<0x06, 12, 12, 12>(x1, x2);
     }
 
     // Calls DispPort(07h)
-    pub fn vertical(&mut self, y1: Component, y2: Component) {
+    pub fn vertical(&mut self, y1: Pixel, y2: Pixel) {
         self.generic_cmd::<0x07, 10, 10, 10>(y1, y2);
     }
 
@@ -79,11 +79,11 @@ impl DispPort {
 
     fn generic_cmd<
         const CMD: u8,
-        const XMASK: Component,
-        const YMASK: Component,
-        const SHIFT: Component,
+        const XMASK: Pixel,
+        const YMASK: Pixel,
+        const SHIFT: Pixel,
     >(
-        &mut self, mut x: Component, mut y: Component,
+        &mut self, mut x: Pixel, mut y: Pixel,
     ) {
         if cfg!(debug_assertions) {
             x &= (1 << XMASK) - 1;

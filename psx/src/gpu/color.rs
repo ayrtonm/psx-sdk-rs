@@ -5,7 +5,13 @@ pub struct Color {
     blue: Intensity,
 }
 
-pub type Palette<'a, const N: usize> = &'a [Color; N];
+pub type Palette<const N: usize> = [Color; N];
+
+impl From<Color> for u32 {
+    fn from(color: Color) -> u32 {
+        (color.blue as u32) << 16 | (color.green as u32) << 8 | (color.red as u32)
+    }
+}
 
 impl From<&Color> for u32 {
     fn from(color: &Color) -> u32 {

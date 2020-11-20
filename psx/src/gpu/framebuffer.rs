@@ -1,9 +1,9 @@
 use crate::gpu::color::Color;
-use crate::gpu::vertex::{Component, Vertex};
+use crate::gpu::vertex::{Pixel, Vertex};
 use crate::gpu::{Depth, DispPort, DrawPort, Res, Vmode};
 use core::cell::RefCell;
 
-type BufferLocation = (Component, Component);
+type BufferLocation = (Pixel, Pixel);
 
 enum Buffer {
     One,
@@ -66,8 +66,8 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
 
     fn draw(&mut self, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres: Component = (&self.res.0).into();
-        let vres: Component = (&self.res.1).into();
+        let hres: Pixel = (&self.res.0).into();
+        let vres: Pixel = (&self.res.1).into();
         self.draw_port
             .borrow_mut()
             .start(buffer.0.into(), buffer.1.into());
@@ -88,6 +88,6 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
             .start(buffer.0.into(), buffer.1.into());
         self.draw_port
             .borrow_mut()
-            .draw_rect(&Vertex::zero(), hres, vres, &Color::black());
+            .draw_rect(Vertex::zero(), (hres, vres), &Color::black());
     }
 }

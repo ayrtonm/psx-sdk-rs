@@ -1,4 +1,4 @@
-use crate::gpu::vertex::Component;
+use crate::gpu::vertex::Pixel;
 use crate::{ro_register, wo_register};
 
 pub mod color;
@@ -40,8 +40,8 @@ pub enum DmaSource {
 
 pub type Res = (Hres, Vres);
 
-impl From<&Hres> for Component {
-    fn from(h: &Hres) -> Component {
+impl From<&Hres> for Pixel {
+    fn from(h: &Hres) -> Pixel {
         match h {
             Hres::H256 => 256,
             Hres::H320 => 320,
@@ -52,8 +52,8 @@ impl From<&Hres> for Component {
     }
 }
 
-impl From<&Vres> for Component {
-    fn from(v: &Vres) -> Component {
+impl From<&Vres> for Pixel {
+    fn from(v: &Vres) -> Pixel {
         match v {
             Vres::V240 => 240,
             Vres::V480 => 480,
