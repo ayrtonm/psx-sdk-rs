@@ -10,7 +10,8 @@ everything...). Very roughly in order of priority.
     - [x] Interrupt enable/disable
     - [ ] Interrupt acknowledge/status
     - [x] Make allocator impl interrupt-free
-- [ ] TIM texture loader
+- [x] TIM texture loader
+    - [ ] Verify that CLUTs work
 - [ ] Add DMA channels
     - [x] Basic GPU DMA channel
     - [ ] Other DMA channels
@@ -22,6 +23,7 @@ everything...). Very roughly in order of priority.
     - [ ] Decide how to structure Texcoord+CLUT arguments
     - [ ] Display textured rectangles
   - [ ] Finish VRAM copy functions
+    - [ ] Implement VRAM to CPU via DMA
   - [ ] Add draw quad functions with logical vertex ordering
   - [ ] Make framebuffer more flexible
     - [ ] Add version without `RefCell`

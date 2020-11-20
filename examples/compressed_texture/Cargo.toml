@@ -8,3 +8,7 @@ edition = "2018"
 
 [dependencies]
 psx = { path = "../../psx" }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

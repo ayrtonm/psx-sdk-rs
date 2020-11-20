@@ -6,6 +6,7 @@
 #![feature(asm)]
 #![feature(naked_functions)]
 #![feature(doc_cfg)]
+#![feature(bool_to_option)]
 
 pub mod allocator;
 pub mod bios;
@@ -17,6 +18,7 @@ pub mod io;
 #[macro_use]
 mod macros;
 mod registers;
+pub mod tim;
 pub mod unzip;
 
 use core::intrinsics::volatile_load;
