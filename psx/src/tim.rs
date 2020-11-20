@@ -20,6 +20,7 @@ impl<'a> TIM<'a> {
             clut,
         }
     }
+
     pub fn bit_map(&self) -> &BitMap<'a> {
         &self.bit_map
     }
@@ -38,15 +39,19 @@ impl<'a> BitMap<'a> {
     pub fn new(src: &'a [u32]) -> (usize, Self) {
         let len = src[0];
         let len_by_u32 = (len as usize) / 4;
-        (len_by_u32, BitMap {
-            len,
-            origin_x: src[1] as Pixel,
-            origin_y: (src[1] >> 16) as Pixel,
-            width: src[2] as Pixel,
-            height: (src[2] >> 16) as Pixel,
-            body: &src[3..len_by_u32],
-        })
+        (
+            len_by_u32,
+            BitMap {
+                len,
+                origin_x: src[1] as Pixel,
+                origin_y: (src[1] >> 16) as Pixel,
+                width: src[2] as Pixel,
+                height: (src[2] >> 16) as Pixel,
+                body: &src[3..len_by_u32],
+            },
+        )
     }
+
     pub fn body(&self) -> &[u32] {
         self.body
     }

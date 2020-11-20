@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(array_map)]
 
-use core::cell::RefCell;
 use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::vertex::{Pixel, Vertex};
@@ -15,21 +14,21 @@ fn main(mut io: IO) {
     //let fake_io = crate::executable::io;
     let mut theta = 0.0;
     let delta = 0.0625;
-    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
-    let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
+    let mut draw_port = io.take_draw_port().expect("DrawPort has been taken");
+    let mut disp_port = io.take_disp_port().expect("DispPort has been taken");
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);
-    disp_port.borrow_mut().reset_gpu();
-    let mut fb = Framebuffer::new(&draw_port, &disp_port, buf0, buf1, res);
+    disp_port.reset_gpu();
+    let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res);
     loop {
         theta += delta;
         while theta > 360.0 {
             theta -= 360.0;
         }
         let (quad, pal) = draw(theta);
-        draw_port.borrow_mut().draw_shaded_quad(&quad, &pal);
-        fb.swap();
+        draw_port.draw_shaded_quad(&quad, &pal);
+        fb.swap(&mut draw_port, &mut disp_port);
     }
 }
 

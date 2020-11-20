@@ -1,6 +1,6 @@
 pub fn decompress<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
-    // The zip file contains an 8-bit with the number of symbols to unzip (as a u32) followed by the
-    // number of entries in the dictionary (as a u32).
+    // The zip file contains an 8-bit with the number of symbols to unzip (as a u32)
+    // followed by the number of entries in the dictionary (as a u32).
     let num_symbols = zip[0] as usize;
     let num_entries = zip[1] as usize;
 

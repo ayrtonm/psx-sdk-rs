@@ -1,8 +1,8 @@
 // This represents x in [0, 1024) and y in [0, 512)
 pub type Pixel = u16;
-// This isn't quite right either since the difference of unsigned 16-bit numbers can exceed an i16
-// but since valid values of x and y are restricted, it'll be fine in those cases. I'll keep this
-// priivate anyway to avoid confusion.
+// This isn't quite right either since the difference of unsigned 16-bit numbers
+// can exceed an i16 but since valid values of x and y are restricted, it'll be
+// fine in those cases. I'll keep this priivate anyway to avoid confusion.
 type PixelDiff = i16;
 
 pub struct Vertex {
@@ -39,10 +39,11 @@ impl From<&Vertex> for u32 {
     }
 }
 
-// This is essentially Copy/Clone, but it's implemented as the `from` trait to make the DrawPort API
-// more ergonomic while keeping ownership explicit. That is, `rect_to_vram(zero, ..)` will consume
-// zero but `rect_to_vram(&zero, ..)` is also allowed. With Copy/Clone, `rect_to_vram(zero, ..)`
-// would copy zero allowing it to be reused. In practice if the `Vertex` is converted to `u32`
+// This is essentially Copy/Clone, but it's implemented as the `from` trait to
+// make the DrawPort API more ergonomic while keeping ownership explicit. That
+// is, `rect_to_vram(zero, ..)` will consume zero but `rect_to_vram(&zero, ..)`
+// is also allowed. With Copy/Clone, `rect_to_vram(zero, ..)` would copy zero
+// allowing it to be reused. In practice if the `Vertex` is converted to `u32`
 // anyway, LTO optimizes that all out.
 impl From<&Vertex> for Vertex {
     fn from(v: &Vertex) -> Vertex {

@@ -1,7 +1,6 @@
 use crate::gpu::color::Color;
 use crate::gpu::vertex::{Pixel, Vertex};
 use crate::gpu::{Depth, DispPort, DrawPort, Res, Vmode};
-use core::cell::RefCell;
 
 type BufferLocation = (Pixel, Pixel);
 
@@ -10,49 +9,44 @@ enum Buffer {
     Two,
 }
 
-pub struct Framebuffer<'a, 'b> {
-    draw_port: &'a RefCell<DrawPort>,
-    disp_port: &'b RefCell<DispPort>,
+pub struct Framebuffer {
     display: Buffer,
     buffers: (BufferLocation, BufferLocation),
     res: Res,
 }
 
-impl<'a, 'b> Framebuffer<'a, 'b> {
+impl Framebuffer {
     pub fn new(
-        draw_port: &'a RefCell<DrawPort>, disp_port: &'b RefCell<DispPort>, one: BufferLocation,
+        draw_port: &mut DrawPort, disp_port: &mut DispPort, one: BufferLocation,
         two: BufferLocation, res: Res,
     ) -> Self
     {
-        disp_port.borrow_mut().horizontal(0, (&res.0).into());
-        disp_port.borrow_mut().vertical(0, (&res.1).into());
         disp_port
-            .borrow_mut()
+            .horizontal(0, (&res.0).into())
+            .vertical(0, (&res.1).into())
             .mode(&res.0, &res.1, Vmode::NTSC, Depth::Lo, false);
         let mut fb = Framebuffer {
-            draw_port,
-            disp_port,
             display: Buffer::One,
             buffers: (one, two),
             res,
         };
-        fb.draw(Buffer::Two);
-        fb.display(Buffer::One);
-        fb.disp_port.borrow_mut().on();
+        fb.draw(draw_port, Buffer::Two);
+        fb.display(draw_port, disp_port, Buffer::One);
+        disp_port.on();
         fb
     }
 
-    pub fn swap(&mut self) {
+    pub fn swap(&mut self, draw_port: &mut DrawPort, disp_port: &mut DispPort) {
         match self.display {
             Buffer::One => {
                 self.display = Buffer::Two;
-                self.draw(Buffer::One);
-                self.display(Buffer::Two);
+                self.draw(draw_port, Buffer::One);
+                self.display(draw_port, disp_port, Buffer::Two);
             },
             Buffer::Two => {
                 self.display = Buffer::One;
-                self.draw(Buffer::Two);
-                self.display(Buffer::One);
+                self.draw(draw_port, Buffer::Two);
+                self.display(draw_port, disp_port, Buffer::One);
             },
         }
     }
@@ -64,30 +58,21 @@ impl<'a, 'b> Framebuffer<'a, 'b> {
         }
     }
 
-    fn draw(&mut self, buffer: Buffer) {
+    fn draw(&mut self, draw_port: &mut DrawPort, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
         let hres: Pixel = (&self.res.0).into();
         let vres: Pixel = (&self.res.1).into();
-        self.draw_port
-            .borrow_mut()
-            .start(buffer.0.into(), buffer.1.into());
-        self.draw_port
-            .borrow_mut()
-            .end(buffer.0 + hres, buffer.1 + vres);
-        self.draw_port
-            .borrow_mut()
-            .offset(buffer.0.into(), buffer.1.into());
+        draw_port
+            .start(buffer)
+            .end((buffer.0 + hres, buffer.1 + vres))
+            .offset(buffer);
     }
 
-    fn display(&mut self, buffer: Buffer) {
+    fn display(&mut self, draw_port: &mut DrawPort, disp_port: &mut DispPort, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
         let hres = (&self.res.0).into();
         let vres = (&self.res.1).into();
-        self.disp_port
-            .borrow_mut()
-            .start(buffer.0.into(), buffer.1.into());
-        self.draw_port
-            .borrow_mut()
-            .draw_rect(Vertex::zero(), (hres, vres), &Color::black());
+        disp_port.start(buffer);
+        draw_port.draw_rect(Vertex::zero(), (hres, vres), &Color::black());
     }
 }

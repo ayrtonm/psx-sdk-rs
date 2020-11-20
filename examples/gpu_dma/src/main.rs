@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(array_map)]
 
-use core::cell::RefCell;
 use psx::dma;
 use psx::dma::{Addr, Block, BlockLen, Control, Direction, Mode, Step};
 use psx::gpu::color::Color;
@@ -12,22 +11,20 @@ use psx::gpu::{DispPort, DmaSource, DrawPort, Hres, Vres};
 
 psx::exe!();
 
-fn mk_framebuffer<'a, 'b>(
-    draw_port: &'a RefCell<DrawPort>, disp_port: &'b RefCell<DispPort>,
-) -> Framebuffer<'a, 'b> {
+fn mk_framebuffer(draw_port: &mut DrawPort, disp_port: &mut DispPort) -> Framebuffer {
     let buf0 = (0, 0);
     let buf1 = (0, 240);
     let res = (Hres::H320, Vres::V240);
-    disp_port.borrow_mut().reset_gpu();
-    disp_port.borrow_mut().dma(DmaSource::CPU);
+    disp_port.reset_gpu();
+    disp_port.dma(DmaSource::CPU);
     Framebuffer::new(draw_port, disp_port, buf0, buf1, res)
 }
 
 fn main(mut io: IO) {
-    let draw_port = RefCell::new(io.take_draw_port().expect("DrawPort has been taken"));
-    let disp_port = RefCell::new(io.take_disp_port().expect("DispPort has been taken"));
+    let mut draw_port = io.take_draw_port().expect("DrawPort has been taken");
+    let mut disp_port = io.take_disp_port().expect("DispPort has been taken");
     let mut dma = io.take_gpu_dma().expect("GPU DMA has been taken");
-    let mut fb = mk_framebuffer(&draw_port, &disp_port);
+    let mut fb = mk_framebuffer(&mut draw_port, &mut disp_port);
 
     dma.control.set_direction(Direction::FromRam);
     dma.control.set_step(Step::Forward);
@@ -42,7 +39,7 @@ fn main(mut io: IO) {
             theta -= 360.0;
         }
         do_transfer(&mut dma, theta);
-        fb.swap();
+        fb.swap(&mut draw_port, &mut disp_port);
     }
 }
 
