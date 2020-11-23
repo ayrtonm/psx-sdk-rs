@@ -1,9 +1,5 @@
 // This represents x in [0, 1024) and y in [0, 512)
 pub type Pixel = i16;
-// This isn't quite right either since the difference of unsigned 16-bit numbers
-// can exceed an i16 but since valid values of x and y are restricted, it'll be
-// fine in those cases. I'll keep this priivate anyway to avoid confusion.
-type PixelDiff = i16;
 
 pub struct Vertex {
     x: Pixel,
@@ -68,41 +64,32 @@ impl Vertex {
         Vertex::new(0, 0)
     }
 
-    pub fn shrink_x(&self, a: Pixel) -> Self {
-        Vertex::new(self.x() / a, self.y())
+    pub fn map<F>(&self, f: F) -> Self
+        where F: Fn((Pixel, Pixel)) -> (Pixel, Pixel) {
+        f((self.x(), self.y())).into()
     }
 
-    pub fn shrink_y(&self, a: Pixel) -> Self {
-        Vertex::new(self.x(), self.y() / a)
+    pub fn shift<T>(&self, v: T) -> Self
+        where Vertex: From<T> {
+        let v = Vertex::from(v);
+        self.map(|(x, y)| (x + v.x(), y + v.y()))
     }
 
-    pub fn scale_x(&self, a: Pixel) -> Self {
-        Vertex::new(self.x() * a, self.y())
-    }
-
-    pub fn scale_y(&self, a: Pixel) -> Self {
-        Vertex::new(self.x(), self.y() * a)
-    }
-
-    pub fn shift(&self, v: &Self) -> Self {
-        Vertex::new(self.x() + v.x(), self.y() + v.y())
-    }
-
-    pub fn copy(&self) -> Self {
-        Vertex::new(self.x(), self.y())
-    }
-
-    pub fn rect(center: &Vertex, size: Vertex) -> Quad {
-        let half_size = size.shrink_x(2).shrink_y(2);
+    pub fn rect<T, U>(center: T, size: U) -> Quad
+        where Vertex: From<T> + From<U> {
+        let center = Vertex::from(center);
+        let size = Vertex::from(size);
+        let half_size = size.map(|(x, y)| (x / 2, y / 2));
         [
-            center.shift(&half_size.scale_x(-1).scale_y(-1)),
-            center.shift(&half_size.scale_x(-1)),
-            center.shift(&half_size.scale_y(-1)),
+            center.shift(&half_size.map(|(x, y)| (-x, -y))),
+            center.shift(&half_size.map(|(x, y)| (-x, y))),
+            center.shift(&half_size.map(|(x, y)| (x, -y))),
             center.shift(&half_size),
         ]
     }
 
-    pub fn square(center: &Vertex, length: Pixel) -> Quad {
-        Vertex::rect(center, Vertex::new(length, length))
+    pub fn square<T>(center: T, length: Pixel) -> Quad
+        where Vertex: From<T> {
+        Vertex::rect::<T, (Pixel, Pixel)>(center, (length, length))
     }
 }

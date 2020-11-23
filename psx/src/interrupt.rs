@@ -33,6 +33,7 @@ impl Stat {
         while self.read().bit(irq as u32) == 0 {}
     }
 
+    // TODO: This function only works for IRQ=0,4,5,6. See nocash specs for details
     pub fn ack_wait(&mut self, irq: IRQ) {
         self.ack(irq);
         self.wait(irq);

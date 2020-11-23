@@ -22,14 +22,14 @@ fn main(mut io: IO) {
     let radius = 32;
     loop {
         draw_port.draw_shaded_quad(
-            &Vertex::rect(&Vertex::new(160, 120), Vertex::new(320, 240)),
+            &Vertex::rect((160, 120), (320, 240)),
             &[Color::aqua(), Color::black(), Color::aqua(), Color::black()],
         );
         if pos.x() + radius >= 320 || pos.x() <= radius {
-            vel = vel.scale_x(-1);
+            vel = vel.map(|(x, y)| (-x, y));
         }
         if pos.y() + radius >= 240 || pos.y() <= radius {
-            vel = vel.scale_y(-1);
+            vel = vel.map(|(x, y)| (x, -y));
         }
         pos = pos.shift(&vel);
         draw_port.draw_circle(&pos, radius, &Color::orange());
@@ -56,7 +56,7 @@ impl DrawPrimitive for DrawPort {
                 let rad_sq = ((a * a) + (b * b)) as f32;
                 let circle = (radius * radius) as f32;
                 if rad_sq <= circle {
-                    self.draw_pixel(center.shift(&Vertex::new(a, b)), color);
+                    self.draw_pixel(center.shift((a, b)), color);
                 }
             }
         }

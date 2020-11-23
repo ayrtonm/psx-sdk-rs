@@ -1,3 +1,4 @@
+shopt -s extglob
 echo "-----------" >> filesizes
 for i in */
     do cd $i;
