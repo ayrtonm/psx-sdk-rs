@@ -1,49 +1,25 @@
+use crate::gpu::AsU32;
+use core::ops::AddAssign;
 // This represents x in [0, 1024) and y in [0, 512)
 pub type Pixel = i16;
 
+#[derive(Clone, Copy)]
 pub struct Vertex {
     x: Pixel,
     y: Pixel,
 }
 
 pub type Polygon<const N: usize> = [Vertex; N];
-pub type Line = Polygon<2>;
-pub type Triangle = Polygon<3>;
-pub type Quad = Polygon<4>;
+
+impl AsU32 for Vertex {
+    fn as_u32(&self) -> u32 {
+        (self.y as u32) << 16 | (self.x as u32)
+    }
+}
 
 impl From<(Pixel, Pixel)> for Vertex {
-    fn from(v: (Pixel, Pixel)) -> Vertex {
-        Vertex::new(v.0, v.1)
-    }
-}
-
-impl From<&(Pixel, Pixel)> for Vertex {
-    fn from(v: &(Pixel, Pixel)) -> Vertex {
-        Vertex::new(v.0, v.1)
-    }
-}
-
-impl From<Vertex> for u32 {
-    fn from(v: Vertex) -> u32 {
-        (v.y() as u32) << 16 | v.x() as u32
-    }
-}
-
-impl From<&Vertex> for u32 {
-    fn from(v: &Vertex) -> u32 {
-        (v.y() as u32) << 16 | v.x() as u32
-    }
-}
-
-// This is essentially Copy/Clone, but it's implemented as the `from` trait to
-// make the DrawPort API more ergonomic while keeping ownership explicit. That
-// is, `rect_to_vram(zero, ..)` will consume zero but `rect_to_vram(&zero, ..)`
-// is also allowed. With Copy/Clone, `rect_to_vram(zero, ..)` would copy zero
-// allowing it to be reused. In practice if the `Vertex` is converted to `u32`
-// anyway, LTO optimizes that all out.
-impl From<&Vertex> for Vertex {
-    fn from(v: &Vertex) -> Vertex {
-        Vertex::new(v.x(), v.y())
+    fn from((x, y): (Pixel, Pixel)) -> Vertex {
+        Vertex { x, y }
     }
 }
 
@@ -65,31 +41,62 @@ impl Vertex {
     }
 
     pub fn map<F>(&self, f: F) -> Self
-        where F: Fn((Pixel, Pixel)) -> (Pixel, Pixel) {
-        f((self.x(), self.y())).into()
+    where F: Fn(Pixel, Pixel) -> (Pixel, Pixel) {
+        f(self.x(), self.y()).into()
+    }
+
+    pub fn apply<F>(&mut self, f: F) -> &mut Self
+    where F: Fn(Pixel, Pixel) -> (Pixel, Pixel) {
+        *self = self.map(f);
+        self
     }
 
     pub fn shift<T>(&self, v: T) -> Self
-        where Vertex: From<T> {
+    where Vertex: From<T> {
         let v = Vertex::from(v);
-        self.map(|(x, y)| (x + v.x(), y + v.y()))
+        self.map(|x, y| (x + v.x(), y + v.y()))
     }
 
-    pub fn rect<T, U>(center: T, size: U) -> Quad
-        where Vertex: From<T> + From<U> {
+    pub fn rect<T, U>(center: T, size: U) -> Polygon<4>
+    where Vertex: From<T> + From<U> {
         let center = Vertex::from(center);
         let size = Vertex::from(size);
-        let half_size = size.map(|(x, y)| (x / 2, y / 2));
+        let half_size = size.map(|x, y| (x / 2, y / 2));
         [
-            center.shift(&half_size.map(|(x, y)| (-x, -y))),
-            center.shift(&half_size.map(|(x, y)| (-x, y))),
-            center.shift(&half_size.map(|(x, y)| (x, -y))),
-            center.shift(&half_size),
+            center.shift(half_size.map(|x, y| (-x, -y))),
+            center.shift(half_size.map(|x, y| (-x, y))),
+            center.shift(half_size.map(|x, y| (x, -y))),
+            center.shift(half_size),
         ]
     }
 
-    pub fn square<T>(center: T, length: Pixel) -> Quad
-        where Vertex: From<T> {
+    pub fn offset_rect<T, U>(offset: T, size: U) -> Polygon<4>
+    where Vertex: From<T> + From<U> {
+        let offset = Vertex::from(offset);
+        let size = Vertex::from(size);
+        [
+            offset.clone(),
+            offset.shift(size.map(|_, y| (0, y))),
+            offset.shift(size.map(|x, _| (x, 0))),
+            offset.shift(size),
+        ]
+    }
+
+    pub fn square<T>(center: T, length: Pixel) -> Polygon<4>
+    where Vertex: From<T> {
         Vertex::rect::<T, (Pixel, Pixel)>(center, (length, length))
+    }
+
+    pub fn offset_square<T>(offset: T, length: Pixel) -> Polygon<4>
+    where Vertex: From<T> {
+        Vertex::offset_rect::<T, (Pixel, Pixel)>(offset, (length, length))
+    }
+}
+
+impl<T> AddAssign<T> for Vertex
+where Vertex: From<T>
+{
+    fn add_assign(&mut self, other: T) {
+        *self = self.shift(other);
     }
 }

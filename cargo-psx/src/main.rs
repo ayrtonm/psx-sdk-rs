@@ -93,7 +93,6 @@ fn main() {
             .arg("--target")
             .arg(target_triple)
             .args(cargo_args)
-            .env("RUSTFLAGS", "-C linker=../../mips_toolchain/ld")
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())

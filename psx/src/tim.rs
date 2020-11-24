@@ -24,6 +24,14 @@ impl<'a> TIM<'a> {
     pub fn bitmap(&self) -> &Bitmap<'a> {
         &self.bitmap
     }
+
+    pub fn clut(&self) -> Option<&Bitmap<'a>> {
+        self.clut.as_ref()
+    }
+
+    pub fn bpp(&self) -> u32 {
+        self.bpp
+    }
 }
 
 pub struct Bitmap<'a> {
@@ -54,5 +62,25 @@ impl<'a> Bitmap<'a> {
 
     pub fn body(&self) -> &[u32] {
         self.body
+    }
+
+    pub fn len(&self) -> u32 {
+        self.len
+    }
+
+    pub fn origin_x(&self) -> Pixel {
+        self.origin_x
+    }
+
+    pub fn origin_y(&self) -> Pixel {
+        self.origin_y
+    }
+
+    pub fn width(&self) -> Pixel {
+        self.width
+    }
+
+    pub fn height(&self) -> Pixel {
+        self.height
     }
 }

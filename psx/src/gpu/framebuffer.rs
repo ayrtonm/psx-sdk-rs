@@ -1,4 +1,5 @@
 use crate::gpu::color::Color;
+use crate::gpu::primitives::rectangle;
 use crate::gpu::vertex::{Pixel, Vertex};
 use crate::gpu::{Depth, DispPort, DrawPort, Res, Vmode};
 
@@ -73,6 +74,7 @@ impl Framebuffer {
         let hres = (&self.res.0).into();
         let vres = (&self.res.1).into();
         disp_port.start(buffer);
-        draw_port.draw_rect(Vertex::zero(), (hres, vres), &Color::black());
+        let clear_screen = rectangle(Vertex::zero(), (hres, vres), Color::black());
+        draw_port.send(&clear_screen);
     }
 }

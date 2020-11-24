@@ -6,6 +6,7 @@
 #![feature(naked_functions)]
 #![feature(doc_cfg)]
 #![feature(bool_to_option)]
+#![feature(array_map)]
 
 pub mod allocator;
 pub mod bios;

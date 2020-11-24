@@ -1,4 +1,7 @@
+use crate::gpu::AsU32;
 type Intensity = u8;
+
+#[derive(Clone, Copy)]
 pub struct Color {
     red: Intensity,
     green: Intensity,
@@ -7,41 +10,35 @@ pub struct Color {
 
 pub type Palette<const N: usize> = [Color; N];
 
-impl From<Color> for u32 {
-    fn from(color: Color) -> u32 {
-        (color.blue as u32) << 16 | (color.green as u32) << 8 | (color.red as u32)
-    }
-}
-
-impl From<&Color> for u32 {
-    fn from(color: &Color) -> u32 {
-        (color.blue as u32) << 16 | (color.green as u32) << 8 | (color.red as u32)
+impl AsU32 for Color {
+    fn as_u32(&self) -> u32 {
+        (self.blue as u32) << 16 | (self.green as u32) << 8 | (self.red as u32)
     }
 }
 
 impl Color {
-    pub const fn new(red: Intensity, green: Intensity, blue: Intensity) -> Self {
+    pub const fn rgb888(red: Intensity, green: Intensity, blue: Intensity) -> Self {
         Color { red, green, blue }
     }
 
     pub const fn red() -> Self {
-        Color::new(255, 0, 0)
+        Color::rgb888(255, 0, 0)
     }
 
     pub const fn green() -> Self {
-        Color::new(0, 255, 0)
+        Color::rgb888(0, 255, 0)
     }
 
     pub const fn blue() -> Self {
-        Color::new(0, 0, 255)
+        Color::rgb888(0, 0, 255)
     }
 
     pub const fn black() -> Self {
-        Color::new(0, 0, 0)
+        Color::rgb888(0, 0, 0)
     }
 
     pub const fn white() -> Self {
-        Color::new(255, 255, 255)
+        Color::rgb888(255, 255, 255)
     }
 
     pub fn yellow() -> Self {
@@ -84,12 +81,12 @@ impl Color {
         let red = self.red + other.red;
         let green = self.green + other.green;
         let blue = self.blue + other.blue;
-        Color::new(red, green, blue)
+        Color::rgb888(red, green, blue)
     }
 
     fn map<F>(&self, f: F) -> Self
     where F: Fn(Intensity) -> Intensity {
-        Color::new(f(self.red), f(self.green), f(self.blue))
+        Color::rgb888(f(self.red), f(self.green), f(self.blue))
     }
 
     // Halves the intensity of each component.
