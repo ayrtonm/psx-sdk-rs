@@ -23,6 +23,14 @@ impl From<(Pixel, Pixel)> for Vertex {
     }
 }
 
+impl<T> AddAssign<T> for Vertex
+where Vertex: From<T>
+{
+    fn add_assign(&mut self, other: T) {
+        *self = self.shift(other);
+    }
+}
+
 impl Vertex {
     pub const fn new(x: Pixel, y: Pixel) -> Self {
         Vertex { x, y }
@@ -90,13 +98,5 @@ impl Vertex {
     pub fn offset_square<T>(offset: T, length: Pixel) -> Polygon<4>
     where Vertex: From<T> {
         Vertex::offset_rect::<T, (Pixel, Pixel)>(offset, (length, length))
-    }
-}
-
-impl<T> AddAssign<T> for Vertex
-where Vertex: From<T>
-{
-    fn add_assign(&mut self, other: T) {
-        *self = self.shift(other);
     }
 }

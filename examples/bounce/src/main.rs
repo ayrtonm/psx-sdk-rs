@@ -1,13 +1,12 @@
 #![no_std]
 #![no_main]
-#![feature(once_cell)]
+#![feature(array_map, once_cell)]
 
 use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
-use psx::gpu::primitives::{point, shaded_quad, textured_quad};
-use psx::gpu::vertex::{Pixel, Vertex};
-use psx::gpu::Packet;
-use psx::gpu::{DrawPort, Hres, Vres};
+use psx::gpu::primitives::{shaded_quad, textured_quad};
+use psx::gpu::vertex::Vertex;
+use psx::gpu::{Hres, Vres};
 use psx::interrupt::IRQ;
 use psx::*;
 
@@ -23,27 +22,21 @@ fn main(mut io: IO) {
     let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res);
     let mut pos = Vertex::new(200, 100);
     let mut vel = Vertex::new(4, 2);
-    let ferris = unzip!("../ferris.tim.zip");
+    let ferris = unzip!("../ferris-8bpp.tim.zip");
     let tim = tim!(ferris);
-    draw_port.to_vram((320, 0), (256, 256), tim.bitmap().body());
+    let (page, clut) = tim.load(&mut draw_port);
     let bg = shaded_quad(
         Vertex::offset_rect(Vertex::zero(), (320, 240)),
         [Color::aqua(), Color::black(), Color::aqua(), Color::black()],
     );
-    let palette = [
-        Color::indigo(),
-        Color::orange(),
-        Color::mint(),
-        Color::aqua(),
-    ];
-    let size = 32;
+    let size = 64;
     let half_size = 16;
     let mut fg = textured_quad(
         Vertex::square(pos, size),
-        Color::indigo(),
+        Color::white(),
         [(0, 0), (0, 255), (255, 0), (255, 255)],
-        0,
-        (5, 0),
+        page,
+        clut,
     );
     loop {
         if pos.x() + half_size >= 320 || pos.x() <= half_size {
@@ -53,7 +46,9 @@ fn main(mut io: IO) {
             vel.apply(|x, y| (x, -y));
         }
         pos += vel;
-        fg.map(|v, _, _| *v = Vertex::square(pos, size));
+        fg.map(|v, _, _| {
+            *v = Vertex::square(pos, size).map(|v| (v.x(), v.y() + (v.x() - pos.x())).into())
+        });
         draw_port.send(&bg).send(&fg);
         int_stat.ack_wait(IRQ::Vblank);
         fb.swap(&mut draw_port, &mut disp_port);

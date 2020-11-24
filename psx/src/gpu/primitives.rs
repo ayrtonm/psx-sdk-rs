@@ -22,8 +22,8 @@ pub struct ShadedCurve<const N: usize>(ShadedPrimitive<N>);
 pub struct TexturedPrimitive<const N: usize> {
     primitive: Primitive<N>,
     tex_coords: [Coord; N],
-    clut: Clut,
     tex_page: Page,
+    clut: Option<Clut>,
 }
 
 pub struct Rectangle {
@@ -61,21 +61,22 @@ macro_rules! primitive_fn {
 
 macro_rules! textured_primitive_fn {
     ($name:ident, $N:expr) => {
-        pub fn $name<T, U, V>(
-            vertices: [T; $N], color: Color, tex_coords: [U; $N], clut: Clut, tex_page: V,
+        pub fn $name<T, U, V, S>(
+            vertices: [T; $N], color: Color, tex_coords: [U; $N], tex_page: V, clut: Option<S>,
         ) -> TexturedPrimitive<$N>
         where
             Vertex: From<T>,
             Coord: From<U>,
-            Page: From<V>, {
+            Page: From<V>,
+            Clut: From<S>, {
             TexturedPrimitive::<$N> {
                 primitive: Primitive::<$N> {
                     vertices: vertices.map(|v| Vertex::from(v)),
                     color,
                 },
                 tex_coords: tex_coords.map(|t| Coord::from(t)),
-                clut,
                 tex_page: Page::from(tex_page),
+                clut: clut.map(|clut| Clut::from(clut)),
             }
         }
     };
@@ -287,7 +288,7 @@ impl Packet<7> for TexturedPrimitive<3> {
         [
             0x24 << 24 | self.primitive.color.as_u32(),
             self.primitive.vertices[0].as_u32(),
-            self.clut.as_u32() | self.tex_coords[0].as_u32(),
+            self.clut.as_ref().map(|c| c.as_u32()).unwrap_or(0) | self.tex_coords[0].as_u32(),
             self.primitive.vertices[1].as_u32(),
             self.tex_page.as_u32() | self.tex_coords[1].as_u32(),
             self.primitive.vertices[2].as_u32(),
@@ -301,7 +302,7 @@ impl Packet<9> for TexturedPrimitive<4> {
         [
             0x2C << 24 | self.primitive.color.as_u32(),
             self.primitive.vertices[0].as_u32(),
-            self.clut.as_u32() | self.tex_coords[0].as_u32(),
+            self.clut.as_ref().map(|c| c.as_u32()).unwrap_or(0) | self.tex_coords[0].as_u32(),
             self.primitive.vertices[1].as_u32(),
             self.tex_page.as_u32() | self.tex_coords[1].as_u32(),
             self.primitive.vertices[2].as_u32(),
