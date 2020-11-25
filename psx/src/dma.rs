@@ -140,14 +140,27 @@ pub struct Channel<A: Addr, B: Block, C: Control> {
 }
 
 pub type Gpu = Channel<gpu::Addr, gpu::Block, gpu::Control>;
+pub type Otc = Channel<otc::Addr, otc::Block, otc::Control>;
 
-pub mod gpu {
-    use crate::rw_register;
-    rw_register!(Addr, 0x1F80_10A0);
-    rw_register!(Block, 0x1F80_10A4);
-    rw_register!(Control, 0x1F80_10A8);
+macro_rules! mk_mod {
+    ($name:ident, $offset:expr) => {
+        pub mod $name {
+            use crate::rw_register;
+            rw_register!(Addr, 0x1F80_1080 + ($offset * 0x10));
+            rw_register!(Block, 0x1F80_1084 + ($offset * 0x10));
+            rw_register!(Control, 0x1F80_1088 + ($offset * 0x10));
 
-    impl super::Addr for Addr {}
-    impl super::Block for Block {}
-    impl super::Control for Control {}
+            impl super::Addr for Addr {}
+            impl super::Block for Block {}
+            impl super::Control for Control {}
+        }
+    };
 }
+
+mk_mod!(mdec_in, 0);
+mk_mod!(mdec_out, 1);
+mk_mod!(gpu, 2);
+mk_mod!(cdrom, 3);
+mk_mod!(spu, 4);
+mk_mod!(pio, 5);
+mk_mod!(otc, 6);
