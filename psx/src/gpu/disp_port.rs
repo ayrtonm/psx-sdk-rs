@@ -1,5 +1,5 @@
 use crate::gpu::vertex::{Pixel, Vertex};
-use crate::gpu::{Depth, DispPort, DmaSource, Hres, Vmode, Vres};
+use crate::gpu::{Depth, DispPort, DmaSource, Vmode};
 use crate::registers::Write;
 
 impl DispPort {
@@ -58,21 +58,23 @@ impl DispPort {
 
     // Calls DispPort(08h)
     pub fn mode(
-        &mut self, hres: &Hres, vres: &Vres, vmode: Vmode, depth: Depth, interlace: bool,
+        &mut self, hres: Pixel, vres: Pixel, vmode: Vmode, depth: Depth, interlace: bool,
     ) -> &mut Self {
         let cmd = 0x08 << 24;
         let hres = match hres {
-            Hres::H256 => 0,
-            Hres::H320 => 1,
-            Hres::H512 => 2,
-            Hres::H640 => 3,
-            Hres::H368 => 1 << 6,
+            256 => 0,
+            320 => 1,
+            512 => 2,
+            640 => 3,
+            368 => 1 << 6,
+            _ => unreachable!("Invalid hres"),
         };
         // Should this only equal 1 << 2 when interlace is true or is that
         // restriction handled in hardware?
         let vres = match vres {
-            Vres::V240 => 0,
-            Vres::V480 => 1 << 2,
+            240 => 0,
+            480 => 1 << 2,
+            _ => unreachable!("Invalid vres"),
         };
         let vmode = match vmode {
             Vmode::NTSC => 0,

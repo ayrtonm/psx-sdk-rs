@@ -1,35 +1,53 @@
 use crate::gpu::color::Color;
 use crate::gpu::primitives::rectangle;
-use crate::gpu::vertex::{Pixel, Vertex};
-use crate::gpu::{Depth, DispPort, DrawPort, Res, Vmode};
+use crate::gpu::vertex::Vertex;
+use crate::gpu::{Depth, DispPort, DrawPort, Vmode};
 
 enum Buffer {
     One,
     Two,
 }
 
+pub struct Attributes {
+    pub mode: Vmode,
+    pub color_depth: Depth,
+    pub interlacing: bool,
+}
+
 pub struct Framebuffer {
     display: Buffer,
     buffers: (Vertex, Vertex),
-    res: Res,
+    res: Vertex,
 }
 
 impl Framebuffer {
-    pub fn new<T, U>(
-        draw_port: &mut DrawPort, disp_port: &mut DispPort, one: T, two: U, res: Res,
+    pub fn new<T, U, V>(
+        draw_port: &mut DrawPort, disp_port: &mut DispPort, one: T, two: U, res: V,
+        attr: Option<Attributes>,
     ) -> Self
-    where Vertex: From<T> + From<U> {
-        let one = Vertex::from(one);
-        let two = Vertex::from(two);
-        disp_port
-            .horizontal(0, (&res.0).into())
-            .vertical(0, (&res.1).into())
-            .mode(&res.0, &res.1, Vmode::NTSC, Depth::Lo, false);
+    where
+        Vertex: From<T> + From<U> + From<V>,
+    {
+        let attr = attr.unwrap_or(Attributes {
+            mode: Vmode::NTSC,
+            color_depth: Depth::Lo,
+            interlacing: false,
+        });
         let mut fb = Framebuffer {
             display: Buffer::One,
-            buffers: (one, two),
-            res,
+            buffers: (Vertex::from(one), Vertex::from(two)),
+            res: Vertex::from(res),
         };
+        disp_port
+            .horizontal(0, fb.res.x())
+            .vertical(0, fb.res.y())
+            .mode(
+                fb.res.x(),
+                fb.res.y(),
+                attr.mode,
+                attr.color_depth,
+                attr.interlacing,
+            );
         fb.draw(draw_port, Buffer::Two);
         fb.display(draw_port, disp_port, Buffer::One);
         disp_port.on();
@@ -60,20 +78,16 @@ impl Framebuffer {
 
     fn draw(&mut self, draw_port: &mut DrawPort, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres: Pixel = (&self.res.0).into();
-        let vres: Pixel = (&self.res.1).into();
         draw_port
             .start(buffer)
-            .end(buffer.shift((hres, vres)))
+            .end(buffer.shift(self.res))
             .offset(buffer);
     }
 
     fn display(&mut self, draw_port: &mut DrawPort, disp_port: &mut DispPort, buffer: Buffer) {
         let buffer = self.buffer_data(buffer);
-        let hres = (&self.res.0).into();
-        let vres = (&self.res.1).into();
         disp_port.start(buffer);
-        let clear_screen = rectangle(Vertex::zero(), (hres, vres), Color::black());
+        let clear_screen = rectangle(Vertex::zero(), self.res, Color::black());
         draw_port.send(&clear_screen);
     }
 }

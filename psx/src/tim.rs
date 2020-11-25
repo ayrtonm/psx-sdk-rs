@@ -28,7 +28,8 @@ impl<'a> TIM<'a> {
         TIM { bpp, bitmap, clut }
     }
 
-    // TODO: Make this return (Result<'a, Page>, Option<Result<'a, Clut>>) and be non-blocking.
+    // TODO: Make this return (Result<'a, Page>, Option<Result<'a, Clut>>) and be
+    // non-blocking.
     pub fn load(
         &self, draw_port: &mut DrawPort, gpu_dma: &'a mut dma::Gpu,
     ) -> (Page, Option<Result<'a, Clut>>) {

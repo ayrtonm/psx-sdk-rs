@@ -1,55 +1,45 @@
 # Todo
 
-## psx
+This is a preliminary list of things missing in psx (which is almost everything...)
 
-This is a very preliminary list of things missing in psx (almost
-everything...). Very roughly in order of priority.
-
-- [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
-- [x] Add interrupt control
-    - [x] Interrupt enable/disable
-    - [x] Interrupt acknowledge/status
-    - [x] Make allocator impl interrupt-free
-- [x] TIM texture loader
-    - [ ] Verify that CLUTs work
-- [ ] Add DMA channels
-    - [x] Basic GPU DMA channel
-    - [ ] Other DMA channels
-    - [ ] DMA control/interrupt registers
-- [ ] Finish GPU support
-  - [x] Support DMA
-  - [ ] Add texture support
-    - [x] Display texture in VRAM
-    - [ ] Decide how to structure Texcoord+CLUT arguments
-    - [ ] Display textured rectangles
-  - [ ] Finish VRAM copy functions
-    - [ ] Implement VRAM to CPU via DMA
-  - [ ] Add draw quad functions with logical vertex ordering
-  - [ ] Make framebuffer more flexible
-    - [x] Add version without `RefCell`
-    - [ ] Consider a version with two-step swap (first call `draw` then `display`)
-    - [ ] Allow setting color depth, video mode and interlacing
-  - [ ] Support depth ordering tables
-  - [ ] Support timer
-- [x] Use allocator
-    - [x] Add call to heap init in `psx::exe`
-    - [x] Add a `no heap` option
-    - [x] Add a real alloc-free option (`no heap` w/o building alloc)
+- [ ] GPU
+    - [ ] Textures
+        - [x] Basic support
+        - [ ] Finish textured primitives
+    - [ ] VRAM to CPU via DMA
+    - [ ] draw_quad with logical vertex ordering
+    - [ ] Framebuffer
+        - [x] Variable video mode, interlacing and color depth
+    - [ ] Depth ordering tables
+    - [ ] Timers
+- [ ] GTE
+    - [ ] Add coprocessor 2 asm snippets
+- [ ] MDEC
+- [ ] SPU
+- [ ] Interrupts
+    - [ ] Fix ack for IRQ1..3, 7..10
+    - [ ] Add relevant coprocessor 0 asm snippets
+- [ ] DMA
+    - [ ] Finish GPU channel
+    - [ ] Add other channels
+    - [ ] Integrate with interrupts
+- [ ] Timers
+- [ ] CDROM/ISO
+    - [ ] Via kernel
+    - [ ] Via MMIO
+- [ ] Controllers
+- [ ] Memory cards
+- [ ] BIOS
+    - [ ] Threads
+    - [ ] Try inlining bios asm trampolines
+- [ ] allocator
     - [ ] Test collections (use GNU ld for now)
     - [ ] Fix linker error for `alloc` crate with rust-lld
-- [ ] Add controller support
-- [ ] Add CDROM/ISO support
-    - [ ] via kernel
-        - [ ] fix `load_exe` demo
-    - [ ] via IO registers
-- [ ] Add thread support via kernel functions
-    - [ ] Figure out how this connects to the Atomic API that was disabled in rustc
-- [ ] Finish adding relevant kernel functions
-    - [ ] Try inlining bios asm trampolines
-- [ ] Add relevant coprocessor 0 asm snippets
-- [ ] Add GTE support
-    - [ ] Add coprocessor 2 asm snippets
-- [ ] Add SPU support
-- [ ] Add MDEC support
-- [ ] Add memory card support
+- [ ] TIM parser
+    - [x] Test CLUTs
+    - [ ] Make DMA TIM loader non-blocking
 - [ ] Add a panic payload
+- [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
+- [ ] Decompressor
+    - [ ] Streaming decompression
+        - [ ] Design the GPU pipeline first to see if this fits in somewhere

@@ -6,7 +6,6 @@ use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
 use psx::gpu::primitives::{shaded_quad, textured_quad};
 use psx::gpu::vertex::Vertex;
-use psx::gpu::{Hres, Vres};
 use psx::interrupt::IRQ;
 use psx::*;
 
@@ -17,10 +16,14 @@ fn main(mut io: IO) {
     let mut disp_port = io.take_disp_port().expect("DispPort has been taken");
     let mut int_stat = io.take_int_stat().expect("interrupt::Stat has been taken");
     let mut gpu_dma = io.take_gpu_dma().expect("dma::Gpu has been taken");
-    let res = (Hres::H320, Vres::V240);
-    let buf0 = Vertex::zero();
-    let buf1 = (0, 240);
-    let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res);
+    let mut fb = Framebuffer::new(
+        &mut draw_port,
+        &mut disp_port,
+        Vertex::zero(),
+        (0, 240),
+        (320, 240),
+        None,
+    );
     let mut pos = Vertex::new(200, 100);
     let mut vel = Vertex::new(4, 2);
     let ferris = unzip!("../ferris-8bpp.tim.zip");
