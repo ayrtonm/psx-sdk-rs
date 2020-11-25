@@ -3,8 +3,6 @@ use crate::gpu::primitives::rectangle;
 use crate::gpu::vertex::{Pixel, Vertex};
 use crate::gpu::{Depth, DispPort, DrawPort, Res, Vmode};
 
-type BufferLocation = (Pixel, Pixel);
-
 enum Buffer {
     One,
     Two,
@@ -12,16 +10,17 @@ enum Buffer {
 
 pub struct Framebuffer {
     display: Buffer,
-    buffers: (BufferLocation, BufferLocation),
+    buffers: (Vertex, Vertex),
     res: Res,
 }
 
 impl Framebuffer {
-    pub fn new(
-        draw_port: &mut DrawPort, disp_port: &mut DispPort, one: BufferLocation,
-        two: BufferLocation, res: Res,
+    pub fn new<T, U>(
+        draw_port: &mut DrawPort, disp_port: &mut DispPort, one: T, two: U, res: Res,
     ) -> Self
-    {
+    where Vertex: From<T> + From<U> {
+        let one = Vertex::from(one);
+        let two = Vertex::from(two);
         disp_port
             .horizontal(0, (&res.0).into())
             .vertical(0, (&res.1).into())
@@ -52,7 +51,7 @@ impl Framebuffer {
         }
     }
 
-    fn buffer_data(&self, buffer: Buffer) -> BufferLocation {
+    fn buffer_data(&self, buffer: Buffer) -> Vertex {
         match buffer {
             Buffer::One => self.buffers.0,
             Buffer::Two => self.buffers.1,
@@ -65,7 +64,7 @@ impl Framebuffer {
         let vres: Pixel = (&self.res.1).into();
         draw_port
             .start(buffer)
-            .end((buffer.0 + hres, buffer.1 + vres))
+            .end(buffer.shift((hres, vres)))
             .offset(buffer);
     }
 

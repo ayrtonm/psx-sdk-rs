@@ -1,6 +1,8 @@
+use crate::dma;
+use crate::dma::{Addr, Block, BlockLen, Control};
 use crate::gpu::texture::{Bpp, Clut, Page};
-use crate::gpu::vertex::Pixel;
-use crate::gpu::DrawPort;
+use crate::gpu::vertex::{Pixel, Vertex};
+use crate::gpu::{AsU32, DrawPort};
 
 pub struct TIM<'a> {
     bpp: Bpp,
@@ -8,6 +10,7 @@ pub struct TIM<'a> {
     clut: Option<Bitmap<'a>>,
 }
 
+type Result<'a, T> = dma::Transfer<'a, dma::gpu::Control, T>;
 impl<'a> TIM<'a> {
     pub fn new(src: &'a [u32]) -> Self {
         let clut = ((src[1] & 8) != 0).then_some(Bitmap::new(&src[2..]));
@@ -25,18 +28,45 @@ impl<'a> TIM<'a> {
         TIM { bpp, bitmap, clut }
     }
 
-    pub fn load(&self, draw_port: &mut DrawPort) -> (Page, Option<Clut>) {
+    // TODO: Make this return (Result<'a, Page>, Option<Result<'a, Clut>>) and be non-blocking.
+    pub fn load(
+        &self, draw_port: &mut DrawPort, gpu_dma: &'a mut dma::Gpu,
+    ) -> (Page, Option<Result<'a, Clut>>) {
+        fn send_header(bmp: &Bitmap, draw_port: &mut DrawPort) {
+            draw_port.send(&[
+                0xA0 << 24,
+                Vertex::from(bmp.offset()).as_u32(),
+                Vertex::from(bmp.size()).as_u32(),
+            ]);
+        }
+
+        fn enqueue_bitmap(bmp: &Bitmap, gpu_dma: &mut dma::Gpu) {
+            gpu_dma.addr.set(bmp.body().as_ptr());
+            gpu_dma.block.set(BlockLen::Words(bmp.body().len()));
+        }
+
+        gpu_dma.control.set_direction(dma::Direction::FromRam);
+        gpu_dma.control.set_step(dma::Step::Forward);
+        gpu_dma.control.set_chopping(false);
+        gpu_dma.control.set_sync_mode(dma::Mode::Immediate);
+
         let bmp = self.bitmap();
-        draw_port.to_vram(bmp.offset(), bmp.size(), bmp.body());
-        let clut = self.clut().map(|clut| {
-            draw_port.to_vram(clut.offset(), clut.size(), clut.body());
-            let base_x = (clut.offset().0 / 16) as u8;
-            let base_y = clut.offset().1;
-            (base_x, base_y).into()
-        });
         let base_x = (bmp.offset().0 / 64) as u8;
         let base_y = (bmp.offset().1 / 256) as u8;
-        (Page::new(base_x, base_y, self.bpp), clut)
+        let page = Page::new(base_x, base_y, self.bpp);
+        send_header(bmp, draw_port);
+        enqueue_bitmap(bmp, gpu_dma);
+        // TODO: remove wait
+        let page = gpu_dma.control.start(Some(page)).wait().unwrap();
+        let clut = self.clut().map(move |clut| {
+            send_header(clut, draw_port);
+            enqueue_bitmap(clut, gpu_dma);
+            let base_x = (clut.offset().0 / 16) as u8;
+            let base_y = clut.offset().1;
+            let clut = (base_x, base_y).into();
+            gpu_dma.control.start(Some(clut))
+        });
+        (page, clut)
     }
 
     pub fn bitmap(&self) -> &Bitmap<'a> {

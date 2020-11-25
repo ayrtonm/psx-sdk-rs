@@ -96,12 +96,12 @@ pub trait Control: Update {
         };
         self.update_bits(9..=10, bits);
     }
-    fn start(&mut self) -> Transfer<Self> {
+    fn start<T: Copy>(&mut self, res: Option<T>) -> Transfer<Self, T> {
         self.update(|val| val.set(24));
         if let Some(Mode::Immediate) = self.sync_mode() {
             self.update(|val| val.set(28));
         }
-        Transfer { control: self }
+        Transfer { control: self, res }
     }
     fn busy(&self) -> bool {
         self.read().bit(24) == 1
@@ -109,17 +109,27 @@ pub trait Control: Update {
 }
 
 #[must_use]
-pub struct Transfer<'a, C: Control + ?Sized> {
+pub struct Transfer<'a, C: Control + ?Sized, T: Copy> {
     control: &'a C,
+    res: Option<T>,
 }
 
-impl<C: Control> Transfer<'_, C> {
+impl<C: Control, T: Copy> Transfer<'_, C, T> {
     pub fn busy(&self) -> bool {
         self.control.busy()
     }
 
-    pub fn wait(&self) {
+    pub fn wait(&self) -> Option<T> {
         while self.busy() {}
+        self.res
+    }
+
+    pub fn if_done(&self) -> Option<T> {
+        if !self.busy() {
+            self.res
+        } else {
+            None
+        }
     }
 }
 

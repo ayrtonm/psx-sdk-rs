@@ -7,6 +7,7 @@
 #![feature(doc_cfg)]
 #![feature(bool_to_option)]
 #![feature(array_map)]
+#![feature(once_cell)]
 
 pub mod allocator;
 pub mod bios;

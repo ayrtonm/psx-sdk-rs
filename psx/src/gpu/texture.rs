@@ -25,6 +25,7 @@ impl From<(u8, u8)> for Coord {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Clut {
     x: u8,
     y: Pixel,
@@ -42,6 +43,7 @@ impl From<(u8, Pixel)> for Clut {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Page {
     x: u8,
     y: u8,

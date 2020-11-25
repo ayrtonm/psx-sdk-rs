@@ -16,21 +16,23 @@ fn main(mut io: IO) {
     let mut draw_port = io.take_draw_port().expect("DrawPort has been taken");
     let mut disp_port = io.take_disp_port().expect("DispPort has been taken");
     let mut int_stat = io.take_int_stat().expect("interrupt::Stat has been taken");
+    let mut gpu_dma = io.take_gpu_dma().expect("dma::Gpu has been taken");
     let res = (Hres::H320, Vres::V240);
-    let buf0 = (0, 0);
+    let buf0 = Vertex::zero();
     let buf1 = (0, 240);
     let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res);
     let mut pos = Vertex::new(200, 100);
     let mut vel = Vertex::new(4, 2);
     let ferris = unzip!("../ferris-8bpp.tim.zip");
     let tim = tim!(ferris);
-    let (page, clut) = tim.load(&mut draw_port);
+    let (page, clut) = tim.load(&mut draw_port, &mut gpu_dma);
+    let clut = clut.unwrap().wait();
     let bg = shaded_quad(
         Vertex::offset_rect(Vertex::zero(), (320, 240)),
         [Color::aqua(), Color::black(), Color::aqua(), Color::black()],
     );
     let size = 64;
-    let half_size = 16;
+    let half_size = 32;
     let mut fg = textured_quad(
         Vertex::square(pos, size),
         Color::white(),
