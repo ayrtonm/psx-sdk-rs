@@ -173,14 +173,7 @@ fn main() {
     .concat();
     let codes = entries
         .iter()
-        .map(|e| {
-            remove_prefix(e.code)
-                .0
-                .to_le_bytes()
-                .iter()
-                .cloned()
-                .collect::<Vec<u8>>()
-        })
+        .map(|e| e.code.to_le_bytes().iter().cloned().collect::<Vec<u8>>())
         .flatten()
         .collect::<Vec<u8>>();
     let symbols = entries
@@ -195,6 +188,5 @@ fn main() {
         .chain(output_stream.iter())
         .cloned()
         .collect::<Vec<u8>>();
-    std::fs::write(output, zipped_file)
-        .expect("Couldn't write compressed stream to file");
+    std::fs::write(output, zipped_file).expect("Couldn't write compressed stream to file");
 }

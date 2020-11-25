@@ -18,6 +18,7 @@ pub fn decompress<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
     let file_start = sym_end;
     let mut ret = [0; N];
     let mut possible_code = 0;
+    let mut possible_code_len = 0;
     let mut ret_idx = 0;
     for &word in &zip[file_start..] {
         let mut remaining_bits = 32;
@@ -25,14 +26,16 @@ pub fn decompress<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
         while remaining_bits != 0 {
             stream <<= 1;
             remaining_bits -= 1;
+            possible_code_len += 1;
             possible_code = (stream >> 32) as u32;
             codes
-                .binary_search(&possible_code)
+                .binary_search(&(possible_code | (1 << possible_code_len)))
                 .map(|idx| {
                     if ret_idx < num_symbols {
                         ret[ret_idx] = symbols[idx];
                         ret_idx += 1;
                         stream &= 0x0000_0000_FFFF_FFFF;
+                        possible_code_len = 0;
                     }
                 })
                 .ok();
