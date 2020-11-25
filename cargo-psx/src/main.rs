@@ -67,6 +67,7 @@ fn main() {
         println!("  --skip-pack          Skips packaging and only builds an ELF");
         println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
         println!("  --no-alloc           Avoids building the `alloc` crate");
+        println!("  --lto                Enable link-time optimization and set codegen units to 1");
         println!("");
         println!("Run `cargo build -h` for build options");
         return
@@ -77,10 +78,20 @@ fn main() {
     let (skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
     let (no_pad, cargo_args) = extract_flag("--no-pad", cargo_args);
     let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
+    let (lto, cargo_args) = extract_flag("--lto", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
+    let linker = "-C linker=../../mips_toolchain/ld";
+    let rustflags = if lto {
+        format!(
+            "{} -C lto=fat -C codegen-units=1 -C embed-bitcode=yes",
+            linker
+        )
+    } else {
+        linker.to_string()
+    };
 
     let target_triple = "mipsel-sony-psx";
     if !skip_build {
@@ -93,6 +104,7 @@ fn main() {
             .arg("--target")
             .arg(target_triple)
             .args(cargo_args)
+            .env("RUSTFLAGS", rustflags)
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
