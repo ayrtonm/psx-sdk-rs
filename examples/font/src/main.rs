@@ -9,7 +9,7 @@ use psx::gpu::framebuffer::*;
 use psx::gpu::primitives::*;
 use psx::gpu::texture::*;
 use psx::gpu::vertex::*;
-use psx::gpu::Packet;
+use psx::gpu::{DrawPort, GpuStat, Packet};
 use psx::*;
 
 psx::exe!();
@@ -39,34 +39,24 @@ fn main(mut io: IO) {
         page,
         clut,
     };
-    let msg =
-        printer.print(b"hello world! This is a very long message. It goes on and on and on... In fact, it might even start overwriting itself if I keep writing such long run-on sentences. I should find a way to make sure that words aren't split across lines. But then again, this isn't the place to write my TODOs. That's TODO.md. It really doesn't get much use though :(. Let's see what other emojis I can make :) :/ :p xD :D ^^ :] :^) 0123456789 ~!@#$%^&*_+=; Still got a ways to go before the message starts overwriting itself. Another thing I should add is msg support to my panic handler. That would make debugging so much easier!");
-    for d in &msg {
-        while !gpu_stat.ready() {}
-        draw_port.send(d);
-    }
+    printer.print(b"hello world! This is a very long message. It goes on and on and on... In fact, it might even start overwriting itself if I keep writing such long run-on sentences. I should find a way to make sure that words aren't split across lines. But then again, this isn't the place to write my TODOs. That's TODO.md. It really doesn't get much use though :(. Let's see what other emojis I can make :) :/ :p xD :D ^^ :] :^) 0123456789 ~!@#$%^&*_+=; Still got a ways to go before the message starts overwriting itself. Another thing I should add is msg support to my panic handler. That would make debugging so much easier!", &mut draw_port, &mut gpu_stat);
     fb.swap(&mut draw_port, &mut disp_port);
     delay(10_000_000);
     printer.reset_cursor();
-    let new_msg_1 = printer.print(b"1 + 1 = ");
-    let new_msg_2 = printer.println(&[b'0' + 1 + 1]);
-    let new_msg_3 = printer.print(b"That was fmt in a loose sense\n 1 + 9 = 0x");
-    let expr = 1 + 9;
-    let new_msg_5 =
-        printer.println(&[u32::try_from(core::char::from_digit(expr, 16).unwrap()).unwrap() as u8]);
-    let new_msg_6 = printer.println(
-        b"That last one doesn't depend on ascii's order, but that'll only work for single digits",
+    printer.print(b"1 + 1 = ", &mut draw_port, &mut gpu_stat);
+    printer.println(&[b'0' + 1 + 1], &mut draw_port, &mut gpu_stat);
+    printer.println(
+        b"That was fmt in a loose sense",
+        &mut draw_port,
+        &mut gpu_stat,
     );
-    for d in new_msg_1
-        .iter()
-        .chain(&new_msg_2)
-        .chain(&new_msg_3)
-        .chain(&new_msg_5)
-        .chain(&new_msg_6)
-    {
-        while !gpu_stat.ready() {}
-        draw_port.send(d);
-    }
+    printer.print(
+        b"Let's format something more complicated 0xdead << 16 | 0xbeef = ",
+        &mut draw_port,
+        &mut gpu_stat,
+    );
+    let expr = (0xdead << 16) | 0xbeef;
+    printer.print_u32(expr, &mut draw_port, &mut gpu_stat);
     fb.swap(&mut draw_port, &mut disp_port);
 }
 
@@ -80,32 +70,43 @@ struct Printer {
     clut: Option<Clut>,
 }
 
+// TODO: I want to make the mutable register references RefCell-like without
+// incurring the runtime cost of RefCell.
 impl Printer {
     fn reset_cursor(&mut self) {
         self.cursor = self.offset;
     }
-    fn println<const N: usize>(&mut self, msg: &[u8; N]) -> [TexturedPrimitive<4>; N] {
-        let primitives = self.print(msg);
+    fn newline(&mut self) {
         let vshift = self.size.y();
         self.cursor.apply(|x, y| (0, y + vshift));
-        primitives
     }
-    fn print<const N: usize>(&mut self, msg: &[u8; N]) -> [TexturedPrimitive<4>; N] {
+    fn print_u32(&mut self, x: u32, draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
+        self.print(b"0x", draw_port, gpu_stat);
+        let mut leading = true;
+        for i in 0..8 {
+            let nibble = (x >> ((7 - i) * 4)) & 0xF;
+            if nibble != 0 {
+                leading = false;
+            };
+            if !leading {
+                let as_char = core::char::from_digit(nibble, 16).unwrap();
+                let as_ascii = u32::try_from(as_char).unwrap() as u8;
+                self.print(&[as_ascii], draw_port, gpu_stat);
+            }
+        }
+    }
+    fn println(&mut self, msg: &[u8], draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
+        self.print(msg, draw_port, gpu_stat);
+        self.newline();
+    }
+    fn print(&mut self, msg: &[u8], draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
         let w_as_u8 = self.size.x() as u8;
         let h_as_u8 = self.size.y() as u8;
         // This assumes that only one texture page is used
         let ascii_per_row = 128 / w_as_u8;
-        msg.map(|ascii| {
+        for &ascii in msg {
             if ascii == b'\n' {
-                let vshift = self.size.y();
-                self.cursor.apply(|x, y| (0, y + vshift));
-                textured_quad(
-                    Vertex::offset_rect(self.offset, (0, 0)),
-                    self.color,
-                    [(0, 0); 4],
-                    self.page,
-                    self.clut,
-                )
+                self.newline();
             } else {
                 let xoffset = ((ascii % ascii_per_row) * w_as_u8);
                 let yoffset = ((ascii / ascii_per_row) * h_as_u8);
@@ -124,8 +125,9 @@ impl Printer {
                     let hshift = self.size.x();
                     self.cursor.apply(|x, y| (x + hshift, y));
                 }
-                letter
+                while !gpu_stat.ready() {}
+                draw_port.send(&letter);
             }
-        })
+        }
     }
 }
