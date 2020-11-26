@@ -4,8 +4,8 @@
 
 use psx::gpu::color::Color;
 use psx::gpu::framebuffer::Framebuffer;
+use psx::gpu::primitives::shaded_quad;
 use psx::gpu::vertex::{Pixel, Vertex};
-use psx::gpu::{Hres, Vres};
 use psx::interrupt::{Interrupts, IRQ};
 
 psx::exe!();
@@ -21,23 +21,23 @@ fn main(mut io: IO) {
     let mut int_stat = io.take_int_stat().expect("interrupt::Stat has been taken");
     let buf0 = (0, 0);
     let buf1 = (0, 240);
-    let res = (Hres::H320, Vres::V240);
+    let res = (320, 240);
     disp_port.reset_gpu();
-    let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res);
+    let mut fb = Framebuffer::new(&mut draw_port, &mut disp_port, buf0, buf1, res, None);
     loop {
         theta += delta;
         while theta > 360.0 {
             theta -= 360.0;
         }
-        let (quad, pal) = draw(theta);
-        draw_port.draw_shaded_quad(&quad, &pal);
+        let (rect, pal) = draw(theta);
+        draw_port.send(&shaded_quad(rect, pal));
         int_stat.ack_wait(IRQ::Vblank);
         fb.swap(&mut draw_port, &mut disp_port);
     }
 }
 
 fn draw(theta: f32) -> ([Vertex; 4], [Color; 4]) {
-    let center = &Vertex::new(160, 120);
+    let center = Vertex::new(160, 120);
     let size = 128;
     let square = Vertex::square(center, size).map(|p| rotate_point(p, theta, center));
     let palette = [
@@ -72,7 +72,7 @@ fn cos(x: f32) -> f32 {
 }
 
 // Rotation is better handled by the GTE but this'll do for a demo
-fn rotate_point(p: Vertex, theta: f32, c: &Vertex) -> Vertex {
+fn rotate_point(p: Vertex, theta: f32, c: Vertex) -> Vertex {
     let dx = p.x() as f32 - c.x() as f32;
     let dy = p.y() as f32 - c.y() as f32;
     let xp = dx * cos(theta) - dy * sin(theta);

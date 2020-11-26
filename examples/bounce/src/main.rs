@@ -29,7 +29,6 @@ fn main(mut io: IO) {
     let ferris = unzip!("../ferris-8bpp.tim.zip");
     let tim = tim!(ferris);
     let (page, clut) = tim.load(&mut draw_port, &mut gpu_dma);
-    let clut = clut.unwrap().wait();
     let bg = shaded_quad(
         Vertex::offset_rect(Vertex::zero(), (320, 240)),
         [Color::aqua(), Color::black(), Color::aqua(), Color::black()],

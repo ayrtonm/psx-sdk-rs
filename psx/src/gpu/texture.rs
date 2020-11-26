@@ -72,4 +72,12 @@ impl Page {
     pub fn new(x: u8, y: u8, bpp: Bpp) -> Self {
         Page { x, y, bpp }
     }
+
+    pub fn x(&self) -> u8 {
+        self.x
+    }
+
+    pub fn y(&self) -> u8 {
+        self.y
+    }
 }

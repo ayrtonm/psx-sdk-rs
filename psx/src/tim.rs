@@ -1,8 +1,8 @@
 use crate::dma;
 use crate::dma::{Addr, Block, BlockLen, Control};
 use crate::gpu::texture::{Bpp, Clut, Page};
-use crate::gpu::vertex::{Pixel, Vertex};
-use crate::gpu::{AsU32, DrawPort};
+use crate::gpu::vertex::Pixel;
+use crate::gpu::DrawPort;
 use crate::registers::Write;
 
 pub struct TIM<'a> {
@@ -52,14 +52,14 @@ impl<'a> TIM<'a> {
         let page = Page::new(base_x, base_y, self.bpp);
         draw_port.write(0xA0 << 24);
         enqueue_bitmap(bmp, gpu_dma);
-        gpu_dma.control.start::<()>(None).wait();
-        let clut = self.clut().map(move |clut| {
+        gpu_dma.control.start(()).wait();
+        let clut = self.clut().map(|clut| {
             draw_port.write(0xA0 << 24);
             enqueue_bitmap(clut, gpu_dma);
             let base_x = (clut.offset().0 / 16) as u8;
             let base_y = clut.offset().1;
             let clut = (base_x, base_y).into();
-            gpu_dma.control.start::<()>(None).wait();
+            gpu_dma.control.start(()).wait();
             clut
         });
         (page, clut)

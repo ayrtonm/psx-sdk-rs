@@ -38,9 +38,11 @@ impl Framebuffer {
             buffers: (Vertex::from(one), Vertex::from(two)),
             res: Vertex::from(res),
         };
+        let hoffset = 0x248;
+        let vmid = 0x88;
         disp_port
-            .horizontal(0, fb.res.x())
-            .vertical(0, fb.res.y())
+            .horizontal(hoffset, hoffset + (fb.res.x() * 8))
+            .vertical(vmid - (fb.res.y() / 2), vmid + (fb.res.y() / 2))
             .mode(
                 fb.res.x(),
                 fb.res.y(),

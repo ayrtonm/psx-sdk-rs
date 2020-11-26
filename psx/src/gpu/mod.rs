@@ -4,6 +4,7 @@ pub mod color;
 pub mod disp_port;
 pub mod draw_port;
 pub mod framebuffer;
+pub mod gpu_stat;
 pub mod primitives;
 pub mod texture;
 pub mod vertex;
