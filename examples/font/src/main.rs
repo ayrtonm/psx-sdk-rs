@@ -50,13 +50,13 @@ fn main(mut io: IO) {
         &mut draw_port,
         &mut gpu_stat,
     );
-    printer.print(
-        b"Let's format something more complicated 0xdead << 16 | 0xbeef = ",
+    let expr = (0xdead << 16) | 0xbeef;
+    printer.print_expr(
+        b"Let's format something more complicated 0xdead << 16 | 0xbeef = {}",
+        expr,
         &mut draw_port,
         &mut gpu_stat,
     );
-    let expr = (0xdead << 16) | 0xbeef;
-    printer.print_u32(expr, &mut draw_port, &mut gpu_stat);
     fb.swap(&mut draw_port, &mut disp_port);
 }
 
@@ -98,6 +98,23 @@ impl Printer {
     fn println(&mut self, msg: &[u8], draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
         self.print(msg, draw_port, gpu_stat);
         self.newline();
+    }
+    fn print_expr(&mut self, msg: &[u8], expr: u32, draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
+        let mut open_var = false;
+        for &ascii in msg {
+            if ascii == b'{' {
+                open_var = true;
+            } else if ascii == b'}' {
+                open_var = false;
+                self.print_u32(expr, draw_port, gpu_stat);
+            } else {
+                if open_var {
+                    self.print(b"{", draw_port, gpu_stat);
+                    open_var = false;
+                }
+                self.print(&[ascii], draw_port, gpu_stat);
+            }
+        }
     }
     fn print(&mut self, msg: &[u8], draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
         let w_as_u8 = self.size.x() as u8;
