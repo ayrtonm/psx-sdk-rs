@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(array_map, once_cell, min_const_generics)]
 
-use core::convert::TryFrom;
 use psx::dma::{Addr, Block, BlockLen, Control};
 use psx::gpu::color::*;
 use psx::gpu::framebuffer::*;
@@ -91,20 +90,14 @@ impl Printer {
                 leading = false;
             };
             if !leading {
-                let as_char = core::char::from_digit(nibble, 16).unwrap();
-                let as_ascii = u32::try_from(as_char).unwrap() as u8;
-                self.print(&[as_ascii], draw_port, gpu_stat);
+                let c = core::char::from_digit(nibble, 16).unwrap();
+                self.print(&[c as u32 as u8], draw_port, gpu_stat);
             }
         }
     }
     fn print_str(&mut self, msg: &str, draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
         for c in msg.chars() {
-            // Maps non-ascii UTF-8 characters to 0x00
-            let c_ascii = match u32::try_from(c).ok() {
-                Some(c_as_u32) => c_as_u32 as u8,
-                None => 0,
-            };
-            self.print(&[c_ascii], draw_port, gpu_stat);
+            self.print(&[c as u32 as u8], draw_port, gpu_stat);
         }
     }
     fn println(&mut self, msg: &[u8], draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
