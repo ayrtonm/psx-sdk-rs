@@ -46,12 +46,11 @@ fn main(mut io: IO) {
         draw_port.send(d);
     }
     fb.swap(&mut draw_port, &mut disp_port);
-    delay(10000000);
+    delay(10_000_000);
     printer.reset_cursor();
     let new_msg_1 = printer.print(b"1 + 1 = ");
     let new_msg_2 = printer.println(&[b'0' + 1 + 1]);
-    let new_msg_3 = printer.println(b"That was fmt in a loose sense");
-    let new_msg_4 = printer.print(b"1 + 9 = 0x");
+    let new_msg_3 = printer.print(b"That was fmt in a loose sense\n 1 + 9 = 0x");
     let expr = 1 + 9;
     let new_msg_5 =
         printer.println(&[u32::try_from(core::char::from_digit(expr, 16).unwrap()).unwrap() as u8]);
@@ -62,7 +61,6 @@ fn main(mut io: IO) {
         .iter()
         .chain(&new_msg_2)
         .chain(&new_msg_3)
-        .chain(&new_msg_4)
         .chain(&new_msg_5)
         .chain(&new_msg_6)
     {
@@ -98,24 +96,36 @@ impl Printer {
         // This assumes that only one texture page is used
         let ascii_per_row = 128 / w_as_u8;
         msg.map(|ascii| {
-            let xoffset = ((ascii % ascii_per_row) * w_as_u8);
-            let yoffset = ((ascii / ascii_per_row) * h_as_u8);
-            let letter = textured_quad(
-                Vertex::offset_rect(self.cursor.shift(self.offset), self.size),
-                self.color,
-                [(0, 0), (0, h_as_u8), (w_as_u8, 0), (w_as_u8, h_as_u8)]
-                    .map(|(x, y)| (x + xoffset, y + yoffset)),
-                self.page,
-                self.clut,
-            );
-            if self.cursor.x() + self.size.x() >= self.limits.x() {
+            if ascii == b'\n' {
                 let vshift = self.size.y();
                 self.cursor.apply(|x, y| (0, y + vshift));
+                textured_quad(
+                    Vertex::offset_rect(self.offset, (0, 0)),
+                    self.color,
+                    [(0, 0); 4],
+                    self.page,
+                    self.clut,
+                )
             } else {
-                let hshift = self.size.x();
-                self.cursor.apply(|x, y| (x + hshift, y));
+                let xoffset = ((ascii % ascii_per_row) * w_as_u8);
+                let yoffset = ((ascii / ascii_per_row) * h_as_u8);
+                let letter = textured_quad(
+                    Vertex::offset_rect(self.cursor.shift(self.offset), self.size),
+                    self.color,
+                    [(0, 0), (0, h_as_u8), (w_as_u8, 0), (w_as_u8, h_as_u8)]
+                        .map(|(x, y)| (x + xoffset, y + yoffset)),
+                    self.page,
+                    self.clut,
+                );
+                if self.cursor.x() + self.size.x() >= self.limits.x() {
+                    let vshift = self.size.y();
+                    self.cursor.apply(|x, y| (0, y + vshift));
+                } else {
+                    let hshift = self.size.x();
+                    self.cursor.apply(|x, y| (x + hshift, y));
+                }
+                letter
             }
-            letter
         })
     }
 }
