@@ -52,11 +52,13 @@ fn main(mut io: IO) {
     );
     let expr = (0xdead << 16) | 0xbeef;
     printer.print_expr(
-        b"Let's format something more complicated 0xdead << 16 | 0xbeef = {}",
+        b"Let's format something more complicated 0xdead << 16 | 0xbeef = {}\n",
         expr,
         &mut draw_port,
         &mut gpu_stat,
     );
+    printer.print(b"IO::take_draw_port returns a ", &mut draw_port, &mut gpu_stat);
+    printer.print_str(core::any::type_name::<Option<DrawPort>>(), &mut draw_port, &mut gpu_stat);
     fb.swap(&mut draw_port, &mut disp_port);
 }
 
@@ -93,6 +95,16 @@ impl Printer {
                 let as_ascii = u32::try_from(as_char).unwrap() as u8;
                 self.print(&[as_ascii], draw_port, gpu_stat);
             }
+        }
+    }
+    fn print_str(&mut self, msg: &str, draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
+        for c in msg.chars() {
+            // Maps non-ascii UTF-8 characters to 0x00
+            let c_ascii = match u32::try_from(c).ok() {
+                Some(c_as_u32) => c_as_u32 as u8,
+                None => 0,
+            };
+            self.print(&[c_ascii], draw_port, gpu_stat);
         }
     }
     fn println(&mut self, msg: &[u8], draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
