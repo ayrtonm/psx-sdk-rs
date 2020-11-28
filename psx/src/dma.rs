@@ -1,166 +1,187 @@
-use crate::registers::{BitTwiddle, Read, Update, Write};
+//! CPU-side DMA channel routines.
 
-pub enum BlockLen {
-    // TODO: this should be u32 since 0x10000 is valid and gets mapped to 0u16
-    Words(usize),
-    Blocks { words: usize, blocks: usize },
+use crate::mmio::dma;
+use crate::mmio::register::{Read, Update, Write};
+
+pub enum BlockSize {
+    Single(u32),
+    Multi { words: u16, blocks: u16 },
     LinkedList,
 }
 
 pub enum Direction {
-    ToRam,
-    FromRam,
+    ToMemory = 0,
+    FromMemory,
 }
 
 pub enum Step {
-    Forward,
+    Forward = 0,
     Backward,
 }
 
-pub enum Mode {
-    Immediate,
+pub struct Chop {
+    dma: u32,
+    cpu: u32,
+}
+
+pub enum SyncMode {
+    Immediate = 0,
     Request,
     LinkedList,
 }
 
-pub trait Addr: Read + Write {
-    fn get(&mut self) -> u32 {
-        self.read()
+pub trait BaseAddress: Read + Write {
+    /// Gets the memory address where this DMA channel will start reading
+    /// from/writing to.
+    fn get(&self) -> u32 {
+        unsafe { self.read() }
     }
 
+    /// Sets the memory address where this DMA channel will start reading
+    /// from/writing to.
     fn set(&mut self, address: *const u32) {
-        let mut address = address as u32;
+        let address = address as u32;
         if cfg!(debug_assertions) {
-            address &= 0x00FF_FFFF;
+            assert_eq!(address >> 24, 0);
         }
-        self.write(address);
+        unsafe { self.write(address) }
     }
 }
-
-pub trait Block: Read + Write {
-    // Note that this depends on sync mode, meaning that the channel may not
-    // necessarily be in the given block mode
-    fn set(&mut self, dma_blocks: BlockLen) {
-        //TODO: add debug mode checks
-        match dma_blocks {
-            BlockLen::Words(words) => {
-                let words = match words {
-                    0..=0xFFFF => words as u32,
-                    0x1_0000 => 0,
-                    _ => unreachable!("Number of words can't exceed 0x1_0000"),
-                };
-                self.write(words);
+pub trait BlockControl: Read + Write {
+    fn get(&self, sync_mode: SyncMode) -> Option<BlockSize> {
+        let value = unsafe { self.read() };
+        match sync_mode {
+            SyncMode::Immediate => match value {
+                0 => Some(BlockSize::Single(0x1_0000)),
+                1..=0xFFFF => Some(BlockSize::Single(value)),
+                _ => None,
             },
-            BlockLen::Blocks { words, blocks } => {
-                self.write(words as u32 | ((blocks as u32) << 16))
+            SyncMode::Request => Some(BlockSize::Multi {
+                words: value as u16,
+                blocks: (value >> 16) as u16,
+            }),
+            SyncMode::LinkedList => Some(BlockSize::LinkedList),
+        }
+    }
+    fn set(&mut self, block_size: BlockSize) {
+        let words = match block_size {
+            BlockSize::Single(words) => match words {
+                0..=0xFFFF => words,
+                0x1_0000 => 0,
+                _ => {
+                    if cfg!(debug_assertions) {
+                        panic!("Number of words can't exceed 0x1_0000");
+                    };
+                    0
+                },
             },
-            BlockLen::LinkedList => self.write(0),
+            BlockSize::Multi { words, blocks } => words as u32 | ((blocks as u32) << 16),
+            BlockSize::LinkedList => 0,
+        };
+        unsafe {
+            self.write(words);
         }
     }
 }
-
-pub trait Control: Update {
+pub trait ChannelControl: Update {
     fn set_direction(&mut self, direction: Direction) {
-        let bit = match direction {
-            Direction::ToRam => 0,
-            Direction::FromRam => 1,
-        };
-        self.update(|val| val.clear(0) | bit);
+        unsafe {
+            self.update(|val| val & !1 | (direction as u32));
+        }
     }
-
     fn set_step(&mut self, step: Step) {
-        let bit = match step {
-            Step::Forward => 0,
-            Step::Backward => 1,
-        };
-        self.update(|val| val.clear(1) | (bit << 1));
+        unsafe {
+            self.update(|val| val & !0b10 | ((step as u32) << 1));
+        }
     }
-    fn set_chopping(&mut self, chop: bool) {
-        let bit = if chop { 1 } else { 0 };
-        self.update(|val| val.clear(8) | (bit << 8));
+    fn set_chop(&mut self, chop: Option<Chop>) {
+        unsafe {
+            self.update(|val| match chop {
+                Some(chop) => {
+                    if cfg!(debug_assertions) {
+                        if chop.dma > 0b111 || chop.cpu > 0b111 {
+                            panic!("DMA chopping windows are limited to 3 bits");
+                        }
+                    }
+                    val | (1 << 8) | (chop.dma << 16) | (chop.cpu << 20)
+                },
+                None => val & !(1 << 8),
+            })
+        }
     }
-    fn sync_mode(&self) -> Option<Mode> {
-        let value = self.read();
-        match value.bits(9..=10) {
-            0 => Some(Mode::Immediate),
-            1 => Some(Mode::Request),
-            2 => Some(Mode::LinkedList),
+    fn set_sync_mode(&mut self, sync_mode: SyncMode) {
+        unsafe {
+            self.update(|val| (val & !(0b11 << 9)) | ((sync_mode as u32) << 9));
+        }
+    }
+    fn sync_mode(&self) -> Option<SyncMode> {
+        let bits = unsafe { self.read() };
+        match (bits >> 9) & 0b11 {
+            0 => Some(SyncMode::Immediate),
+            1 => Some(SyncMode::Request),
+            2 => Some(SyncMode::LinkedList),
             _ => None,
         }
     }
-    fn set_sync_mode(&mut self, mode: Mode) {
-        let bits = match mode {
-            Mode::Immediate => 0,
-            Mode::Request => 1,
-            Mode::LinkedList => 2,
-        };
-        self.update_bits(9..=10, bits);
-    }
-    fn start<T: Copy>(&mut self, res: T) -> Transfer<Self, T> {
-        self.update(|val| val.set(24));
-        if let Some(Mode::Immediate) = self.sync_mode() {
-            self.update(|val| val.set(28));
+    fn start<T: Copy>(&mut self, result: T) -> Transfer<Self, T> {
+        unsafe {
+            match self.sync_mode() {
+                Some(SyncMode::Immediate) => self.update(|val| val | (1 << 24) | (1 << 28)),
+                _ => self.update(|val| val | (1 << 24)),
+            }
         }
-        Transfer { control: self, res }
+        Transfer {
+            control: self,
+            result,
+        }
     }
     fn busy(&self) -> bool {
-        self.read().bit(24) == 1
+        unsafe { self.read() & (1 << 24) != 0 }
     }
 }
 
 #[must_use]
-pub struct Transfer<'a, C: Control + ?Sized, T: Copy> {
+pub struct Transfer<'a, C: ChannelControl + ?Sized, T: Copy> {
     control: &'a C,
-    res: T,
+    result: T,
 }
 
-impl<C: Control, T: Copy> Transfer<'_, C, T> {
+impl<C: ChannelControl, T: Copy> Transfer<'_, C, T> {
     pub fn busy(&self) -> bool {
         self.control.busy()
     }
 
-    pub fn wait(&self) -> T {
+    pub fn wait(self) -> T {
         while self.busy() {}
-        self.res
+        self.result
     }
 
     pub fn if_done(&self) -> Option<T> {
         if !self.busy() {
-            Some(self.res)
+            Some(self.result)
         } else {
             None
         }
     }
 }
 
-pub struct Channel<A: Addr, B: Block, C: Control> {
-    pub addr: A,
-    pub block: B,
-    pub control: C,
-}
-
-pub type Gpu = Channel<gpu::Addr, gpu::Block, gpu::Control>;
-pub type Otc = Channel<otc::Addr, otc::Block, otc::Control>;
-
-macro_rules! mk_mod {
-    ($name:ident, $offset:expr) => {
-        pub mod $name {
-            use crate::rw_register;
-            rw_register!(Addr, 0x1F80_1080 + ($offset * 0x10));
-            rw_register!(Block, 0x1F80_1084 + ($offset * 0x10));
-            rw_register!(Control, 0x1F80_1088 + ($offset * 0x10));
-
-            impl super::Addr for Addr {}
-            impl super::Block for Block {}
-            impl super::Control for Control {}
+macro_rules! enable_fn {
+    ($name:ident, $bit:expr) => {
+        pub fn $name(&mut self, enable: bool) {
+            unsafe {
+                self.update(|val| {
+                    if enable {
+                        val | (1 << $bit)
+                    } else {
+                        val & !(1 << $bit)
+                    }
+                })
+            }
         }
     };
 }
+impl dma::Control {
+    enable_fn!(gpu, 11);
 
-mk_mod!(mdec_in, 0);
-mk_mod!(mdec_out, 1);
-mk_mod!(gpu, 2);
-mk_mod!(cdrom, 3);
-mk_mod!(spu, 4);
-mk_mod!(pio, 5);
-mk_mod!(otc, 6);
+    enable_fn!(otc, 27);
+}

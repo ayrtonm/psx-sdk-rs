@@ -1,6 +1,6 @@
-use crate::gpu::AsU32;
 type Intensity = u8;
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Color {
     red: Intensity,
@@ -8,36 +8,28 @@ pub struct Color {
     blue: Intensity,
 }
 
-pub type Palette<const N: usize> = [Color; N];
-
-impl AsU32 for Color {
-    fn as_u32(&self) -> u32 {
-        (self.blue as u32) << 16 | (self.green as u32) << 8 | (self.red as u32)
-    }
-}
-
 impl Color {
-    pub const fn rgb888(red: Intensity, green: Intensity, blue: Intensity) -> Self {
+    pub fn rgb888(red: Intensity, green: Intensity, blue: Intensity) -> Self {
         Color { red, green, blue }
     }
 
-    pub const fn red() -> Self {
+    pub fn red() -> Self {
         Color::rgb888(255, 0, 0)
     }
 
-    pub const fn green() -> Self {
+    pub fn green() -> Self {
         Color::rgb888(0, 255, 0)
     }
 
-    pub const fn blue() -> Self {
+    pub fn blue() -> Self {
         Color::rgb888(0, 0, 255)
     }
 
-    pub const fn black() -> Self {
+    pub fn black() -> Self {
         Color::rgb888(0, 0, 0)
     }
 
-    pub const fn white() -> Self {
+    pub fn white() -> Self {
         Color::rgb888(255, 255, 255)
     }
 
