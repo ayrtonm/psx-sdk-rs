@@ -1,6 +1,6 @@
 use core::mem::size_of;
 
-use super::Buffer;
+use super::{Buffer, DoubleBuffer};
 use crate::gpu::color::Color;
 use crate::gpu::vertex::Vertex;
 
@@ -23,14 +23,21 @@ pub struct PolyF4 {
 macro_rules! impl_PolyF {
     ($n:expr, $name:ident, $cmd:expr) => {
         impl $name {
+            const SIZE: usize = size_of::<Self>() / 4;
+            pub fn from_double<const N: usize>(buffer: &mut DoubleBuffer<N>) -> [Self; 2] {
+                let (buf0, buf1) = buffer.get(Self::SIZE);
+                [$name::from_direct::<N>(buf0), $name::from_direct::<N>(buf1)]
+            }
             pub fn from<const N: usize>(buffer: &mut Buffer<N>) -> Self {
+                $name::from_direct::<N>(buffer.get(Self::SIZE))
+            }
+            fn from_direct<const N: usize>(buffer: &mut [u32]) -> Self {
                 let ptr = buffer
-                    .get(size_of::<Self>() / 4)
                     .as_mut_ptr()
                     .cast::<Self>();
                 let mut prim = unsafe { core::ptr::read(ptr) };
-                prim.cmd($cmd);
-                prim.tag = (size_of::<Self>() as u32 / 4) << 24;
+                prim.cmd = $cmd;
+                prim.tag = (Self::SIZE as u32) << 24;
                 prim
             }
 
@@ -51,11 +58,6 @@ macro_rules! impl_PolyF {
 
             pub fn color(&mut self, color: Color) -> &mut Self {
                 self.color = color;
-                self
-            }
-
-            pub fn cmd(&mut self, cmd: u8) -> &mut Self {
-                self.cmd = cmd;
                 self
             }
         }
