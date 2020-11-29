@@ -21,4 +21,10 @@ impl Vertex {
     pub fn y(&self) -> Pixel {
         self.y
     }
+
+    pub fn shift<T>(&self, other: T) -> Self
+    where Vertex: From<T> {
+        let other = Vertex::from(other);
+        (self.x() + other.x(), self.y() + other.y()).into()
+    }
 }

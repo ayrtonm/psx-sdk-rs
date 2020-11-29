@@ -9,6 +9,18 @@ pub enum BlockSize {
     LinkedList,
 }
 
+impl From<u32> for BlockSize {
+    fn from(words: u32) -> Self {
+        BlockSize::Single(words)
+    }
+}
+
+impl From<(u16, u16)> for BlockSize {
+    fn from((words, blocks): (u16, u16)) -> Self {
+        BlockSize::Multi { words, blocks }
+    }
+}
+
 pub enum Direction {
     ToMemory = 0,
     FromMemory,
@@ -63,7 +75,9 @@ pub trait BlockControl: Read + Write {
             SyncMode::LinkedList => Some(BlockSize::LinkedList),
         }
     }
-    fn set(&mut self, block_size: BlockSize) {
+    fn set<T>(&mut self, block_size: T)
+    where BlockSize: From<T> {
+        let block_size = BlockSize::from(block_size);
         let words = match block_size {
             BlockSize::Single(words) => match words {
                 0..=0xFFFF => words,
@@ -84,17 +98,19 @@ pub trait BlockControl: Read + Write {
     }
 }
 pub trait ChannelControl: Update {
-    fn set_direction(&mut self, direction: Direction) {
+    fn set_direction(&mut self, direction: Direction) -> &mut Self {
         unsafe {
             self.update(|val| val & !1 | (direction as u32));
         }
+        self
     }
-    fn set_step(&mut self, step: Step) {
+    fn set_step(&mut self, step: Step) -> &mut Self {
         unsafe {
             self.update(|val| val & !0b10 | ((step as u32) << 1));
         }
+        self
     }
-    fn set_chop(&mut self, chop: Option<Chop>) {
+    fn set_chop(&mut self, chop: Option<Chop>) -> &mut Self {
         unsafe {
             self.update(|val| match chop {
                 Some(chop) => {
@@ -108,11 +124,13 @@ pub trait ChannelControl: Update {
                 None => val & !(1 << 8),
             })
         }
+        self
     }
-    fn set_sync_mode(&mut self, sync_mode: SyncMode) {
+    fn set_sync_mode(&mut self, sync_mode: SyncMode) -> &mut Self {
         unsafe {
             self.update(|val| (val & !(0b11 << 9)) | ((sync_mode as u32) << 9));
         }
+        self
     }
     fn sync_mode(&self) -> Option<SyncMode> {
         let bits = unsafe { self.read() };

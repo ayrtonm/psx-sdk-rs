@@ -9,8 +9,12 @@
 //! buffers. In exchange for this flexibility, we have to apply the borrow
 //! checker rules dynamically and get run-time errors instead.
 
+use crate::gpu::color::Color;
+use crate::gpu::primitives::tile::Tile;
 use crate::gpu::vertex::Vertex;
+use crate::gpu::{Depth, Vmode};
 use crate::mmio::gpu::{GP0, GP1};
+use crate::mmio::register::Write;
 use core::cell::RefCell;
 
 pub struct UncheckedFramebuffer<'a, 'b> {
@@ -51,17 +55,30 @@ enum Buffer {
 pub struct Framebuffer {
     display: Buffer,
     buffers: (Vertex, Vertex),
-    _res: Vertex,
+    res: Vertex,
+    clear: Color,
 }
 
 impl Framebuffer {
-    pub fn new<T, U, V>(buf0: T, buf1: U, res: V, _gp0: &mut GP0, _gp1: &mut GP1) -> Self
+    pub fn new<T, U, V>(buf0: T, buf1: U, res: V, gp0: &mut GP0, gp1: &mut GP1) -> Self
     where Vertex: From<T> + From<U> + From<V> {
-        Framebuffer {
+        let mut fb = Framebuffer {
             display: Buffer::One,
             buffers: (Vertex::from(buf0), Vertex::from(buf1)),
-            _res: Vertex::from(res),
-        }
+            res: Vertex::from(res),
+            clear: Color::BLACK,
+        };
+        // Magic constants from nocash specs. If I remember correctly some PS1 games
+        // made these adjustable in-game
+        let hoffset = 0x248;
+        let vmid = 0x88;
+        gp1.horizontal(hoffset, hoffset + (fb.res.x() * 8))
+            .vertical(vmid - (fb.res.y() / 2), vmid + (fb.res.y() / 2))
+            .mode(fb.res.x(), fb.res.y(), Vmode::NTSC, Depth::Lo, false);
+        fb.draw(Buffer::Two, gp0);
+        fb.display(Buffer::One, gp0, gp1);
+        gp1.on();
+        fb
     }
 
     pub fn swap(&mut self, gp0: &mut GP0, gp1: &mut GP1) {
@@ -86,11 +103,30 @@ impl Framebuffer {
         }
     }
 
-    fn draw(&mut self, buffer: Buffer, _gp0: &mut GP0) {
-        let _buffer = self.buffer(buffer);
+    fn draw(&mut self, buffer: Buffer, gp0: &mut GP0) {
+        let buffer = self.buffer(buffer);
+        gp0.start(buffer).end(buffer.shift(self.res)).offset(buffer);
     }
 
-    fn display(&mut self, buffer: Buffer, _gp0: &mut GP0, _gp1: &mut GP1) {
-        let _buffer = self.buffer(buffer);
+    fn display(&mut self, buffer: Buffer, gp0: &mut GP0, gp1: &mut GP1) {
+        let buffer = self.buffer(buffer);
+        gp1.start(buffer);
+        let clear_screen = Tile {
+            tag: 0,
+            color: self.clear,
+            cmd: 0x60,
+            offset: (0, 0).into(),
+            size: self.res,
+        };
+        // TODO: this is a placeholder until I make a good API for sending single
+        // primitives to GP0 (i.e. w/o DMA).
+        let slice = unsafe {
+            core::slice::from_raw_parts(&clear_screen.color as *const _ as *const u32, 3)
+        };
+        for &s in slice {
+            unsafe {
+                gp0.write(s);
+            }
+        }
     }
 }

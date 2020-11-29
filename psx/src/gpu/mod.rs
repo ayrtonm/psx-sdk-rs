@@ -1,8 +1,15 @@
 pub mod color;
-pub mod primitive;
+pub mod gp0;
+pub mod gp1;
+pub mod primitives;
 pub mod texture;
 pub mod vertex;
 
-use crate::mmio::gpu;
-
-impl gpu::GP0 {}
+pub enum Vmode {
+    NTSC,
+    PAL,
+}
+pub enum Depth {
+    Lo,
+    Hi,
+}
