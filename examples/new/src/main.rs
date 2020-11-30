@@ -22,10 +22,7 @@ fn main(mut mmio: MMIO) {
 
     inner(&mut buffer, &mut ot);
 
-    mmio.gpu_dma
-        .prepare_ot(&mut mmio.gp1)
-        .send(&ot)
-        .wait();
+    mmio.gpu_dma.prepare_ot(&mut mmio.gp1).send(&ot).wait();
 
     loop {
         mmio.gpu_dma.send(&ot).wait();

@@ -2,7 +2,9 @@
 #![feature(min_const_generics, type_alias_impl_trait, bool_to_option, array_map)]
 // Only used for bios trampolines so far
 #![feature(asm, naked_functions)]
+#![feature(alloc_error_handler)]
 
+mod allocator;
 pub mod bios;
 mod builtins;
 pub mod dma;

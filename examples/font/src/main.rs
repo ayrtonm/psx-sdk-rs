@@ -56,8 +56,16 @@ fn main(mut io: IO) {
         &mut draw_port,
         &mut gpu_stat,
     );
-    printer.print(b"IO::take_draw_port returns a ", &mut draw_port, &mut gpu_stat);
-    printer.print_str(core::any::type_name::<Option<DrawPort>>(), &mut draw_port, &mut gpu_stat);
+    printer.print(
+        b"IO::take_draw_port returns a ",
+        &mut draw_port,
+        &mut gpu_stat,
+    );
+    printer.print_str(
+        core::any::type_name::<Option<DrawPort>>(),
+        &mut draw_port,
+        &mut gpu_stat,
+    );
     fb.swap(&mut draw_port, &mut disp_port);
 }
 
@@ -104,7 +112,13 @@ impl Printer {
         self.print(msg, draw_port, gpu_stat);
         self.newline();
     }
-    fn print_expr(&mut self, msg: &[u8], expr: u32, draw_port: &mut DrawPort, gpu_stat: &mut GpuStat) {
+    fn print_expr(
+        &mut self,
+        msg: &[u8],
+        expr: u32,
+        draw_port: &mut DrawPort,
+        gpu_stat: &mut GpuStat,
+    ) {
         let mut open_var = false;
         for &ascii in msg {
             if ascii == b'{' {
