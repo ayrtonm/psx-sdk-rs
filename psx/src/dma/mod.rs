@@ -187,7 +187,7 @@ impl<C: ChannelControl, T: Copy> Transfer<'_, C, T> {
 
 macro_rules! enable_fn {
     ($name:ident, $bit:expr) => {
-        pub fn $name(&mut self, enable: bool) {
+        pub fn $name(&mut self, enable: bool) -> &mut Self {
             unsafe {
                 self.update(|val| {
                     if enable {
@@ -197,6 +197,7 @@ macro_rules! enable_fn {
                     }
                 })
             }
+            self
         }
     };
 }

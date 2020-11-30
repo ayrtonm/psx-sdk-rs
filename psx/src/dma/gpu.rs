@@ -27,6 +27,10 @@ impl dma::gpu::Channel {
         self.channel_control.start(())
     }
 
+    // TODO: passing GP0 isn't necessary if the transfers are purely done thru DMA
+    // This should be easy to do by increasing the size of the TIM array to include a 1 or 2 word
+    // header. This'll give flexibility for prepending 0xA000_0000 or prepending a linked list tag +
+    // 0xA000_0000.
     pub fn load_tim(&mut self, tim: &TIM, gp0: &mut gpu::GP0) -> (TexPage, Option<Clut>) {
         self.channel_control
             .set_direction(Direction::FromMemory)

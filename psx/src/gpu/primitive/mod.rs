@@ -21,7 +21,10 @@ pub trait Primitive: Sized {
 
 pub struct Packet<T>(*mut T);
 impl<T> Packet<T> {
-    pub fn as_mut(&self) -> &mut T {
+    pub fn as_ref(&self) -> &T {
+        unsafe { self.0.as_ref().unwrap() }
+    }
+    pub fn as_mut(&mut self) -> &mut T {
         unsafe { self.0.as_mut().unwrap() }
     }
 }
@@ -47,7 +50,7 @@ impl<const N: usize> Buffer<N> {
     pub fn alloc<T: Allocatable>(&mut self) -> Packet<T> {
         let slice = self.get(size_of::<T>() / 4);
         let ptr = slice.as_mut_ptr().cast::<T>();
-        let prim = Packet(ptr);
+        let mut prim = Packet(ptr);
         prim.as_mut().cmd().len(size_of::<T>() / 4);
         prim
     }
@@ -78,7 +81,7 @@ impl<const N: usize> OT<N> {
         &self.entries[n]
     }
 
-    pub fn add_prim<T>(&mut self, z: usize, prim: Packet<T>) -> &mut Self {
+    pub fn add_prim<T>(&mut self, z: usize, prim: &mut Packet<T>) -> &mut Self {
         let tag = prim.as_mut() as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;
