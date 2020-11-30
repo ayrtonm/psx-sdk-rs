@@ -1,9 +1,5 @@
 use core::mem::{size_of, transmute};
 
-use crate::dma;
-use crate::dma::{BaseAddress, BlockControl, ChannelControl};
-use crate::mmio::dma::{gpu, otc};
-
 pub mod linef;
 pub mod lineg;
 pub mod polyf;
@@ -12,6 +8,18 @@ pub mod polyg;
 pub mod polygt;
 pub mod sprt;
 pub mod tile;
+
+// TODO: move this to self::tile
+impl Primitive for tile::Tile {}
+
+pub trait Primitive: Sized {
+    fn as_slice(&self) -> &[u32] {
+        let size = size_of::<Self>() / 4;
+        unsafe {
+            &core::slice::from_raw_parts(self as *const Self as *const u32, size)[1..]
+        }
+    }
+}
 
 pub struct Packet<T>(*mut T);
 impl<T> Packet<T> {

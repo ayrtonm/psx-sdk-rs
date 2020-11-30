@@ -1,4 +1,5 @@
 use super::{Allocatable, Packet};
+use super::Primitive;
 use crate::gpu::color::Color;
 use crate::gpu::vertex::Vertex;
 
@@ -20,6 +21,7 @@ pub struct PolyF4 {
 
 macro_rules! impl_PolyF {
     ($n:expr, $name:ident, $cmd:expr) => {
+        impl Primitive for $name {}
         impl Allocatable for $name {
             fn cmd(&mut self) -> &mut Self {
                 self.cmd = $cmd;

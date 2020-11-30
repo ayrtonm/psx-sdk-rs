@@ -1,8 +1,7 @@
 #![no_std]
 #![no_main]
-#![feature(array_map, min_const_generics)]
+#![feature(min_const_generics)]
 
-use psx::dma::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, SyncMode};
 use psx::framebuffer::Framebuffer;
 use psx::gpu::color::Color;
 use psx::gpu::primitive;
@@ -24,7 +23,7 @@ fn main(mut mmio: MMIO) {
     inner(&mut buffer, &mut ot);
 
     mmio.gpu_dma
-        .prepare(&mut mmio.gp1)
+        .prepare_ot(&mut mmio.gp1)
         .send(&ot)
         .wait();
 

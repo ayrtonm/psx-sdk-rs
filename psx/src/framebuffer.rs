@@ -14,7 +14,6 @@ use crate::gpu::primitive::tile::Tile;
 use crate::gpu::vertex::Vertex;
 use crate::gpu::{Depth, Vmode};
 use crate::mmio::gpu::{GP0, GP1};
-use crate::mmio::register::Write;
 use core::cell::RefCell;
 
 pub struct UncheckedFramebuffer<'a, 'b> {
@@ -118,15 +117,6 @@ impl Framebuffer {
             offset: (0, 0).into(),
             size: self.res,
         };
-        // TODO: this is a placeholder until I make a good API for sending single
-        // primitives to GP0 (i.e. w/o DMA).
-        let slice = unsafe {
-            core::slice::from_raw_parts(&clear_screen.color as *const _ as *const u32, 3)
-        };
-        for &s in slice {
-            unsafe {
-                gp0.write(s);
-            }
-        }
+        gp0.send(&clear_screen);
     }
 }

@@ -206,7 +206,7 @@ impl dma::Control {
 }
 
 impl dma::gpu::Channel {
-    pub fn prepare(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
+    pub fn prepare_ot(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
         gp1.dma_direction(2);
         self.block_control.set(BlockSize::LinkedList);
         self.channel_control

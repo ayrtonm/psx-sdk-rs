@@ -1,8 +1,17 @@
+use super::primitive::Primitive;
 use super::vertex::Vertex;
 use crate::mmio::gpu;
 use crate::mmio::register::Write;
 
 impl gpu::GP0 {
+    pub fn send<T: Primitive>(&mut self, primitive: &T) -> &mut Self {
+        for &word in primitive.as_slice() {
+            unsafe {
+                self.write(word);
+            }
+        }
+        self
+    }
     pub fn start<T>(&mut self, offset: T) -> &mut Self
     where Vertex: From<T> {
         let v = Vertex::from(offset);
