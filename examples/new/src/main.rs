@@ -14,13 +14,14 @@ fn main(mut mmio: MMIO) {
     mmio.dma_control.gpu(true).otc(true);
     let mut fb = Framebuffer::new((0, 0), (0, 240), (320, 240), &mut mmio.gp0, &mut mmio.gp1);
 
-    let mut buffer = primitive::Buffer::<11>::new();
+    let mut buffer = primitive::Buffer::<100>::new();
     let mut ot = primitive::OT::<8>::new();
 
     mmio.otc_dma.clear(&ot).wait();
 
-    draw_scene(&mut buffer, &mut ot);
+    draw_scene2(&mut buffer, &mut ot);
 
+    draw_scene(&mut buffer, &mut ot);
     mmio.gpu_dma.prepare_ot(&mut mmio.gp1).send(&ot).wait();
 
     loop {
@@ -49,4 +50,15 @@ fn draw_scene<const N: usize, const M: usize>(
         .color(Color::YELLOW)
         .packet();
     ot.add_prim(4, &mut prim1).add_prim(4, &mut prim0);
+}
+
+fn draw_scene2<const N: usize, const M: usize>(
+    buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
+) {
+    let mut prim0 = buffer.alloc::<PolyF3>();
+    prim0
+        .as_mut()
+        .vertices([(25, 25), (75, 0), (75, 100)])
+        .color(Color::RED);
+    ot.add_prim(4, &mut prim0);
 }

@@ -9,7 +9,8 @@ pub mod polygt;
 pub mod sprt;
 pub mod tile;
 
-// TODO: move this to self::tile
+impl Primitive for polyf::PolyF3 {}
+impl Primitive for polyf::PolyF4 {}
 impl Primitive for tile::Tile {}
 
 pub trait Primitive: Sized {
@@ -24,6 +25,7 @@ impl<T> Packet<T> {
     pub fn as_ref(&self) -> &T {
         unsafe { self.0.as_ref().unwrap() }
     }
+
     pub fn as_mut(&mut self) -> &mut T {
         unsafe { self.0.as_mut().unwrap() }
     }
@@ -71,6 +73,10 @@ pub struct OT<const N: usize> {
 impl<const N: usize> OT<N> {
     pub fn new() -> Self {
         OT { entries: [0; N] }
+    }
+
+    pub fn len(&self) -> usize {
+        N - 1
     }
 
     pub fn start(&self) -> &u32 {

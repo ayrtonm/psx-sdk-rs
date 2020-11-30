@@ -10,19 +10,20 @@ pub struct TIM<'a> {
 }
 
 impl<'a> TIM<'a> {
-    pub fn new(src: &'a [u32]) -> Self {
-        let clut_bitmap = ((src[1] & 8) != 0).then_some(Bitmap::new(&src[2..]));
-        let (offset, clut_bitmap) = match clut_bitmap {
-            Some((offset, clut_bitmap)) => (offset + 2, Some(clut_bitmap)),
-            None => (2, None),
-        };
-        let (_, bitmap) = Bitmap::new(&src[offset..]);
+    pub fn new(src: &'a mut [u32]) -> Self {
         let bpp = match src[1] & 3 {
             0 => Bpp::B4,
             1 => Bpp::B8,
             2 => Bpp::B15,
             _ => unreachable!("TIM contains an invalid bpp"),
         };
+        let (clut_bitmap, other) = if (src[1] & 8) != 0 {
+            let (bitmap, other) = Bitmap::new(&mut src[2..]);
+            (Some(bitmap), other)
+        } else {
+            (None, &mut src[2..])
+        };
+        let (bitmap, _) = Bitmap::new(other);
         TIM {
             bpp,
             bitmap,
