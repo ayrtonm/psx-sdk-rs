@@ -12,6 +12,7 @@ impl gpu::GP0 {
         }
         self
     }
+
     pub fn start<T>(&mut self, offset: T) -> &mut Self
     where Vertex: From<T> {
         let v = Vertex::from(offset);

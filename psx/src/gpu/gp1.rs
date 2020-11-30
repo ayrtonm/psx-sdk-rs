@@ -1,11 +1,32 @@
+use super::dma;
 use super::vertex::{Pixel, Vertex};
 use super::{Depth, Vmode};
 use crate::mmio::gpu;
 use crate::mmio::register::Write;
 
 impl gpu::GP1 {
+    pub fn reset_gpu(&mut self) -> &mut Self {
+        unsafe { self.write(0) };
+        self
+    }
+
+    pub fn reset_buffer(&mut self) -> &mut Self {
+        unsafe { self.write(1 << 24) };
+        self
+    }
+
     pub fn on(&mut self) -> &mut Self {
         unsafe { self.write(0x0300_0000) };
+        self
+    }
+
+    pub fn off(&mut self) -> &mut Self {
+        unsafe { self.write(0x0300_0001) };
+        self
+    }
+
+    pub fn dma_source(&mut self, src: dma::Source) -> &mut Self {
+        unsafe { self.write((0x04 << 24) | src as u32) };
         self
     }
 

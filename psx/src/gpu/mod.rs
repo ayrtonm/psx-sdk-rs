@@ -14,3 +14,12 @@ pub enum Depth {
     Lo,
     Hi,
 }
+
+pub mod dma {
+    pub enum Source {
+        Off = 0,
+        FIFO,
+        CPU,
+        GPU,
+    }
+}

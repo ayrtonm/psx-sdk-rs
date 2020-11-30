@@ -1,5 +1,5 @@
-use super::{Allocatable, Packet};
 use super::Primitive;
+use super::{Allocatable, Packet};
 use crate::gpu::color::Color;
 use crate::gpu::vertex::Vertex;
 

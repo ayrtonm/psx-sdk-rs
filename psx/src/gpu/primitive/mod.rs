@@ -15,9 +15,7 @@ impl Primitive for tile::Tile {}
 pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {
         let size = size_of::<Self>() / 4;
-        unsafe {
-            &core::slice::from_raw_parts(self as *const Self as *const u32, size)[1..]
-        }
+        unsafe { &core::slice::from_raw_parts(self as *const Self as *const u32, size)[1..] }
     }
 }
 

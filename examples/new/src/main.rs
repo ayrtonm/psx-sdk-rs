@@ -31,7 +31,6 @@ fn main(mut mmio: MMIO) {
         mmio.gpu_dma.send(&ot).wait();
         mmio.gpu_stat.sync();
 
-        //mmio.int_stat.wait(IRQ::Vblank);
         mmio.int_stat.ack(IRQ::Vblank);
 
         fb.swap(&mut mmio.gp0, &mut mmio.gp1);

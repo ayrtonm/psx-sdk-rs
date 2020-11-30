@@ -1,24 +1,25 @@
 //! CPU-side DMA channel routines.
 
 use crate::gpu::primitive::OT;
-use crate::mmio::{dma, gpu};
+use crate::gpu::texture::{Clut, TexPage};
 use crate::mmio::register::{Read, Update, Write};
+use crate::mmio::{dma, gpu};
+use crate::tim::TIM;
 
 pub enum BlockSize {
-    Single(u32),
+    Single(usize),
     Multi { words: u16, blocks: u16 },
     LinkedList,
 }
 
-impl From<u32> for BlockSize {
-    fn from(words: u32) -> Self {
+impl From<usize> for BlockSize {
+    fn from(words: usize) -> Self {
         BlockSize::Single(words)
     }
 }
-
-impl From<(u16, u16)> for BlockSize {
-    fn from((words, blocks): (u16, u16)) -> Self {
-        BlockSize::Multi { words, blocks }
+impl From<u32> for BlockSize {
+    fn from(words: u32) -> Self {
+        BlockSize::Single(words as usize)
     }
 }
 
@@ -65,8 +66,8 @@ pub trait BlockControl: Read + Write {
         let value = unsafe { self.read() };
         match sync_mode {
             SyncMode::Immediate => match value {
-                0 => Some(BlockSize::Single(0x1_0000)),
-                1..=0xFFFF => Some(BlockSize::Single(value)),
+                0 => Some(0x1_0000u32.into()),
+                1..=0xFFFF => Some(value.into()),
                 _ => None,
             },
             SyncMode::Request => Some(BlockSize::Multi {
@@ -81,7 +82,7 @@ pub trait BlockControl: Read + Write {
         let block_size = BlockSize::from(block_size);
         let words = match block_size {
             BlockSize::Single(words) => match words {
-                0..=0xFFFF => words,
+                0..=0xFFFF => words as u32,
                 0x1_0000 => 0,
                 _ => {
                     if cfg!(debug_assertions) {
@@ -218,11 +219,38 @@ impl dma::gpu::Channel {
     pub fn send<const N: usize>(&mut self, ot: &OT<N>) -> Transfer<dma::gpu::ChannelControl, ()> {
         self.send_offset(ot, N - 1)
     }
+
     pub fn send_offset<const N: usize>(
         &mut self, ot: &OT<N>, n: usize,
     ) -> Transfer<dma::gpu::ChannelControl, ()> {
         self.base_address.set(ot.entry(n));
         self.channel_control.start(())
+    }
+
+    pub fn load_tim(&mut self, tim: &TIM, gp0: &mut gpu::GP0) -> (TexPage, Option<Clut>) {
+        self.channel_control
+            .set_direction(Direction::FromMemory)
+            .set_step(Step::Forward)
+            .set_chop(None)
+            .set_sync_mode(SyncMode::Immediate);
+
+        let texpage = tim.texpage();
+        let clut = tim.clut();
+
+        unsafe { gp0.write(0xA0 << 24) };
+        let bmp = tim.bitmap().data();
+        self.base_address.set(bmp.as_ptr());
+        self.block_control.set(bmp.len());
+        self.channel_control.start(()).wait();
+
+        tim.clut_bitmap().map(|clut| {
+            unsafe { gp0.write(0xA0 << 24) };
+            self.base_address.set(clut.data().as_ptr());
+            self.block_control.set(clut.data().len());
+            self.channel_control.start(()).wait();
+        });
+
+        (texpage, clut)
     }
 }
 impl dma::otc::Channel {
