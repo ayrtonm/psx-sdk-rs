@@ -3,8 +3,6 @@ use crate::mmio::register::Read;
 
 impl gpu::Stat {
     pub fn sync(&self) {
-        unsafe {
-            while self.read() & (1 << 28) == 0 {}
-        }
+        unsafe { while self.read() & (1 << 28) == 0 {} }
     }
 }

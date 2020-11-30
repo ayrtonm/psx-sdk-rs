@@ -1,6 +1,7 @@
 //! CPU-side DMA channel routines.
 
-use crate::mmio::dma;
+use crate::gpu::primitive::OT;
+use crate::mmio::{dma, gpu};
 use crate::mmio::register::{Read, Update, Write};
 
 pub enum BlockSize {
@@ -149,7 +150,7 @@ pub trait ChannelControl: Update {
             }
         }
         Transfer {
-            control: self,
+            channel_control: self,
             result,
         }
     }
@@ -160,13 +161,13 @@ pub trait ChannelControl: Update {
 
 #[must_use]
 pub struct Transfer<'a, C: ChannelControl + ?Sized, T: Copy> {
-    control: &'a C,
+    channel_control: &'a C,
     result: T,
 }
 
 impl<C: ChannelControl, T: Copy> Transfer<'_, C, T> {
     pub fn busy(&self) -> bool {
-        self.control.busy()
+        self.channel_control.busy()
     }
 
     pub fn wait(self) -> T {
@@ -202,4 +203,35 @@ impl dma::Control {
     enable_fn!(gpu, 11);
 
     enable_fn!(otc, 27);
+}
+
+impl dma::gpu::Channel {
+    pub fn prepare(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
+        gp1.dma_direction(2);
+        self.block_control.set(BlockSize::LinkedList);
+        self.channel_control
+            .set_direction(Direction::FromMemory)
+            .set_sync_mode(SyncMode::LinkedList);
+        self
+    }
+
+    pub fn send<const N: usize>(&mut self, ot: &OT<N>) -> Transfer<dma::gpu::ChannelControl, ()> {
+        self.send_offset(ot, N - 1)
+    }
+    pub fn send_offset<const N: usize>(
+        &mut self, ot: &OT<N>, n: usize,
+    ) -> Transfer<dma::gpu::ChannelControl, ()> {
+        self.base_address.set(ot.entry(n));
+        self.channel_control.start(())
+    }
+}
+impl dma::otc::Channel {
+    pub fn clear<const N: usize>(&mut self, ot: &OT<N>) -> Transfer<dma::otc::ChannelControl, ()> {
+        self.base_address.set(ot.start());
+        self.block_control.set(N as u32);
+        self.channel_control
+            .set_sync_mode(SyncMode::Immediate)
+            .set_step(Step::Backward)
+            .start(())
+    }
 }

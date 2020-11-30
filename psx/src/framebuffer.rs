@@ -10,7 +10,7 @@
 //! checker rules dynamically and get run-time errors instead.
 
 use crate::gpu::color::Color;
-use crate::gpu::primitives::tile::Tile;
+use crate::gpu::primitive::tile::Tile;
 use crate::gpu::vertex::Vertex;
 use crate::gpu::{Depth, Vmode};
 use crate::mmio::gpu::{GP0, GP1};
