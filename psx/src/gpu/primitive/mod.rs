@@ -49,19 +49,24 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn alloc<T: Allocatable>(&mut self) -> Packet<T> {
-        let slice = self.get(size_of::<T>() / 4);
-        let ptr = slice.as_mut_ptr().cast::<T>();
-        let mut prim = Packet(ptr);
-        prim.as_mut().cmd().len(size_of::<T>() / 4);
-        prim
+    pub fn alloc<T: Allocatable>(&mut self) -> Option<Packet<T>> {
+        self.get(size_of::<T>() / 4).map(|slice| {
+            let ptr = slice.as_mut_ptr().cast::<T>();
+            let mut prim = Packet(ptr);
+            prim.as_mut().cmd().len(size_of::<T>() / 4);
+            prim
+        })
     }
 
-    fn get(&mut self, n: usize) -> &mut [u32] {
+    fn get(&mut self, n: usize) -> Option<&mut [u32]> {
         let start = self.next_primitive;
         let end = self.next_primitive + n;
-        self.next_primitive = end;
-        &mut self.data[start..end]
+        if end < self.data.len() {
+            self.next_primitive = end;
+            Some(&mut self.data[start..end])
+        } else {
+            None
+        }
     }
 }
 

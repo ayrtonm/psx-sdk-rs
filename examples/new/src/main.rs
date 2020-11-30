@@ -38,13 +38,14 @@ fn main(mut mmio: MMIO) {
 fn draw_scene<const N: usize, const M: usize>(
     buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
 ) {
-    let mut prim0 = buffer.alloc::<PolyF3>();
+    let mut prim0 = buffer.alloc::<PolyF3>().unwrap();
     prim0
         .as_mut()
         .vertices([(0, 0), (100, 0), (0, 100)])
         .color(Color::BLUE);
     let mut prim1 = buffer
         .alloc::<PolyF4>()
+        .unwrap()
         .as_mut()
         .vertices([(100, 100), (50, 100), (100, 50), (25, 25)])
         .color(Color::YELLOW)
@@ -55,7 +56,7 @@ fn draw_scene<const N: usize, const M: usize>(
 fn draw_scene2<const N: usize, const M: usize>(
     buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
 ) {
-    let mut prim0 = buffer.alloc::<PolyF3>();
+    let mut prim0 = buffer.alloc::<PolyF3>().unwrap();
     prim0
         .as_mut()
         .vertices([(25, 25), (75, 0), (75, 100)])
