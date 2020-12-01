@@ -13,14 +13,14 @@ fn main(mut mmio: MMIO) {
     mmio.dma_control.gpu(true).otc(true);
     let mut fb = Framebuffer::new((0, 0), (0, 240), (320, 240), &mut mmio.gp0, &mut mmio.gp1);
 
-    let mut buffer = primitive::Buffer::<100>::new();
+    let buffer = primitive::Buffer::<100>::new();
     let mut ot = primitive::OT::<8>::new();
 
     mmio.otc_dma.clear(&ot).wait();
 
-    draw_scene2(&mut buffer, &mut ot);
+    draw_scene2(&buffer, &mut ot);
 
-    draw_scene(&mut buffer, &mut ot);
+    draw_scene(&buffer, &mut ot);
     mmio.gpu_dma.prepare_ot(&mut mmio.gp1).send(&ot).wait();
 
     loop {
@@ -35,28 +35,44 @@ fn main(mut mmio: MMIO) {
 }
 
 fn draw_scene<const N: usize, const M: usize>(
-    buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
+    buffer: &primitive::Buffer<N>, ot: &mut primitive::OT<M>,
 ) {
-    let prim0 = buffer
-        .PolyF3()
-        .unwrap()
+    #[repr(C)]
+    struct Composite {
+        pub a: primitive::polyf::PolyF3,
+        pub b: primitive::polyf::PolyF4,
+    }
+    let composite = buffer.alloc::<primitive::Packet<Composite>>().unwrap();
+    use core::mem::size_of;
+    composite.tag = ((size_of::<primitive::Packet<Composite>>() / 4) as u32) << 24;
+    composite
+        .packet
+        .a
+        .cmd()
         .vertices([(0, 0), (100, 0), (0, 100)])
         .color(Color::BLUE);
-    let prim1 = buffer
-        .PolyF4()
-        .unwrap()
+    composite
+        .packet
+        .b
+        .cmd()
         .vertices([(100, 100), (50, 100), (100, 50), (25, 25)])
         .color(Color::YELLOW);
-    ot.add_prim(4, prim1).add_prim(4, prim0);
+    ot.add_prim(4, composite);
 }
 
 fn draw_scene2<const N: usize, const M: usize>(
-    buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
+    buffer: &primitive::Buffer<N>, ot: &mut primitive::OT<M>,
 ) {
     let prim0 = buffer
         .PolyF3()
         .unwrap()
         .vertices([(25, 25), (75, 0), (75, 100)])
         .color(Color::RED);
-    ot.add_prim(4, prim0);
+    let buffer2 = primitive::Buffer::<20>::new();
+    let prim1 = buffer2
+        .PolyF4()
+        .unwrap()
+        .vertices([(200, 130), (200, 260), (275, 230), (275, 260)])
+        .color(Color::ORANGE);
+    ot.add_prim(4, prim0); //.add_prim(4, prim1);
 }

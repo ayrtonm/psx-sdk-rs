@@ -1,5 +1,6 @@
 use core::cell::UnsafeCell;
 use core::mem::{size_of, transmute};
+use core::slice::from_raw_parts;
 
 pub mod linef;
 pub mod lineg;
@@ -12,10 +13,16 @@ pub mod tile;
 
 impl Primitive for tile::Tile {}
 
+#[repr(C)]
+pub struct Packet<T> {
+    pub tag: u32,
+    pub packet: T,
+}
+
 pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {
         let size = size_of::<Self>() / 4;
-        unsafe { &core::slice::from_raw_parts(self as *const Self as *const u32, size)[1..] }
+        unsafe { from_raw_parts(self as *const Self as *const u32, size) }
     }
 }
 
@@ -32,7 +39,10 @@ struct InnerBuffer<const N: usize> {
 impl<const N: usize> Buffer<N> {
     pub fn new() -> Self {
         Buffer {
-            cell: UnsafeCell::new(InnerBuffer::new()),
+            cell: UnsafeCell::new(InnerBuffer {
+                data: [0; N],
+                next: 0,
+            }),
         }
     }
 
@@ -51,13 +61,10 @@ impl<const N: usize> Buffer<N> {
             }
         }
     }
-}
 
-impl<const N: usize> InnerBuffer<N> {
-    pub fn new() -> Self {
-        InnerBuffer {
-            data: [0; N],
-            next: 0,
+    pub fn empty(&mut self) {
+        unsafe {
+            (*self.cell.get()).next = 0;
         }
     }
 }
@@ -84,7 +91,7 @@ impl<const N: usize> OT<N> {
         &self.entries[n]
     }
 
-    pub fn add_prim<T: Primitive>(&mut self, z: usize, prim: &mut T) -> &mut Self {
+    pub fn add_prim<T>(&mut self, z: usize, prim: &mut Packet<T>) -> &mut Self {
         let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;

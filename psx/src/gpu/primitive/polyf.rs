@@ -1,12 +1,11 @@
 use core::mem::size_of;
 
-use super::{Buffer, Primitive};
+use super::{Buffer, Packet, Primitive};
 use crate::gpu::color::Color;
 use crate::gpu::vertex::Vertex;
 
 #[repr(C)]
 pub struct PolyF3 {
-    pub tag: u32,
     pub color: Color,
     pub cmd: u8,
     pub vertices: [Vertex; 3],
@@ -14,29 +13,45 @@ pub struct PolyF3 {
 
 #[repr(C)]
 pub struct PolyF4 {
-    pub tag: u32,
     pub color: Color,
     pub cmd: u8,
     pub vertices: [Vertex; 4],
 }
 
 macro_rules! impl_PolyF {
-    ($n:expr, $name:ident, $cmd:expr) => {
-        impl Primitive for $name {}
+    ($N:expr, $name:ident, $cmd:expr) => {
+        impl Primitive for Packet<$name> {}
         #[allow(non_snake_case)]
         impl<const N: usize> Buffer<N> {
-            pub fn $name(&self) -> Option<&mut $name> {
-                self.alloc::<$name>().map(|prim| prim.init())
+            pub fn $name(&self) -> Option<&mut Packet<$name>> {
+                self.alloc::<Packet<$name>>().map(|prim| prim.init())
             }
         }
-        impl $name {
+        impl Packet<$name> {
             pub fn init(&mut self) -> &mut Self {
-                self.cmd = $cmd;
+                self.packet.cmd();
                 self.tag = (size_of::<Self>() as u32 / 4) << 24;
                 self
             }
 
-            pub fn vertices<T>(&mut self, vertices: [T; $n]) -> &mut Self
+            pub fn vertices<T>(&mut self, vertices: [T; $N]) -> &mut Self
+            where Vertex: From<T> {
+                self.packet.vertices(vertices);
+                self
+            }
+
+            pub fn color(&mut self, color: Color) -> &mut Self {
+                self.packet.color(color);
+                self
+            }
+        }
+        impl $name {
+            pub fn cmd(&mut self) -> &mut Self {
+                self.cmd = $cmd;
+                self
+            }
+
+            pub fn vertices<T>(&mut self, vertices: [T; $N]) -> &mut Self
             where Vertex: From<T> {
                 self.vertices = vertices.map(|t| Vertex::from(t));
                 self

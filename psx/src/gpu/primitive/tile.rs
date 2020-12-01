@@ -3,7 +3,7 @@ use crate::gpu::vertex::Vertex;
 
 #[repr(C)]
 pub struct Tile {
-    pub tag: u32,
+    //pub tag: u32,
     pub color: Color,
     pub cmd: u8,
     pub offset: Vertex,
