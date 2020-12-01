@@ -46,7 +46,13 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn alloc<T>(&self) -> Option<&mut T> {
+    pub fn alloc<T>(&self) -> Option<&mut Packet<T>> {
+        self.generic_alloc::<Packet<T>>().map(|p| {
+            p.tag = (size_of::<Packet<T>>() as u32 / 4) << 24;
+            p
+        })
+    }
+    fn generic_alloc<T>(&self) -> Option<&mut T> {
         unsafe {
             let size = size_of::<T>() / 4;
             let start = (*self.cell.get()).next;

@@ -1,6 +1,4 @@
-use core::mem::size_of;
-
-use super::{Buffer, Packet, Primitive};
+use super::{Packet, Buffer, Primitive};
 use crate::gpu::color::Color;
 use crate::gpu::vertex::Vertex;
 
@@ -24,22 +22,18 @@ macro_rules! impl_PolyF {
         #[allow(non_snake_case)]
         impl<const N: usize> Buffer<N> {
             pub fn $name(&self) -> Option<&mut Packet<$name>> {
-                self.alloc::<Packet<$name>>().map(|prim| prim.init())
+                self.alloc::<$name>().map(|prim| {
+                    prim.packet.cmd();
+                    prim
+                })
             }
         }
         impl Packet<$name> {
-            pub fn init(&mut self) -> &mut Self {
-                self.packet.cmd();
-                self.tag = (size_of::<Self>() as u32 / 4) << 24;
-                self
-            }
-
             pub fn vertices<T>(&mut self, vertices: [T; $N]) -> &mut Self
             where Vertex: From<T> {
                 self.packet.vertices(vertices);
                 self
             }
-
             pub fn color(&mut self, color: Color) -> &mut Self {
                 self.packet.color(color);
                 self
@@ -50,7 +44,6 @@ macro_rules! impl_PolyF {
                 self.cmd = $cmd;
                 self
             }
-
             pub fn vertices<T>(&mut self, vertices: [T; $N]) -> &mut Self
             where Vertex: From<T> {
                 self.vertices = vertices.map(|t| Vertex::from(t));

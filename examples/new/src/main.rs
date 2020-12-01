@@ -42,9 +42,7 @@ fn draw_scene<const N: usize, const M: usize>(
         pub a: primitive::polyf::PolyF3,
         pub b: primitive::polyf::PolyF4,
     }
-    let composite = buffer.alloc::<primitive::Packet<Composite>>().unwrap();
-    use core::mem::size_of;
-    composite.tag = ((size_of::<primitive::Packet<Composite>>() / 4) as u32) << 24;
+    let composite = buffer.alloc::<Composite>().unwrap();
     composite
         .packet
         .a
