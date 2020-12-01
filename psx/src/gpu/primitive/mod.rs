@@ -12,11 +12,18 @@ pub mod sprt;
 pub mod tile;
 
 impl Primitive for tile::Tile {}
+impl Primitive for Packet<tile::Tile> {}
 
 #[repr(C)]
 pub struct Packet<T> {
-    pub tag: u32,
-    pub packet: T,
+    tag: u32,
+    packet: T,
+}
+
+impl<T> Packet<T> {
+    pub fn packet(&mut self) -> &mut T {
+        &mut self.packet
+    }
 }
 
 pub trait Primitive: Sized {
@@ -25,6 +32,12 @@ pub trait Primitive: Sized {
         unsafe { from_raw_parts(self as *const Self as *const u32, size) }
     }
 }
+
+pub trait Init {
+    fn init(&mut self);
+}
+
+impl<T> Primitive for T where T: Init {}
 
 /// A bump allocator for a single-buffered primitive array.
 pub struct Buffer<const N: usize> {
@@ -46,12 +59,14 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn alloc<T>(&self) -> Option<&mut Packet<T>> {
+    pub fn alloc<T: Init>(&self) -> Option<&mut Packet<T>> {
         self.generic_alloc::<Packet<T>>().map(|p| {
             p.tag = (size_of::<Packet<T>>() as u32 / 4) << 24;
+            p.packet.init();
             p
         })
     }
+
     fn generic_alloc<T>(&self) -> Option<&mut T> {
         unsafe {
             let size = size_of::<T>() / 4;
@@ -97,7 +112,7 @@ impl<const N: usize> OT<N> {
         &self.entries[n]
     }
 
-    pub fn add_prim<T>(&mut self, z: usize, prim: &mut Packet<T>) -> &mut Self {
+    pub fn add_prim<T: Init>(&mut self, z: usize, prim: &mut Packet<T>) -> &mut Self {
         let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;

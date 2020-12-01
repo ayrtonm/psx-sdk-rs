@@ -42,17 +42,21 @@ fn draw_scene<const N: usize, const M: usize>(
         pub a: primitive::polyf::PolyF3,
         pub b: primitive::polyf::PolyF4,
     }
+    impl primitive::Init for Composite {
+        fn init(&mut self) {
+            self.a.cmd();
+            self.b.cmd();
+        }
+    }
     let composite = buffer.alloc::<Composite>().unwrap();
     composite
-        .packet
+        .packet()
         .a
-        .cmd()
         .vertices([(0, 0), (100, 0), (0, 100)])
         .color(Color::BLUE);
     composite
-        .packet
+        .packet()
         .b
-        .cmd()
         .vertices([(100, 100), (50, 100), (100, 50), (25, 25)])
         .color(Color::YELLOW);
     ot.add_prim(4, composite);
