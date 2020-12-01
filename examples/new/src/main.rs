@@ -5,7 +5,6 @@
 use psx::framebuffer::Framebuffer;
 use psx::gpu::color::Color;
 use psx::gpu::primitive;
-use psx::gpu::primitive::polyf::{PolyF3, PolyF4};
 use psx::interrupt::IRQ;
 
 psx::exe!();
@@ -38,28 +37,26 @@ fn main(mut mmio: MMIO) {
 fn draw_scene<const N: usize, const M: usize>(
     buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
 ) {
-    let mut prim0 = buffer.alloc::<PolyF3>().unwrap();
-    prim0
-        .as_mut()
+    let prim0 = buffer
+        .PolyF3()
+        .unwrap()
         .vertices([(0, 0), (100, 0), (0, 100)])
         .color(Color::BLUE);
-    let mut prim1 = buffer
-        .alloc::<PolyF4>()
+    let prim1 = buffer
+        .PolyF4()
         .unwrap()
-        .as_mut()
         .vertices([(100, 100), (50, 100), (100, 50), (25, 25)])
-        .color(Color::YELLOW)
-        .packet();
-    ot.add_prim(4, &mut prim1).add_prim(4, &mut prim0);
+        .color(Color::YELLOW);
+    ot.add_prim(4, prim1).add_prim(4, prim0);
 }
 
 fn draw_scene2<const N: usize, const M: usize>(
     buffer: &mut primitive::Buffer<N>, ot: &mut primitive::OT<M>,
 ) {
-    let mut prim0 = buffer.alloc::<PolyF3>().unwrap();
-    prim0
-        .as_mut()
+    let prim0 = buffer
+        .PolyF3()
+        .unwrap()
         .vertices([(25, 25), (75, 0), (75, 100)])
         .color(Color::RED);
-    ot.add_prim(4, &mut prim0);
+    ot.add_prim(4, prim0);
 }

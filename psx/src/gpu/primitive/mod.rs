@@ -1,3 +1,4 @@
+use core::cell::UnsafeCell;
 use core::mem::{size_of, transmute};
 
 pub mod linef;
@@ -9,8 +10,6 @@ pub mod polygt;
 pub mod sprt;
 pub mod tile;
 
-impl Primitive for polyf::PolyF3 {}
-impl Primitive for polyf::PolyF4 {}
 impl Primitive for tile::Tile {}
 
 pub trait Primitive: Sized {
@@ -20,52 +19,45 @@ pub trait Primitive: Sized {
     }
 }
 
-pub struct Packet<T>(*mut T);
-impl<T> Packet<T> {
-    pub fn as_ref(&self) -> &T {
-        unsafe { self.0.as_ref().unwrap() }
-    }
-
-    pub fn as_mut(&mut self) -> &mut T {
-        unsafe { self.0.as_mut().unwrap() }
-    }
-}
-pub trait Allocatable: Sized {
-    fn cmd(&mut self) -> &mut Self;
-    fn len(&mut self, len: usize) -> &mut Self;
-}
 /// A bump allocator for a single-buffered primitive array.
 pub struct Buffer<const N: usize> {
-    pub data: [u32; N],
-    next_primitive: usize,
+    cell: UnsafeCell<InnerBuffer<N>>,
+}
+
+struct InnerBuffer<const N: usize> {
+    data: [u32; N],
+    next: usize,
 }
 
 impl<const N: usize> Buffer<N> {
     pub fn new() -> Self {
-        let data = [0; N];
         Buffer {
-            data,
-            next_primitive: 0,
+            cell: UnsafeCell::new(InnerBuffer::new()),
         }
     }
 
-    pub fn alloc<T: Allocatable>(&mut self) -> Option<Packet<T>> {
-        self.get(size_of::<T>() / 4).map(|slice| {
-            let ptr = slice.as_mut_ptr().cast::<T>();
-            let mut prim = Packet(ptr);
-            prim.as_mut().cmd().len(size_of::<T>() / 4);
-            prim
-        })
+    pub fn alloc<T>(&self) -> Option<&mut T> {
+        unsafe {
+            let size = size_of::<T>() / 4;
+            let start = (*self.cell.get()).next;
+            let end = start + size;
+            if end < N {
+                (*self.cell.get()).next += size;
+                let slice = &mut (*self.cell.get()).data[start..end];
+                let ptr = slice.as_mut_ptr().cast::<T>();
+                ptr.as_mut()
+            } else {
+                None
+            }
+        }
     }
+}
 
-    fn get(&mut self, n: usize) -> Option<&mut [u32]> {
-        let start = self.next_primitive;
-        let end = self.next_primitive + n;
-        if end < self.data.len() {
-            self.next_primitive = end;
-            Some(&mut self.data[start..end])
-        } else {
-            None
+impl<const N: usize> InnerBuffer<N> {
+    pub fn new() -> Self {
+        InnerBuffer {
+            data: [0; N],
+            next: 0,
         }
     }
 }
@@ -92,8 +84,8 @@ impl<const N: usize> OT<N> {
         &self.entries[n]
     }
 
-    pub fn add_prim<T>(&mut self, z: usize, prim: &mut Packet<T>) -> &mut Self {
-        let tag = prim.as_mut() as *mut _ as *mut u32;
+    pub fn add_prim<T: Primitive>(&mut self, z: usize, prim: &mut T) -> &mut Self {
+        let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;
             *tag |= self.entries[z];

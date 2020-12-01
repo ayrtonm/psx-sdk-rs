@@ -1,4 +1,6 @@
-use super::{Allocatable, Packet};
+use core::mem::size_of;
+
+use super::{Buffer, Primitive};
 use crate::gpu::color::Color;
 use crate::gpu::vertex::Vertex;
 
@@ -20,21 +22,18 @@ pub struct PolyF4 {
 
 macro_rules! impl_PolyF {
     ($n:expr, $name:ident, $cmd:expr) => {
-        impl Allocatable for $name {
-            fn cmd(&mut self) -> &mut Self {
-                self.cmd = $cmd;
-                self
-            }
-
-            fn len(&mut self, len: usize) -> &mut Self {
-                self.tag = (len as u32) << 24;
-                self
+        impl Primitive for $name {}
+        #[allow(non_snake_case)]
+        impl<const N: usize> Buffer<N> {
+            pub fn $name(&self) -> Option<&mut $name> {
+                self.alloc::<$name>().map(|prim| prim.init())
             }
         }
-
         impl $name {
-            pub fn packet(&mut self) -> Packet<Self> {
-                Packet(self as *mut Self)
+            pub fn init(&mut self) -> &mut Self {
+                self.cmd = $cmd;
+                self.tag = (size_of::<Self>() as u32 / 4) << 24;
+                self
             }
 
             pub fn vertices<T>(&mut self, vertices: [T; $n]) -> &mut Self
