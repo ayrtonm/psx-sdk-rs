@@ -1,5 +1,8 @@
 #![no_std]
-#![feature(min_const_generics, type_alias_impl_trait, bool_to_option, array_map)]
+// Pretty much required to implement certain things
+#![feature(min_const_generics)]
+// Could probably get away with not using these if necessary
+#![feature(bool_to_option, array_map, type_alias_impl_trait)]
 // Only used for bios trampolines so far
 #![feature(asm, naked_functions)]
 #![feature(alloc_error_handler)]
@@ -14,15 +17,9 @@ pub mod interrupt;
 #[macro_use]
 pub mod macros;
 pub mod mmio;
+mod panic;
 pub mod tim;
 pub mod unzip;
-
-use core::panic::PanicInfo;
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    loop {}
-}
 
 pub fn delay(n: u32) {
     for _ in 0..n {

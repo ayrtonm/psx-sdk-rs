@@ -51,10 +51,10 @@ macro_rules! unzipped_size {
 #[macro_export]
 macro_rules! unzip_now {
     ($file:literal) => {{
-        use $crate::unzip::decompress;
+        use $crate::unzip::unzip;
         use $crate::{include_u32, unzipped_size};
         const N: usize = unzipped_size!($file);
-        decompress(include_u32!($file)) as [u32; N]
+        unzip(include_u32!($file)) as [u32; N]
     }};
 }
 
@@ -71,6 +71,9 @@ macro_rules! unzip {
     }};
 }
 
+// Lazily loads a tim. The closure in the Lazy constructor is not allowed to
+// capture anything since it's being coerced to an fn pointer. This is why it
+// has to be a macro instead of a function.
 #[macro_export]
 macro_rules! tim {
     ($data:expr) => {{

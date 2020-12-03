@@ -1,6 +1,6 @@
 use core::cell::UnsafeCell;
 use core::mem::{size_of, transmute};
-use core::slice::from_raw_parts;
+use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 pub mod linef;
 pub mod lineg;
@@ -12,6 +12,7 @@ pub mod sprt;
 pub mod tile;
 
 impl Primitive for tile::Tile {}
+impl Primitive for polyft::PolyFT4 {}
 impl Primitive for Packet<tile::Tile> {}
 
 #[repr(C)]
@@ -30,6 +31,11 @@ pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {
         let size = size_of::<Self>() / 4;
         unsafe { from_raw_parts(self as *const Self as *const u32, size) }
+    }
+    // Use this to unzip a file into a buffer-allocated primitive
+    fn as_mut_slice(&mut self) -> &mut [u32] {
+        let size = size_of::<Self>() / 4;
+        unsafe { from_raw_parts_mut(self as *mut Self as *mut u32, size) }
     }
 }
 

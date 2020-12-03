@@ -20,7 +20,7 @@ pub struct PolyFT3 {
 
 #[repr(C)]
 pub struct PolyFT4 {
-    pub tag: u32,
+    //pub tag: u32,
     pub color: Color,
     pub cmd: u8,
     pub v0: Vertex,

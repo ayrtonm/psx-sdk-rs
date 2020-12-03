@@ -33,7 +33,7 @@ impl<'a> TIM<'a> {
 
     pub fn texpage(&self) -> TexPage {
         let bmp = self.bitmap().offset();
-        (bmp.x() as u8 / 64, (bmp.y() / 256) as u8, self.bpp()).into()
+        ((bmp.x() / 64) as u8, (bmp.y() / 256) as u8, self.bpp()).into()
     }
 
     pub fn clut(&self) -> Option<Clut> {

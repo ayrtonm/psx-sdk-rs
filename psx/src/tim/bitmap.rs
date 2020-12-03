@@ -6,7 +6,7 @@ pub struct Bitmap<'a> {
 
 impl<'a> Bitmap<'a> {
     pub fn new(src: &'a mut [u32]) -> (Self, &'a mut [u32]) {
-        let words = (src[0] as usize / 4) + 1;
+        let words = src[0] as usize / 4;
         src[0] = 0xA0 << 24;
         let (data, other) = src.split_at_mut(words);
         (Bitmap { data }, other)
@@ -17,7 +17,7 @@ impl<'a> Bitmap<'a> {
     }
 
     pub(super) fn offset(&self) -> Vertex {
-        (self.data[2] as Pixel, (self.data[2] >> 16) as Pixel).into()
+        (self.data[1] as Pixel, (self.data[1] >> 16) as Pixel).into()
     }
 
     //fn body(&self) -> &[u32] {

@@ -13,6 +13,12 @@ impl From<(u8, u8)> for TexCoord {
 #[repr(C)]
 pub struct Clut(u16);
 
+impl From<Option<Clut>> for Clut {
+    fn from(maybe_clut: Option<Clut>) -> Clut {
+        maybe_clut.unwrap_or(Clut(0))
+    }
+}
+
 impl From<(u8, i16)> for Clut {
     fn from((x, y): (u8, i16)) -> Self {
         Clut((y << 6) as u16 | x as u16)
