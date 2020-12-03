@@ -11,8 +11,10 @@ pub mod polygt;
 pub mod sprt;
 pub mod tile;
 
+// These should all be moved to their respective locations
 impl Primitive for tile::Tile {}
 impl Primitive for polyft::PolyFT4 {}
+// Is this necessary/warranted?
 impl Primitive for Packet<tile::Tile> {}
 
 #[repr(C)]

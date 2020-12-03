@@ -11,8 +11,8 @@ macro_rules! include_u8 {
     ($file:literal) => {{
         use $crate::file_size;
         const N: usize = file_size!($file);
-        const ar: [u8; N] = *include_bytes!($file);
-        ar
+        const AR: [u8; N] = *include_bytes!($file);
+        AR
     }};
 }
 
@@ -21,8 +21,8 @@ macro_rules! include_u16 {
     ($file:literal) => {{
         use $crate::{file_size, include_u8};
         const N: usize = file_size!($file) / 2;
-        const ar: [u16; N] = unsafe { core::mem::transmute(include_u8!($file)) };
-        ar
+        const AR: [u16; N] = unsafe { core::mem::transmute(include_u8!($file)) };
+        AR
     }};
 }
 
@@ -31,8 +31,8 @@ macro_rules! include_u32 {
     ($file:literal) => {{
         use $crate::{file_size, include_u8};
         const N: usize = file_size!($file) / 4;
-        const ar: [u32; N] = unsafe { core::mem::transmute(include_u8!($file)) };
-        ar
+        const AR: [u32; N] = unsafe { core::mem::transmute(include_u8!($file)) };
+        AR
     }};
 }
 

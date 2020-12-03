@@ -1,4 +1,5 @@
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct TexCoord {
     x: u8,
     y: u8,
@@ -11,6 +12,7 @@ impl From<(u8, u8)> for TexCoord {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct Clut(u16);
 
 impl From<Option<Clut>> for Clut {
@@ -33,6 +35,7 @@ pub enum Bpp {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct TexPage(u16);
 
 impl From<(u8, u8)> for TexPage {

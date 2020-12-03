@@ -1,6 +1,8 @@
 #![no_std]
 // Pretty much required to implement certain things
 #![feature(min_const_generics)]
+// TODO: Is there an alternative to access the panic message or work with the payload instead?
+#![feature(panic_info_message, fmt_as_str)]
 // Could probably get away with not using these if necessary
 #![feature(bool_to_option, array_map, type_alias_impl_trait)]
 // Only used for bios trampolines so far
@@ -18,6 +20,7 @@ pub mod interrupt;
 pub mod macros;
 pub mod mmio;
 mod panic;
+pub mod printer;
 pub mod tim;
 pub mod unzip;
 

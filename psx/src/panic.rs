@@ -1,22 +1,32 @@
+use crate::framebuffer::{Framebuffer, UnsafeFramebuffer};
+use crate::gpu::color::Color;
+use crate::mmio::{dma, gpu};
+use crate::printer::{Printer, UnsafePrinter};
 use core::panic::PanicInfo;
 
-use crate::mmio::gpu;
-use crate::gpu::color::Color;
-use crate::gpu::primitive::tile::Tile;
-
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    let (mut gp0, mut gp1) = unsafe {
-        (gpu::GP0::new(), gpu::GP1::new())
+fn panic(panic_info: &PanicInfo) -> ! {
+    let (mut gp0, mut gp1, mut otc_dma, mut gpu_dma, mut dma_control) = unsafe {
+        (
+            gpu::GP0::new(),
+            gpu::GP1::new(),
+            dma::otc::Channel::new(),
+            dma::gpu::Channel::new(),
+            dma::Control::new(),
+        )
     };
+
+    let mut printer = UnsafePrinter::<1024>::new((0, 0), (8, 16), (0, 0), (320, 240), Color::WHITE);
+    let mut fb = UnsafeFramebuffer::new((0, 0), (0, 240), (320, 240));
+
+    dma_control.gpu(true).otc(true);
+    // TODO: Why is the Framebuffer constructor not taking care of this?
     gp0.start((0, 0)).end((320, 240)).offset((0, 0));
-    gp1.start((0, 0));
-    let clear_screen = Tile {
-        color: Color::INDIGO,
-        cmd: 0x60,
-        offset: (0, 0).into(),
-        size: (320, 240).into(),
-    };
-    gp0.send(&clear_screen);
+    printer.load_font();
+    let s = panic_info.message().unwrap().as_str().unwrap();
+    let x = s.chars().map(|c| c as u32 as u8);
+    //printer.print(b"hello".iter());
+    printer.print(x);
+    fb.swap();
     loop {}
 }

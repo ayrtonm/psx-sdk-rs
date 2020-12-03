@@ -35,6 +35,9 @@ This is a preliminary list of things missing in psx (which is almost everything.
 - [ ] allocator
     - [ ] Test collections (use GNU ld for now)
     - [ ] Fix linker error for `alloc` crate with rust-lld
+- [ ] Unzip
+    - [ ] Making TIM take a mutable array broke my lazy macros :( Fix this
+    - [ ] Add tests (for x86) to verify that future commits don't break macros
 - [ ] TIM parser
     - [x] Test CLUTs
     - [ ] Make DMA TIM loader non-blocking

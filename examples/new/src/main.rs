@@ -2,43 +2,39 @@
 #![no_main]
 #![feature(array_map, min_const_generics)]
 
-use psx::{unzip_now, include_u32};
-use psx::tim::TIM;
 use psx::framebuffer::Framebuffer;
 use psx::gpu::color::Color;
-use psx::gpu::vertex::Vertex;
 use psx::gpu::primitive;
-use psx::gpu::primitive::polyft::PolyFT4;
 use psx::gpu::primitive::polyf::PolyF4;
+use psx::gpu::primitive::polyft::PolyFT4;
+use psx::gpu::vertex::Vertex;
 use psx::interrupt::IRQ;
+use psx::printer::Printer;
+use psx::tim::TIM;
+use psx::{include_u32, unzip_now};
 
 psx::exe!();
 
 fn main(mut mmio: MMIO) {
+    panic!("this is the panic payload");
     mmio.dma_control.gpu(true).otc(true);
     let mut fb = Framebuffer::new((0, 0), (0, 240), (320, 240), &mut mmio.gp0, &mut mmio.gp1);
 
-    let mut ferris = include_u32!("../ferris.tim");
-    let tim = TIM::new(&mut ferris);
-    mmio.gp1.dma_direction(2);
-    let (tpage, clut) = mmio.gpu_dma.load_tim(&tim);
-    let polyft4 = PolyFT4 {
-        color: Color::WHITE,
-        cmd: 0x2C,
-        v0: (0, 0).into(),
-        t0: (0, 0).into(),
-        clut: clut.into(),
-        v1: (320, 0).into(),
-        t1: (255, 0).into(),
-        tpage,
-        v2: (0, 240).into(),
-        t2: (0, 255).into(),
-        _pad0: 0,
-        v3: (320, 240).into(),
-        t3: (255, 255).into(),
-        _pad1: 0,
-    };
-    mmio.gp0.send(&polyft4);
+    let mut printer = Printer::<100>::new(
+        (0, 0),
+        (8, 16),
+        (0, 0),
+        (320, 240),
+        Color::WHITE,
+        &mut mmio.otc_dma,
+    );
+    printer.load_font(&mut mmio.gp1, &mut mmio.gpu_dma);
+    //printer.print(
+    //    b"hello world!".iter(),
+    //    &mut mmio.gp0,
+    //    &mut mmio.gp1,
+    //    &mut mmio.gpu_dma,
+    //);
     fb.swap(&mut mmio.gp0, &mut mmio.gp1);
     loop {}
 
@@ -50,7 +46,6 @@ fn main(mut mmio: MMIO) {
     draw_scene2(&buffer, &mut ot);
 
     draw_scene(&buffer, &mut ot);
-    ot.add_prim(4, &mut polyft4);
     mmio.gpu_dma.prepare_ot(&mut mmio.gp1).send(&ot).wait();
 
     loop {
