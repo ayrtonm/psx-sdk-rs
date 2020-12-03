@@ -1,5 +1,4 @@
 use crate::gpu::color::Color;
-use crate::gpu::primitive::sprt::Sprt;
 use crate::gpu::primitive::{Buffer, OT};
 use crate::gpu::texture::{Clut, TexPage};
 use crate::gpu::vertex::Vertex;
@@ -7,48 +6,9 @@ use crate::mmio::register::Write;
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 
-pub struct UnsafePrinter<const N: usize> {
-    printer: Printer<N>,
-    otc_dma: dma::otc::Channel,
-    gpu_dma: dma::gpu::Channel,
-    gp0: gpu::GP0,
-    gp1: gpu::GP1,
-}
+mod wrapper;
 
-impl<const N: usize> UnsafePrinter<N> {
-    pub fn new<T, U, V, S>(
-        cursor: T, font_size: U, box_offset: V, box_size: S, color: Color,
-    ) -> Self
-    where Vertex: From<T> + From<U> + From<V> + From<S> {
-        unsafe {
-            let mut otc_dma = dma::otc::Channel::new();
-            UnsafePrinter {
-                printer: Printer::<N>::new(
-                    cursor,
-                    font_size,
-                    box_offset,
-                    box_size,
-                    color,
-                    &mut otc_dma,
-                ),
-                otc_dma,
-                gpu_dma: dma::gpu::Channel::new(),
-                gp0: gpu::GP0::new(),
-                gp1: gpu::GP1::new(),
-            }
-        }
-    }
-
-    pub fn load_font(&mut self) {
-        self.printer.load_font(&mut self.gp1, &mut self.gpu_dma)
-    }
-
-    pub fn print<'a, M>(&mut self, msg: M)
-    where M: Iterator<Item = u8> {
-        self.printer
-            .print(msg, &mut self.gp0, &mut self.gp1, &mut self.gpu_dma)
-    }
-}
+pub use wrapper::UnsafePrinter as UnsafePrinter;
 
 pub struct Printer<const N: usize> {
     // Where the font is stored
@@ -62,12 +22,12 @@ pub struct Printer<const N: usize> {
     font_size: Vertex,
     box_offset: Vertex,
     box_size: Vertex,
-    color: Color,
+    color: Option<Color>,
 }
 
 impl<const N: usize> Printer<N> {
     pub fn new<T, U, V, S>(
-        cursor: T, font_size: U, box_offset: V, box_size: S, color: Color,
+        cursor: T, font_size: U, box_offset: V, box_size: S, color: Option<Color>,
         otc_dma: &mut dma::otc::Channel,
     ) -> Self
     where
@@ -78,7 +38,7 @@ impl<const N: usize> Printer<N> {
         let box_offset = Vertex::from(box_offset);
         let box_size = Vertex::from(box_size);
         let buffer = Buffer::<N>::new();
-        let mut ot = OT::<1>::new();
+        let ot = OT::<1>::new();
         otc_dma.clear(&ot).wait();
         Printer {
             tpage: None,
@@ -96,7 +56,7 @@ impl<const N: usize> Printer<N> {
     }
 
     pub fn load_font(&mut self, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel) {
-        let mut font = unzip_now!("../font.tim.zip");
+        let mut font = unzip_now!("../../font.tim.zip");
         let tim = TIM::new(&mut font);
         gp1.dma_direction(2);
         let (tpage, clut) = gpu_dma.load_tim(&tim);
@@ -133,7 +93,7 @@ impl<const N: usize> Printer<N> {
                     .buffer
                     .Sprt()
                     .unwrap()
-                    .color(Color::WHITE)
+                    .color(self.color.unwrap_or(Color::WHITE))
                     .offset(self.cursor.shift(self.box_offset))
                     .t0((xoffset, yoffset))
                     .clut(self.clut)
