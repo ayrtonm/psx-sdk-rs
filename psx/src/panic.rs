@@ -23,7 +23,13 @@ fn panic(panic_info: &PanicInfo) -> ! {
     // TODO: Why is the Framebuffer constructor not taking care of this?
     gp0.start((0, 0)).end((320, 240)).offset((0, 0));
     printer.load_font();
-    let s = panic_info.message().unwrap().as_str().unwrap();
+
+    // TODO: fix and test alloc to get better messages
+    let s = &panic_info
+        .message()
+        .unwrap()
+        .as_str()
+        .unwrap_or("panic msg contained formatted arguments");
     let x = s.chars().map(|c| c as u32 as u8);
     //printer.print(b"hello".iter());
     printer.print(x);
