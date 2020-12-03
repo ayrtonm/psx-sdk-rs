@@ -16,27 +16,8 @@ use psx::{include_u32, unzip_now};
 psx::exe!();
 
 fn main(mut mmio: MMIO) {
-    panic!("this is the panic payload");
     mmio.dma_control.gpu(true).otc(true);
     let mut fb = Framebuffer::new((0, 0), (0, 240), (320, 240), &mut mmio.gp0, &mut mmio.gp1);
-
-    let mut printer = Printer::<100>::new(
-        (0, 0),
-        (8, 16),
-        (0, 0),
-        (320, 240),
-        Color::WHITE,
-        &mut mmio.otc_dma,
-    );
-    printer.load_font(&mut mmio.gp1, &mut mmio.gpu_dma);
-    //printer.print(
-    //    b"hello world!".iter(),
-    //    &mut mmio.gp0,
-    //    &mut mmio.gp1,
-    //    &mut mmio.gpu_dma,
-    //);
-    fb.swap(&mut mmio.gp0, &mut mmio.gp1);
-    loop {}
 
     let buffer = primitive::Buffer::<100>::new();
     let mut ot = primitive::OT::<8>::new();
@@ -55,6 +36,8 @@ fn main(mut mmio: MMIO) {
         mmio.int_stat.ack(IRQ::Vblank);
 
         fb.swap(&mut mmio.gp0, &mut mmio.gp1);
+        psx::delay(10000000);
+        panic!("panicked");
         mmio.gpu_stat.sync();
     }
 }
