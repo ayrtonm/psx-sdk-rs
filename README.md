@@ -79,7 +79,7 @@ for more options.
 
 psx::exe!();
 
-fn main(mut io: IO) {
+fn main(mut mmio: MMIO) {
 }
 ```
 
