@@ -3,9 +3,9 @@
 #![feature(array_map, min_const_generics)]
 
 use psx::framebuffer::Framebuffer;
-use psx::gpu::primitive;
-use psx::gpu::primitive::polyf::PolyF4;
-use psx::gpu::primitive::polyft::PolyFT4;
+use psx::gpu::prim;
+use psx::gpu::prim::polyf::PolyF4;
+use psx::gpu::prim::polyft::PolyFT4;
 use psx::gpu::{Color, Vertex};
 use psx::interrupt::IRQ;
 use psx::printer::Printer;
@@ -18,8 +18,8 @@ fn main(mut mmio: MMIO) {
     mmio.dma_control.gpu(true).otc(true);
     let mut fb = Framebuffer::new((0, 0), (0, 240), (320, 240), &mut mmio.gp0, &mut mmio.gp1);
 
-    let buffer = primitive::Buffer::<100>::new();
-    let mut ot = primitive::OT::<8>::new();
+    let buffer = prim::Buffer::<100>::new();
+    let mut ot = prim::OT::<8>::new();
 
     mmio.otc_dma.clear(&ot).wait();
 
@@ -42,14 +42,14 @@ fn main(mut mmio: MMIO) {
 }
 
 fn draw_scene<const N: usize, const M: usize>(
-    buffer: &primitive::Buffer<N>, ot: &mut primitive::OT<M>,
+    buffer: &prim::Buffer<N>, ot: &mut prim::OT<M>,
 ) {
     #[repr(C)]
     struct Composite {
-        pub a: primitive::polyf::PolyF3,
-        pub b: primitive::polyf::PolyF4,
+        pub a: prim::polyf::PolyF3,
+        pub b: prim::polyf::PolyF4,
     }
-    impl primitive::Init for Composite {
+    impl prim::Init for Composite {
         fn init(&mut self) {
             self.a.cmd();
             self.b.cmd();
@@ -70,14 +70,14 @@ fn draw_scene<const N: usize, const M: usize>(
 }
 
 fn draw_scene2<const N: usize, const M: usize>(
-    buffer: &primitive::Buffer<N>, ot: &mut primitive::OT<M>,
+    buffer: &prim::Buffer<N>, ot: &mut prim::OT<M>,
 ) {
     let prim0 = buffer
         .PolyF3()
         .unwrap()
         .vertices([(25, 25), (75, 0), (75, 100)])
         .color(Color::RED);
-    let buffer2 = primitive::Buffer::<20>::new();
+    let buffer2 = prim::Buffer::<20>::new();
     let prim1 = buffer2
         .PolyF4()
         .unwrap()

@@ -1,7 +1,7 @@
 mod color;
 pub mod gp0;
 pub mod gp1;
-pub mod primitive;
+pub mod prim;
 pub mod stat;
 mod texture;
 mod vertex;

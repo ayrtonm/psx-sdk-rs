@@ -1,5 +1,5 @@
 use super::{BaseAddress, BlockControl, ChannelControl, Step, SyncMode, Transfer};
-use crate::gpu::primitive::OT;
+use crate::gpu::prim::OT;
 use crate::mmio::dma;
 
 impl dma::otc::Channel {

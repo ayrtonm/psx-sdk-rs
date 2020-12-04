@@ -1,11 +1,11 @@
-use super::primitive::Primitive;
+use super::prim::Primitive;
 use super::vertex::Vertex;
 use crate::mmio::gpu;
 use crate::mmio::register::Write;
 
 impl gpu::GP0 {
-    pub fn send<T: Primitive>(&mut self, primitive: &T) -> &mut Self {
-        for &word in primitive.as_slice() {
+    pub fn send<T: Primitive>(&mut self, prim: &T) -> &mut Self {
+        for &word in prim.as_slice() {
             unsafe {
                 self.write(word);
             }

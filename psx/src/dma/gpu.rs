@@ -1,6 +1,6 @@
 use super::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, Step, SyncMode};
 use crate::dma::dummy_transfer;
-use crate::gpu::primitive::OT;
+use crate::gpu::prim::OT;
 use crate::gpu::{Clut, TexPage};
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;

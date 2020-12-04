@@ -44,5 +44,5 @@ This is a preliminary list of things missing in psx (which is almost everything.
         - [ ] Design the GPU pipeline first to see if this fits in somewhere
 - [ ] TIM parser
     - [x] Test CLUTs
-    - [ ] Make DMA TIM loader non-blocking
+    - [x] Make DMA TIM loader non-blocking
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)

@@ -34,7 +34,7 @@ pub trait Primitive: Sized {
         let size = size_of::<Self>() / 4;
         unsafe { from_raw_parts(self as *const Self as *const u32, size) }
     }
-    // Use this to unzip a file into a buffer-allocated primitive
+    // Use this to unzip a file into a buffer-allocated prim
     fn as_mut_slice(&mut self) -> &mut [u32] {
         let size = size_of::<Self>() / 4;
         unsafe { from_raw_parts_mut(self as *mut Self as *mut u32, size) }
@@ -47,7 +47,7 @@ pub trait Init {
 
 impl<T> Primitive for T where T: Init {}
 
-/// A bump allocator for a single-buffered primitive array.
+/// A bump allocator for a single-buffered prim array.
 pub struct Buffer<const N: usize> {
     cell: UnsafeCell<InnerBuffer<N>>,
 }
