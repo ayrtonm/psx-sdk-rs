@@ -58,12 +58,18 @@ impl<const N: usize> Printer<N> {
     pub fn load_font(&mut self, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel) {
         let mut font = unzip_now!("../../font.tim.zip");
         let tim = TIM::new(&mut font);
+        // TODO: wtf is a 2? use an enum here
         gp1.dma_direction(2);
-        let (tpage, clut) = gpu_dma.load_tim(&tim);
+        let transfer = gpu_dma.load_tim(&tim);
+        let next_transfer = transfer.wait();
+        let (tpage, clut) = next_transfer(gpu_dma, &tim).wait();
         self.tpage = Some(tpage);
         self.clut = clut;
     }
 
+    // TODO: figure out at which point it makes the most sense to set the TexPage
+    // (probably once per call to print)
+    // TODO: I shouldn't be calling `write`, add a method to GP0 instead
     pub fn set_texpage(&self, gp0: &mut gpu::GP0) {
         unsafe {
             gp0.write(0xe1 << 24 | 0xa | (0 << 4));

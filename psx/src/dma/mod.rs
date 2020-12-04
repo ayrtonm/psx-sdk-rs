@@ -160,6 +160,15 @@ pub trait ChannelControl: Update {
     }
 }
 
+pub fn dummy_transfer<C: ChannelControl, T: Copy>(
+    channel_control: &C, result: T,
+) -> Transfer<C, T> {
+    Transfer {
+        channel_control,
+        result,
+    }
+}
+
 #[must_use]
 pub struct Transfer<'a, C: ChannelControl + ?Sized, T: Copy> {
     channel_control: &'a C,
