@@ -6,6 +6,7 @@ use crate::tim::TIM;
 
 // Let's make these methods more readable
 type Transfer<'a, T> = super::Transfer<'a, dma::gpu::ChannelControl, T>;
+type MaybeTransfer<'a, T> = super::MaybeTransfer<'a, dma::gpu::ChannelControl, T>;
 
 impl dma::gpu::Channel {
     pub fn prepare_ot(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
@@ -28,9 +29,9 @@ impl dma::gpu::Channel {
         self.channel_control.start(ot)
     }
 
-    pub fn load_tim(
+    pub fn load_tim<'a>(
         &mut self, tim: &TIM,
-    ) -> Transfer<for<'a> fn(&'a mut Self, &'a TIM) -> Transfer<'a, (TexPage, Option<Clut>)>> {
+    ) -> Transfer<fn(&'a mut Self, &'a TIM) -> MaybeTransfer<'a, (TexPage, Option<Clut>)>> {
         self.channel_control
             .set_direction(Direction::FromMemory)
             .set_step(Step::Forward)
@@ -45,14 +46,13 @@ impl dma::gpu::Channel {
             let texpage = tim.texpage();
             let clut = tim.clut();
             let result = (texpage, clut);
-            match tim.clut_bitmap() {
-                Some(clut) => {
+            tim.clut_bitmap()
+                .map(move |clut| {
                     gpu_dma.base_address.set(clut.data().as_ptr());
                     gpu_dma.block_control.set(clut.data().len());
-                    gpu_dma.channel_control.start(result)
-                },
-                None => Transfer::dummy(&mut gpu_dma.channel_control, result),
-            }
+                    MaybeTransfer::Transfer(gpu_dma.channel_control.start(result))
+                })
+                .unwrap_or(MaybeTransfer::Result(result))
         })
     }
 }

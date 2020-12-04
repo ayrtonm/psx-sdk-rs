@@ -1,6 +1,6 @@
 use core::ptr::{read_volatile, write_volatile};
 
-pub trait Address {
+pub trait Address: Sized {
     const ADDRESS: u32;
 }
 

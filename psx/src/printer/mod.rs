@@ -1,3 +1,4 @@
+use crate::dma::MaybeTransfer;
 use crate::gpu::prim::{Buffer, OT};
 use crate::gpu::Color;
 use crate::gpu::Vertex;
@@ -64,7 +65,7 @@ impl<const N: usize> Printer<N> {
         gp1.dma_direction(2);
         let transfer = gpu_dma.load_tim(&tim);
         let next_transfer = transfer.wait();
-        let (tpage, clut) = next_transfer(gpu_dma, &tim).wait();
+        let (tpage, clut) = next_transfer(gpu_dma, &tim).maybe_wait();
         self.tpage = Some(tpage);
         self.clut = clut;
     }

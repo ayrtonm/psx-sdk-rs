@@ -161,19 +161,12 @@ pub trait ChannelControl: Update {
 }
 
 #[must_use]
-pub struct Transfer<'a, C: ChannelControl + ?Sized, T> {
+pub struct Transfer<'a, C: ChannelControl, T> {
     channel_control: &'a C,
     result: T,
 }
 
 impl<'a, C: ChannelControl, T> Transfer<'a, C, T> {
-    pub fn dummy(channel_control: &'a C, result: T) -> Self {
-        Transfer {
-            channel_control,
-            result,
-        }
-    }
-
     pub fn busy(&self) -> bool {
         self.channel_control.busy()
     }
@@ -185,6 +178,27 @@ impl<'a, C: ChannelControl, T> Transfer<'a, C, T> {
 
     pub fn consume(self) -> T {
         self.result
+    }
+}
+
+pub enum MaybeTransfer<'a, C: ChannelControl, T> {
+    Transfer(Transfer<'a, C, T>),
+    Result(T),
+}
+
+impl<'a, C: ChannelControl, T> MaybeTransfer<'a, C, T> {
+    pub fn maybe_wait(self) -> T {
+        match self {
+            MaybeTransfer::Transfer(t) => t.wait(),
+            MaybeTransfer::Result(res) => res,
+        }
+    }
+
+    pub fn consume(self) -> T {
+        match self {
+            MaybeTransfer::Transfer(t) => t.consume(),
+            MaybeTransfer::Result(res) => res,
+        }
     }
 }
 

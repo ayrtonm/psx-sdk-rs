@@ -15,14 +15,22 @@ fn panic(panic_info: &PanicInfo) -> ! {
     // Printer somehow dma_control.gpu(true).otc(true);
     // TODO: Why is the Framebuffer constructor not taking care of this?
     gp0.start((0, 0)).end((320, 240)).offset((0, 0));
+    // Based on an extremely rough analysis using --release, --lto and --no-pad...
+    // 6143 - 2275 = 3868B
+    // 2660B of this is just font.tim.zip
+    // That still leaves 1208B though
     printer.load_font();
 
     // TODO: fix and test alloc to get better messages
+    // I cannot stress enough how rough this analysis is, but it does seem like
+    // this is the heaviest part of this panic handler
+    // 10354 - 6143 = 4211B
     let s = &panic_info
         .message()
         .unwrap()
         .as_str()
         .unwrap_or("panic msg contained formatted arguments");
+    // 11210 - 10354 = 856B
     printer.print(s.as_bytes());
     fb.swap();
     loop {}
