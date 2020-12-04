@@ -1,5 +1,4 @@
 use super::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, Step, SyncMode};
-use crate::dma::dummy_transfer;
 use crate::gpu::prim::OT;
 use crate::gpu::{Clut, TexPage};
 use crate::mmio::{dma, gpu};
@@ -52,7 +51,7 @@ impl dma::gpu::Channel {
                     gpu_dma.block_control.set(clut.data().len());
                     gpu_dma.channel_control.start(result)
                 },
-                None => dummy_transfer(&mut gpu_dma.channel_control, result),
+                None => Transfer::dummy(&mut gpu_dma.channel_control, result),
             }
         })
     }

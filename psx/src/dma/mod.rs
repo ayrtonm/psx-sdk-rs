@@ -166,14 +166,14 @@ pub struct Transfer<'a, C: ChannelControl + ?Sized, T> {
     result: T,
 }
 
-pub fn dummy_transfer<C: ChannelControl, T>(channel_control: &C, result: T) -> Transfer<C, T> {
-    Transfer {
-        channel_control,
-        result,
+impl<'a, C: ChannelControl, T> Transfer<'a, C, T> {
+    pub fn dummy(channel_control: &'a C, result: T) -> Self {
+        Transfer {
+            channel_control,
+            result,
+        }
     }
-}
 
-impl<C: ChannelControl, T> Transfer<'_, C, T> {
     pub fn busy(&self) -> bool {
         self.channel_control.busy()
     }
