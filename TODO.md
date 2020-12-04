@@ -3,15 +3,20 @@
 This is a preliminary list of things missing in psx (which is almost everything...)
 
 - [ ] GPU
+    - [ ] Pipeline
+        - [ ] Double buffering
+            - [ ] Think of a good way to swap all primitives at once. All primitives borrow Buffer so maybe checking a bool there might work
+        - [ ] Find a way to avoid rewriting T's methods for Packet<T>. Packet<T> will save 32 bits per primitive so it's definitely the way to go, but I'd rather not have to write so many methods if possible
+        - [ ] Ordering table method names could be clearer
     - [x] Textures
         - [x] Basic support
         - [x] Finish textured primitives
-    - [ ] VRAM to CPU via DMA
     - [ ] Framebuffer
-        - [x] Variable video mode, interlacing and color depth
+        - [ ] Variable video mode, interlacing and color depth
     - [x] Depth ordering tables
     - [ ] Timers
     - [ ] draw_quad with logical vertex ordering
+    - [ ] VRAM to CPU via DMA
 - [ ] GTE
     - [ ] Add coprocessor 2 asm snippets
 - [ ] MDEC
@@ -37,12 +42,14 @@ This is a preliminary list of things missing in psx (which is almost everything.
     - [ ] Fix linker error for `alloc` crate with rust-lld
 - [ ] Pretty Panic
     - [ ] Make printing panic messages a config option since it adds a whole 10 KB (even with LTO)
+        - [ ] cfg attributes worked, now how do I set a feature?
 - [ ] Unzip
-    - [ ] Making TIM take a mutable array broke my lazy macros :( Fix this
-    - [ ] Add tests (for x86) to verify that future commits don't break macros
+    - [ ] Making TIM take a mutable slice broke my lazy macros :( Fix this. Having TIM hold on to its data can work
+    - [ ] Add tests (for x86-64) to verify that future commits don't break macros
+        - [ ] There's a transmute that assumes usize == u32 that makes this difficult on x86-64, I'd like to avoid having a separate crate for tests but that might work
     - [ ] Streaming decompression
         - [ ] Design the GPU pipeline first to see if this fits in somewhere
-- [ ] TIM parser
+- [x] TIM parser
     - [x] Test CLUTs
     - [x] Make DMA TIM loader non-blocking
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
