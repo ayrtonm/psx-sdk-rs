@@ -143,7 +143,7 @@ pub trait ChannelControl: Update {
             _ => None,
         }
     }
-    fn start<T: Copy>(&mut self, result: T) -> Transfer<Self, T> {
+    fn start<T>(&mut self, result: T) -> Transfer<Self, T> {
         unsafe {
             match self.sync_mode() {
                 Some(SyncMode::Immediate) => self.update(|val| val | (1 << 24) | (1 << 28)),
@@ -160,22 +160,20 @@ pub trait ChannelControl: Update {
     }
 }
 
-pub fn dummy_transfer<C: ChannelControl, T: Copy>(
-    channel_control: &C, result: T,
-) -> Transfer<C, T> {
+#[must_use]
+pub struct Transfer<'a, C: ChannelControl + ?Sized, T> {
+    channel_control: &'a C,
+    result: T,
+}
+
+pub fn dummy_transfer<C: ChannelControl, T>(channel_control: &C, result: T) -> Transfer<C, T> {
     Transfer {
         channel_control,
         result,
     }
 }
 
-#[must_use]
-pub struct Transfer<'a, C: ChannelControl + ?Sized, T: Copy> {
-    channel_control: &'a C,
-    result: T,
-}
-
-impl<C: ChannelControl, T: Copy> Transfer<'_, C, T> {
+impl<C: ChannelControl, T> Transfer<'_, C, T> {
     pub fn busy(&self) -> bool {
         self.channel_control.busy()
     }
@@ -185,13 +183,20 @@ impl<C: ChannelControl, T: Copy> Transfer<'_, C, T> {
         self.result
     }
 
-    pub fn if_done(&self) -> Option<T> {
-        if !self.busy() {
-            Some(self.result)
+    pub fn consume(self) -> T {
+        self.result
+    }
+}
+
+#[macro_export]
+macro_rules! if_done {
+    ($transfer:expr) => {{
+        if !$transfer.busy() {
+            Some($transfer.consume())
         } else {
             None
         }
-    }
+    }};
 }
 
 macro_rules! enable_fn {
