@@ -4,10 +4,10 @@
 //! and swap buffers. While this let's us apply the borrow checker rules to I/O
 //! registers statically for compile-time errors, it is occasionally too
 //! restrictive and not very ergonomic. [`UncheckedFramebuffer`] is
-//! an alternative which stores references to [`RefCell`]s with [`GP0`] and
-//! [`GP1`] to avoid having to pass in mutable references every time we swap
-//! buffers. In exchange for this flexibility, we have to apply the borrow
-//! checker rules dynamically and get run-time errors instead.
+//! an alternative which stores references to [`RefCell`](core::cell::RefCell)s
+//! with [`GP0`] and [`GP1`] to avoid having to pass in mutable references every
+//! time we swap buffers. In exchange for this flexibility, we have to apply the
+//! borrow checker rules dynamically and get run-time errors instead.
 
 use crate::gpu::prim::tile::Tile;
 use crate::gpu::Color;

@@ -11,6 +11,11 @@ pub mod polygt;
 pub mod sprt;
 pub mod tile;
 
+// This is a submodule only while it's in development
+mod double_buffer;
+pub use double_buffer::DoubleBuffer;
+pub use double_buffer::DoublePacket;
+
 // These should all be moved to their respective locations
 impl Primitive for tile::Tile {}
 impl Primitive for polyft::PolyFT4 {}

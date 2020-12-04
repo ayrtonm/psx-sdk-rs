@@ -39,6 +39,8 @@ impl<const N: usize> Printer<N> {
         let box_size = Vertex::from(box_size);
         let buffer = Buffer::<N>::new();
         let ot = OT::<1>::new();
+        // How unnecessary is this to not lock up the GPU? In case it is needed, I could
+        // just write the single value straight to the ordering table
         otc_dma.clear(&ot).wait();
         Printer {
             tpage: None,

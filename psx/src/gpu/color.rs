@@ -3,9 +3,9 @@ type Intensity = u8;
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct Color {
-    red: Intensity,
-    green: Intensity,
-    blue: Intensity,
+    pub red: Intensity,
+    pub green: Intensity,
+    pub blue: Intensity,
 }
 
 impl Color {

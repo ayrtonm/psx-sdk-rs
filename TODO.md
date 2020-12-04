@@ -40,6 +40,8 @@ This is a preliminary list of things missing in psx (which is almost everything.
 - [ ] allocator
     - [ ] Test collections (use GNU ld for now)
     - [ ] Fix linker error for `alloc` crate with rust-lld
+- [ ] Printer
+    - [ ] Fix printer msg type to work with &str or similar
 - [ ] Pretty Panic
     - [ ] Make printing panic messages a config option since it adds a whole 10 KB (even with LTO)
         - [ ] cfg attributes worked, now how do I set a feature?
