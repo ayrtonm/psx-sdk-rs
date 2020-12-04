@@ -8,10 +8,11 @@ use core::panic::PanicInfo;
 fn panic(panic_info: &PanicInfo) -> ! {
     let mut gp0 = unsafe { gpu::GP0::new() };
 
-    let mut printer = UnsafePrinter::<1024>::new((0, 0), (8, 16), (0, 0), (320, 240), None);
-    let mut fb = UnsafeFramebuffer::new((0, 0), (0, 240), (320, 240));
+    let mut printer = UnsafePrinter::<1024>::default();
+    let mut fb = UnsafeFramebuffer::default();
 
-    //dma_control.gpu(true).otc(true);
+    // TODO: I should probably uncomment this for ePSXe, or better yet put it in
+    // Printer somehow dma_control.gpu(true).otc(true);
     // TODO: Why is the Framebuffer constructor not taking care of this?
     gp0.start((0, 0)).end((320, 240)).offset((0, 0));
     printer.load_font();

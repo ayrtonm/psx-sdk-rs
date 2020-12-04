@@ -3,6 +3,12 @@ use crate::gpu::Color;
 use crate::gpu::Vertex;
 use crate::mmio::{dma, gpu};
 
+impl<const N: usize> Default for UnsafePrinter<N> {
+    fn default() -> Self {
+        UnsafePrinter::new((0, 0), (8, 16), (0, 0), (320, 240), None)
+    }
+}
+
 pub struct UnsafePrinter<const N: usize> {
     printer: Printer<N>,
     gpu_dma: dma::gpu::Channel,

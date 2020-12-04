@@ -3,6 +3,12 @@ use crate::gpu::Vertex;
 use crate::mmio::gpu::{GP0, GP1};
 use core::cell::RefCell;
 
+impl Default for UnsafeFramebuffer {
+    fn default() -> Self {
+        UnsafeFramebuffer::new((0, 0), (0, 240), (320, 240))
+    }
+}
+
 pub struct UnsafeFramebuffer {
     fb: Framebuffer,
     gp0: GP0,
