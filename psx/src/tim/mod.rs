@@ -1,5 +1,5 @@
 use self::bitmap::Bitmap;
-use crate::gpu::texture::{Bpp, Clut, TexPage};
+use crate::gpu::{Bpp, Clut, TexPage};
 
 mod bitmap;
 

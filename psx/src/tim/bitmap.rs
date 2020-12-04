@@ -1,4 +1,4 @@
-use crate::gpu::vertex::{Pixel, Vertex};
+use crate::gpu::{Pixel, Vertex};
 
 pub struct Bitmap<'a> {
     data: &'a [u32],

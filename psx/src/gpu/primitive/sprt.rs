@@ -1,7 +1,7 @@
 use super::{Buffer, Init, Packet};
-use crate::gpu::color::Color;
-use crate::gpu::texture::{Clut, TexCoord};
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Color;
+use crate::gpu::Vertex;
+use crate::gpu::{Clut, TexCoord};
 
 #[repr(C)]
 pub struct Sprt {

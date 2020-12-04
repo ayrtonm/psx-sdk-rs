@@ -9,9 +9,9 @@
 //! buffers. In exchange for this flexibility, we have to apply the borrow
 //! checker rules dynamically and get run-time errors instead.
 
-use crate::gpu::color::Color;
 use crate::gpu::primitive::tile::Tile;
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Color;
+use crate::gpu::Vertex;
 use crate::gpu::{Depth, Vmode};
 use crate::mmio::gpu::{GP0, GP1};
 

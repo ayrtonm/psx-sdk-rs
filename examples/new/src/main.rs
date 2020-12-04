@@ -3,11 +3,10 @@
 #![feature(array_map, min_const_generics)]
 
 use psx::framebuffer::Framebuffer;
-use psx::gpu::color::Color;
 use psx::gpu::primitive;
 use psx::gpu::primitive::polyf::PolyF4;
 use psx::gpu::primitive::polyft::PolyFT4;
-use psx::gpu::vertex::Vertex;
+use psx::gpu::{Color, Vertex};
 use psx::interrupt::IRQ;
 use psx::printer::Printer;
 use psx::tim::TIM;

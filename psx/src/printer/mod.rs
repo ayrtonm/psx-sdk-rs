@@ -1,14 +1,14 @@
-use crate::gpu::color::Color;
 use crate::gpu::primitive::{Buffer, OT};
-use crate::gpu::texture::{Clut, TexPage};
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Color;
+use crate::gpu::Vertex;
+use crate::gpu::{Clut, TexPage};
 use crate::mmio::register::Write;
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 
 mod wrapper;
 
-pub use wrapper::UnsafePrinter as UnsafePrinter;
+pub use wrapper::UnsafePrinter;
 
 pub struct Printer<const N: usize> {
     // Where the font is stored

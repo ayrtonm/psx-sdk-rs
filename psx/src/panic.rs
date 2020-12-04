@@ -4,10 +4,9 @@ use crate::printer::UnsafePrinter;
 use core::panic::PanicInfo;
 
 #[panic_handler]
+//#[cfg(feature = "pretty_panic")]
 fn panic(panic_info: &PanicInfo) -> ! {
-    let mut gp0 = unsafe {
-        gpu::GP0::new()
-    };
+    let mut gp0 = unsafe { gpu::GP0::new() };
 
     let mut printer = UnsafePrinter::<1024>::new((0, 0), (8, 16), (0, 0), (320, 240), None);
     let mut fb = UnsafeFramebuffer::new((0, 0), (0, 240), (320, 240));
@@ -29,3 +28,9 @@ fn panic(panic_info: &PanicInfo) -> ! {
     fb.swap();
     loop {}
 }
+
+//#[panic_handler]
+//#[cfg(not(feature = "pretty_panic"))]
+//fn panic(panic_info: &PanicInfo) -> ! {
+//    loop {}
+//}

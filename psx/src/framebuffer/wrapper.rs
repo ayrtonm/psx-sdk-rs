@@ -1,5 +1,5 @@
 use super::Framebuffer;
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Vertex;
 use crate::mmio::gpu::{GP0, GP1};
 use core::cell::RefCell;
 

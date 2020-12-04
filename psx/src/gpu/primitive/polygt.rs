@@ -1,6 +1,6 @@
-use crate::gpu::color::Color;
-use crate::gpu::texture::{Clut, TexCoord, TexPage};
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Color;
+use crate::gpu::Vertex;
+use crate::gpu::{Clut, TexCoord, TexPage};
 
 #[repr(C)]
 pub struct PolyGT3 {

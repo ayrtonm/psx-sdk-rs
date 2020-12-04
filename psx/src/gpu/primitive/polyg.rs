@@ -1,5 +1,5 @@
-use crate::gpu::color::Color;
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Color;
+use crate::gpu::Vertex;
 
 #[repr(C)]
 pub struct PolyG3 {

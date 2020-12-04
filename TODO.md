@@ -3,15 +3,15 @@
 This is a preliminary list of things missing in psx (which is almost everything...)
 
 - [ ] GPU
-    - [ ] Textures
+    - [x] Textures
         - [x] Basic support
-        - [ ] Finish textured primitives
+        - [x] Finish textured primitives
     - [ ] VRAM to CPU via DMA
-    - [ ] draw_quad with logical vertex ordering
     - [ ] Framebuffer
         - [x] Variable video mode, interlacing and color depth
-    - [ ] Depth ordering tables
+    - [x] Depth ordering tables
     - [ ] Timers
+    - [ ] draw_quad with logical vertex ordering
 - [ ] GTE
     - [ ] Add coprocessor 2 asm snippets
 - [ ] MDEC
@@ -20,8 +20,8 @@ This is a preliminary list of things missing in psx (which is almost everything.
     - [ ] Fix ack for IRQ1..3, 7..10
     - [ ] Add relevant coprocessor 0 asm snippets
 - [ ] DMA
-    - [ ] Finish GPU channel
-    - [ ] Add other channels
+    - [x] Finish GPU channel
+    - [x] Add other channels
     - [ ] Integrate with interrupts
 - [ ] Timers
 - [ ] CDROM/ISO
@@ -40,11 +40,9 @@ This is a preliminary list of things missing in psx (which is almost everything.
 - [ ] Unzip
     - [ ] Making TIM take a mutable array broke my lazy macros :( Fix this
     - [ ] Add tests (for x86) to verify that future commits don't break macros
+    - [ ] Streaming decompression
+        - [ ] Design the GPU pipeline first to see if this fits in somewhere
 - [ ] TIM parser
     - [x] Test CLUTs
     - [ ] Make DMA TIM loader non-blocking
-- [ ] Add a panic payload
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
-- [ ] Decompressor
-    - [ ] Streaming decompression
-        - [ ] Design the GPU pipeline first to see if this fits in somewhere

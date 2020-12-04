@@ -1,10 +1,20 @@
-pub mod color;
+mod color;
 pub mod gp0;
 pub mod gp1;
 pub mod primitive;
 pub mod stat;
-pub mod texture;
-pub mod vertex;
+mod texture;
+mod vertex;
+
+pub(crate) use vertex::Pixel;
+pub use vertex::Vertex;
+
+pub use color::Color;
+
+pub use texture::Bpp;
+pub use texture::Clut;
+pub use texture::TexCoord;
+pub use texture::TexPage;
 
 pub enum Vmode {
     NTSC,

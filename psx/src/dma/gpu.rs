@@ -1,7 +1,7 @@
 use super::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, Step, SyncMode,
             Transfer};
 use crate::gpu::primitive::OT;
-use crate::gpu::texture::{Clut, TexPage};
+use crate::gpu::{Clut, TexPage};
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 

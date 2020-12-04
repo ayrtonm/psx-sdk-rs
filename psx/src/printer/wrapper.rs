@@ -1,6 +1,6 @@
 use super::Printer;
-use crate::gpu::color::Color;
-use crate::gpu::vertex::Vertex;
+use crate::gpu::Color;
+use crate::gpu::Vertex;
 use crate::mmio::{dma, gpu};
 
 pub struct UnsafePrinter<const N: usize> {
@@ -42,4 +42,3 @@ impl<const N: usize> UnsafePrinter<N> {
             .print(msg, &mut self.gp0, &mut self.gp1, &mut self.gpu_dma)
     }
 }
-
