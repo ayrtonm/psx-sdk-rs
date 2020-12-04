@@ -43,7 +43,7 @@ impl<const N: usize> UnsafePrinter<N> {
     }
 
     pub fn print<'a, M>(&mut self, msg: M)
-    where M: Iterator<Item = u8> {
+    where M: IntoIterator<Item = &'a u8> {
         self.printer
             .print(msg, &mut self.gp0, &mut self.gp1, &mut self.gpu_dma)
     }

@@ -62,7 +62,7 @@ cargo install --path .
 ## Building the demo
 
 ```
-cd examples/rotating_square
+cd examples/new
 cargo psx --release
 ```
 

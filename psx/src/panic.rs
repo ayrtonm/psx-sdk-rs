@@ -23,9 +23,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
         .unwrap()
         .as_str()
         .unwrap_or("panic msg contained formatted arguments");
-    let x = s.chars().map(|c| c as u32 as u8);
-    printer.print(b"hello".iter().map(|c| *c as u8));
-    printer.print(x);
+    printer.print(s.as_bytes());
     fb.swap();
     loop {}
 }

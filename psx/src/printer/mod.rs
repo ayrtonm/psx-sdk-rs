@@ -85,13 +85,13 @@ impl<const N: usize> Printer<N> {
     // TODO: make sure we don't overrun the buffer
     pub fn print<'a, M>(
         &mut self, msg: M, gp0: &mut gpu::GP0, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel,
-    ) where M: Iterator<Item = u8> {
+    ) where M: IntoIterator<Item = &'a u8> {
         self.set_texpage(gp0);
         let w = self.font_size.x() as u8;
         let h = self.font_size.y() as u8;
         // Assuming only one texture page is used
         let ascii_per_row = 128 / w;
-        for ascii in msg {
+        for &ascii in msg {
             if ascii == b'\n' {
                 self.newline();
             } else {
