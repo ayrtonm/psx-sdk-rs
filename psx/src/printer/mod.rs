@@ -80,7 +80,7 @@ impl<const N: usize> Printer<N> {
     }
 
     pub fn newline(&mut self) {
-        self.cursor = self.cursor.shift((0, self.font_size.y()));
+        self.cursor = self.cursor.shift((-self.cursor.x(), self.font_size.y()));
     }
 
     // TODO: make sure we don't overrun the buffer
