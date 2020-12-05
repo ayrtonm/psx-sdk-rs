@@ -90,11 +90,11 @@ impl<const N: usize> Printer<N> {
     ) where
         M: IntoIterator<Item = &'a u8>,
     {
-        fn print_char<const N: usize>(printer: &mut Printer<N>, ascii: u8) {
-            let w = printer.font_size.x() as u8;
-            let h = printer.font_size.y() as u8;
-            // Assuming only one texture page is used
-            let ascii_per_row = 128 / w;
+        let w = self.font_size.x() as u8;
+        let h = self.font_size.y() as u8;
+        // Assuming only one texture page is used
+        let ascii_per_row = 128 / w;
+        let print_char = |printer: &mut Self, ascii| {
             let xoffset = (ascii % ascii_per_row) * w;
             let yoffset = (ascii / ascii_per_row) * h;
             let letter = printer
@@ -117,37 +117,33 @@ impl<const N: usize> Printer<N> {
             } else {
                 printer.cursor = printer.cursor.shift((printer.font_size.x(), 0));
             }
-        }
+        };
         self.set_texpage(gp0);
         let mut fmt_arg = false;
+        let mut leading_zeros = false;
         let mut args = args.iter();
         for &ascii in msg {
             match ascii {
                 b'\n' => self.newline(),
                 b'\0' => break,
-                b'{' => {
-                    if fmt_arg {
-                        fmt_arg = false;
-                        print_char::<N>(self, b'{')
-                    } else {
-                        fmt_arg = true;
-                    }
+                b'0' if fmt_arg => leading_zeros = true,
+                b'{' if !fmt_arg => fmt_arg = true,
+                b'{' if fmt_arg => {
+                    fmt_arg = false;
+                    print_char(self, b'{')
                 },
-                b'}' => {
-                    if fmt_arg {
-                        fmt_arg = false;
-                        let arg = args.next().unwrap();
-                        let formatted = Self::format_u32(*arg, true);
-                        for &c in &formatted {
-                            print_char::<N>(self, c)
-                        }
-                    } else {
-                        print_char::<N>(self, b'}')
+                b'}' if fmt_arg => {
+                    fmt_arg = false;
+                    let arg = args.next().unwrap();
+                    let formatted = Self::format_u32(*arg, leading_zeros);
+                    leading_zeros = false;
+                    for &c in &formatted {
+                        print_char(self, c)
                     }
                 },
                 _ => {
                     if !fmt_arg {
-                        print_char::<N>(self, ascii)
+                        print_char(self, ascii)
                     }
                 },
             }

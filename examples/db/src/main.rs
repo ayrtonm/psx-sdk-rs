@@ -24,7 +24,7 @@ fn main(mut mmio: MMIO) {
     } else {
         printer.print(b"colors differ", []);
     };
-    printer.print(b"\nhello {} {{ } {ignore}", [0xdead_beef, 0xabcd_1234]);
+    printer.print(b"\nhello {} {{ } {0}", [0x00ad_beef, 0x00cd_1234]);
     fb.swap();
     loop {}
 }
