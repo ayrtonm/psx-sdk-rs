@@ -95,6 +95,8 @@ impl<const N: usize> Printer<N> {
         for &ascii in msg {
             if ascii == b'\n' {
                 self.newline();
+            } else if ascii == b'\0' {
+                break
             } else {
                 let xoffset = (ascii % ascii_per_row) * w;
                 let yoffset = (ascii / ascii_per_row) * h;
@@ -118,5 +120,24 @@ impl<const N: usize> Printer<N> {
             }
         }
         gpu_dma.prepare_ot(gp1).send(&self.ot).wait();
+    }
+
+    pub fn format_u32(x: u32, leading_zeros: bool) -> [u8; 10] {
+        let mut leading = !leading_zeros;
+        let mut ar = [0; 10];
+        ar[0..2].copy_from_slice(b"0x");
+        let mut j = 2;
+        for i in 0..8 {
+            let nibble = (x >> ((7 - i) * 4)) & 0xF;
+            if nibble != 0 {
+                leading = false;
+            };
+            if !leading {
+                let as_char = core::char::from_digit(nibble, 16).unwrap();
+                ar[j] = as_char as u8;
+                j += 1;
+            }
+        }
+        ar
     }
 }
