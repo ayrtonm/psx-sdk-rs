@@ -42,9 +42,9 @@ impl<const N: usize> UnsafePrinter<N> {
         self.printer.load_font(&mut self.gp1, &mut self.gpu_dma)
     }
 
-    pub fn print<'a, M>(&mut self, msg: M)
+    pub fn print<'a, M, const A: usize>(&mut self, msg: M, args: [u32; A])
     where M: IntoIterator<Item = &'a u8> {
         self.printer
-            .print(msg, &mut self.gp0, &mut self.gp1, &mut self.gpu_dma)
+            .print(msg, args, &mut self.gp0, &mut self.gp1, &mut self.gpu_dma)
     }
 }

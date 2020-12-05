@@ -2,7 +2,7 @@
 #![no_main]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::printer::UnsafePrinter;
+use psx::printer::{Printer, UnsafePrinter};
 use psx::gpu::prim::DoubleBuffer;
 use psx::gpu::Color;
 
@@ -20,10 +20,11 @@ fn main(mut mmio: MMIO) {
     let mut printer = UnsafePrinter::<256>::default();
     printer.load_font();
     if c == b.packet().color.green {
-        printer.print(b"world".iter().map(|c| *c as u8));
+        printer.print(b"colors are the same", []);
     } else {
-        printer.print(b"hello".iter().map(|c| *c as u8));
+        printer.print(b"colors differ", []);
     };
+    printer.print(b"\nhello {} {{ } {ignore}", [0xdead_beef, 0xabcd_1234]);
     fb.swap();
     loop {}
 }

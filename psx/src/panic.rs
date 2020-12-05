@@ -31,7 +31,7 @@ fn panic(panic_info: &PanicInfo) -> ! {
         .as_str()
         .unwrap_or("panic msg contained formatted arguments");
     // 11210 - 10354 = 856B
-    printer.print(s.as_bytes());
+    printer.print(s.as_bytes(), []);
     fb.swap();
     loop {}
 }

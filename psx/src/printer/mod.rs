@@ -84,39 +84,72 @@ impl<const N: usize> Printer<N> {
     }
 
     // TODO: make sure we don't overrun the buffer
-    pub fn print<'a, M>(
-        &mut self, msg: M, gp0: &mut gpu::GP0, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel,
-    ) where M: IntoIterator<Item = &'a u8> {
-        self.set_texpage(gp0);
-        let w = self.font_size.x() as u8;
-        let h = self.font_size.y() as u8;
-        // Assuming only one texture page is used
-        let ascii_per_row = 128 / w;
-        for &ascii in msg {
-            if ascii == b'\n' {
-                self.newline();
-            } else if ascii == b'\0' {
-                break
+    pub fn print<'a, M, const A: usize>(
+        &mut self, msg: M, args: [u32; A], gp0: &mut gpu::GP0, gp1: &mut gpu::GP1,
+        gpu_dma: &mut dma::gpu::Channel,
+    ) where
+        M: IntoIterator<Item = &'a u8>,
+    {
+        fn print_char<const N: usize>(printer: &mut Printer<N>, ascii: u8) {
+            let w = printer.font_size.x() as u8;
+            let h = printer.font_size.y() as u8;
+            // Assuming only one texture page is used
+            let ascii_per_row = 128 / w;
+            let xoffset = (ascii % ascii_per_row) * w;
+            let yoffset = (ascii / ascii_per_row) * h;
+            let letter = printer
+                .buffer
+                .Sprt()
+                .unwrap()
+                .color(printer.color.unwrap_or(Color::WHITE))
+                .offset(printer.cursor.shift(printer.box_offset))
+                .t0((xoffset, yoffset))
+                .clut(printer.clut)
+                .size(printer.font_size);
+            printer.ot.add_prim(0, letter);
+            if printer.cursor.x() + printer.font_size.x() >=
+                printer.box_offset.x() + printer.box_size.x()
+            {
+                printer.cursor = printer.cursor.shift((
+                    -printer.box_size.x() - printer.font_size.x(),
+                    printer.font_size.y(),
+                ));
             } else {
-                let xoffset = (ascii % ascii_per_row) * w;
-                let yoffset = (ascii / ascii_per_row) * h;
-                let letter = self
-                    .buffer
-                    .Sprt()
-                    .unwrap()
-                    .color(self.color.unwrap_or(Color::WHITE))
-                    .offset(self.cursor.shift(self.box_offset))
-                    .t0((xoffset, yoffset))
-                    .clut(self.clut)
-                    .size(self.font_size);
-                self.ot.add_prim(0, letter);
-                if self.cursor.x() + self.font_size.x() >= self.box_offset.x() + self.box_size.x() {
-                    self.cursor = self
-                        .cursor
-                        .shift((-self.box_size.x() - self.font_size.x(), self.font_size.y()));
-                } else {
-                    self.cursor = self.cursor.shift((self.font_size.x(), 0));
-                }
+                printer.cursor = printer.cursor.shift((printer.font_size.x(), 0));
+            }
+        }
+        self.set_texpage(gp0);
+        let mut fmt_arg = false;
+        let mut args = args.iter();
+        for &ascii in msg {
+            match ascii {
+                b'\n' => self.newline(),
+                b'\0' => break,
+                b'{' => {
+                    if fmt_arg {
+                        fmt_arg = false;
+                        print_char::<N>(self, b'{')
+                    } else {
+                        fmt_arg = true;
+                    }
+                },
+                b'}' => {
+                    if fmt_arg {
+                        fmt_arg = false;
+                        let arg = args.next().unwrap();
+                        let formatted = Self::format_u32(*arg, true);
+                        for &c in &formatted {
+                            print_char::<N>(self, c)
+                        }
+                    } else {
+                        print_char::<N>(self, b'}')
+                    }
+                },
+                _ => {
+                    if !fmt_arg {
+                        print_char::<N>(self, ascii)
+                    }
+                },
             }
         }
         gpu_dma.prepare_ot(gp1).send(&self.ot).wait();
