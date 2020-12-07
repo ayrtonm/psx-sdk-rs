@@ -1,4 +1,4 @@
-use super::{Buffer, Init, Packet};
+use super::{Buffer, DoubleBuffer, DoublePacket, Init, Packet};
 use crate::gpu::Color;
 use crate::gpu::Vertex;
 use crate::gpu::{Clut, TexCoord};
@@ -7,7 +7,7 @@ use crate::gpu::{Clut, TexCoord};
 pub struct Sprt {
     //pub tag: u32,
     pub color: Color,
-    pub cmd: u8,
+    cmd: u8,
     pub offset: Vertex,
     pub t0: TexCoord,
     pub clut: Clut,
@@ -16,9 +16,8 @@ pub struct Sprt {
 
 #[repr(C)]
 pub struct Sprt8 {
-    pub tag: u32,
     pub color: Color,
-    pub cmd: u8,
+    cmd: u8,
     pub offset: Vertex,
     pub t0: TexCoord,
     pub clut: Clut,
@@ -26,9 +25,8 @@ pub struct Sprt8 {
 
 #[repr(C)]
 pub struct Sprt16 {
-    pub tag: u32,
     pub color: Color,
-    pub cmd: u8,
+    cmd: u8,
     pub offset: Vertex,
     pub t0: TexCoord,
     pub clut: Clut,
@@ -43,6 +41,13 @@ impl Init for Sprt {
 #[allow(non_snake_case)]
 impl<const N: usize> Buffer<N> {
     pub fn Sprt(&self) -> Option<&mut Packet<Sprt>> {
+        self.alloc::<Sprt>()
+    }
+}
+
+#[allow(non_snake_case)]
+impl<const N: usize> DoubleBuffer<N> {
+    pub fn Sprt(&self) -> Option<DoublePacket<Sprt>> {
         self.alloc::<Sprt>()
     }
 }

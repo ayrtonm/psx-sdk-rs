@@ -1,4 +1,4 @@
-use super::{Buffer, Init, Packet};
+use super::{Buffer, DoubleBuffer, DoublePacket, Init, Packet};
 use crate::gpu::Color;
 use crate::gpu::Vertex;
 
@@ -26,6 +26,12 @@ macro_rules! impl_PolyF {
         #[allow(non_snake_case)]
         impl<const N: usize> Buffer<N> {
             pub fn $name(&self) -> Option<&mut Packet<$name>> {
+                self.alloc::<$name>()
+            }
+        }
+        #[allow(non_snake_case)]
+        impl<const N: usize> DoubleBuffer<N> {
+            pub fn $name(&self) -> Option<DoublePacket<$name>> {
                 self.alloc::<$name>()
             }
         }

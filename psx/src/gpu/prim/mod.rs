@@ -1,5 +1,4 @@
-use core::cell::UnsafeCell;
-use core::mem::{size_of, transmute};
+use core::mem::size_of;
 use core::ops::{Deref, DerefMut};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
@@ -12,17 +11,14 @@ pub mod polygt;
 pub mod sprt;
 pub mod tile;
 
-// This is a submodule only while it's in development
-mod double_buffer;
-pub use double_buffer::DoubleBuffer;
-pub use double_buffer::DoubleOT;
-pub use double_buffer::DoublePacket;
+mod buffer;
+mod ot;
+pub use buffer::{Buffer, DoubleBuffer};
+pub use ot::{DoubleOT, OT};
 
-// These should all be moved to their respective locations
+// These should all be replaced with their respective impl Init
 impl Primitive for tile::Tile {}
 impl Primitive for polyft::PolyFT4 {}
-// Is this necessary/warranted?
-impl Primitive for Packet<tile::Tile> {}
 
 #[repr(C)]
 pub struct Packet<T> {
@@ -44,6 +40,38 @@ impl<T> DerefMut for Packet<T> {
     }
 }
 
+pub struct DoublePacket<'a, T> {
+    pub(self) packet_1: &'a mut Packet<T>,
+    pub(self) packet_2: &'a mut Packet<T>,
+    pub(self) swapped: *const bool,
+}
+
+impl<'a, T> Deref for DoublePacket<'a, T> {
+    type Target = Packet<T>;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            if *self.swapped {
+                &self.packet_1
+            } else {
+                &self.packet_2
+            }
+        }
+    }
+}
+
+impl<'a, T> DerefMut for DoublePacket<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe {
+            if *self.swapped {
+                &mut self.packet_1
+            } else {
+                &mut self.packet_2
+            }
+        }
+    }
+}
+
 pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {
         let size = size_of::<Self>() / 4;
@@ -61,92 +89,3 @@ pub trait Init {
 }
 
 impl<T> Primitive for T where T: Init {}
-
-/// A bump allocator for a single-buffered prim array.
-pub struct Buffer<const N: usize> {
-    cell: UnsafeCell<InnerBuffer<N>>,
-}
-
-struct InnerBuffer<const N: usize> {
-    data: [u32; N],
-    next: usize,
-}
-
-impl<const N: usize> Buffer<N> {
-    pub fn new() -> Self {
-        Buffer {
-            cell: UnsafeCell::new(InnerBuffer {
-                data: [0; N],
-                next: 0,
-            }),
-        }
-    }
-
-    pub fn alloc<T: Init>(&self) -> Option<&mut Packet<T>> {
-        self.generic_alloc::<Packet<T>>().map(|p| {
-            p.tag = (size_of::<Packet<T>>() as u32 / 4) << 24;
-            p.packet.init();
-            p
-        })
-    }
-
-    fn generic_alloc<T>(&self) -> Option<&mut T> {
-        unsafe {
-            let size = size_of::<T>() / 4;
-            let start = (*self.cell.get()).next;
-            let end = start + size;
-            if end < N {
-                (*self.cell.get()).next += size;
-                let slice = &mut (*self.cell.get()).data[start..end];
-                let ptr = slice.as_mut_ptr().cast::<T>();
-                ptr.as_mut()
-            } else {
-                None
-            }
-        }
-    }
-
-    pub fn empty(&mut self) {
-        unsafe {
-            (*self.cell.get()).next = 0;
-        }
-    }
-}
-
-/// A depth [ordering table](http://problemkaputt.de/psx-spx.htm#gpudepthordering)
-pub struct OT<const N: usize> {
-    entries: [u32; N],
-}
-
-impl<const N: usize> OT<N> {
-    pub fn new() -> Self {
-        OT { entries: [0; N] }
-    }
-
-    pub fn start(&self) -> usize {
-        N - 1
-    }
-
-    pub fn first_entry(&self) -> &u32 {
-        &self.entries[N - 1]
-    }
-
-    pub fn entry(&self, n: usize) -> &u32 {
-        &self.entries[n]
-    }
-
-    pub fn insert<T: Init, U>(&mut self, prim: &mut U, z: usize) -> &mut Self
-    where U: Deref<Target = Packet<T>> + DerefMut {
-        self.add_prim(prim, z)
-    }
-
-    pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {
-        let tag = prim as *mut _ as *mut u32;
-        unsafe {
-            *tag &= !0x00FF_FFFF;
-            *tag |= self.entries[z];
-            self.entries[z] = transmute::<_, u32>(tag) & 0x00FF_FFFF;
-        }
-        self
-    }
-}

@@ -3,9 +3,8 @@ use crate::gpu::Vertex;
 
 #[repr(C)]
 pub struct LineG2 {
-    pub tag: u32,
     pub color0: Color,
-    pub cmd: u8,
+    cmd: u8,
     pub v0: Vertex,
     pub color1: Color,
     pub _pad: u8,
@@ -21,7 +20,6 @@ pub struct ColoredVertex {
 
 #[repr(C)]
 pub struct LineG<const N: usize> {
-    pub tag: u32,
     pub colored_vertices: [ColoredVertex; N],
-    pub term: u32,
+    term: u32,
 }

@@ -4,9 +4,8 @@ use crate::gpu::{Clut, TexCoord, TexPage};
 
 #[repr(C)]
 pub struct PolyFT3 {
-    pub tag: u32,
     pub color: Color,
-    pub cmd: u8,
+    cmd: u8,
     pub v0: Vertex,
     pub t0: TexCoord,
     pub clut: Clut,
@@ -20,9 +19,8 @@ pub struct PolyFT3 {
 
 #[repr(C)]
 pub struct PolyFT4 {
-    //pub tag: u32,
     pub color: Color,
-    pub cmd: u8,
+    cmd: u8,
     pub v0: Vertex,
     pub t0: TexCoord,
     pub clut: Clut,
