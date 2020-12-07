@@ -2,6 +2,7 @@ use core::cell::UnsafeCell;
 use core::mem::size_of;
 
 use super::{DoublePacket, Init, Packet};
+
 /// A bump allocator for a single-buffered prim array.
 pub struct Buffer<const N: usize> {
     cell: UnsafeCell<InnerBuffer<N>>,
