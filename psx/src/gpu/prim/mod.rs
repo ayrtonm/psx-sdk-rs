@@ -2,23 +2,33 @@ use core::mem::size_of;
 use core::ops::{Deref, DerefMut};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
-pub mod linef;
-pub mod lineg;
-pub mod polyf;
-pub mod polyft;
-pub mod polyg;
-pub mod polygt;
-pub mod sprt;
-pub mod tile;
+mod primitive;
 
 mod buffer;
 mod ot;
+
+pub use primitive::PolyF3;
+pub use primitive::PolyF4;
+pub use primitive::PolyFT3;
+pub use primitive::PolyFT4;
+pub use primitive::PolyG3;
+pub use primitive::PolyG4;
+pub use primitive::PolyGT3;
+pub use primitive::PolyGT4;
+pub use primitive::LineF2;
+pub use primitive::LineF;
+pub use primitive::LineG2;
+pub use primitive::LineG;
+pub use primitive::Tile;
+pub use primitive::Tile1;
+pub use primitive::Tile8;
+pub use primitive::Tile16;
+pub use primitive::Sprt;
+pub use primitive::Sprt8;
+pub use primitive::Sprt16;
+
 pub use buffer::{Buffer, DoubleBuffer};
 pub use ot::{DoubleOT, OT};
-
-// These should all be replaced with their respective impl Init
-impl Primitive for tile::Tile {}
-impl Primitive for polyft::PolyFT4 {}
 
 #[repr(C)]
 pub struct Packet<T> {
