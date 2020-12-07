@@ -63,7 +63,7 @@ impl<const N: usize> DoubleBuffer<N> {
 pub struct DoubleOT<const N: usize> {
     ot_1: OT<N>,
     ot_2: OT<N>,
-    swapped: bool,
+    swapped: UnsafeCell<bool>,
 }
 
 impl<const N: usize> DoubleOT<N> {
@@ -71,26 +71,32 @@ impl<const N: usize> DoubleOT<N> {
         DoubleOT {
             ot_1: OT::new(),
             ot_2: OT::new(),
-            swapped: false,
+            swapped: UnsafeCell::new(false),
         }
     }
     pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {
-        if self.swapped {
-            self.ot_1.add_prim(prim, z)
-        } else {
-            self.ot_2.add_prim(prim, z)
-        };
+        unsafe {
+            if *self.swapped.get() {
+                self.ot_1.add_prim(prim, z)
+            } else {
+                self.ot_2.add_prim(prim, z)
+            };
+        }
         self
     }
-    pub fn swap(&mut self) -> &mut Self {
-        self.swapped = !self.swapped;
+    pub fn swap(&self) -> &Self {
+        unsafe {
+            *self.swapped.get() = !*self.swapped.get();
+        }
         self
     }
     pub fn ot(&self) -> &OT<N> {
-        if self.swapped {
-            &self.ot_1
-        } else {
-            &self.ot_2
+        unsafe {
+            if *self.swapped.get() {
+                &self.ot_1
+            } else {
+                &self.ot_2
+            }
         }
     }
 }

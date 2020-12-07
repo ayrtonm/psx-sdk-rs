@@ -45,7 +45,8 @@ fn main(mut mmio: MMIO) {
     // Initialize the other copy of the packet as an orange rectangle
     let p2 = poly.packet().vertices(init).color(Color::ORANGE);
     // Insert that packet into the other ordering table
-    ot.swap().add_prim(p2, 0);
+    ot.swap();
+    ot.add_prim(p2, 0);
 
     // Let's start by sending buffer 1
     buffer.swap();
@@ -62,12 +63,12 @@ fn main(mut mmio: MMIO) {
         theta += 15.0;
         poly.packet()
             .vertices(init.map(|v| rotate_point(v, theta, ((x + y) / 2, (x + y) / 2))));
+        ot.swap();
         send_ot.wait();
         gpu_stat.sync();
         psx::delay(1000000);
         fb.swap();
         //int_stat.wait(IRQ::Vblank);
-        ot.swap();
     }
 }
 
