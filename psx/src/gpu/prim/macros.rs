@@ -1,5 +1,3 @@
-#![macro_use]
-
 macro_rules! impl_prim {
     ($name:ident, $cmd:expr) => {
         impl Init for $name {
@@ -9,8 +7,8 @@ macro_rules! impl_prim {
         }
 
         #[allow(non_snake_case)]
-        impl<const N: usize> Buffer<N> {
-            pub fn $name(&self) -> Option<&mut Packet<$name>> {
+        impl<const N: usize> SingleBuffer<N> {
+            pub fn $name(&self) -> Option<&mut SinglePacket<$name>> {
                 self.alloc::<$name>()
             }
         }

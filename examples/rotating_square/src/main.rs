@@ -3,9 +3,9 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::prim::{Buffer, DoubleBuffer, DoubleOT, OT};
+use psx::gpu::prim::{DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
-use psx::interrupt::IRQ;
+//use psx::interrupt::IRQ;
 
 psx::exe!();
 
@@ -16,8 +16,8 @@ fn main(mut mmio: MMIO) {
     let gpu_dma = &mut mmio.gpu_dma;
     let gp1 = &mut mmio.gp1;
     let gpu_stat = &mut mmio.gpu_stat;
-    let int_mask = &mut mmio.int_mask;
-    let int_stat = &mut mmio.int_stat;
+    //let int_mask = &mut mmio.int_mask;
+    //let int_stat = &mut mmio.int_stat;
 
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();

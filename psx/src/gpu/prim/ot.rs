@@ -2,16 +2,16 @@ use core::cell::UnsafeCell;
 use core::mem::transmute;
 use core::ops::{Deref, DerefMut};
 
-use super::{Init, Packet};
+use super::{Init, SinglePacket};
 
 /// A depth [ordering table](http://problemkaputt.de/psx-spx.htm#gpudepthordering)
-pub struct OT<const N: usize> {
+pub struct SingleOT<const N: usize> {
     entries: [u32; N],
 }
 
-impl<const N: usize> OT<N> {
+impl<const N: usize> SingleOT<N> {
     pub fn new() -> Self {
-        OT { entries: [0; N] }
+        SingleOT { entries: [0; N] }
     }
 
     pub fn start(&self) -> usize {
@@ -27,11 +27,11 @@ impl<const N: usize> OT<N> {
     }
 
     pub fn insert<T: Init, U>(&mut self, prim: &mut U, z: usize) -> &mut Self
-    where U: Deref<Target = Packet<T>> + DerefMut {
+    where U: Deref<Target = SinglePacket<T>> + DerefMut {
         self.add_prim(prim, z)
     }
 
-    pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {
+    pub fn add_prim<T: Init>(&mut self, prim: &mut SinglePacket<T>, z: usize) -> &mut Self {
         let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;
@@ -43,16 +43,16 @@ impl<const N: usize> OT<N> {
 }
 
 pub struct DoubleOT<const N: usize> {
-    ot_1: OT<N>,
-    ot_2: OT<N>,
+    ot_1: SingleOT<N>,
+    ot_2: SingleOT<N>,
     swapped: UnsafeCell<bool>,
 }
 
 impl<const N: usize> DoubleOT<N> {
     pub fn new() -> Self {
         DoubleOT {
-            ot_1: OT::new(),
-            ot_2: OT::new(),
+            ot_1: SingleOT::new(),
+            ot_2: SingleOT::new(),
             swapped: UnsafeCell::new(false),
         }
     }
@@ -66,7 +66,7 @@ impl<const N: usize> DoubleOT<N> {
 }
 
 impl<const N: usize> Deref for DoubleOT<N> {
-    type Target = OT<N>;
+    type Target = SingleOT<N>;
 
     fn deref(&self) -> &Self::Target {
         unsafe {

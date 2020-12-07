@@ -1,7 +1,7 @@
 use core::mem::size_of;
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
-use crate::gpu::{Clut, Color, TexCoord, TexPage, Vertex};
+use crate::gpu::{Clut, Color, TexCoord, Vertex};
 
 #[macro_use]
 mod macros;
@@ -30,9 +30,9 @@ pub use primitive::Tile1;
 pub use primitive::Tile16;
 pub use primitive::Tile8;
 
-pub use buffer::{Buffer, DoubleBuffer};
-pub use ot::{DoubleOT, OT};
-pub use packet::{DoublePacket, Packet};
+pub use buffer::{DoubleBuffer, SingleBuffer};
+pub use ot::{DoubleOT, SingleOT};
+pub use packet::{DoublePacket, SinglePacket};
 
 pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {

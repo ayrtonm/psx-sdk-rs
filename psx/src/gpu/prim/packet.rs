@@ -1,12 +1,12 @@
 use core::ops::{Deref, DerefMut};
 
 #[repr(C)]
-pub struct Packet<T> {
+pub struct SinglePacket<T> {
     pub(crate) tag: u32,
     pub(crate) packet: T,
 }
 
-impl<T> Deref for Packet<T> {
+impl<T> Deref for SinglePacket<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -14,20 +14,20 @@ impl<T> Deref for Packet<T> {
     }
 }
 
-impl<T> DerefMut for Packet<T> {
+impl<T> DerefMut for SinglePacket<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.packet
     }
 }
 
 pub struct DoublePacket<'a, T> {
-    pub(crate) packet_1: &'a mut Packet<T>,
-    pub(crate) packet_2: &'a mut Packet<T>,
+    pub(crate) packet_1: &'a mut SinglePacket<T>,
+    pub(crate) packet_2: &'a mut SinglePacket<T>,
     pub(crate) swapped: *const bool,
 }
 
 impl<'a, T> Deref for DoublePacket<'a, T> {
-    type Target = Packet<T>;
+    type Target = SinglePacket<T>;
 
     fn deref(&self) -> &Self::Target {
         unsafe {

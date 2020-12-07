@@ -1,4 +1,4 @@
-use crate::gpu::prim::{Buffer, OT};
+use crate::gpu::prim::{SingleBuffer, SingleOT};
 use crate::gpu::Color;
 use crate::gpu::Vertex;
 use crate::gpu::{Clut, TexPage};
@@ -15,8 +15,8 @@ pub struct Printer<const N: usize> {
     tpage: Option<TexPage>,
     clut: Option<Clut>,
 
-    buffer: Buffer<N>,
-    ot: OT<1>,
+    buffer: SingleBuffer<N>,
+    ot: SingleOT<1>,
 
     cursor: Vertex,
     font_size: Vertex,
@@ -37,8 +37,8 @@ impl<const N: usize> Printer<N> {
         let font_size = Vertex::from(font_size);
         let box_offset = Vertex::from(box_offset);
         let box_size = Vertex::from(box_size);
-        let buffer = Buffer::<N>::new();
-        let ot = OT::<1>::new();
+        let buffer = SingleBuffer::<N>::new();
+        let ot = SingleOT::<1>::new();
         // How unnecessary is this to not lock up the GPU? In case it is needed, I could
         // just write the single value straight to the ordering table
         otc_dma.clear(&ot).wait();

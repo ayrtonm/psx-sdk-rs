@@ -1,10 +1,10 @@
 use core::cell::UnsafeCell;
 use core::mem::size_of;
 
-use super::{DoublePacket, Init, Packet};
+use super::{DoublePacket, Init, SinglePacket};
 
 /// A bump allocator for a single-buffered prim array.
-pub struct Buffer<const N: usize> {
+pub struct SingleBuffer<const N: usize> {
     cell: UnsafeCell<InnerBuffer<N>>,
 }
 
@@ -13,9 +13,9 @@ struct InnerBuffer<const N: usize> {
     next: usize,
 }
 
-impl<const N: usize> Buffer<N> {
+impl<const N: usize> SingleBuffer<N> {
     pub fn new() -> Self {
-        Buffer {
+        SingleBuffer {
             cell: UnsafeCell::new(InnerBuffer {
                 data: [0; N],
                 next: 0,
@@ -23,9 +23,9 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn alloc<T: Init>(&self) -> Option<&mut Packet<T>> {
-        self.generic_alloc::<Packet<T>>().map(|p| {
-            p.tag = (size_of::<Packet<T>>() as u32 / 4) << 24;
+    pub fn alloc<T: Init>(&self) -> Option<&mut SinglePacket<T>> {
+        self.generic_alloc::<SinglePacket<T>>().map(|p| {
+            p.tag = (size_of::<SinglePacket<T>>() as u32 / 4) << 24;
             p.packet.init();
             p
         })
@@ -57,16 +57,16 @@ impl<const N: usize> Buffer<N> {
 // TODO: remove one instance of InnerBuffer::next. This is low priority, get a
 // working double buffer first.
 pub struct DoubleBuffer<const N: usize> {
-    buffer_1: Buffer<N>,
-    buffer_2: Buffer<N>,
+    buffer_1: SingleBuffer<N>,
+    buffer_2: SingleBuffer<N>,
     swapped: UnsafeCell<bool>,
 }
 
 impl<const N: usize> DoubleBuffer<N> {
     pub fn new() -> Self {
         DoubleBuffer {
-            buffer_1: Buffer::<N>::new(),
-            buffer_2: Buffer::<N>::new(),
+            buffer_1: SingleBuffer::<N>::new(),
+            buffer_2: SingleBuffer::<N>::new(),
             swapped: UnsafeCell::new(false),
         }
     }
