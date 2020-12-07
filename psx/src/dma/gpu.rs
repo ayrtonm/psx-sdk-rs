@@ -19,7 +19,7 @@ impl dma::gpu::Channel {
     }
 
     pub fn send<'a, const N: usize>(&mut self, ot: &'a OT<N>) -> Transfer<&'a OT<N>> {
-        self.send_offset(ot, ot.len())
+        self.send_offset(ot, ot.start())
     }
 
     pub fn send_offset<'a, const N: usize>(

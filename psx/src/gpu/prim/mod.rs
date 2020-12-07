@@ -15,6 +15,7 @@ pub mod tile;
 mod double_buffer;
 pub use double_buffer::DoubleBuffer;
 pub use double_buffer::DoublePacket;
+pub use double_buffer::DoubleOT;
 
 // These should all be moved to their respective locations
 impl Primitive for tile::Tile {}
@@ -113,11 +114,11 @@ impl<const N: usize> OT<N> {
         OT { entries: [0; N] }
     }
 
-    pub fn len(&self) -> usize {
+    pub fn start(&self) -> usize {
         N - 1
     }
 
-    pub fn start(&self) -> &u32 {
+    pub fn first_entry(&self) -> &u32 {
         &self.entries[N - 1]
     }
 
@@ -125,7 +126,7 @@ impl<const N: usize> OT<N> {
         &self.entries[n]
     }
 
-    pub fn add_prim<T: Init>(&mut self, z: usize, prim: &mut Packet<T>) -> &mut Self {
+    pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {
         let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;

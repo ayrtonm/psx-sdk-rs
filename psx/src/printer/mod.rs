@@ -1,4 +1,3 @@
-use crate::dma::MaybeTransfer;
 use crate::gpu::prim::{Buffer, OT};
 use crate::gpu::Color;
 use crate::gpu::Vertex;
@@ -106,7 +105,7 @@ impl<const N: usize> Printer<N> {
                 .t0((xoffset, yoffset))
                 .clut(printer.clut)
                 .size(printer.font_size);
-            printer.ot.add_prim(0, letter);
+            printer.ot.add_prim(letter, 0);
             if printer.cursor.x() + printer.font_size.x() >=
                 printer.box_offset.x() + printer.box_size.x()
             {
@@ -138,7 +137,9 @@ impl<const N: usize> Printer<N> {
                     let formatted = Self::format_u32(*arg, leading_zeros);
                     leading_zeros = false;
                     for &c in &formatted {
-                        print_char(self, c)
+                        if c != b'\0' {
+                            print_char(self, c)
+                        };
                     }
                 },
                 _ => {

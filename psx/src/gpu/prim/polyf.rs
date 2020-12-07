@@ -4,16 +4,16 @@ use crate::gpu::Vertex;
 
 #[repr(C)]
 pub struct PolyF3 {
-    color: Color,
+    pub color: Color,
     cmd: u8,
-    vertices: [Vertex; 3],
+    pub vertices: [Vertex; 3],
 }
 
 #[repr(C)]
 pub struct PolyF4 {
-    color: Color,
+    pub color: Color,
     cmd: u8,
-    vertices: [Vertex; 4],
+    pub vertices: [Vertex; 4],
 }
 
 macro_rules! impl_PolyF {

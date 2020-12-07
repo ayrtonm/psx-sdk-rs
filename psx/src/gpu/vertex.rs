@@ -1,4 +1,4 @@
-pub(crate) type Pixel = i16;
+pub type Pixel = i16;
 
 #[repr(C)]
 #[derive(Clone, Copy)]

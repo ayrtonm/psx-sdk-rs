@@ -6,7 +6,7 @@ pub mod stat;
 mod texture;
 mod vertex;
 
-pub(crate) use vertex::Pixel;
+pub use vertex::Pixel;
 pub use vertex::Vertex;
 
 pub use color::Color;
