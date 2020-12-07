@@ -1,3 +1,4 @@
+use core::ops::{Deref, DerefMut};
 use core::cell::UnsafeCell;
 use core::mem::{size_of, transmute};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
@@ -29,8 +30,14 @@ pub struct Packet<T> {
     packet: T,
 }
 
-impl<T> Packet<T> {
-    pub fn packet(&mut self) -> &mut T {
+impl<T> Deref for Packet<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.packet
+    }
+}
+impl<T> DerefMut for Packet<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.packet
     }
 }

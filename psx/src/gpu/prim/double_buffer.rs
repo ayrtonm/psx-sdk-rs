@@ -1,16 +1,30 @@
-use super::{Buffer, Init, Packet};
+use core::ops::{Deref, DerefMut};
 use core::cell::UnsafeCell;
+
+use super::{Buffer, Init, Packet};
 use super::OT;
 
 pub struct DoublePacket<'a, T> {
     packet_1: &'a mut Packet<T>,
     packet_2: &'a mut Packet<T>,
-    //swapped: &'a bool,
     swapped: *const bool,
 }
 
-impl<'a, T> DoublePacket<'a, T> {
-    pub fn packet(&mut self) -> &mut Packet<T> {
+impl<'a, T> Deref for DoublePacket<'a, T> {
+    type Target = Packet<T>;
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            if *self.swapped {
+                &self.packet_1
+            } else {
+                &self.packet_2
+            }
+        }
+    }
+}
+
+impl<'a, T> DerefMut for DoublePacket<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
             if *self.swapped {
                 &mut self.packet_1
@@ -74,28 +88,34 @@ impl<const N: usize> DoubleOT<N> {
             swapped: UnsafeCell::new(false),
         }
     }
-    pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {
-        unsafe {
-            if *self.swapped.get() {
-                self.ot_1.add_prim(prim, z)
-            } else {
-                self.ot_2.add_prim(prim, z)
-            };
-        }
-        self
-    }
     pub fn swap(&self) -> &Self {
         unsafe {
             *self.swapped.get() = !*self.swapped.get();
         }
         self
     }
-    pub fn ot(&self) -> &OT<N> {
+}
+
+impl<const N: usize> Deref for DoubleOT<N> {
+    type Target = OT<N>;
+    fn deref(&self) -> &Self::Target {
         unsafe {
             if *self.swapped.get() {
                 &self.ot_1
             } else {
                 &self.ot_2
+            }
+        }
+    }
+}
+
+impl<const N: usize> DerefMut for DoubleOT<N> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe {
+            if *self.swapped.get() {
+                &mut self.ot_1
+            } else {
+                &mut self.ot_2
             }
         }
     }
