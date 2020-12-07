@@ -96,10 +96,8 @@ impl<const N: usize> Printer<N> {
         let print_char = |printer: &mut Self, ascii| {
             let xoffset = (ascii % ascii_per_row) * w;
             let yoffset = (ascii / ascii_per_row) * h;
-            let letter = printer
-                .buffer
-                .Sprt()
-                .unwrap()
+            let letter = printer.buffer.Sprt().unwrap();
+            letter
                 .color(printer.color.unwrap_or(Color::WHITE))
                 .offset(printer.cursor.shift(printer.box_offset))
                 .t0((xoffset, yoffset))

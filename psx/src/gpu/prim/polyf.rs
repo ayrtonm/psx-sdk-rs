@@ -29,18 +29,6 @@ macro_rules! impl_PolyF {
                 self.alloc::<$name>()
             }
         }
-        //impl Packet<$name> {
-        //    pub fn vertices<T>(&mut self, vertices: [T; $N]) -> &mut Self
-        //    where Vertex: From<T> {
-        //        self.packet.vertices(vertices);
-        //        self
-        //    }
-
-        //    pub fn color(&mut self, color: Color) -> &mut Self {
-        //        self.packet.color(color);
-        //        self
-        //    }
-        //}
         impl $name {
             pub fn cmd(&mut self) -> &mut Self {
                 self.cmd = $cmd;

@@ -46,36 +46,7 @@ impl<const N: usize> Buffer<N> {
         self.alloc::<Sprt>()
     }
 }
-impl Packet<Sprt> {
-    pub fn color(&mut self, color: Color) -> &mut Self {
-        self.packet.color(color);
-        self
-    }
 
-    pub fn offset<T>(&mut self, offset: T) -> &mut Self
-    where Vertex: From<T> {
-        self.packet.offset(offset);
-        self
-    }
-
-    pub fn t0<T>(&mut self, t0: T) -> &mut Self
-    where TexCoord: From<T> {
-        self.packet.t0(t0);
-        self
-    }
-
-    pub fn clut<T>(&mut self, clut: T) -> &mut Self
-    where Clut: From<T> {
-        self.packet.clut(clut);
-        self
-    }
-
-    pub fn size<T>(&mut self, size: T) -> &mut Self
-    where Vertex: From<T> {
-        self.packet.size(size);
-        self
-    }
-}
 impl Sprt {
     pub fn cmd(&mut self) -> &mut Self {
         self.cmd = 0x64;

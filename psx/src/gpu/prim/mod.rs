@@ -1,6 +1,6 @@
-use core::ops::{Deref, DerefMut};
 use core::cell::UnsafeCell;
 use core::mem::{size_of, transmute};
+use core::ops::{Deref, DerefMut};
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 pub mod linef;
@@ -15,8 +15,8 @@ pub mod tile;
 // This is a submodule only while it's in development
 mod double_buffer;
 pub use double_buffer::DoubleBuffer;
-pub use double_buffer::DoublePacket;
 pub use double_buffer::DoubleOT;
+pub use double_buffer::DoublePacket;
 
 // These should all be moved to their respective locations
 impl Primitive for tile::Tile {}
@@ -32,10 +32,12 @@ pub struct Packet<T> {
 
 impl<T> Deref for Packet<T> {
     type Target = T;
+
     fn deref(&self) -> &Self::Target {
         &self.packet
     }
 }
+
 impl<T> DerefMut for Packet<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.packet
@@ -131,6 +133,11 @@ impl<const N: usize> OT<N> {
 
     pub fn entry(&self, n: usize) -> &u32 {
         &self.entries[n]
+    }
+
+    pub fn insert<T: Init, U>(&mut self, prim: &mut U, z: usize) -> &mut Self
+    where U: Deref<Target = Packet<T>> + DerefMut {
+        self.add_prim(prim, z)
     }
 
     pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {

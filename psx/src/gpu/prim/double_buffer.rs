@@ -1,8 +1,8 @@
-use core::ops::{Deref, DerefMut};
 use core::cell::UnsafeCell;
+use core::ops::{Deref, DerefMut};
 
-use super::{Buffer, Init, Packet};
 use super::OT;
+use super::{Buffer, Init, Packet};
 
 pub struct DoublePacket<'a, T> {
     packet_1: &'a mut Packet<T>,
@@ -12,6 +12,7 @@ pub struct DoublePacket<'a, T> {
 
 impl<'a, T> Deref for DoublePacket<'a, T> {
     type Target = Packet<T>;
+
     fn deref(&self) -> &Self::Target {
         unsafe {
             if *self.swapped {
@@ -88,6 +89,7 @@ impl<const N: usize> DoubleOT<N> {
             swapped: UnsafeCell::new(false),
         }
     }
+
     pub fn swap(&self) -> &Self {
         unsafe {
             *self.swapped.get() = !*self.swapped.get();
@@ -98,6 +100,7 @@ impl<const N: usize> DoubleOT<N> {
 
 impl<const N: usize> Deref for DoubleOT<N> {
     type Target = OT<N>;
+
     fn deref(&self) -> &Self::Target {
         unsafe {
             if *self.swapped.get() {

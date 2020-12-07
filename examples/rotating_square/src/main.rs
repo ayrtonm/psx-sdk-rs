@@ -27,8 +27,8 @@ fn main(mut mmio: MMIO) {
     // Enable the DMA channels
     dma_control.otc(true).gpu(true);
     // Initialize *both* ordering tables
-    otc_dma.clear(&*ot).wait();
-    otc_dma.clear(&*ot.swap()).wait();
+    otc_dma.clear(&ot).wait();
+    otc_dma.clear(&ot.swap()).wait();
 
     let x = 25;
     let y = 50;
@@ -39,14 +39,14 @@ fn main(mut mmio: MMIO) {
     // Initialize one copy of the packet as a blue rectangle
     poly.vertices(init).color(Color::AQUA);
     // Insert that packet into an ordering table
-    ot.add_prim(&mut *poly, 0);
+    ot.insert(&mut poly, 0);
     // Switch over to the over prim buffer
     buffer.swap();
     // Initialize the other copy of the packet as an orange rectangle
     poly.vertices(init).color(Color::ORANGE);
     // Insert that packet into the other ordering table
     ot.swap();
-    ot.add_prim(&mut *poly, 0);
+    ot.insert(&mut poly, 0);
 
     // Let's start by sending buffer 1
     buffer.swap();
@@ -58,7 +58,7 @@ fn main(mut mmio: MMIO) {
         // Send an ordering table
         // While the ordering table is being sent to the GPU, we can keep working if
         // chopping is on We can keep working while ot[i] is being sent if
-        let send_ot = gpu_dma.send(&*ot);
+        let send_ot = gpu_dma.send(&ot);
         buffer.swap();
         theta += 15.0;
         poly.vertices(init.map(|v| rotate_point(v, theta, ((x + y) / 2, (x + y) / 2))));
