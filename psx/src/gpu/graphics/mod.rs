@@ -7,27 +7,7 @@ mod macros;
 mod buffer;
 mod ot;
 mod packet;
-mod primitive;
-
-pub use primitive::LineF;
-pub use primitive::LineF2;
-pub use primitive::LineG;
-pub use primitive::LineG2;
-pub use primitive::PolyF3;
-pub use primitive::PolyF4;
-pub use primitive::PolyFT3;
-pub use primitive::PolyFT4;
-pub use primitive::PolyG3;
-pub use primitive::PolyG4;
-pub use primitive::PolyGT3;
-pub use primitive::PolyGT4;
-pub use primitive::Sprt;
-pub use primitive::Sprt16;
-pub use primitive::Sprt8;
-pub use primitive::Tile;
-pub use primitive::Tile1;
-pub use primitive::Tile16;
-pub use primitive::Tile8;
+pub mod primitive;
 
 pub use buffer::{DoubleBuffer, SingleBuffer};
 pub use ot::{DoubleOT, SingleOT};
@@ -55,6 +35,27 @@ pub const fn size_of<T>(n: usize) -> usize {
     n * core::mem::size_of::<SinglePacket<T>>() / 4
 }
 
+use primitive::LineF;
+use primitive::LineF2;
+// TODO: impl this
+//use primitive::LineG;
+use primitive::LineG2;
+use primitive::PolyF3;
+use primitive::PolyF4;
+use primitive::PolyFT3;
+use primitive::PolyFT4;
+use primitive::PolyG3;
+use primitive::PolyG4;
+use primitive::PolyGT3;
+use primitive::PolyGT4;
+use primitive::Sprt;
+use primitive::Sprt16;
+use primitive::Sprt8;
+use primitive::Tile;
+use primitive::Tile1;
+use primitive::Tile16;
+use primitive::Tile8;
+
 impl_prim!(PolyF3, 0x20);
 impl_prim!(PolyF4, 0x28);
 impl_prim!(PolyFT3, 0x24);
@@ -79,17 +80,17 @@ impl_prim!(Sprt16, 0x7C);
 
 mod vertices {
     use super::*;
-    impl_vertices!(3, PolyF3);
-    impl_vertices!(4, PolyF4);
-    impl_vertices!(3, PolyFT3);
-    impl_vertices!(4, PolyFT4);
+    impl_vertices!(PolyF3, 3);
+    impl_vertices!(PolyF4, 4);
+    impl_vertices!(PolyFT3, 3);
+    impl_vertices!(PolyFT4, 4);
 
-    impl_vertices!(3, PolyG3);
-    impl_vertices!(4, PolyG4);
-    impl_vertices!(3, PolyGT3);
-    impl_vertices!(4, PolyGT4);
+    impl_vertices!(PolyG3, 3);
+    impl_vertices!(PolyG4, 4);
+    impl_vertices!(PolyGT3, 3);
+    impl_vertices!(PolyGT4, 4);
 
-    impl_vertices!(2, LineF2);
+    impl_vertices!(LineF2, 2);
     impl<const N: usize> LineF<N> {
         pub fn vertices<T>(&mut self, vertices: [T; N]) -> &mut Self
         where Vertex: From<T> {
@@ -99,13 +100,13 @@ mod vertices {
     }
     // TODO: LineG2
     // TODO: LineG<N>
-    impl_vertices!(1, Tile);
-    impl_vertices!(1, Tile1);
-    impl_vertices!(1, Tile8);
-    impl_vertices!(1, Tile16);
-    impl_vertices!(1, Sprt);
-    impl_vertices!(1, Sprt8);
-    impl_vertices!(1, Sprt16);
+    impl_vertices!(Tile, 1);
+    impl_vertices!(Tile1, 1);
+    impl_vertices!(Tile8, 1);
+    impl_vertices!(Tile16, 1);
+    impl_vertices!(Sprt, 1);
+    impl_vertices!(Sprt8, 1);
+    impl_vertices!(Sprt16, 1);
 }
 
 mod color {
@@ -115,10 +116,10 @@ mod color {
     impl_color!(PolyFT3);
     impl_color!(PolyFT4);
 
-    impl_gouraud!(3, PolyG3);
-    impl_gouraud!(4, PolyG4);
-    impl_gouraud!(3, PolyGT3);
-    impl_gouraud!(4, PolyGT4);
+    impl_gouraud!(PolyG3, 3);
+    impl_gouraud!(PolyG4, 4);
+    impl_gouraud!(PolyGT3, 3);
+    impl_gouraud!(PolyGT4, 4);
 
     impl_color!(LineF2);
     impl<const N: usize> LineF<N> {
@@ -127,7 +128,7 @@ mod color {
             self
         }
     }
-    impl_gouraud!(2, LineG2);
+    impl_gouraud!(LineG2, 2);
     // TODO: LineG<N>
 
     impl_color!(Tile);

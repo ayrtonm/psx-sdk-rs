@@ -3,7 +3,8 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::prim::{size_of, DoubleBuffer, DoubleOT, PolyG3};
+use psx::gpu::graphics::primitive::PolyG3;
+use psx::gpu::graphics::{size_of, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 
@@ -69,6 +70,10 @@ fn main(mut mmio: MMIO) {
         };
         // Rotate the triangles in the other buffer
         buffer.swap();
+        // This is kind of a dumb example since the vertices are rotated wrt their init position.
+        // Rotating them wrt to the previous (currently being drawn) frame's position would be a
+        // better example of the advantage of double buffering primitives, but this leads to floats
+        // being truncated at every step which along with the flawed trig fn skews the results badly
         for i in 0..T_NUM {
             triangles[i].vertices(position(i, theta, 10.0));
         }

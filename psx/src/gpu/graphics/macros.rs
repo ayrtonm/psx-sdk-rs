@@ -30,7 +30,7 @@ macro_rules! impl_prim {
 }
 
 macro_rules! impl_vertices {
-    (1, $name:path) => {
+    ($name:ident,1) => {
         impl $name {
             pub fn offset<T>(&mut self, offset: T) -> &mut Self
             where Vertex: From<T> {
@@ -39,7 +39,7 @@ macro_rules! impl_vertices {
             }
         }
     };
-    (2, $name:path) => {
+    ($name:ident,2) => {
         impl $name {
             pub fn vertices<T>(&mut self, vertices: [T; 2]) -> &mut Self
             where Vertex: From<T> {
@@ -50,7 +50,7 @@ macro_rules! impl_vertices {
             }
         }
     };
-    (3, $name:path) => {
+    ($name:ident,3) => {
         impl $name {
             pub fn vertices<T>(&mut self, vertices: [T; 3]) -> &mut Self
             where Vertex: From<T> {
@@ -62,7 +62,7 @@ macro_rules! impl_vertices {
             }
         }
     };
-    (4, $name:path) => {
+    ($name:ident,4) => {
         impl $name {
             pub fn vertices<T>(&mut self, vertices: [T; 4]) -> &mut Self
             where Vertex: From<T> {
@@ -78,7 +78,7 @@ macro_rules! impl_vertices {
 }
 
 macro_rules! impl_color {
-    ($name:path) => {
+    ($name:ident) => {
         impl $name {
             pub fn color(&mut self, color: Color) -> &mut Self {
                 self.color = color;
@@ -89,7 +89,7 @@ macro_rules! impl_color {
 }
 
 macro_rules! impl_gouraud {
-    (2, $name:path) => {
+    ($name:ident,2) => {
         impl $name {
             pub fn color(&mut self, palette: [Color; 2]) -> &mut Self {
                 self.color0 = palette[0];
@@ -98,7 +98,7 @@ macro_rules! impl_gouraud {
             }
         }
     };
-    (3, $name:path) => {
+    ($name:ident,3) => {
         impl $name {
             pub fn color(&mut self, palette: [Color; 3]) -> &mut Self {
                 self.color0 = palette[0];
@@ -108,7 +108,7 @@ macro_rules! impl_gouraud {
             }
         }
     };
-    (4, $name:path) => {
+    ($name:ident,4) => {
         impl $name {
             pub fn color(&mut self, palette: [Color; 4]) -> &mut Self {
                 self.color0 = palette[0];

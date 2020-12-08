@@ -3,7 +3,8 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::prim::{size_of, DoubleBuffer, DoubleOT, PolyG4};
+use psx::gpu::graphics::primitive::PolyG4;
+use psx::gpu::graphics::{size_of, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 

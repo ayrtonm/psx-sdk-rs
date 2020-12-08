@@ -1,5 +1,5 @@
 use super::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, Step, SyncMode};
-use crate::gpu::prim::SingleOT;
+use crate::gpu::graphics::SingleOT;
 use crate::gpu::{Clut, TexPage};
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;

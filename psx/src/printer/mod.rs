@@ -1,4 +1,4 @@
-use crate::gpu::prim::{SingleBuffer, SingleOT};
+use crate::gpu::graphics::{SingleBuffer, SingleOT};
 use crate::gpu::Color;
 use crate::gpu::Vertex;
 use crate::gpu::{Clut, TexPage};

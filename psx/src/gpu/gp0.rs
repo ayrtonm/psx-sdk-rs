@@ -1,4 +1,4 @@
-use super::prim::Primitive;
+use super::graphics::Primitive;
 use super::vertex::Vertex;
 use crate::mmio::gpu;
 use crate::mmio::register::Write;
