@@ -1,6 +1,6 @@
 # Todo
 
-This is a preliminary list of things missing in psx (which is almost everything...)
+This is a preliminary list of things missing in psx (which is quite a lot...)
 
 - [ ] GPU
     - [x] Graphics pipeline
@@ -59,3 +59,9 @@ This is a preliminary list of things missing in psx (which is almost everything.
     - [x] Test CLUTs
     - [x] Make DMA TIM loader non-blocking
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
+
+This is an incomplete list of things missing in `cargo-psx`
+
+- [ ] Modify `extract_flag` and `extract_key_value` to take a `&mut Vec<String>` and only return the extracted result
+- [ ] Wrap cargo-init to overwrite src/main.rs with program template
+- [ ] Allow user-defined RUSTFLAGS env var

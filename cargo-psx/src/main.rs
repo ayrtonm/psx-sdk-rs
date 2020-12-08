@@ -83,18 +83,23 @@ fn main() {
     let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
     let (lto, cargo_args) = extract_flag("--lto", cargo_args);
     let (check, cargo_args) = extract_flag("--check", cargo_args);
+    // TODO: wrap cargo-init to write program template to src/main.rs
+    //let (init, cargo_args) = extract_key_value("--init", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
-    let linker = "-C linker=../../mips_toolchain/ld";
+    // TODO: remove external toolchain linker after fixing rust-lld's alloc error
+    //let linker = "-C linker=../../mips_toolchain/ld";
     let rustflags = if lto {
-        format!(
-            "{} -C lto=fat -C codegen-units=1 -C embed-bitcode=yes",
-            linker
-        )
+        "-C lto=fat -C codegen-units=1 -C embed-bitcode=yes"
+    //format!(
+    //    "{} -C lto=fat -C codegen-units=1 -C embed-bitcode=yes",
+    //    linker
+    //)
     } else {
-        linker.to_string()
+        ""
+        //linker.to_string()
     };
 
     let target_triple = "mipsel-sony-psx";
@@ -107,7 +112,6 @@ fn main() {
     };
 
     if !skip_build {
-        // TODO: remove `RUSTFLAGS` env var after fixing rust-lld's alloc error
         let mut build = Command::new("cargo")
             .arg("+".to_string() + &toolchain_name)
             .arg(cargo_subcmd)

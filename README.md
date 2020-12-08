@@ -23,6 +23,9 @@ for building the rust compiler and LLVM for more specifics.
     sed -i 's/#incremental = false/incremental = true/' config.toml
     ```
 
+    Note that enabling incremental compilation here only affects the build of
+    the compiler itself, not any code generated for the PlayStation.
+
 3. Patch the rust compiler:
 
     ```
@@ -54,24 +57,32 @@ for building the rust compiler and LLVM for more specifics.
 
 ## Installing cargo-psx
 
+`cargo-psx` acts as a wrapper for `cargo-build` and `cargo-check` in addition to
+simias's `elf2psexe` utility. Basically this lets you run `cargo psx` to build
+instead of `cargo build +psx -Z build-std=core,alloc --target=mipsel-sony-psx`.
+
+To install, just do:
+
 ```
 cd cargo-psx
 cargo install --path .
 ```
     
-## Building the demo
+## Usage
 
-```
-cd examples/new
-cargo psx --release
-```
+The `examples` directory has some demos which may or may not be broken at the
+moment due to changes in the `psx` crate. To try one out just run `cargo psx
+--release` from the demo's directory. This defaults to building an ELF using a
+toolchain named `psx` and repackaging it into a PSEXE with region `JP`. Building
+without `--release` (in debug mode) is possible, but will probably be unusably
+slow. See `cargo psx -h`.
 
-This defaults to building an ELF using a toolchain named `psx` and repackaging
-it into a PSEXE with region `NA`. Note that building without `--release` (in
-debug mode) is possible, but will probably be unusably slow. See `cargo psx -h`
-for more options.
+### Program template
 
-## Program template
+To create a new program just use `cargo-init`, replace `src/main.rs` with
+this template and add `psx = { path = "path/to/psx/crate" }` to `Cargo.toml`
+under `[dependencies]`. Note that the `psx::exe` macro expects a modified main
+interface.
 
 ```rust
 #![no_std]
@@ -83,7 +94,18 @@ fn main(mut mmio: MMIO) {
 }
 ```
 
-Note the modified `main` interface. See `examples` for more details.
+## Documentation
+
+To generate documentation for the `psx` crate:
+
+```
+cd psx
+cargo doc --target mipsel-unknown-linux-gnu
+```
+
+Then open `target/mipsel-unknown-linux-gnu/doc/psx/index.html` in a browser.
+Once things become a bit more stable I'll probably document things more
+thoroughly and link a tutorial here.
 
 ## Optionally running executables on hardware
 

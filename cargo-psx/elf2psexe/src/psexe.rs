@@ -180,7 +180,6 @@ impl PsxWriter {
             // Update the offset
             offset = base + data.len() as u32;
         }
-        //TODO: handle case where `cur_size` is a multiple of 0x800
         let cur_size = self.psexe.metadata().expect("Could not get the new PSEXE's metadata").len();
         if !no_pad {
             let padded_size = (((cur_size as f32) / (0x800 as f32)).ceil() as u64) * 0x800;
