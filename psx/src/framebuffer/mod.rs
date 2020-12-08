@@ -87,7 +87,7 @@ impl Framebuffer {
         let clear_screen = Tile {
             color: self.clear,
             cmd: 0x60,
-            offset: (0, 0).into(),
+            offset: 0.into(),
             size: self.res,
         };
         gp0.send(&clear_screen);

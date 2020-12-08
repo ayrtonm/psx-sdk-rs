@@ -5,7 +5,7 @@
 use core::mem::size_of;
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::prim::{DoubleBuffer, DoubleOT, DoublePacket, PolyG3};
+use psx::gpu::prim::{DoubleBuffer, DoubleOT, PolyG3, SinglePacket};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 
@@ -23,10 +23,11 @@ fn main(mut mmio: MMIO) {
 
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();
-    const T_SIZE: usize = size_of::<DoublePacket<PolyG3>>();
-    const T_NUM: usize = 5;
-    const N: usize = T_SIZE * T_NUM;
-    let buffer = DoubleBuffer::<N>::new();
+    // Size the buffer so it fits exactly 50 (double-buffered) PolyG3s
+    const T_SIZE: usize = size_of::<SinglePacket<PolyG3>>() / 4;
+    const T_NUM: usize = 50;
+    const BUFFER_SIZE: usize = T_SIZE * T_NUM;
+    let buffer = DoubleBuffer::<BUFFER_SIZE>::new();
     let mut ot = DoubleOT::<1>::new();
 
     // Enable the DMA channels
@@ -35,48 +36,57 @@ fn main(mut mmio: MMIO) {
     otc_dma.clear(&ot).wait();
     otc_dma.clear(&ot.swap()).wait();
 
-    let x = 64;
-    let y = 128;
-    let midpoint = (x + y) / 2;
-    let init = [(x, x), (y, x), (x, y), (y, y)];
-    // Make a double-buffered packet
-    let mut poly = buffer.PolyG4().unwrap();
+    let position = |i, theta, a| {
+        [(0.0, 0.0), (a / 2.0, sin(60.0) * a), (a, 0.0)]
+            .map(|(x, y)| ((x - a / 2.0) as Pixel, (y - sin(60.0) * a / 2.0) as Pixel))
+            .map(|v| rotate_point(v, theta, 0).shift(i as Pixel + 10))
+    };
+    // Allocate 50 double-buffered PolyG3s. Note the array `triangles` below only holds handles to
+    // the allocated PolyG3s. The PolyG3s themselves are in the buffer's backing arrays.
+    let mut triangles = buffer.array::<PolyG3, T_NUM>().unwrap();
 
-    // Initialize one copy of the packet as a blue rectangle
-    let pal = [Color::AQUA, Color::MINT, Color::INDIGO, Color::ORANGE];
-    poly.vertices(init).color(pal);
-    // Insert that packet into an ordering table
-    ot.insert(&mut poly, 0);
-    // Switch over to the other prim buffer
+    // Colors will be constant within the loop, so let's initialize them now. Since the PolyG3s are
+    // double-buffered, the colors must be initialized for both copies. Let's use a closure to
+    // simplify this.
+    let mut init_packet = |ot: &mut DoubleOT<1>| {
+        for i in 0..T_NUM {
+            triangles[i].color([Color::RED, Color::GREEN, Color::BLUE]);
+            // Don't forget to insert the triangles into onne of ther ordering tables
+            ot.add_prim(&mut triangles[i], 0);
+        }
+    };
+    init_packet(&mut ot);
     buffer.swap();
-    // Initialize the other copy of the packet as an orange rectangle
-    poly.vertices(init).color(pal);
-    // Insert that packet into the other ordering table
     ot.swap();
-    ot.insert(&mut poly, 0);
+    init_packet(&mut ot);
 
-    //Let's start by sending buffer 1
-    buffer.swap();
-    ot.swap();
     let mut theta = 0.0;
     gpu_dma.prepare_ot(gp1);
     int_mask.enable(IRQ::Vblank);
     loop {
         // Send an ordering table
-        // While the ordering table is being sent to the GPU, we can keep working if
-        // chopping is on We can keep working while ot[i] is being sent if
         let send_ot = gpu_dma.send(&ot);
-        buffer.swap();
-        theta += 1.0;
+        theta += 5.0;
         if theta == 360.0 {
             theta = 0.0;
         };
-        poly.vertices(init.map(|v| rotate_point(v, theta, midpoint)));
+        // Rotate the triangles in the other buffer
+        buffer.swap();
+        for i in 0..T_NUM {
+            triangles[i].vertices(position(i, theta, 10.0));
+        }
+        // Swap the ordering tables for the next frame
         ot.swap();
+        // If we needed to rearrange anything within the OT, we'd do it here
+
+        // Wait until the DMA transfer is done
         send_ot.wait();
+        // Wait until the GPU is done
         gpu_stat.sync();
+        // Wait until the next vblank
         int_stat.ack(IRQ::Vblank);
         int_stat.wait(IRQ::Vblank);
+        // Show the ordering table we sent at the beginning of the loop
         fb.swap();
     }
 }
@@ -104,7 +114,7 @@ fn cos(x: f32) -> f32 {
 }
 
 // Rotation is better handled by the GTE but this'll do for a demo
-fn rotate_point<T, U>(p: T, theta: f32, c: U) -> (Pixel, Pixel)
+fn rotate_point<T, U>(p: T, theta: f32, c: U) -> Vertex
 where
     Vertex: From<T> + From<U>,
 {
@@ -116,5 +126,5 @@ where
     let yp = dy * cos(theta) + dx * sin(theta);
     let xf = xp + c.x() as f32;
     let yf = yp + c.y() as f32;
-    (xf as Pixel, yf as Pixel)
+    (xf as Pixel, yf as Pixel).into()
 }

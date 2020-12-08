@@ -26,6 +26,7 @@ impl<const N: usize> SingleOT<N> {
         &self.entries[n]
     }
 
+    // TODO: combine `insert` and `add_prim` into one function
     pub fn insert<T: Init, U>(&mut self, prim: &mut U, z: usize) -> &mut Self
     where U: Deref<Target = SinglePacket<T>> + DerefMut {
         self.add_prim(prim, z)

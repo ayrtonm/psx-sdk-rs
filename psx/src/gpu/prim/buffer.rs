@@ -1,5 +1,5 @@
 use core::cell::UnsafeCell;
-use core::mem::size_of;
+use core::mem::{size_of, MaybeUninit};
 
 use super::{DoublePacket, Init, SinglePacket};
 
@@ -36,7 +36,7 @@ impl<const N: usize> SingleBuffer<N> {
             let size = size_of::<T>() / 4;
             let start = (*self.cell.get()).next;
             let end = start + size;
-            if end < N {
+            if end <= N {
                 (*self.cell.get()).next += size;
                 let slice = &mut (*self.cell.get()).data[start..end];
                 let ptr = slice.as_mut_ptr().cast::<T>();
@@ -51,6 +51,14 @@ impl<const N: usize> SingleBuffer<N> {
         unsafe {
             (*self.cell.get()).next = 0;
         }
+    }
+
+    pub fn array<T: Init, const M: usize>(&self) -> Option<[&mut SinglePacket<T>; M]> {
+        let mut ar: [&mut SinglePacket<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
+        for i in 0..M {
+            self.alloc().map(|t| ar[i] = t).or_else(|| return None);
+        }
+        Some(ar)
     }
 }
 
@@ -71,8 +79,13 @@ impl<const N: usize> DoubleBuffer<N> {
         }
     }
 
+    // TODO: should alloc return Option<T>? One on hand, the buffer size is const so
+    // you should be able to plan on being able to make some max number of
+    // primitives. On the other hand, this could be useful for knowing when to
+    // reset the buffer without having to plan so carefully.
     pub fn alloc<T: Init>(&self) -> Option<DoublePacket<T>> {
-        self.buffer_1
+        let opt = self
+            .buffer_1
             .alloc::<T>()
             .map(move |packet_1| {
                 self.buffer_2.alloc::<T>().map(move |packet_2| unsafe {
@@ -83,12 +96,25 @@ impl<const N: usize> DoubleBuffer<N> {
                     }
                 })
             })
-            .flatten()
+            .flatten();
+        // TODO: Fix this ugly hack after implementing pretty panic
+        if opt.is_none() {
+            panic!("primitive buffer overflow");
+        };
+        opt
     }
 
     pub fn swap(&self) {
         unsafe {
             *self.swapped.get() = !*self.swapped.get();
         }
+    }
+
+    pub fn array<T: Init, const M: usize>(&self) -> Option<[DoublePacket<T>; M]> {
+        let mut ar: [DoublePacket<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
+        for i in 0..M {
+            self.alloc().map(|t| ar[i] = t).or_else(|| return None);
+        }
+        Some(ar)
     }
 }

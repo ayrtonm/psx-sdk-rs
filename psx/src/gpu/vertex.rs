@@ -7,6 +7,12 @@ pub struct Vertex {
     y: Pixel,
 }
 
+impl From<Pixel> for Vertex {
+    fn from(p: Pixel) -> Self {
+        Vertex { x: p, y: p }
+    }
+}
+
 impl From<(Pixel, Pixel)> for Vertex {
     fn from((x, y): (Pixel, Pixel)) -> Self {
         Vertex { x, y }
