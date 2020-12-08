@@ -2,10 +2,8 @@
 #![no_main]
 #![feature(array_map)]
 
-use core::mem::size_of;
-
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::prim::{DoubleBuffer, DoubleOT, DoublePacket, PolyG3};
+use psx::gpu::prim::{size_of, DoubleBuffer, DoubleOT, PolyG4};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 
@@ -23,9 +21,7 @@ fn main(mut mmio: MMIO) {
 
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();
-    const T_SIZE: usize = size_of::<DoublePacket<PolyG3>>();
-    const T_NUM: usize = 5;
-    const N: usize = T_SIZE * T_NUM;
+    const N: usize = size_of::<PolyG4>(1);
     let buffer = DoubleBuffer::<N>::new();
     let mut ot = DoubleOT::<1>::new();
 
@@ -105,9 +101,7 @@ fn cos(x: f32) -> f32 {
 
 // Rotation is better handled by the GTE but this'll do for a demo
 fn rotate_point<T, U>(p: T, theta: f32, c: U) -> (Pixel, Pixel)
-where
-    Vertex: From<T> + From<U>,
-{
+where Vertex: From<T> + From<U> {
     let p = Vertex::from(p);
     let c = Vertex::from(c);
     let dx = p.x() as f32 - c.x() as f32;

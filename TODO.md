@@ -6,7 +6,7 @@ This is a preliminary list of things missing in psx (which is almost everything.
     - [x] Pipeline
         - [x] Double buffering
             - [x] Think of a good way to swap all primitives at once. All primitives borrow Buffer so maybe checking a bool there might work
-        - [x] Find a way to avoid rewriting T's methods for Packet\<T>. Packet\<T> will save 32 bits per primitive so it's definitely the way to go, but I'd rather not have to write so many methods if possible
+        - [x] Find a way to avoid rewriting `T`'s methods for `Packet<T>`. `Packet<T>` will save 32 bits per primitive so it's definitely the way to go, but I'd rather not have to write so many methods if possible
         - [x] Ordering table method names could be clearer
     - [x] Textures
         - [x] Basic support
@@ -24,6 +24,7 @@ This is a preliminary list of things missing in psx (which is almost everything.
 - [ ] Interrupts
     - [ ] Fix ack for IRQ1..3, 7..10
     - [ ] Add relevant coprocessor 0 asm snippets
+    - [ ] There seems to be a subtle bug with ack/wait Vblank since mednafen no longer works
 - [ ] DMA
     - [x] Finish GPU channel
     - [x] Add other channels

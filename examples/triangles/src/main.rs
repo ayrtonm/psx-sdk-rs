@@ -2,10 +2,8 @@
 #![no_main]
 #![feature(array_map)]
 
-use core::mem::size_of;
-
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::prim::{DoubleBuffer, DoubleOT, PolyG3, SinglePacket};
+use psx::gpu::prim::{size_of, DoubleBuffer, DoubleOT, PolyG3};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 
@@ -24,9 +22,8 @@ fn main(mut mmio: MMIO) {
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();
     // Size the buffer so it fits exactly 50 (double-buffered) PolyG3s
-    const T_SIZE: usize = size_of::<SinglePacket<PolyG3>>() / 4;
     const T_NUM: usize = 50;
-    const BUFFER_SIZE: usize = T_SIZE * T_NUM;
+    const BUFFER_SIZE: usize = size_of::<PolyG3>(T_NUM);
     let buffer = DoubleBuffer::<BUFFER_SIZE>::new();
     let mut ot = DoubleOT::<1>::new();
 

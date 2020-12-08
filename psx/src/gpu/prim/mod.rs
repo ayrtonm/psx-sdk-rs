@@ -1,4 +1,3 @@
-use core::mem::size_of;
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
 use crate::gpu::{Clut, Color, TexCoord, Vertex};
@@ -36,12 +35,12 @@ pub use packet::{DoublePacket, SinglePacket};
 
 pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {
-        let size = size_of::<Self>() / 4;
+        let size = size_of::<Self>(1);
         unsafe { from_raw_parts(self as *const Self as *const u32, size) }
     }
     // Use this to unzip a file into a buffer-allocated prim
     fn as_mut_slice(&mut self) -> &mut [u32] {
-        let size = size_of::<Self>() / 4;
+        let size = size_of::<Self>(1);
         unsafe { from_raw_parts_mut(self as *mut Self as *mut u32, size) }
     }
 }
@@ -51,6 +50,10 @@ pub trait Init {
 }
 
 impl<T> Primitive for T where T: Init {}
+
+pub const fn size_of<T>(n: usize) -> usize {
+    n * core::mem::size_of::<SinglePacket<T>>() / 4
+}
 
 impl_prim!(PolyF3, 0x20);
 impl_prim!(PolyF4, 0x28);
