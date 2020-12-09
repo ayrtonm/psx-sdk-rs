@@ -1,8 +1,8 @@
 use super::{BaseAddress, BlockControl, ChannelControl, Step, SyncMode, Transfer};
 use crate::gpu::graphics::SingleOT;
-use crate::mmio::dma;
+use crate::mmio::{dma, Enabled};
 
-impl dma::otc::Channel {
+impl dma::otc::Channel<Enabled> {
     pub fn clear<const N: usize>(
         &mut self, ot: &SingleOT<N>,
     ) -> Transfer<dma::otc::ChannelControl, ()> {

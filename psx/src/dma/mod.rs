@@ -213,15 +213,17 @@ macro_rules! if_done {
     }};
 }
 
-macro_rules! enable_fn {
-    ($name:ident, $bit:expr) => {
-        pub fn $name(&mut self, enable: bool) -> &mut Self {
+// Methods for toggling DMA channels via dma::Control
+macro_rules! toggle_fn {
+    ($name:ident, $num:expr) => {
+        pub(crate) fn $name(&mut self, enable: bool) -> &mut Self {
+            let bit = (4 * $num) + 3;
             unsafe {
                 self.update(|val| {
                     if enable {
-                        val | (1 << $bit)
+                        val | (1 << bit)
                     } else {
-                        val & !(1 << $bit)
+                        val & !(1 << bit)
                     }
                 })
             }
@@ -229,8 +231,19 @@ macro_rules! enable_fn {
         }
     };
 }
-impl dma::Control {
-    enable_fn!(gpu, 11);
 
-    enable_fn!(otc, 27);
+impl dma::Control {
+    toggle_fn!(mdec_in, 0);
+
+    toggle_fn!(mdec_out, 1);
+
+    toggle_fn!(gpu, 2);
+
+    toggle_fn!(cdrom, 3);
+
+    toggle_fn!(spu, 4);
+
+    toggle_fn!(pio, 5);
+
+    toggle_fn!(otc, 6);
 }

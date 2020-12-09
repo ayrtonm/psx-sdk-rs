@@ -13,8 +13,9 @@ psx::exe!();
 fn main(mut mmio: MMIO) {
     // Borrow all the IO ports we'll need
     let dma_control = &mut mmio.dma_control;
-    let otc_dma = &mut mmio.otc_dma;
-    let gpu_dma = &mut mmio.gpu_dma;
+    // Make sure to enable the DMA channels to get access to their methods
+    let otc_dma = &mut mmio.otc_dma.enable(dma_control);
+    let gpu_dma = &mut mmio.gpu_dma.enable(dma_control);
     let gp1 = &mut mmio.gp1;
     let gpu_stat = &mut mmio.gpu_stat;
     let int_mask = &mut mmio.int_mask;
@@ -28,8 +29,6 @@ fn main(mut mmio: MMIO) {
     let buffer = DoubleBuffer::<BUFFER_SIZE>::new();
     let mut ot = DoubleOT::<1>::new();
 
-    // Enable the DMA channels
-    dma_control.otc(true).gpu(true);
     // Initialize *both* ordering tables
     otc_dma.clear(&ot).wait();
     otc_dma.clear(&ot.swap()).wait();

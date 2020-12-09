@@ -4,9 +4,14 @@
 //! registers](http://problemkaputt.de/psx-spx.htm#iomap). This module defines zero-sized types for
 //! read and/or write access to each register and an [`MMIO`] struct to hold
 //! them.
-
 mod macros;
 pub(crate) mod register;
+
+pub trait MMIOState {}
+pub struct Enabled {}
+pub struct Disabled {}
+impl MMIOState for Enabled {}
+impl MMIOState for Disabled {}
 
 pub mod interrupt {
     read_write!(Stat, 0x1F80_1070);
@@ -25,17 +30,33 @@ pub mod dma {
     macro_rules! dma_channel {
         ($name:ident, $offset:expr) => {
             pub mod $name {
-                pub struct Channel {
+                use crate::mmio::{Disabled, Enabled, MMIOState};
+                use core::marker::PhantomData;
+                pub struct Channel<T: MMIOState> {
                     pub base_address: BaseAddress,
                     pub block_control: BlockControl,
                     pub channel_control: ChannelControl,
+                    _state: PhantomData<T>,
                 }
-                impl Channel {
+                impl Channel<Disabled> {
                     pub(crate) unsafe fn new() -> Self {
                         Channel {
                             base_address: BaseAddress::new(),
                             block_control: BlockControl::new(),
                             channel_control: ChannelControl::new(),
+                            _state: PhantomData::<Disabled>,
+                        }
+                    }
+
+                    pub fn enable(self, dma_control: &mut super::Control) -> Channel<Enabled> {
+                        unsafe {
+                            dma_control.$name(true);
+                            Channel {
+                                base_address: BaseAddress::new(),
+                                block_control: BlockControl::new(),
+                                channel_control: ChannelControl::new(),
+                                _state: PhantomData::<Enabled>,
+                            }
                         }
                     }
                 }
@@ -73,13 +94,13 @@ pub struct MMIO {
     pub dma_control: dma::Control,
     pub dma_interrupt: dma::Interrupt,
 
-    pub mdec_in_dma: dma::mdec_in::Channel,
-    pub mdec_out_dma: dma::mdec_out::Channel,
-    pub gpu_dma: dma::gpu::Channel,
-    pub cdrom_dma: dma::cdrom::Channel,
-    pub spu_dma: dma::spu::Channel,
-    pub pio_dma: dma::pio::Channel,
-    pub otc_dma: dma::otc::Channel,
+    pub mdec_in_dma: dma::mdec_in::Channel<Disabled>,
+    pub mdec_out_dma: dma::mdec_out::Channel<Disabled>,
+    pub gpu_dma: dma::gpu::Channel<Disabled>,
+    pub cdrom_dma: dma::cdrom::Channel<Disabled>,
+    pub spu_dma: dma::spu::Channel<Disabled>,
+    pub pio_dma: dma::pio::Channel<Disabled>,
+    pub otc_dma: dma::otc::Channel<Disabled>,
 }
 
 impl MMIO {

@@ -1,14 +1,14 @@
 use super::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, Step, SyncMode};
 use crate::gpu::graphics::SingleOT;
 use crate::gpu::{Clut, TexPage};
-use crate::mmio::{dma, gpu};
+use crate::mmio::{dma, gpu, Enabled};
 use crate::tim::TIM;
 
 // Let's make these methods more readable
 type Transfer<'a, T> = super::Transfer<'a, dma::gpu::ChannelControl, T>;
 type MaybeTransfer<'a, T> = super::MaybeTransfer<'a, dma::gpu::ChannelControl, T>;
 
-impl dma::gpu::Channel {
+impl dma::gpu::Channel<Enabled> {
     pub fn prepare_ot(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
         gp1.dma_direction(2);
         self.block_control.set(BlockSize::LinkedList);
