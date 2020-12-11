@@ -6,8 +6,8 @@ mod irq;
 mod mask;
 mod stat;
 
-pub use irq::IRQ;
 pub(self) use irq::ALL_IRQS;
+pub use irq::IRQ;
 
 pub fn disable() {
     let mut status = cop0::Status::read();

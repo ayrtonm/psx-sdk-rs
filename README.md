@@ -81,15 +81,15 @@ slow. See `cargo psx -h`.
 
 To create a new program just use `cargo-init`, replace `src/main.rs` with
 this template and add `psx = { path = "path/to/psx/crate" }` to `Cargo.toml`
-under `[dependencies]`. Note that the `psx::exe` macro expects a modified main
-interface.
+under `[dependencies]`. Note the modified, unmangled main interface.
 
 ```rust
 #![no_std]
 #![no_main]
 
-psx::exe!();
+use psx::mmio::MMIO;
 
+#[no_mangle]
 fn main(mut mmio: MMIO) {
 }
 ```

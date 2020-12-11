@@ -40,13 +40,14 @@ impl Status {
     pub fn read() -> Self {
         let status;
         unsafe {
-            asm!("mfc0 {}, $12", out(reg) status);
+            asm!("mfc0 $2, $12", out("$2") status);
             Status::from_bits_unchecked(status)
         }
     }
+
     pub fn write(self) {
         unsafe {
-            asm!("mtc0 {}, $12", in(reg) self.bits());
+            asm!("mtc0 $2, $12", in("$2") self.bits());
         }
     }
 }
@@ -55,13 +56,14 @@ impl Cause {
     pub fn read() -> Self {
         let cause;
         unsafe {
-            asm!("mfc0 {}, $13", out(reg) cause);
+            asm!("mfc0 $2, $13", out("$2") cause);
             Cause::from_bits_unchecked(cause)
         }
     }
+
     pub fn write(self) {
         unsafe {
-            asm!("mtc0 {}, $13", in(reg) self.bits());
+            asm!("mtc0 $2, $13", in("$2") self.bits());
         }
     }
 }

@@ -7,9 +7,9 @@ use psx::gpu::graphics::primitive::PolyG3;
 use psx::gpu::graphics::{size_of, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
+use psx::mmio::MMIO;
 
-psx::exe!();
-
+#[no_mangle]
 fn main(mut mmio: MMIO) {
     // Borrow all the IO ports we'll need
     let dma_control = &mut mmio.dma_control;

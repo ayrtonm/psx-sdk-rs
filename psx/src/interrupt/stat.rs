@@ -1,5 +1,5 @@
 use super::IRQ;
-use crate::mmio::interrupt::{Stat};
+use crate::mmio::interrupt::Stat;
 use crate::mmio::register::{Read, Update};
 
 impl Stat {

@@ -4,6 +4,9 @@
 //! registers](http://problemkaputt.de/psx-spx.htm#iomap). This module defines zero-sized types for
 //! read and/or write access to each register and an [`MMIO`] struct to hold
 //! them.
+
+// These struct constructors are all pub(crate) for use in Unsafe wrappers, but not all are used
+#![allow(dead_code)]
 mod macros;
 pub(crate) mod register;
 
@@ -82,6 +85,8 @@ pub mod dma {
     dma_channel!(otc, 6);
 }
 
+// TODO: MMIO must always be zero-sized. I should find a way to add static
+// assertions to ensure this
 pub struct MMIO {
     pub gpu_read: gpu::Read,
     pub gpu_stat: gpu::Stat,
@@ -101,29 +106,6 @@ pub struct MMIO {
     pub spu_dma: dma::spu::Channel<Disabled>,
     pub pio_dma: dma::pio::Channel<Disabled>,
     pub otc_dma: dma::otc::Channel<Disabled>,
-}
-
-impl MMIO {
-    pub unsafe fn new() -> Self {
-        MMIO {
-            gpu_read: gpu::Read::new(),
-            gpu_stat: gpu::Stat::new(),
-            gp0: gpu::GP0::new(),
-            gp1: gpu::GP1::new(),
-
-            int_stat: interrupt::Stat::new(),
-            int_mask: interrupt::Mask::new(),
-
-            dma_control: dma::Control::new(),
-            dma_interrupt: dma::Interrupt::new(),
-
-            mdec_in_dma: dma::mdec_in::Channel::new(),
-            mdec_out_dma: dma::mdec_out::Channel::new(),
-            gpu_dma: dma::gpu::Channel::new(),
-            cdrom_dma: dma::cdrom::Channel::new(),
-            spu_dma: dma::spu::Channel::new(),
-            pio_dma: dma::pio::Channel::new(),
-            otc_dma: dma::otc::Channel::new(),
-        }
-    }
+    // Prevents instantiation
+    _unused: (),
 }

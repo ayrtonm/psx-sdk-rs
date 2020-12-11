@@ -32,18 +32,3 @@ pub fn delay(n: u32) {
         }
     }
 }
-
-#[macro_export]
-macro_rules! exe {
-    () => {
-        use psx::mmio::MMIO;
-
-        mod __exe__ {
-            #[no_mangle]
-            fn main() {
-                let mmio = unsafe { psx::mmio::MMIO::new() };
-                super::main(mmio)
-            }
-        }
-    };
-}
