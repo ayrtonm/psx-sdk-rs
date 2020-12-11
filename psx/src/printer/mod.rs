@@ -157,7 +157,7 @@ impl<const N: usize> Printer<N> {
         let mut j = 2;
         for i in 0..8 {
             let nibble = (x >> ((7 - i) * 4)) & 0xF;
-            if nibble != 0 {
+            if nibble != 0 || i == 7 {
                 leading = false;
             };
             if !leading {

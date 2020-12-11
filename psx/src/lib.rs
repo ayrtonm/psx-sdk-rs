@@ -12,12 +12,13 @@
 mod allocator;
 pub mod bios;
 mod builtins;
+pub mod cop0;
 pub mod dma;
 pub mod framebuffer;
 pub mod gpu;
 pub mod interrupt;
 #[macro_use]
-pub mod macros;
+mod macros;
 pub mod mmio;
 mod panic;
 pub mod printer;

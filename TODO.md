@@ -2,6 +2,11 @@
 
 This is a preliminary list of things missing in psx (which is quite a lot...)
 
+- [x] cop0
+    - [x] Implement interrupt::free
+    - [x] Enable coprocessors
+- [ ] GTE
+    - [ ] Add coprocessor 2 asm snippets
 - [ ] GPU
     - [x] Graphics pipeline
         - [ ] Finish up methods for textured primitives
@@ -18,8 +23,6 @@ This is a preliminary list of things missing in psx (which is quite a lot...)
     - [ ] Timers
     - [ ] draw_quad with logical vertex ordering
     - [ ] VRAM to CPU via DMA
-- [ ] GTE
-    - [ ] Add coprocessor 2 asm snippets
 - [ ] MDEC
 - [ ] SPU
 - [ ] Interrupts
@@ -58,6 +61,7 @@ This is a preliminary list of things missing in psx (which is quite a lot...)
 - [x] TIM parser
     - [x] Test CLUTs
     - [x] Make DMA TIM loader non-blocking
+    - [ ] Are CLUT-only TIMs a thing?
 - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
 
 This is an incomplete list of things missing in `cargo-psx`
