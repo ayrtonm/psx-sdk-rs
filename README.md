@@ -71,11 +71,10 @@ cargo install --path .
 ## Usage
 
 The `examples` directory has some demos which may or may not be broken at the
-moment due to changes in the `psx` crate. To try one out just run `cargo psx
---release` from the demo's directory. This defaults to building an ELF using a
-toolchain named `psx` and repackaging it into a PSEXE with region `JP`. Building
-without `--release` (in debug mode) is possible, but will probably be unusably
-slow. See `cargo psx -h`.
+moment due to changes in the `psx` crate. To try one out just run `cargo psx`
+from the demo's directory. This defaults to building an ELF using a toolchain
+named `psx` and repackaging it into a PSEXE with region `JP`. See `cargo psx -h`
+for more.
 
 ### Program template
 

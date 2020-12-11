@@ -54,11 +54,12 @@ fn main() {
     let args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
         println!("cargo-psx");
-        println!("Builds with cargo then repackages the ELF as a PSEXE\n");
+        println!("Builds with cargo in release-mode then repackages the ELF as a PSEXE\n");
         println!("USAGE:");
         println!("  cargo psx [OPTIONS]\n");
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
+        println!("  --debug              Builds in debug mode");
         println!(
             "  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)"
         );
@@ -83,6 +84,7 @@ fn main() {
     let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
     let (lto, cargo_args) = extract_flag("--lto", cargo_args);
     let (check, cargo_args) = extract_flag("--check", cargo_args);
+    let (debug, mut cargo_args) = extract_flag("--debug", cargo_args);
     // TODO: wrap cargo-init to write program template to src/main.rs
     //let (init, cargo_args) = extract_key_value("--init", cargo_args);
 
@@ -110,6 +112,10 @@ fn main() {
     } else {
         "build"
     };
+
+    if !debug {
+        cargo_args.push("--release".to_string());
+    }
 
     if !skip_build {
         let mut build = Command::new("cargo")
@@ -139,9 +145,9 @@ fn main() {
             .exec()
             .expect("Could not parse cargo metadata");
         let profile = env::args()
-            .any(|arg| arg == "--release")
-            .then_some("release")
-            .unwrap_or("debug");
+            .any(|arg| arg == "--debug")
+            .then_some("debug")
+            .unwrap_or("release");
 
         let target_dir = metadata.target_directory.join(target_triple).join(profile);
         for pkg in metadata.packages {
