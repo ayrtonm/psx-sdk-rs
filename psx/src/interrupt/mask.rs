@@ -1,8 +1,8 @@
 use super::{ALL_IRQS, IRQ};
-use crate::mmio::interrupt::Mask;
+use crate::mmio::int;
 use crate::mmio::register::{Read, Update, Write};
 
-impl Mask {
+impl int::Mask {
     /// Returns the [`IRQ`]\(s\) enabled by [I_MASK](http://problemkaputt.de/psx-spx.htm#interrupts).
     pub fn enabled(&self) -> impl Iterator<Item = IRQ> {
         let val = unsafe { self.read() };

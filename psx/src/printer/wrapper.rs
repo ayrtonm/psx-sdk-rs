@@ -5,7 +5,7 @@ use crate::mmio::{dma, gpu, Enabled};
 
 impl<const N: usize> Default for UnsafePrinter<N> {
     fn default() -> Self {
-        UnsafePrinter::new((0, 0), (8, 16), (0, 0), (320, 240), None)
+        UnsafePrinter::new(0, (8, 16), 0, (320, 240), None)
     }
 }
 

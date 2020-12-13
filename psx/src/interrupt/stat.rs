@@ -1,8 +1,8 @@
 use super::IRQ;
-use crate::mmio::interrupt::Stat;
+use crate::mmio::int;
 use crate::mmio::register::{Read, Update};
 
-impl Stat {
+impl int::Stat {
     /// Zeroes the bit(s) of [I_STAT](http://problemkaputt.de/psx-spx.htm#interrupts) correponding
     /// to the given [`IRQ`]\(s\) to acknowledge them.
     pub fn ack<I>(&mut self, interrupts: I)
@@ -23,6 +23,6 @@ impl Stat {
         let mask = interrupts
             .into_iter()
             .fold(0, |acc, irq| acc | (1 << irq as u32));
-        unsafe { while self.read() != mask {} }
+        unsafe { while self.read() & mask != mask {} }
     }
 }

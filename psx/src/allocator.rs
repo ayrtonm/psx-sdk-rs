@@ -20,5 +20,5 @@ pub static HEAP: BiosAllocator = BiosAllocator;
 
 #[alloc_error_handler]
 fn on_oom(_layout: Layout) -> ! {
-    loop {}
+    panic!("Ran out of memory")
 }

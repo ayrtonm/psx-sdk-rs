@@ -1,7 +1,7 @@
 type Intensity = u8;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Color {
     pub red: Intensity,
     pub green: Intensity,

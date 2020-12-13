@@ -3,6 +3,10 @@ use crate::mmio::gpu;
 use crate::printer::UnsafePrinter;
 use core::panic::PanicInfo;
 
+// TODO: Add some feature flag for cargo-psx --no-alloc
+//extern crate alloc;
+//use crate::panic::alloc::string::ToString;
+
 #[panic_handler]
 //#[cfg(feature = "pretty_panic")]
 fn panic(panic_info: &PanicInfo) -> ! {
@@ -28,6 +32,8 @@ fn panic(panic_info: &PanicInfo) -> ! {
     let s = &panic_info
         .message()
         .unwrap()
+        // TODO: See `extern crate alloc;` above
+        //.to_string();
         .as_str()
         .unwrap_or("panic msg contained formatted arguments");
     // 11210 - 10354 = 856B

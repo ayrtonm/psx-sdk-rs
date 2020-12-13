@@ -37,6 +37,8 @@ impl<const N: usize> SingleOT<N> {
         unsafe {
             *tag &= !0x00FF_FFFF;
             *tag |= self.entries[z];
+            // TODO: Change this to transmute to usize then cast to u32
+            // This will allow the crate to compile on x86-64 for tests
             self.entries[z] = transmute::<_, u32>(tag) & 0x00FF_FFFF;
         }
         self

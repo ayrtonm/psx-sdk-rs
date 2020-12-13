@@ -1,7 +1,7 @@
 pub type Pixel = i16;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Vertex {
     x: Pixel,
     y: Pixel,
@@ -32,5 +32,11 @@ impl Vertex {
     where Vertex: From<T> {
         let other = Vertex::from(other);
         (self.x() + other.x(), self.y() + other.y()).into()
+    }
+
+    pub fn scale<T>(&self, scale: T) -> Self
+    where Vertex: From<T> {
+        let scale = Vertex::from(scale);
+        (self.x() * scale.x(), self.y() * scale.y()).into()
     }
 }

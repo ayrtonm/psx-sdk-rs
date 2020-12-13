@@ -16,7 +16,7 @@ pub struct Disabled {}
 impl MMIOState for Enabled {}
 impl MMIOState for Disabled {}
 
-pub mod interrupt {
+pub mod int {
     read_write!(Stat, 0x1F80_1070);
     read_write!(Mask, 0x1F80_1074);
 }
@@ -93,8 +93,8 @@ pub struct MMIO {
     pub gp0: gpu::GP0,
     pub gp1: gpu::GP1,
 
-    pub int_stat: interrupt::Stat,
-    pub int_mask: interrupt::Mask,
+    pub int_stat: int::Stat,
+    pub int_mask: int::Mask,
 
     pub dma_control: dma::Control,
     pub dma_interrupt: dma::Interrupt,
