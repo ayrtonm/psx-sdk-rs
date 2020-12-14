@@ -1,6 +1,3 @@
-use crate::framebuffer::UnsafeFramebuffer;
-use crate::mmio::gpu;
-use crate::printer::UnsafePrinter;
 use core::panic::PanicInfo;
 
 // TODO: Add some feature flag for cargo-psx --no-alloc
@@ -10,6 +7,10 @@ use core::panic::PanicInfo;
 #[panic_handler]
 #[cfg(feature = "pretty_panic")]
 fn panic(panic_info: &PanicInfo) -> ! {
+    use crate::framebuffer::UnsafeFramebuffer;
+    use crate::mmio::gpu;
+    use crate::printer::UnsafePrinter;
+
     let mut gp0 = unsafe { gpu::GP0::new() };
 
     let mut printer = UnsafePrinter::<1024>::default();
@@ -33,6 +34,6 @@ fn panic(panic_info: &PanicInfo) -> ! {
 
 #[panic_handler]
 #[cfg(not(feature = "pretty_panic"))]
-fn panic(panic_info: &PanicInfo) -> ! {
+fn panic(_panic_info: &PanicInfo) -> ! {
     loop {}
 }
