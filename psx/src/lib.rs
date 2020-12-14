@@ -16,6 +16,7 @@ pub mod cop0;
 pub mod dma;
 pub mod framebuffer;
 pub mod gpu;
+pub mod gte;
 pub mod interrupt;
 #[macro_use]
 mod macros;

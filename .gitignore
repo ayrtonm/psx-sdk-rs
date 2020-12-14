@@ -16,3 +16,4 @@ psxdev/*
 *.s
 examples/filesizes
 */*/*/target
+psx/*.zip

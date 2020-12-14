@@ -8,6 +8,7 @@ use alloc::vec;
 use psx::bios;
 use psx::framebuffer::UnsafeFramebuffer;
 use psx::gpu::Color;
+use psx::gte::GTE;
 use psx::interrupt::IRQ;
 use psx::mmio::gpu::GP1;
 use psx::mmio::{dma, Enabled, MMIO};
@@ -26,7 +27,8 @@ pub struct IO {
 }
 
 #[no_mangle]
-fn main(mut mmio: MMIO) {
+fn main(mut mmio: MMIO, mut gte: GTE) {
+    gte.enable();
     bios::init_heap(0x9F80_0000, 1024);
     let dma_control = &mut mmio.dma_control;
     let mut io = IO {
