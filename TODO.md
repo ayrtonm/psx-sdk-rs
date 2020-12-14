@@ -67,7 +67,12 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
     - [x] Test CLUTs
     - [x] Make DMA TIM loader non-blocking
     - [ ] Are CLUT-only TIMs a thing?
-- [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
+- [ ] Tests
+    - [ ] Test macro invocations
+    - [ ] I might've tried to get too fancy with IRQs, so I should test these
+    - [ ] Test the gpu::graphics stuff
+- [ ] Miscellaneous
+    - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
 
 This is an incomplete list of things missing in `cargo-psx`
 

@@ -1,6 +1,6 @@
 use core::iter;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum IRQ {
     Vblank = 0,
     GPU,
