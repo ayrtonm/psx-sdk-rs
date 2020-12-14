@@ -43,13 +43,15 @@ This is a preliminary list of things missing in psx (which is quite a lot...)
     - [ ] Threads
     - [ ] Try inlining bios asm trampolines
 - [ ] allocator
-    - [ ] Test collections (use GNU ld for now)
-    - [ ] Fix linker error for `alloc` crate with rust-lld
+    - [x] Test collections (use GNU ld for now)
+        - [ ] Made use of Vec and Box in doom demo, but I should add some tests to the `psx` crate itself
+    - [x] Fix linker error for `alloc` crate with rust-lld
 - [ ] Printer
     - [x] Fix printer msg type to work with &str or similar
+    - [ ] Consider something similar to typestates for load_font. But how do I know when someone overwrites the section of VRAM with the font? (i.e. Printer changes from FontLoaded to FontNotLoaded)
     - [ ] Add an UncheckedPrinter
 - [ ] Pretty Panic
-    - [ ] Get formatted args working. Depends on String so it's kinda blocked until allocator is well-tested.
+    - [x] Get formatted args working. Depends on String so it's kinda blocked until allocator is well-tested.
     - [ ] Make printing panic messages a config option since it adds a whole 10 KB (even with LTO)
         - [ ] cfg attributes worked, now how do I set a feature?
 - [ ] Unzip

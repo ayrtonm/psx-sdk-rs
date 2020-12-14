@@ -101,6 +101,8 @@ index 00000000000..d9e91f9a66b
 +   {
 +       *(.MIPS.abiflags)
 +       *(.reginfo)
++       *(.eh_frame)
++       *(.eh_frame_hdr)
 +   }
 +}
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs

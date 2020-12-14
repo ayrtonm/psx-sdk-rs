@@ -91,18 +91,9 @@ fn main() {
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
-    // TODO: remove external toolchain linker after fixing rust-lld's alloc error
-    //let linker = "-C linker=../../mips_toolchain/ld";
-    let rustflags = if lto {
-        "-C lto=fat -C codegen-units=1 -C embed-bitcode=yes"
-    //format!(
-    //    "{} -C lto=fat -C codegen-units=1 -C embed-bitcode=yes",
-    //    linker
-    //)
-    } else {
-        ""
-        //linker.to_string()
-    };
+    let rustflags = lto
+        .then_some("-C lto=fat -C codegen-units=1 -C embed-bitcode=yes")
+        .unwrap_or("");
 
     let target_triple = "mipsel-sony-psx";
 
