@@ -48,6 +48,9 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
     - [x] Fix linker error for `alloc` crate with rust-lld
 - [ ] Printer
     - [x] Fix printer msg type to work with &str or similar
+    - [ ] Fix font_size. Add option to use Sprt16
+    - [ ] Keep trying to decrease size of font.tim.zip
+    - [ ] Find a way to use Printer with small buffers
     - [ ] Consider something similar to typestates for load_font. But how do I know when someone overwrites the section of VRAM with the font? (i.e. Printer changes from FontLoaded to FontNotLoaded)
     - [ ] Add an UncheckedPrinter
 - [ ] Pretty Panic

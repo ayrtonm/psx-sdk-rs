@@ -28,6 +28,7 @@ pub struct IO {
 
 #[no_mangle]
 fn main(mut mmio: MMIO, mut gte: GTE) {
+    // TODO: This breaks mednafen
     gte.enable();
     bios::init_heap(0x9F80_0000, 1024);
     let dma_control = &mut mmio.dma_control;

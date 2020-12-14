@@ -140,8 +140,8 @@ mod color {
     impl_color!(Sprt16);
 }
 
-// TODO: make this into a macro
-impl Sprt {
+// TODO: make these into macros
+impl Sprt8 {
     pub fn t0<T>(&mut self, t0: T) -> &mut Self
     where TexCoord: From<T> {
         self.t0 = t0.into();
@@ -153,7 +153,9 @@ impl Sprt {
         self.clut = clut.into();
         self
     }
+}
 
+impl Sprt {
     pub fn size<T>(&mut self, size: T) -> &mut Self
     where Vertex: From<T> {
         self.size = size.into();

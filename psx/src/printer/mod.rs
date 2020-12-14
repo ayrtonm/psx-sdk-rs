@@ -58,7 +58,7 @@ impl<const N: usize> Printer<N> {
     }
 
     pub fn load_font(&mut self, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel<Enabled>) {
-        let mut font = unzip_now!("../../font.tim.zip");
+        let mut font = unzip_now!("../../small_font_subset.tim.zip");
         let tim = TIM::new(&mut font);
         // TODO: wtf is a 2? use an enum here
         gp1.dma_direction(2);
@@ -94,15 +94,16 @@ impl<const N: usize> Printer<N> {
         // Assuming only one texture page is used
         let ascii_per_row = 128 / w;
         let print_char = |printer: &mut Self, ascii| {
+            let ascii = ascii - (2 * ascii_per_row);
             let xoffset = (ascii % ascii_per_row) * w;
             let yoffset = (ascii / ascii_per_row) * h;
-            let letter = printer.buffer.Sprt().unwrap();
+            let letter = printer.buffer.Sprt8().unwrap();
             letter
                 .color(printer.color.unwrap_or(Color::WHITE))
                 .offset(printer.cursor.shift(printer.box_offset))
                 .t0((xoffset, yoffset))
-                .clut(printer.clut)
-                .size(printer.font_size);
+                .clut(printer.clut);
+                //.size(printer.font_size);
             printer.ot.add_prim(letter, 0);
             if printer.cursor.x() + printer.font_size.x() >=
                 printer.box_offset.x() + printer.box_size.x()
