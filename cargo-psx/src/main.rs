@@ -72,6 +72,7 @@ fn main() {
         println!("  --no-alloc           Avoids building the `alloc` crate");
         println!("  --lto                Enable link-time optimization and set codegen units to 1");
         println!("  --check              Runs cargo check");
+        println!("  --panic              Enable pretty panic messages");
         println!("");
         println!("Run `cargo build -h` for build options");
         return
@@ -84,6 +85,7 @@ fn main() {
     let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
     let (lto, cargo_args) = extract_flag("--lto", cargo_args);
     let (check, cargo_args) = extract_flag("--check", cargo_args);
+    let (pretty_panic, cargo_args) = extract_flag("--pretty", cargo_args);
     let (debug, mut cargo_args) = extract_flag("--debug", cargo_args);
     // TODO: wrap cargo-init to write program template to src/main.rs
     //let (init, cargo_args) = extract_key_value("--init", cargo_args);
@@ -91,6 +93,10 @@ fn main() {
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
+    if pretty_panic {
+        cargo_args.push("--features".to_string());
+        cargo_args.push("psx/pretty_panic".to_string());
+    };
     let rustflags = lto
         .then_some("-C lto=fat -C codegen-units=1 -C embed-bitcode=yes")
         .unwrap_or("");

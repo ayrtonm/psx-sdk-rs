@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 bitflags = "1.2.1"
+
+[features]
+pretty_panic = []

@@ -5,7 +5,7 @@ use core::cell::RefCell;
 
 impl Default for UnsafeFramebuffer {
     fn default() -> Self {
-        UnsafeFramebuffer::new((0, 0), (0, 240), (320, 240))
+        UnsafeFramebuffer::new(0, (0, 240), (320, 240))
     }
 }
 

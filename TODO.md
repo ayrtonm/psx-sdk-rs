@@ -1,6 +1,6 @@
 # Todo
 
-This is a preliminary list of things missing in psx (which is quite a lot...)
+This is a preliminary list of things missing in psx (which is quite a bit...)
 
 - [x] cop0
     - [x] Implement interrupt::free
@@ -52,8 +52,8 @@ This is a preliminary list of things missing in psx (which is quite a lot...)
     - [ ] Add an UncheckedPrinter
 - [ ] Pretty Panic
     - [x] Get formatted args working. Depends on String so it's kinda blocked until allocator is well-tested.
-    - [ ] Make printing panic messages a config option since it adds a whole 10 KB (even with LTO)
-        - [ ] cfg attributes worked, now how do I set a feature?
+    - [x] Make printing panic messages a config option since it adds a whole 10 KB (even with LTO)
+        - [x] cfg attributes worked, now how do I set a feature?
 - [ ] Unzip
     - [ ] Making TIM take a mutable slice broke my lazy macros :( Fix this. Having TIM hold on to its data can work
     - [ ] Add tests (for x86-64) to verify that future commits don't break macros
