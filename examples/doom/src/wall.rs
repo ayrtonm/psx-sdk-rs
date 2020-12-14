@@ -42,10 +42,10 @@ impl Wall {
         let max_x = max(self.start.x(), self.end.x());
         let min_y = min(self.start.y(), self.end.y());
         let max_y = max(self.start.y(), self.end.y());
-        min_x <= point.x()
-            && point.x() <= max_x
-            && min_y <= point.y()
-            && point.y() <= max_y
+        let (a, b, c) = self.normal_form();
+        a * point.x() + b * point.y() + c == 0
+            && (min_x..=max_x).contains(&point.x())
+            && (min_y..=max_y).contains(&point.y())
             && point != self.start
             && point != self.end
     }
