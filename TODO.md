@@ -77,5 +77,6 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
 This is an incomplete list of things missing in `cargo-psx`
 
 - [ ] Modify `extract_flag` and `extract_key_value` to take a `&mut Vec<String>` and only return the extracted result
-- [ ] Wrap cargo-init to overwrite src/main.rs with program template
+    - [x] Fix extract_flag
+    - [ ] Fix extract_key_value
 - [ ] Allow user-defined RUSTFLAGS env var

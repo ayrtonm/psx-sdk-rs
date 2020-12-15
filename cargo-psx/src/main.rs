@@ -4,18 +4,13 @@ use cargo_metadata::MetadataCommand;
 use std::env;
 use std::process::{self, Command, Stdio};
 
-fn extract_flag(flag: &str, args: Vec<String>) -> (bool, Vec<String>) {
-    let flag_present = args.iter().cloned().filter(|arg| arg == flag).count() == 1;
-    let args = if flag_present {
-        args.split(|arg| arg == flag)
-            .flatten()
-            .cloned()
-            .collect::<Vec<String>>()
-    } else {
-        args
-    };
-    (flag_present, args)
+fn extract_flag(flag: &str, args: &mut Vec<String>) -> bool {
+    let n = args.iter().position(|arg| arg == flag);
+    n.map(|n| {
+        args.remove(n);
+    }).is_some()
 }
+
 fn extract_key_value(key: &str, args: Vec<String>) -> (Option<String>, Vec<String>) {
     // Splits arguments at key argument
     let mut temp_iter = args.split(|arg| arg == key);
@@ -78,17 +73,15 @@ fn main() {
         return
     };
     let (region, cargo_args) = extract_key_value("--region", args);
-    let (toolchain_name, cargo_args) = extract_key_value("--toolchain", cargo_args);
-    let (skip_build, cargo_args) = extract_flag("--skip-build", cargo_args);
-    let (mut skip_pack, cargo_args) = extract_flag("--skip-pack", cargo_args);
-    let (no_pad, cargo_args) = extract_flag("--no-pad", cargo_args);
-    let (no_alloc, cargo_args) = extract_flag("--no-alloc", cargo_args);
-    let (lto, cargo_args) = extract_flag("--lto", cargo_args);
-    let (check, cargo_args) = extract_flag("--check", cargo_args);
-    let (pretty_panic, cargo_args) = extract_flag("--pretty", cargo_args);
-    let (debug, mut cargo_args) = extract_flag("--debug", cargo_args);
-    // TODO: wrap cargo-init to write program template to src/main.rs
-    //let (init, cargo_args) = extract_key_value("--init", cargo_args);
+    let (toolchain_name, mut cargo_args) = extract_key_value("--toolchain", cargo_args);
+    let skip_build = extract_flag("--skip-build", &mut cargo_args);
+    let mut skip_pack = extract_flag("--skip-pack", &mut cargo_args);
+    let no_pad = extract_flag("--no-pad", &mut cargo_args);
+    let no_alloc = extract_flag("--no-alloc", &mut cargo_args);
+    let lto = extract_flag("--lto", &mut cargo_args);
+    let check = extract_flag("--check", &mut cargo_args);
+    let pretty_panic = extract_flag("--panic", &mut cargo_args);
+    let debug = extract_flag("--debug", &mut cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
