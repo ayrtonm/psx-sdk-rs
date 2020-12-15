@@ -103,7 +103,6 @@ impl<const N: usize> Printer<N> {
                 .offset(printer.cursor.shift(printer.box_offset))
                 .t0((xoffset, yoffset))
                 .clut(printer.clut);
-            //.size(printer.font_size);
             printer.ot.add_prim(letter, 0);
             if printer.cursor.x() + printer.font_size.x() >=
                 printer.box_offset.x() + printer.box_size.x()
@@ -151,22 +150,24 @@ impl<const N: usize> Printer<N> {
         gpu_dma.prepare_ot(gp1).send(&self.ot).wait();
     }
 
-    pub fn format_u32(x: u32, leading_zeros: bool) -> [u8; 10] {
+    pub fn format_u32(x: u32, leading_zeros: bool) -> [u8; 9] {
         let mut leading = !leading_zeros;
-        let mut ar = [0; 10];
-        ar[0..2].copy_from_slice(b"0x");
-        let mut j = 2;
+        let mut ar = [0; 9];
+        let mut j = 0;
         for i in 0..8 {
             let nibble = (x >> ((7 - i) * 4)) & 0xF;
             if nibble != 0 || i == 7 {
                 leading = false;
             };
             if !leading {
-                let as_char = core::char::from_digit(nibble, 16).unwrap();
+                let as_char = core::char::from_digit(nibble, 16)
+                    .unwrap()
+                    .to_ascii_uppercase();
                 ar[j] = as_char as u8;
                 j += 1;
             }
         }
+        ar[j] = b'h';
         ar
     }
 }

@@ -21,8 +21,11 @@ fn main(mut mmio: MMIO) {
     run_tests(&mut mmio);
     unsafe {
         let exception_addr: u32 = transmute(exception as fn());
-        let j = (1 << 31) | ((exception_addr & 0x0FFF_FFFF) / 4);
-        p.print(b"entry point {}\n{}\n", [j, exception_addr]);
+        let j = (1 << 31) | ((exception_addr & 0x0FFF_FFFF) >> 2);
+        p.print(
+            b"entry point {}\nexception_addr {}\nand jump instr {}\n",
+            [transmute(main as fn(_)), exception_addr, j],
+        );
     }
     p.print(b"All tests passed", []);
     f.swap();
@@ -71,14 +74,12 @@ fn test_exception(mmio: &mut MMIO) {
         core::ptr::write_volatile(0x8000_0084 as *mut u32, 0);
         let mut stat = cop0::Status::read();
         stat.remove(cop0::Status::BEV);
+        stat.insert(cop0::Status::IM);
         stat.write();
         mmio.int_mask.disable_all();
         interrupt::enable();
-        interrupt::free(|| {
-            mmio.int_mask.enable(IRQ::Vblank);
-            mmio.int_stat.ack(IRQ::Vblank);
-        });
-        //exception();
+        mmio.int_stat.ack(IRQ::Vblank);
+        mmio.int_mask.enable(IRQ::Vblank);
         loop {}
     }
 }
