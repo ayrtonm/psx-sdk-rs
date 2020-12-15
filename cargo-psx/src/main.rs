@@ -5,48 +5,26 @@ use std::env;
 use std::process::{self, Command, Stdio};
 
 fn extract_flag(flag: &str, args: &mut Vec<String>) -> bool {
-    let n = args.iter().position(|arg| arg == flag);
-    n.map(|n| {
-        args.remove(n);
-    }).is_some()
+    args.iter()
+        .position(|arg| arg == flag)
+        .map(|n| {
+            args.remove(n);
+        })
+        .is_some()
 }
 
-fn extract_key_value(key: &str, args: Vec<String>) -> (Option<String>, Vec<String>) {
-    // Splits arguments at key argument
-    let mut temp_iter = args.split(|arg| arg == key);
-    // Gets all arguments before key
-    let cargo_args = temp_iter
-        .next()
-        .expect("Args empty")
-        .iter()
-        .cloned()
-        .collect::<Vec<String>>();
-    // Gets arguments after key if any and pops the first argument after key, i.e.
-    // the desired key's value. Then combines the remaining arguments with the
-    // ones before key.
-    match temp_iter.next() {
-        Some(v) => {
-            let mut it = v.iter();
-            (
-                Some(
-                    it.next()
-                        .expect("`split` returned an empty iterator")
-                        .to_string(),
-                ),
-                cargo_args
-                    .iter()
-                    .chain(it)
-                    .cloned()
-                    .collect::<Vec<String>>(),
-            )
-        },
-        None => (None, cargo_args),
-    }
+fn extract_key_value(key: &str, args: &mut Vec<String>) -> Option<String> {
+    args.iter().position(|arg| arg == key).map(|n| {
+        let value = args[n + 1].clone();
+        args.remove(n + 1);
+        args.remove(n);
+        value
+    })
 }
 
 fn main() {
     // Skips `cargo psx`
-    let args = env::args().skip(2).collect::<Vec<String>>();
+    let mut args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
         println!("cargo-psx");
         println!("Builds with cargo in release-mode then repackages the ELF as a PSEXE\n");
@@ -72,16 +50,17 @@ fn main() {
         println!("Run `cargo build -h` for build options");
         return
     };
-    let (region, cargo_args) = extract_key_value("--region", args);
-    let (toolchain_name, mut cargo_args) = extract_key_value("--toolchain", cargo_args);
-    let skip_build = extract_flag("--skip-build", &mut cargo_args);
-    let mut skip_pack = extract_flag("--skip-pack", &mut cargo_args);
-    let no_pad = extract_flag("--no-pad", &mut cargo_args);
-    let no_alloc = extract_flag("--no-alloc", &mut cargo_args);
-    let lto = extract_flag("--lto", &mut cargo_args);
-    let check = extract_flag("--check", &mut cargo_args);
-    let pretty_panic = extract_flag("--panic", &mut cargo_args);
-    let debug = extract_flag("--debug", &mut cargo_args);
+    let cargo_args = &mut args;
+    let region = extract_key_value("--region", cargo_args);
+    let toolchain_name = extract_key_value("--toolchain", cargo_args);
+    let skip_build = extract_flag("--skip-build", cargo_args);
+    let mut skip_pack = extract_flag("--skip-pack", cargo_args);
+    let no_pad = extract_flag("--no-pad", cargo_args);
+    let no_alloc = extract_flag("--no-alloc", cargo_args);
+    let lto = extract_flag("--lto", cargo_args);
+    let check = extract_flag("--check", cargo_args);
+    let pretty_panic = extract_flag("--panic", cargo_args);
+    let debug = extract_flag("--debug", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
