@@ -2,11 +2,15 @@
 
 This is a preliminary list of things missing in psx (which is quite a bit...)
 
+- [ ] Exceptions
+    - [ ] Make a linker script to place an exception fn at the exception vector 0x8000_0080
+- [ ] Controllers
 - [x] cop0
     - [x] Implement interrupt::free
     - [x] Enable coprocessors
 - [ ] GTE
-    - [ ] Add coprocessor 2 asm snippets
+    - [x] Add coprocessor 2 asm snippets
+    - [ ] Make a small demo to test something basic like inner product (probably easiest to print something instead of making a visual demo)
 - [ ] GPU
     - [x] Graphics pipeline
         - [ ] Finish up methods for textured primitives
@@ -26,9 +30,10 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
 - [ ] MDEC
 - [ ] SPU
 - [ ] Interrupts
-    - [ ] Fix ack for IRQ1..3, 7..10
-    - [ ] Add relevant coprocessor 0 asm snippets
-    - [ ] There seems to be a subtle bug with ack/wait Vblank since mednafen no longer works
+    - [ ] Fix ack for IRQ1..3, 7..10 which need to have the IRQ ack'ed at the peripheral between the MMIO reg's ack/wait
+        - [ ] Seems to be fixed since ack/wait are separate, but I should double check that this is true
+    - [x] Add relevant coprocessor 0 asm snippets
+    - [x] There seems to be a subtle bug with ack/wait Vblank since mednafen no longer works
 - [ ] DMA
     - [x] Finish GPU channel
     - [x] Add other channels
@@ -37,7 +42,6 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
 - [ ] CDROM/ISO
     - [ ] Via kernel
     - [ ] Via MMIO
-- [ ] Controllers
 - [ ] Memory cards
 - [ ] BIOS
     - [ ] Threads
@@ -53,7 +57,7 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
     - [ ] Find a way to use Printer with small buffers
     - [ ] Consider something similar to typestates for load_font. But how do I know when someone overwrites the section of VRAM with the font? (i.e. Printer changes from FontLoaded to FontNotLoaded)
     - [ ] Add an UncheckedPrinter
-- [ ] Pretty Panic
+- [x] Pretty Panic
     - [x] Get formatted args working. Depends on String so it's kinda blocked until allocator is well-tested.
     - [x] Make printing panic messages a config option since it adds a whole 10 KB (even with LTO)
         - [x] cfg attributes worked, now how do I set a feature?
@@ -76,7 +80,7 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
 
 This is an incomplete list of things missing in `cargo-psx`
 
-- [ ] Modify `extract_flag` and `extract_key_value` to take a `&mut Vec<String>` and only return the extracted result
+- [x] Modify `extract_flag` and `extract_key_value` to take a `&mut Vec<String>` and only return the extracted result
     - [x] Fix extract_flag
-    - [ ] Fix extract_key_value
-- [ ] Allow user-defined RUSTFLAGS env var
+    - [x] Fix extract_key_value
+- [x] Allow user-defined RUSTFLAGS env var

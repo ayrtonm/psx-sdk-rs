@@ -43,24 +43,30 @@ fn main() {
         println!("  --skip-pack          Skips packaging and only builds an ELF");
         println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
         println!("  --no-alloc           Avoids building the `alloc` crate");
-        println!("  --lto                Enable link-time optimization and set codegen units to 1");
+        println!(
+            "  --lto                Enables link-time optimization and set codegen units to 1"
+        );
+        println!("  --size               Sets opt-level=s to optimize for size");
         println!("  --check              Runs cargo check");
-        println!("  --panic              Enable pretty panic messages");
+        println!("  --panic              Enables panic messages (may ~10 KB)");
         println!("");
         println!("Run `cargo build -h` for build options");
         return
     };
     let cargo_args = &mut args;
-    let region = extract_key_value("--region", cargo_args);
+
+    let debug = extract_flag("--debug", cargo_args);
     let toolchain_name = extract_key_value("--toolchain", cargo_args);
+    let region = extract_key_value("--region", cargo_args);
     let skip_build = extract_flag("--skip-build", cargo_args);
+    // This is enabled later on if we are only running `cargo check`
     let mut skip_pack = extract_flag("--skip-pack", cargo_args);
     let no_pad = extract_flag("--no-pad", cargo_args);
     let no_alloc = extract_flag("--no-alloc", cargo_args);
     let lto = extract_flag("--lto", cargo_args);
+    let size = extract_flag("--size", cargo_args);
     let check = extract_flag("--check", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
-    let debug = extract_flag("--debug", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
@@ -69,9 +75,19 @@ fn main() {
         cargo_args.push("--features".to_string());
         cargo_args.push("psx/pretty_panic".to_string());
     };
-    let rustflags = lto
-        .then_some("-C lto=fat -C codegen-units=1 -C embed-bitcode=yes")
-        .unwrap_or("");
+    let lto_flags = "-C lto=fat -C codegen-units=1 -C embed-bitcode=yes".to_string();
+    let size_flag = "-C opt-level=s".to_string();
+    let rustflags = &match (env::var("RUSTFLAGS").ok(), lto, size) {
+        (None, false, false) => "".to_string(),
+        (None, true, false) => lto_flags,
+        (None, false, true) => size_flag,
+        (None, true, true) => format!("{} {}", lto_flags, size_flag),
+
+        (Some(flags), false, false) => flags,
+        (Some(flags), true, false) => format!("{} {}", flags, lto_flags),
+        (Some(flags), false, true) => format!("{} {}", flags, size_flag),
+        (Some(flags), true, true) => format!("{} {} {}", flags, lto_flags, size_flag),
+    };
 
     let target_triple = "mipsel-sony-psx";
 
