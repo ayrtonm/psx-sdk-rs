@@ -1,13 +1,12 @@
 #![no_std]
 // Pretty much required to implement certain things
 #![feature(min_const_generics)]
-// TODO: Is there an alternative to access the panic message or work with the payload instead?
-#![feature(panic_info_message, fmt_as_str)]
+// Used for error messages
+#![feature(panic_info_message, fmt_as_str, alloc_error_handler)]
 // Could probably get away with not using these if necessary
 #![feature(bool_to_option, array_map, type_alias_impl_trait)]
 // Only used for bios trampolines so far
 #![feature(asm, naked_functions)]
-#![feature(alloc_error_handler)]
 
 mod allocator;
 pub mod bios;

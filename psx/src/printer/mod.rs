@@ -103,7 +103,7 @@ impl<const N: usize> Printer<N> {
                 .offset(printer.cursor.shift(printer.box_offset))
                 .t0((xoffset, yoffset))
                 .clut(printer.clut);
-                //.size(printer.font_size);
+            //.size(printer.font_size);
             printer.ot.add_prim(letter, 0);
             if printer.cursor.x() + printer.font_size.x() >=
                 printer.box_offset.x() + printer.box_size.x()

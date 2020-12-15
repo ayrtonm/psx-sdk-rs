@@ -1,5 +1,8 @@
 use core::ptr::{read_volatile, write_volatile};
 
+// These traits exist in public interfaces, but the module is pub(cate) so they
+// can't be used or implemented outside the crate since that would require
+// importing this module.
 pub trait Address: Sized {
     const ADDRESS: u32;
 }

@@ -16,19 +16,46 @@ pub struct Disabled {}
 impl MMIOState for Enabled {}
 impl MMIOState for Disabled {}
 
+/// Interrupt status and mask registers
 pub mod int {
-    read_write!(Stat, 0x1F80_1070);
-    read_write!(Mask, 0x1F80_1074);
+    read_write!(
+        /// Read and acknowledge IRQs.
+        Stat,
+        0x1F80_1070
+    );
+    read_write!(
+        /// Enable and disable IRQs.
+        Mask,
+        0x1F80_1074
+    );
 }
 
+/// GPU I/O registers
 pub mod gpu {
-    read_only!(Read, 0x1F80_1810);
-    write_only!(GP0, 0x1F80_1810);
+    read_only!(
+        /// Receives responses to GP0(C0h) and GP1(10h) commands.
+        Read,
+        0x1F80_1810
+    );
+    write_only!(
+        /// Sends GP0 commands and packets for rendering and VRAM access.
+        GP0,
+        0x1F80_1810
+    );
 
-    read_only!(Stat, 0x1F80_1814);
-    write_only!(GP1, 0x1F80_1814);
+    read_only!(
+        /// GPU status register
+        Stat,
+        0x1F80_1814
+    );
+    write_only!(
+        /// Sends GP1 commands for display and DMA control.
+        GP1,
+        0x1F80_1814
+    );
 }
 
+/// DMA channel, control and interrupt registers
 pub mod dma {
     macro_rules! dma_channel {
         ($name:ident, $offset:expr) => {
@@ -87,6 +114,7 @@ pub mod dma {
 
 // TODO: MMIO must always be zero-sized. I should find a way to add static
 // assertions to ensure this
+/// Contains an instance of each I/O register defined in this module
 pub struct MMIO {
     pub gpu_read: gpu::Read,
     pub gpu_stat: gpu::Stat,

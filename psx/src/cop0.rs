@@ -1,5 +1,7 @@
 use bitflags::bitflags;
 
+// TODO: Double check the multi-bit flags. Multi-bit flags probably aren't as
+// useful as I'm imagining
 bitflags! {
     pub struct Status: u32 {
         const IEC = 1;
