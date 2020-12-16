@@ -69,3 +69,15 @@ impl Cause {
         }
     }
 }
+
+pub struct EPC;
+
+impl EPC {
+    pub fn read() -> u32 {
+        let epc;
+        unsafe {
+            asm!("mfc0 $2, $14", out("$2") epc);
+        }
+        epc
+    }
+}
