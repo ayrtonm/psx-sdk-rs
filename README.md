@@ -24,7 +24,9 @@ for building the rust compiler and LLVM for more specifics.
     ```
 
     Note that enabling incremental compilation here only affects the build of
-    the compiler itself, not any code generated for the PlayStation.
+    the compiler itself, not any code generated for the PlayStation. This can
+    speed up compilation of the compiler after an initial build, but comes at
+    the cost of increased memory usage and storage requirements.
 
 3. Patch the rust compiler:
 

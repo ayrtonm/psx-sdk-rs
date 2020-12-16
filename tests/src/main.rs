@@ -65,12 +65,14 @@ fn exception(mut mmio: MMIO) {
     unsafe {
         p.print(
             b"hit an exception\n\
+                  Caused by {}\n\
                   EPC (cop0r14) contains {}\n\
                   Entry point {}\n\
                   test_exception {}\n\
                   this fn {}\n\
                   end fn {}",
             [
+                cop0::Cause::read().bits(),
                 cop0::EPC::read(),
                 transmute(main as fn(_)),
                 transmute(test_exception as fn(_)),
@@ -85,8 +87,11 @@ fn exception(mut mmio: MMIO) {
     stat.remove(cop0::Status::IM);
     stat.write();
     unsafe {
-        asm!("j $2
-              nop", in("$2") cop0::EPC::read());
+        asm!(".macro rfe
+              .word 0x42000010
+              .endmacro
+              j $2
+              rfe", in("$2") cop0::EPC::read());
     }
 }
 
