@@ -13,7 +13,11 @@ bitflags! {
         const IEO = 1 << 4;
         const KUO = 1 << 5;
 
-        const IM = 0x0000_FF00;
+        //const IM = 0x0000_FF00;
+        const IM_SW1 = 1 << 8;
+        const IM_SW2 = 1 << 9;
+        const IM_HW = 1 << 10;
+        // Bits 11-15 of IM are always zero
         const ISC = 1 << 16;
         const SWC = 1 << 17;
         const PZ = 1 << 18;
@@ -39,6 +43,7 @@ bitflags! {
 }
 
 impl Status {
+    #[inline(always)]
     pub fn read() -> Self {
         let status;
         unsafe {
@@ -47,6 +52,7 @@ impl Status {
         }
     }
 
+    #[inline(always)]
     pub fn write(self) {
         unsafe {
             asm!("mtc0 $2, $12", in("$2") self.bits());
@@ -55,6 +61,7 @@ impl Status {
 }
 
 impl Cause {
+    #[inline(always)]
     pub fn read() -> Self {
         let cause;
         unsafe {
@@ -63,6 +70,7 @@ impl Cause {
         }
     }
 
+    #[inline(always)]
     pub fn write(self) {
         unsafe {
             asm!("mtc0 $2, $13", in("$2") self.bits());
@@ -73,6 +81,7 @@ impl Cause {
 pub struct EPC;
 
 impl EPC {
+    #[inline(always)]
     pub fn read() -> u32 {
         let epc;
         unsafe {
@@ -81,3 +90,14 @@ impl EPC {
         epc
     }
 }
+
+//#[naked]
+//#[inline(always)]
+//pub fn rfe() {
+//    unsafe {
+//        asm!(".macro rfe
+//              .word 0x42000010
+//              .endmacro
+//              rfe");
+//    }
+//}

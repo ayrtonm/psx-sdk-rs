@@ -27,7 +27,7 @@ fn tests_passed() {
     let mut f = UnsafeFramebuffer::default();
     p.load_font();
     unsafe {
-        p.print(b"All tests passed with {} exceptions", [EXCEPTION_NUM]);
+        p.print(b"All tests passed with {} exception(s)", [EXCEPTION_NUM]);
     }
     f.swap();
     loop {}
@@ -95,8 +95,7 @@ fn exception(mut mmio: MMIO) {
     //stat.remove(cop0::Status::IM);
     //stat.write();
     unsafe {
-        asm!(".word 0x42000010
-              j $2", in("$2") cop0::EPC::read());
+        asm!("j $2", in("$2") cop0::EPC::read());
     }
 }
 
