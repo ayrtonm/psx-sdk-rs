@@ -27,9 +27,9 @@ fn main() {
     let mut args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
         println!("cargo-psx");
-        println!("Builds with cargo in release-mode then repackages the ELF as a PSEXE\n");
+        println!("Builds with cargo in release mode then repackages the ELF as a PSEXE\n");
         println!("USAGE:");
-        println!("  cargo psx [OPTIONS]\n");
+        println!("  cargo psx [check] [OPTIONS]\n");
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
         println!("  --debug              Builds in debug mode");
@@ -47,8 +47,7 @@ fn main() {
             "  --lto                Enables link-time optimization and set codegen units to 1"
         );
         println!("  --size               Sets opt-level=s to optimize for size");
-        println!("  --check              Runs cargo check");
-        println!("  --panic              Enables panic messages (may ~10 KB)");
+        println!("  --panic              Enables panic messages (may add ~10 KB)");
         println!("");
         println!("Run `cargo build -h` for build options");
         return
@@ -65,7 +64,7 @@ fn main() {
     let no_alloc = extract_flag("--no-alloc", cargo_args);
     let lto = extract_flag("--lto", cargo_args);
     let size = extract_flag("--size", cargo_args);
-    let check = extract_flag("--check", cargo_args);
+    let check = extract_flag("check", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
