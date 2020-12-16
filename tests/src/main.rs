@@ -14,6 +14,8 @@ use psx::gpu::{Color, Vertex};
 use psx::interrupt::IRQ;
 use psx::{cop0, interrupt};
 
+static mut EXCEPTION_NUM: u32 = 0;
+
 #[no_mangle]
 fn main(mut mmio: MMIO) {
     run_tests(&mut mmio);
@@ -24,7 +26,9 @@ fn tests_passed() {
     let mut p = UnsafePrinter::<1024>::default();
     let mut f = UnsafeFramebuffer::default();
     p.load_font();
-    p.print(b"All tests passed", []);
+    unsafe {
+        p.print(b"All tests passed with {} exceptions", [EXCEPTION_NUM]);
+    }
     f.swap();
     loop {}
 }
@@ -57,48 +61,49 @@ fn test_int_mask(int_mask: &mut int::Mask) {
 // Required to return from the exception
 #[naked]
 fn exception(mut mmio: MMIO) {
-    let gp0 = &mut mmio.gp0;
-    let gp1 = &mut mmio.gp1;
-    let mut p = UnsafePrinter::<1024>::default();
-    let mut f = Framebuffer::new(0, (0, 240), (320, 240), gp0, gp1);
-    p.load_font();
-    unsafe {
-        p.print(
-            b"hit an exception\n\
+    interrupt::free(|| {
+        let gp0 = &mut mmio.gp0;
+        let gp1 = &mut mmio.gp1;
+        let mut p = UnsafePrinter::<1024>::default();
+        let mut f = Framebuffer::new(0, (0, 240), (320, 240), gp0, gp1);
+        p.load_font();
+        unsafe {
+            EXCEPTION_NUM += 1;
+            p.print(
+                b"hit exception number {}\n\
                   Caused by {}\n\
                   EPC (cop0r14) contains {}\n\
                   Entry point {}\n\
                   test_exception {}\n\
                   this fn {}\n\
                   end fn {}",
-            [
-                cop0::Cause::read().bits(),
-                cop0::EPC::read(),
-                transmute(main as fn(_)),
-                transmute(test_exception as fn(_)),
-                transmute(exception as fn(_)),
-                transmute(tests_passed as fn()),
-            ],
-        );
-    }
-    f.swap(gp0, gp1);
-    interrupt::disable();
-    let mut stat = cop0::Status::read();
-    stat.remove(cop0::Status::IM);
-    stat.write();
+                [
+                    EXCEPTION_NUM,
+                    cop0::Cause::read().bits(),
+                    cop0::EPC::read(),
+                    transmute(main as fn(_)),
+                    transmute(test_exception as fn(_)),
+                    transmute(exception as fn(_)),
+                    transmute(tests_passed as fn()),
+                ],
+            );
+        }
+        f.swap(gp0, gp1);
+    });
+    //interrupt::disable();
+    //let mut stat = cop0::Status::read();
+    //stat.remove(cop0::Status::IM);
+    //stat.write();
     unsafe {
-        asm!(".macro rfe
-              .word 0x42000010
-              .endmacro
-              j $2
-              rfe", in("$2") cop0::EPC::read());
+        asm!(".word 0x42000010
+              j $2", in("$2") cop0::EPC::read());
     }
 }
 
 fn test_exception(mmio: &mut MMIO) {
     unsafe {
         let exception_addr = transmute::<_, u32>(exception as fn(_));
-        let j = (3 << 26) | ((exception_addr & 0x03FF_FFFF) >> 2);
+        let j = (2 << 26) | ((exception_addr & 0x03FF_FFFF) >> 2);
         core::ptr::write_volatile(0x8000_0080 as *mut u32, j);
         // Don't forget to fill the jump delay slot
         core::ptr::write_volatile(0x8000_0084 as *mut u32, 0);
@@ -107,9 +112,6 @@ fn test_exception(mmio: &mut MMIO) {
         stat.insert(cop0::Status::IM);
         stat.write();
         interrupt::enable();
-        // This function should return after the rfe so end() shouldn't be
-        // necessary, but it seems that the interrupt handler is messing with
-        // $ra or my stack frames
-        //end();
+        //psx::delay(100);
     }
 }
