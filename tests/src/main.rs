@@ -108,7 +108,7 @@ fn test_exception(mmio: &mut MMIO) {
         core::ptr::write_volatile(0x8000_0084 as *mut u32, 0);
         let mut stat = cop0::Status::read();
         stat.remove(cop0::Status::BEV);
-        stat.insert(cop0::Status::IM);
+        stat.insert(cop0::Status::IM_HW);
         stat.write();
         interrupt::enable();
         //psx::delay(100);

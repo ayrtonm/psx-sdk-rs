@@ -4,7 +4,7 @@
 
 use psx::framebuffer::UnsafeFramebuffer;
 use psx::gpu::graphics::primitive::PolyG4;
-use psx::gpu::graphics::{size_of, DoubleBuffer, DoubleOT};
+use psx::gpu::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 use psx::mmio::MMIO;
@@ -22,7 +22,7 @@ fn main(mut mmio: MMIO) {
 
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();
-    const N: usize = size_of::<PolyG4>(1);
+    const N: usize = packet_size::<PolyG4>();
     let buffer = DoubleBuffer::<N>::new();
     let mut ot = DoubleOT::<1>::new();
 
@@ -35,7 +35,7 @@ fn main(mut mmio: MMIO) {
     let midpoint = (x + y) / 2;
     let init = [(x, x), (y, x), (x, y), (y, y)];
     // Make a double-buffered packet
-    let mut poly = buffer.PolyG4().unwrap();
+    let mut poly = buffer.poly_g4().unwrap();
 
     // Initialize one copy of the packet as a blue rectangle
     let pal = [Color::AQUA, Color::MINT, Color::INDIGO, Color::ORANGE];

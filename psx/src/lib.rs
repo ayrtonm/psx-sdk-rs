@@ -7,6 +7,8 @@
 #![feature(bool_to_option, array_map, type_alias_impl_trait)]
 // Only used for bios trampolines so far
 #![feature(asm, naked_functions)]
+// TODO: I should start using this eventually
+//#![deny(missing_docs)]
 
 mod allocator;
 pub mod bios;

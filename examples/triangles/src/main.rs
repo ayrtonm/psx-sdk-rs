@@ -4,7 +4,7 @@
 
 use psx::framebuffer::UnsafeFramebuffer;
 use psx::gpu::graphics::primitive::PolyG3;
-use psx::gpu::graphics::{size_of, DoubleBuffer, DoubleOT};
+use psx::gpu::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 use psx::mmio::MMIO;
@@ -25,7 +25,7 @@ fn main(mut mmio: MMIO) {
     let mut fb = UnsafeFramebuffer::default();
     // Size the buffer so it fits exactly 50 (double-buffered) PolyG3s
     const T_NUM: usize = 50;
-    const BUFFER_SIZE: usize = size_of::<PolyG3>(T_NUM);
+    const BUFFER_SIZE: usize = packet_size::<PolyG3>() * T_NUM;
     let buffer = DoubleBuffer::<BUFFER_SIZE>::new();
     let mut ot = DoubleOT::<1>::new();
 
@@ -40,7 +40,7 @@ fn main(mut mmio: MMIO) {
     };
     // Allocate 50 double-buffered PolyG3s. Note the array `triangles` below only holds handles to
     // the allocated PolyG3s. The PolyG3s themselves are in the buffer's backing arrays.
-    let mut triangles = buffer.array::<PolyG3, T_NUM>().unwrap();
+    let mut triangles = buffer.poly_g3_array::<T_NUM>().unwrap();
 
     // Colors will be constant within the loop, so let's initialize them now. Since the PolyG3s are
     // double-buffered, the colors must be initialized for both copies. Let's use a closure to

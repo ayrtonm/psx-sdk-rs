@@ -6,17 +6,26 @@ macro_rules! impl_prim {
             }
         }
 
-        #[allow(non_snake_case)]
-        impl<const N: usize> SingleBuffer<N> {
-            pub fn $name(&self) -> Option<&mut SinglePacket<$name>> {
-                self.alloc::<$name>()
+        paste! {
+            impl<const N: usize> SingleBuffer<N> {
+                pub fn [<$name:snake>](&self) -> Option<&mut SinglePacket<$name>> {
+                    self.alloc()
+                }
             }
-        }
-
-        #[allow(non_snake_case)]
-        impl<const N: usize> DoubleBuffer<N> {
-            pub fn $name(&self) -> Option<DoublePacket<$name>> {
-                self.alloc::<$name>()
+            impl<const N: usize> SingleBuffer<N> {
+                pub fn [<$name:snake _ array>]<const M: usize>(&self) -> Option<[&mut SinglePacket<$name>; M]> {
+                    self.alloc_array()
+                }
+            }
+            impl<const N: usize> DoubleBuffer<N> {
+                pub fn [<$name:snake>](&self) -> Option<DoublePacket<$name>> {
+                    self.alloc()
+                }
+            }
+            impl<const N: usize> DoubleBuffer<N> {
+                pub fn [<$name:snake _ array>]<const M: usize>(&self) -> Option<[DoublePacket<$name>; M]> {
+                    self.alloc_array()
+                }
             }
         }
 

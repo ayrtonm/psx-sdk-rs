@@ -1,7 +1,7 @@
 use core::cell::UnsafeCell;
 use core::mem::{size_of, MaybeUninit};
 
-use super::{DoublePacket, Init, SinglePacket};
+use super::{packet_size, DoublePacket, Init, SinglePacket};
 
 /// A bump allocator for a single-buffered prim array.
 pub struct SingleBuffer<const N: usize> {
@@ -25,7 +25,7 @@ impl<const N: usize> SingleBuffer<N> {
 
     pub fn alloc<T: Init>(&self) -> Option<&mut SinglePacket<T>> {
         self.generic_alloc::<SinglePacket<T>>().map(|p| {
-            p.tag = (size_of::<SinglePacket<T>>() as u32 / 4) << 24;
+            p.tag = (packet_size::<T>() << 24) as u32;
             p.packet.init();
             p
         })
@@ -53,7 +53,7 @@ impl<const N: usize> SingleBuffer<N> {
         }
     }
 
-    pub fn array<T: Init, const M: usize>(&self) -> Option<[&mut SinglePacket<T>; M]> {
+    pub fn alloc_array<T: Init, const M: usize>(&self) -> Option<[&mut SinglePacket<T>; M]> {
         let mut ar: [&mut SinglePacket<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
         for i in 0..M {
             self.alloc().map(|t| ar[i] = t).or_else(|| return None);
@@ -110,7 +110,7 @@ impl<const N: usize> DoubleBuffer<N> {
         }
     }
 
-    pub fn array<T: Init, const M: usize>(&self) -> Option<[DoublePacket<T>; M]> {
+    pub fn alloc_array<T: Init, const M: usize>(&self) -> Option<[DoublePacket<T>; M]> {
         let mut ar: [DoublePacket<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
         for i in 0..M {
             self.alloc().map(|t| ar[i] = t).or_else(|| return None);
