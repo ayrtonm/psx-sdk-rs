@@ -39,7 +39,7 @@ pub fn draw(walls: &Vec<&Wall>, io: &mut IO) {
 
     let mut ranges_drawn = Vec::<RangeInclusive<i16>>::new();
     let mut draw_wall = |wall: &Wall| {
-        buffer.line_f2().map(|prim| {
+        buffer.linef2().map(|prim| {
             prim
                 .color(wall.color)
                 .vertices([wall.start, wall.end].map(|v| resize_aerial(v)));
@@ -47,7 +47,7 @@ pub fn draw(walls: &Vec<&Wall>, io: &mut IO) {
         });
         let hud_x = 50;
         let hud_y = 50;
-        buffer.poly_f4().map(|hud| {
+        buffer.polyf4().map(|hud| {
             hud
                 .color(Color::BLACK)
                 .vertices([(0, 0), (hud_x, 0), (0, hud_y), (hud_x, hud_y)]);
@@ -67,7 +67,7 @@ pub fn draw(walls: &Vec<&Wall>, io: &mut IO) {
         ranges_drawn.push(start_x..=end_x);
         let start = (start_x, wall.y(start_x).unwrap_or(wall.start.y())).into();
         let end = (end_x, wall.y(end_x).unwrap_or(wall.end.y())).into();
-        buffer.poly_f4().map(|prim| {
+        buffer.polyf4().map(|prim| {
             prim
                 .color(wall.color)
                 .vertices(transform_first_person(start, end));

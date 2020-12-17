@@ -35,7 +35,7 @@ fn main(mut mmio: MMIO) {
     let midpoint = (x + y) / 2;
     let init = [(x, x), (y, x), (x, y), (y, y)];
     // Make a double-buffered packet
-    let mut poly = buffer.poly_g4().unwrap();
+    let mut poly = buffer.polyg4().unwrap();
 
     // Initialize one copy of the packet as a blue rectangle
     let pal = [Color::AQUA, Color::MINT, Color::INDIGO, Color::ORANGE];

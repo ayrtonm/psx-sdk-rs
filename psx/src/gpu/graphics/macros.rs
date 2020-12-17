@@ -8,22 +8,22 @@ macro_rules! impl_prim {
 
         paste! {
             impl<const N: usize> SingleBuffer<N> {
-                pub fn [<$name:snake>](&self) -> Option<&mut SinglePacket<$name>> {
+                pub fn [<$name:lower>](&self) -> Option<&mut SinglePacket<$name>> {
                     self.alloc()
                 }
             }
             impl<const N: usize> SingleBuffer<N> {
-                pub fn [<$name:snake _ array>]<const M: usize>(&self) -> Option<[&mut SinglePacket<$name>; M]> {
+                pub fn [<$name:lower _ array>]<const M: usize>(&self) -> Option<[&mut SinglePacket<$name>; M]> {
                     self.alloc_array()
                 }
             }
             impl<const N: usize> DoubleBuffer<N> {
-                pub fn [<$name:snake>](&self) -> Option<DoublePacket<$name>> {
+                pub fn [<$name:lower>](&self) -> Option<DoublePacket<$name>> {
                     self.alloc()
                 }
             }
             impl<const N: usize> DoubleBuffer<N> {
-                pub fn [<$name:snake _ array>]<const M: usize>(&self) -> Option<[DoublePacket<$name>; M]> {
+                pub fn [<$name:lower _ array>]<const M: usize>(&self) -> Option<[DoublePacket<$name>; M]> {
                     self.alloc_array()
                 }
             }

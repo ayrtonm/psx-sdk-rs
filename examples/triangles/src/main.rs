@@ -40,7 +40,7 @@ fn main(mut mmio: MMIO) {
     };
     // Allocate 50 double-buffered PolyG3s. Note the array `triangles` below only holds handles to
     // the allocated PolyG3s. The PolyG3s themselves are in the buffer's backing arrays.
-    let mut triangles = buffer.poly_g3_array::<T_NUM>().unwrap();
+    let mut triangles = buffer.polyg3_array::<T_NUM>().unwrap();
 
     // Colors will be constant within the loop, so let's initialize them now. Since the PolyG3s are
     // double-buffered, the colors must be initialized for both copies. Let's use a closure to
