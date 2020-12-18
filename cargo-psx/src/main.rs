@@ -1,6 +1,6 @@
 #![feature(bool_to_option)]
 
-use cargo_metadata::MetadataCommand;
+use cargo_metadata::{Metadata, MetadataCommand, Package, Target};
 use std::env;
 use std::process::{self, Command, Stdio};
 
@@ -22,14 +22,34 @@ fn extract_key_value(key: &str, args: &mut Vec<String>) -> Option<String> {
     })
 }
 
+fn apply_packages<F: Fn(&Package)>(metadata: &Metadata, f: F) {
+    for pkg in &metadata.packages {
+        f(&pkg);
+    }
+}
+
+fn apply_targets<F: Fn(&Target)>(metadata: &Metadata, f: F) {
+    for pkg in &metadata.packages {
+        for target in &pkg.targets {
+            if target.kind.iter().any(|k| k == "bin") {
+                f(&target);
+            }
+        }
+    }
+}
+
+fn psexe_name(name: &str, profile: &str, region: &str) -> String {
+    format!("{}_{}_{}.psexe", name, profile, region)
+}
+
 fn main() {
     // Skips `cargo psx`
     let mut args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
         println!("cargo-psx");
-        println!("Builds with cargo in release mode then repackages the ELF as a PSEXE\n");
+        println!("Runs a cargo subcommand then repackages the resulting ELF as a PSEXE\n");
         println!("USAGE:");
-        println!("  cargo psx [check] [OPTIONS]\n");
+        println!("  cargo psx [clean] [check] [OPTIONS]\n");
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
         println!("  --debug              Builds in debug mode");
@@ -54,17 +74,20 @@ fn main() {
     };
     let cargo_args = &mut args;
 
+    let check = extract_flag("check", cargo_args);
+    let clean = extract_flag("clean", cargo_args);
+
     let debug = extract_flag("--debug", cargo_args);
     let toolchain_name = extract_key_value("--toolchain", cargo_args);
     let region = extract_key_value("--region", cargo_args);
-    let skip_build = extract_flag("--skip-build", cargo_args);
+    // This is enabled later on if we are only running `cargo clean`
+    let mut skip_build = extract_flag("--skip-build", cargo_args);
     // This is enabled later on if we are only running `cargo check`
     let mut skip_pack = extract_flag("--skip-pack", cargo_args);
     let no_pad = extract_flag("--no-pad", cargo_args);
     let no_alloc = extract_flag("--no-alloc", cargo_args);
     let lto = extract_flag("--lto", cargo_args);
     let size = extract_flag("--size", cargo_args);
-    let check = extract_flag("check", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
@@ -101,6 +124,53 @@ fn main() {
         cargo_args.push("--release".to_string());
     }
 
+    // Gets cargo metadata for `clean` and `pack` steps
+    let metadata = &MetadataCommand::new()
+        .exec()
+        .expect("Could not parse cargo metadata");
+    let profile = env::args()
+        .any(|arg| arg == "--debug")
+        .then_some("debug")
+        .unwrap_or("release");
+
+    if clean {
+        skip_build = true;
+        skip_pack = true;
+        apply_packages(metadata, |pkg| {
+            let mut clean = Command::new("cargo")
+                .arg("clean")
+                .arg("-p")
+                .arg(&pkg.name)
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .expect("`cargo clean` failed to start");
+            let status = clean.wait().expect("`cargo clean` wasn't running");
+            if !status.success() {
+                let code = status.code().unwrap_or(1);
+                process::exit(code);
+            }
+        });
+        apply_targets(metadata, |target| {
+            let psexe_name = &psexe_name(&target.name, profile, &region);
+            let mut rm = Command::new("rm")
+                .arg(psexe_name)
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .expect(&format!("`rm {}` failed to start", psexe_name));
+            let status = rm
+                .wait()
+                .expect(&format!("`rm {}` wasn't running", psexe_name));
+            if !status.success() {
+                let code = status.code().unwrap_or(1);
+                process::exit(code);
+            }
+        });
+    }
+
     if !skip_build {
         let mut build = Command::new("cargo")
             .arg("+".to_string() + &toolchain_name)
@@ -115,7 +185,7 @@ fn main() {
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .spawn()
-            .expect("`cargo build` failed to start");
+            .expect(&format!("`cargo {}` failed to start", cargo_subcmd));
 
         let status = build.wait().expect("`cargo build` wasn't running");
         if !status.success() {
@@ -125,28 +195,16 @@ fn main() {
     }
 
     if !skip_pack {
-        let metadata = MetadataCommand::new()
-            .exec()
-            .expect("Could not parse cargo metadata");
-        let profile = env::args()
-            .any(|arg| arg == "--debug")
-            .then_some("debug")
-            .unwrap_or("release");
-
         let target_dir = metadata.target_directory.join(target_triple).join(profile);
-        for pkg in metadata.packages {
-            for target in pkg.targets {
-                if target.kind.iter().any(|k| k == "bin") {
-                    let elf = &target_dir
-                        .join(&target.name)
-                        .to_str()
-                        .expect("Could not convert ELF path to UTF-8")
-                        .to_string();
-                    let psexe = &format!("{}_{}_{}{}", &target.name, profile, region, ".psexe");
-                    let convert_args = vec![region.as_str(), elf, psexe];
-                    elf2psexe::main(convert_args, no_pad);
-                }
-            }
-        }
+        apply_targets(metadata, |target| {
+            let elf = &target_dir
+                .join(&target.name)
+                .to_str()
+                .expect("Could not convert ELF path to UTF-8")
+                .to_string();
+            let psexe = &psexe_name(&target.name, profile, &region);
+            let convert_args = vec![region.as_str(), elf, psexe];
+            elf2psexe::main(convert_args, no_pad);
+        });
     }
 }
