@@ -106,11 +106,9 @@ fn test_exception(mmio: &mut MMIO) {
         core::ptr::write_volatile(0x8000_0080 as *mut u32, j);
         // Don't forget to fill the jump delay slot
         core::ptr::write_volatile(0x8000_0084 as *mut u32, 0);
-        let mut stat = cop0::Status::read();
-        stat.remove(cop0::Status::BEV);
-        stat.insert(cop0::Status::IM_HW);
-        stat.write();
-        interrupt::enable();
-        //psx::delay(100);
+        cop0::Status::read()
+            .enable_hw_int()
+            .enable_interrupts()
+            .write();
     }
 }

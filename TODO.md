@@ -2,18 +2,27 @@
 
 This is a preliminary list of things missing in psx (which is quite a bit...)
 
-- [ ] Exceptions
-    - [ ] Make a linker script to place an exception fn at the exception vector 0x8000_0080
 - [ ] Controllers
+- [ ] Exceptions
+    - [x] Install exception vectors
+    - [x] Call fn from exception
+    - [x] return from exception
+    - [x] return from interrupted function
+    - [ ] resuming from an interrupted, nested interrupt
+    - [ ] Does it make sense to use the software interrupts anywhere? Maybe for task priorities?
+    - [ ] Make an API to do all this. Should the exception vector be a member of MMIO?
 - [x] cop0
     - [x] Implement interrupt::free
     - [x] Enable coprocessors
+    - [x] LLVM can't optimize multiple consecutive bitflag read/writes, so I should make all cop0 register modifications `must_use` methods of cop0::$REG.
 - [ ] GTE
     - [x] Add coprocessor 2 asm snippets
     - [ ] Make a small demo to test something basic like inner product (probably easiest to print something instead of making a visual demo)
+    - [ ] Make some R/W trait for coprocessor registers. Basically like MMIO R/W but without a default impl
 - [ ] GPU
     - [x] Graphics pipeline
         - [ ] Finish up methods for textured primitives
+        - [ ] Separate graphics from gpu module
         - [x] Double buffering
             - [x] Think of a good way to swap all primitives at once. All primitives borrow Buffer so maybe checking a bool there might work
         - [x] Find a way to avoid rewriting `T`'s methods for `Packet<T>`. `Packet<T>` will save 32 bits per primitive so it's definitely the way to go, but I'd rather not have to write so many methods if possible

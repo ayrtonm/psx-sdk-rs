@@ -3,6 +3,7 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
+use psx::printer::UnsafePrinter;
 use psx::gpu::graphics::primitive::PolyG4;
 use psx::gpu::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
@@ -30,10 +31,14 @@ fn main(mut mmio: MMIO) {
     otc_dma.clear(&ot).wait();
     otc_dma.clear(&ot.swap()).wait();
 
-    let x = 64;
-    let y = 128;
-    let midpoint = (x + y) / 2;
-    let init = [(x, x), (y, x), (x, y), (y, y)];
+    let midpoint = Vertex::from((160, 120));
+    let half_size = 64;
+    let init = [
+        midpoint.shift(-half_size),
+        midpoint.shift((-half_size, half_size)),
+        midpoint.shift((half_size, -half_size)),
+        midpoint.shift(half_size),
+    ];
     // Make a double-buffered packet
     let mut poly = buffer.polyg4().unwrap();
 
@@ -70,6 +75,10 @@ fn main(mut mmio: MMIO) {
         ot.swap();
         send_ot.wait();
         gpu_stat.sync();
+        let mut p = UnsafePrinter::<1024>::new(0, 8, (0, 200), (320, 40), None);
+        p.load_font();
+        p.print(b"This demo was made with psx-sdk-rs\n", []);
+        p.print(b"theta = {}", [theta as u32]);
         int_stat.ack(IRQ::Vblank);
         int_stat.wait(IRQ::Vblank);
         fb.swap();

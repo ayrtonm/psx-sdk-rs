@@ -6,8 +6,6 @@ pub struct GTE(());
 
 impl GTE {
     pub fn enable(&mut self) {
-        let mut stat = cop0::Status::read();
-        stat.insert(cop0::Status::CU2);
-        stat.write();
+        cop0::Status::read().set(cop0::Status::CU2).write();
     }
 }

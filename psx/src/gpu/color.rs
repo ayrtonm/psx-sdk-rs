@@ -9,20 +9,23 @@ pub struct Color {
 }
 
 impl Color {
-    pub const AQUA: Self = { Color::BLUE.average(&Color::CYAN) };
     pub const BLACK: Self = { Color::rgb(0, 0, 0) };
-    pub const BLUE: Self = { Color::rgb(0, 0, 255) };
-    pub const CYAN: Self = { Color::GREEN.sum(&Color::BLUE) };
+    pub const WHITE: Self = { Color::rgb(255, 255, 255) };
+
+    pub const RED: Self = { Color::rgb(255, 0, 0) };
     pub const GREEN: Self = { Color::rgb(0, 255, 0) };
-    pub const INDIGO: Self = { Color::BLUE.average(&Color::VIOLET) };
-    pub const LIME: Self = { Color::GREEN.average(&Color::YELLOW) };
-    pub const MINT: Self = { Color::GREEN.average(&Color::CYAN) };
+    pub const BLUE: Self = { Color::rgb(0, 0, 255) };
+
+    pub const YELLOW: Self = { Color::RED.sum(&Color::GREEN) };
+    pub const CYAN: Self = { Color::GREEN.sum(&Color::BLUE) };
+    pub const VIOLET: Self = { Color::BLUE.sum(&Color::RED) };
+
     pub const ORANGE: Self = { Color::RED.average(&Color::YELLOW) };
     pub const PINK: Self = { Color::RED.average(&Color::VIOLET) };
-    pub const RED: Self = { Color::rgb(255, 0, 0) };
-    pub const VIOLET: Self = { Color::BLUE.sum(&Color::RED) };
-    pub const WHITE: Self = { Color::rgb(255, 255, 255) };
-    pub const YELLOW: Self = { Color::RED.sum(&Color::GREEN) };
+    pub const LIME: Self = { Color::GREEN.average(&Color::YELLOW) };
+    pub const MINT: Self = { Color::GREEN.average(&Color::CYAN) };
+    pub const AQUA: Self = { Color::BLUE.average(&Color::CYAN) };
+    pub const INDIGO: Self = { Color::BLUE.average(&Color::VIOLET) };
 
     pub const fn rgb(red: Intensity, green: Intensity, blue: Intensity) -> Self {
         Color { red, green, blue }
