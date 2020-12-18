@@ -21,18 +21,21 @@ pub trait Sources {
 }
 
 impl Sources for Source0 {
+    #[inline(always)]
     fn bits(self) -> u32 {
         self as u32
     }
 }
 
 impl Sources for Source1 {
+    #[inline(always)]
     fn bits(self) -> u32 {
         self as u32
     }
 }
 
 impl Sources for Source2 {
+    #[inline(always)]
     fn bits(self) -> u32 {
         self as u32
     }

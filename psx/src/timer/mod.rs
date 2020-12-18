@@ -13,13 +13,13 @@ macro_rules! impl_timer {
     ($offset:expr) => {
         paste::paste! {
             impl crate::mmio::[<timer $offset>]::Current {
-                pub fn get_current(&self) -> u16 {
+                pub fn get(&self) -> u16 {
                     unsafe {
                         self.read() as u16
                     }
                 }
 
-                pub fn set_current(&mut self, value: u16) {
+                pub fn set(&mut self, value: u16) {
                     unsafe {
                         self.write(value.into())
                     }
@@ -44,6 +44,21 @@ macro_rules! impl_timer {
                     self
                 }
 
+                #[inline(always)]
+                pub fn target_reset(&mut self, enable: bool) -> &mut Self {
+                    unsafe {
+                        self.update(|val| {
+                            if enable {
+                                val | (1 << 3)
+                            } else {
+                                val & !(1 << 3)
+                            }
+                        });
+                    }
+                    self
+                }
+
+                #[inline(always)]
                 pub fn source(&mut self, source: [<Source $offset>]) -> &mut Self {
                     unsafe {
                         self.update(|mut val| {
@@ -56,13 +71,13 @@ macro_rules! impl_timer {
             }
 
             impl crate::mmio::[<timer $offset>]::Target {
-                pub fn get_target(&self) -> u16 {
+                pub fn get(&self) -> u16 {
                     unsafe {
                         self.read() as u16
                     }
                 }
 
-                pub fn set_target(&mut self, value: u16) {
+                pub fn set(&mut self, value: u16) {
                     unsafe {
                         self.write(value.into())
                     }

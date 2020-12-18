@@ -85,6 +85,7 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
     - [ ] I might've tried to get too fancy with IRQs, so I should test these
     - [ ] Test the gpu::graphics stuff
 - [ ] Miscellaneous
+    - [ ] There's some obvious opportunities to optimize code size. For example, two consecutive calls to `update` on the same register could be combined into one. I should try to find a way to do this with just rust. Or alternatively throw out everything and rewrite it in assembly :p
     - [ ] Check if any `volatile_*` need a `compiler_fence` (see embedonomicon DMA chapter)
 
 This is an incomplete list of things missing in `cargo-psx`
