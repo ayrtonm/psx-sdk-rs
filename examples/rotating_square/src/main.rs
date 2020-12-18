@@ -18,8 +18,8 @@ fn main(mut mmio: MMIO) {
     let gpu_dma = &mut mmio.gpu_dma.enable(dma_control);
     let gp1 = &mut mmio.gp1;
     let gpu_stat = &mut mmio.gpu_stat;
-    let int_mask = &mut mmio.int_mask;
-    let int_stat = &mut mmio.int_stat;
+    let irq_mask = &mut mmio.irq_mask;
+    let irq_stat = &mut mmio.irq_stat;
 
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();
@@ -60,7 +60,7 @@ fn main(mut mmio: MMIO) {
     ot.swap();
     let mut theta = 0.0;
     gpu_dma.prepare_ot(gp1);
-    int_mask.enable(IRQ::Vblank);
+    irq_mask.enable(IRQ::Vblank);
     loop {
         // Send an ordering table
         // While the ordering table is being sent to the GPU, we can keep working if
@@ -79,8 +79,8 @@ fn main(mut mmio: MMIO) {
         p.load_font();
         p.print(b"This demo was made with psx-sdk-rs\n", []);
         p.print(b"theta = {}", [theta as u32]);
-        int_stat.ack(IRQ::Vblank);
-        int_stat.wait(IRQ::Vblank);
+        irq_stat.ack(IRQ::Vblank);
+        irq_stat.wait(IRQ::Vblank);
         fb.swap();
     }
 }
