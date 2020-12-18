@@ -1,13 +1,24 @@
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Mode0 {
-    A = 0,
-    B,
-    C,
-    D,
+    PauseHblank = 0,
+    ResetHblank,
+    TimeHblank,
+    FreeRunHblank,
 }
 
-pub enum Mode1 {}
-pub enum Mode2 {}
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Mode1 {
+    PauseVblank = 0,
+    ResetVblank,
+    TimeVblank,
+    FreeRunVblank,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Mode2 {
+    Stop = 0,
+    Start,
+}
 
 pub trait Mode {
     fn bits(self) -> u32;

@@ -1,13 +1,20 @@
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Source0 {
-    A = 0,
-    B,
-    C,
-    D,
+    System = 0,
+    DotClock,
 }
 
-pub enum Source1 {}
-pub enum Source2 {}
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Source1 {
+    System = 0,
+    Hblank,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Source2 {
+    System = 0,
+    SlowSystem = 2,
+}
 
 pub trait Source {
     fn bits(self) -> u32;
