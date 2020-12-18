@@ -16,23 +16,23 @@ pub enum Source2 {
     SlowSystem = 2,
 }
 
-pub trait Source {
+pub trait Sources {
     fn bits(self) -> u32;
 }
 
-impl Source for Source0 {
+impl Sources for Source0 {
     fn bits(self) -> u32 {
         self as u32
     }
 }
 
-impl Source for Source1 {
+impl Sources for Source1 {
     fn bits(self) -> u32 {
         self as u32
     }
 }
 
-impl Source for Source2 {
+impl Sources for Source2 {
     fn bits(self) -> u32 {
         self as u32
     }

@@ -20,23 +20,23 @@ pub enum Mode2 {
     Start,
 }
 
-pub trait Mode {
+pub trait Modes {
     fn bits(self) -> u32;
 }
 
-impl Mode for Mode0 {
+impl Modes for Mode0 {
     fn bits(self) -> u32 {
         self as u32
     }
 }
 
-impl Mode for Mode1 {
+impl Modes for Mode1 {
     fn bits(self) -> u32 {
         self as u32
     }
 }
 
-impl Mode for Mode2 {
+impl Modes for Mode2 {
     fn bits(self) -> u32 {
         self as u32
     }

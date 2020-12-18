@@ -135,15 +135,12 @@ macro_rules! timer_registers {
                 read_write!(Mode, 0x1F80_1104 + ($offset * 0x10));
                 read_write!(Target, 0x1F80_1108 + ($offset * 0x10));
                 pub struct Timer {
-                    pub(crate) current: Current,
-                    mode: Mode,
-                    pub(crate) target: Target,
+                    pub current: Current,
+                    pub mode: Mode,
+                    pub target: Target,
+                    // Prevents instantiation
+                    _unused: (),
                 }
-
-                use crate::timer::modes::[<Mode $offset>] as TimerMode;
-                use crate::timer::sources::[<Source $offset>] as Source;
-
-                impl crate::timer::Timer<TimerMode, Source> for Timer {}
             }
         }
     };
