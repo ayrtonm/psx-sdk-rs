@@ -39,7 +39,7 @@ impl gpu::Stat {
     // version. This isn't really shadowing since the interal `read` can't be
     // called directly or implemented.
     unsafe fn read_value(&self) -> u32 {
-        <Self as Read>::read(self)
+        <Self as Read<u32>>::read(self)
     }
 
     pub fn read(&self) -> StatusFlags {

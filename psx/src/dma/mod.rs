@@ -44,7 +44,7 @@ pub enum SyncMode {
     LinkedList,
 }
 
-pub trait BaseAddress: Read + Write {
+pub trait BaseAddress: Read<u32> + Write<u32> {
     /// Gets the memory address where this DMA channel will start reading
     /// from/writing to.
     fn get(&self) -> u32 {
@@ -61,7 +61,7 @@ pub trait BaseAddress: Read + Write {
         unsafe { self.write(address) }
     }
 }
-pub trait BlockControl: Read + Write {
+pub trait BlockControl: Read<u32> + Write<u32> {
     fn get(&self, sync_mode: SyncMode) -> Option<BlockSize> {
         let value = unsafe { self.read() };
         match sync_mode {
@@ -99,7 +99,7 @@ pub trait BlockControl: Read + Write {
         }
     }
 }
-pub trait ChannelControl: Update {
+pub trait ChannelControl: Update<u32> {
     fn set_direction(&mut self, direction: Direction) -> &mut Self {
         unsafe {
             self.update(|val| val & !1 | (direction as u32));

@@ -16,6 +16,16 @@ pub struct Disabled {}
 impl MMIOState for Enabled {}
 impl MMIOState for Disabled {}
 
+pub mod joy {
+    // TODO: This is technically a 1-byte register. Would a 4-byte write be a
+    // problem?
+    read_write!(Data, 0x1F80_1040);
+    read_only!(Stat, 0x1F80_1044);
+    // TODO: These are 16-bit r/w registers
+    //read_write!(Mode, 0x1F80_1048);
+    //read_write!(Ctrl, 0x1F80_104A);
+    //read_write!(Baud, 0x1F80_104E);
+}
 /// Interrupt status and mask registers
 pub mod int {
     read_write!(
@@ -116,13 +126,16 @@ pub mod dma {
 // assertions to ensure this
 /// Contains an instance of each I/O register defined in this module
 pub struct MMIO {
+    pub joy_data: joy::Data,
+    pub joy_stat: joy::Stat,
+
+    pub int_stat: int::Stat,
+    pub int_mask: int::Mask,
+
     pub gpu_read: gpu::Read,
     pub gpu_stat: gpu::Stat,
     pub gp0: gpu::GP0,
     pub gp1: gpu::GP1,
-
-    pub int_stat: int::Stat,
-    pub int_mask: int::Mask,
 
     pub dma_control: dma::Control,
     pub dma_interrupt: dma::Interrupt,
