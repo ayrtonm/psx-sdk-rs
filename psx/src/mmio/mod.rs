@@ -85,7 +85,7 @@ pub mod dma {
                 }
                 impl Channel<Disabled> {
                     pub(crate) unsafe fn new() -> Self {
-                        Channel {
+                        Self {
                             base_address: BaseAddress::new(),
                             block_control: BlockControl::new(),
                             channel_control: ChannelControl::new(),
@@ -134,11 +134,16 @@ macro_rules! timer_registers {
                 read_write!(Current, 0x1F80_1100 + ($offset * 0x10));
                 read_write!(Mode, 0x1F80_1104 + ($offset * 0x10));
                 read_write!(Target, 0x1F80_1108 + ($offset * 0x10));
+                pub struct Timer {
+                    pub(crate) current: Current,
+                    mode: Mode,
+                    pub(crate) target: Target,
+                }
 
                 use crate::timer::modes::[<Mode $offset>] as TimerMode;
                 use crate::timer::sources::[<Source $offset>] as Source;
 
-                impl crate::timer::Timer<TimerMode, Source> for Mode {}
+                impl crate::timer::Timer<TimerMode, Source> for Timer {}
             }
         }
     };
@@ -151,17 +156,9 @@ timer_registers!(2);
 // assertions to ensure this
 /// Contains an instance of each I/O register defined in this module
 pub struct MMIO {
-    pub timer0_current: timer0::Current,
-    pub timer0_mode: timer0::Mode,
-    pub timer0_target: timer0::Target,
-
-    pub timer1_current: timer1::Current,
-    pub timer1_mode: timer1::Mode,
-    pub timer1_target: timer1::Target,
-
-    pub timer2_current: timer2::Current,
-    pub timer2_mode: timer2::Mode,
-    pub timer2_target: timer2::Target,
+    pub timer0: timer0::Timer,
+    pub timer1: timer1::Timer,
+    pub timer2: timer2::Timer,
 
     pub joy_data: joy::Data,
     pub joy_stat: joy::Stat,

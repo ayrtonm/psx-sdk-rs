@@ -37,4 +37,3 @@ impl Source for Source2 {
         self as u32
     }
 }
-
