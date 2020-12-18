@@ -11,7 +11,7 @@ macro_rules! register {
             }
         }
 
-        impl $crate::mmio::register::Address<u32> for $name {
+        impl $crate::mmio::register::Address for $name {
             const ADDRESS: u32 = $address;
         }
     };
