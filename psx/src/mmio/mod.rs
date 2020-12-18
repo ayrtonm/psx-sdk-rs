@@ -134,7 +134,11 @@ macro_rules! timer_registers {
                 read_write!(Current, 0x1F80_1100 + ($offset * 0x10));
                 read_write!(Mode, 0x1F80_1104 + ($offset * 0x10));
                 read_write!(Target, 0x1F80_1108 + ($offset * 0x10));
-                impl crate::timer::Timer for Mode {}
+
+                use crate::timer::modes::[<Mode $offset>] as TimerMode;
+                use crate::timer::sources::[<Source $offset>] as Source;
+
+                impl crate::timer::Timer<TimerMode, Source> for Mode {}
             }
         }
     };
