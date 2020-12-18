@@ -1,3 +1,34 @@
+#[macro_use]
+macro_rules! impl_value {
+    ($value:ident, $reg:path) => {
+        #[must_use = "MMIO register must be bound to a variable or written to memory"]
+        pub struct $value<'a, T: Copy, R: Read<T> + Write<T>> {
+            pub value: T,
+            register: &'a mut R,
+        }
+
+        impl $reg {
+            #[inline(always)]
+            pub fn read(&mut self) -> $value<u32, $reg> {
+                $value {
+                    value: unsafe {
+                        <Self as Read<u32>>::read(self)
+                    },
+                    register: self,
+                }
+            }
+        }
+
+        impl<'a, T: Copy, R: Read<T> + Write<T>> $value<'a, T, R> {
+            pub fn write(self) {
+                unsafe {
+                    self.register.write(self.value)
+                }
+            }
+        }
+    };
+}
+
 #[macro_export]
 macro_rules! file_size {
     ($file:literal) => {{

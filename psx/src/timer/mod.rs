@@ -12,6 +12,7 @@ pub use sources::{Source0, Source1, Source2};
 macro_rules! impl_timer {
     ($offset:expr) => {
         paste::paste! {
+            impl_value!([<Timer $offset Value>], crate::mmio::[<timer $offset>]::Mode);
             impl crate::mmio::[<timer $offset>]::Current {
                 pub fn get(&self) -> u16 {
                     unsafe {
@@ -43,7 +44,6 @@ macro_rules! impl_timer {
                     }
                     self
                 }
-
                 #[inline(always)]
                 pub fn target_reset(&mut self, enable: bool) -> &mut Self {
                     unsafe {
@@ -66,6 +66,25 @@ macro_rules! impl_timer {
                             val | source.bits()
                         });
                     }
+                    self
+                }
+           }
+
+            impl<'a> [<Timer $offset Value>]<'a, u32, crate::mmio::[<timer $offset>]::Mode> {
+                #[inline(always)]
+                pub fn target_reset(mut self, enable: bool) -> Self {
+                    if enable {
+                        self.value |= 1 << 3;
+                    } else {
+                        self.value &= !(1 << 3);
+                    }
+                    self
+                }
+
+                #[inline(always)]
+                pub fn source(mut self, source: [<Source $offset>]) -> Self {
+                    self.value &= !(0b11 << 8);
+                    self.value |= source.bits();
                     self
                 }
             }
