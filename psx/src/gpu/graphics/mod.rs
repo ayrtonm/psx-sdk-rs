@@ -1,8 +1,6 @@
 use core::mem::size_of;
 use core::slice::{from_raw_parts, from_raw_parts_mut};
 
-use paste::paste;
-
 use crate::gpu::{Clut, Color, TexCoord, Vertex};
 
 #[macro_use]

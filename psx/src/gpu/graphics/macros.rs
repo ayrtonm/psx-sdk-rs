@@ -6,7 +6,7 @@ macro_rules! impl_prim {
             }
         }
 
-        paste! {
+        paste::paste! {
             impl<const N: usize> SingleBuffer<N> {
                 pub fn [<$name:lower>](&self) -> Option<&mut SinglePacket<$name>> {
                     self.alloc()

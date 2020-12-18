@@ -1,8 +1,8 @@
 use super::IRQ;
-use crate::mmio::int;
+use crate::mmio::irq;
 use crate::mmio::register::{Read, Update};
 
-impl int::Stat {
+impl irq::Stat {
     /// Zeroes the bit(s) of [I_STAT](http://problemkaputt.de/psx-spx.htm#interrupts) correponding
     /// to the given [`IRQ`]\(s\) to acknowledge them.
     pub fn ack<I>(&mut self, interrupts: I)

@@ -2,6 +2,7 @@
 
 This is a preliminary list of things missing in psx (which is quite a bit...)
 
+- [ ] Timers
 - [ ] Controllers
 - [ ] Exceptions
     - [x] Install exception vectors
@@ -47,7 +48,6 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
     - [x] Finish GPU channel
     - [x] Add other channels
     - [ ] Integrate with interrupts
-- [ ] Timers
 - [ ] CDROM/ISO
     - [ ] Via kernel
     - [ ] Via MMIO

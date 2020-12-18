@@ -25,6 +25,7 @@ pub mod mmio;
 mod panic;
 pub mod printer;
 pub mod tim;
+pub mod timer;
 pub mod unzip;
 
 pub fn delay(n: u32) {

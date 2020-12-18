@@ -21,13 +21,18 @@ pub mod joy {
     // problem?
     read_write!(Data, 0x1F80_1040);
     read_only!(Stat, 0x1F80_1044);
-    // TODO: These are 16-bit r/w registers
-    //read_write!(Mode, 0x1F80_1048);
+    // TODO: These are overlapping 16-bit r/w registers. They'll require new
+    // register macros. TODO: Splitting up Mode and Ctrl will prevent
+    // optimizing individual 16-bit accesses to 32-bit accesses so it might
+    // be best to combine them read_write!(Mode, 0x1F80_1048);
     //read_write!(Ctrl, 0x1F80_104A);
-    //read_write!(Baud, 0x1F80_104E);
+    // TODO: This doesn't overlap with anything, but is an offset 16-bit
+    // register read_write!(Baud, 0x1F80_104E);
 }
+// TODO: These are technically 2-byte registers. But nocash is a bit vague about
+// how legit it is to access them like that
 /// Interrupt status and mask registers
-pub mod int {
+pub mod irq {
     read_write!(
         /// Read and acknowledge IRQs.
         Stat,
@@ -122,15 +127,43 @@ pub mod dma {
     dma_channel!(otc, 6);
 }
 
+macro_rules! timer_registers {
+    ($offset:expr) => {
+        paste::paste! {
+            pub mod [<timer $offset>] {
+                read_write!(Current, 0x1F80_1100 + ($offset * 0x10));
+                read_write!(Mode, 0x1F80_1104 + ($offset * 0x10));
+                read_write!(Target, 0x1F80_1108 + ($offset * 0x10));
+                impl crate::timer::Timer for Mode {}
+            }
+        }
+    };
+}
+timer_registers!(0);
+timer_registers!(1);
+timer_registers!(2);
+
 // TODO: MMIO must always be zero-sized. I should find a way to add static
 // assertions to ensure this
 /// Contains an instance of each I/O register defined in this module
 pub struct MMIO {
+    pub timer0_current: timer0::Current,
+    pub timer0_mode: timer0::Mode,
+    pub timer0_target: timer0::Target,
+
+    pub timer1_current: timer1::Current,
+    pub timer1_mode: timer1::Mode,
+    pub timer1_target: timer1::Target,
+
+    pub timer2_current: timer2::Current,
+    pub timer2_mode: timer2::Mode,
+    pub timer2_target: timer2::Target,
+
     pub joy_data: joy::Data,
     pub joy_stat: joy::Stat,
 
-    pub int_stat: int::Stat,
-    pub int_mask: int::Mask,
+    pub irq_stat: irq::Stat,
+    pub irq_mask: irq::Mask,
 
     pub gpu_read: gpu::Read,
     pub gpu_stat: gpu::Stat,

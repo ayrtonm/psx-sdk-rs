@@ -1,35 +1,37 @@
 // TODO: It'd be nice to have some safeguard against implementing write methods
-// to cop registers TODO: Dead code is temporarily allowed while I make the flag
-// methods
+// to cop registers
+// TODO: Dead code is temporarily allowed while I make the flag methods
+// TODO: It'd be nice to use R26 for mfc0/mtc0 instead of R2. See nocash RFE
+// opcode for more details
 #![allow(dead_code)]
 #[must_use = "Modifications to COP0 status must be written back to cop0r12"]
 pub struct Status(u32);
-pub struct Cause(u32);
+pub struct Cause;
 pub struct EPC;
 
 impl Status {
-    const IEC: u32 = 1;
-    const KUC: u32 = 1 << 1;
-    const IEP: u32 = 1 << 2;
-    const KUP: u32 = 1 << 3;
-    const IEO: u32 = 1 << 4;
-    const KUO: u32 = 1 << 5;
+    pub const IEC: u32 = 1;
+    pub const KUC: u32 = 1 << 1;
+    pub const IEP: u32 = 1 << 2;
+    pub const KUP: u32 = 1 << 3;
+    pub const IEO: u32 = 1 << 4;
+    pub const KUO: u32 = 1 << 5;
 
-    const IM_SW1: u32 = 1 << 8;
-    const IM_SW2: u32 = 1 << 9;
-    const IM_HW: u32 = 1 << 10;
+    pub const IM_SW1: u32 = 1 << 8;
+    pub const IM_SW2: u32 = 1 << 9;
+    pub const IM_HW: u32 = 1 << 10;
     //const IM = 0x0000_FF00;
     // Bits 11-15 of IM are always zero
 
-    const ISC: u32 = 1 << 16;
-    const SWC: u32 = 1 << 17;
-    const PZ: u32 = 1 << 18;
-    const CM: u32 = 1 << 19;
-    const PE: u32 = 1 << 20;
-    const TS: u32 = 1 << 21;
-    const BEV: u32 = 1 << 22;
+    pub const ISC: u32 = 1 << 16;
+    pub const SWC: u32 = 1 << 17;
+    pub const PZ: u32 = 1 << 18;
+    pub const CM: u32 = 1 << 19;
+    pub const PE: u32 = 1 << 20;
+    pub const TS: u32 = 1 << 21;
+    pub const BEV: u32 = 1 << 22;
     //const RE = 1 << 25;
-    const CU0: u32 = 1 << 28;
+    pub const CU0: u32 = 1 << 28;
     //const CU1 = 1 << 29;
     pub const CU2: u32 = 1 << 30;
     //const CU3 = 1 << 31;
@@ -43,27 +45,35 @@ impl Status {
         Self(status)
     }
 
+    pub fn bits(&self) -> u32 {
+        self.0
+    }
+
+    pub(self) fn bits_mut(&mut self) -> &mut u32 {
+        &mut self.0
+    }
+
     #[inline(always)]
     pub fn write(self) {
         unsafe {
-            asm!("mtc0 $2, $12", in("$2") self.0);
+            asm!("mtc0 $2, $12", in("$2") self.bits());
         }
     }
 
     #[inline(always)]
     pub fn contains(&self, flags: u32) -> bool {
-        self.0 & flags != 0
+        self.bits() & flags != 0
     }
 
     #[inline(always)]
     pub fn set(mut self, flags: u32) -> Self {
-        self.0 |= flags;
+        *self.bits_mut() |= flags;
         self
     }
 
     #[inline(always)]
     pub fn clear(mut self, flags: u32) -> Self {
-        self.0 &= !flags;
+        *self.bits_mut() &= !flags;
         self
     }
 
@@ -91,11 +101,11 @@ impl Cause {
     const BD: u32 = 1 << 31;
 
     #[inline(always)]
-    pub fn read() -> Self {
+    pub fn read() -> u32 {
         let cause;
         unsafe {
             asm!("mfc0 $2, $13", out("$2") cause);
-            Self(cause)
+            cause
         }
     }
 }

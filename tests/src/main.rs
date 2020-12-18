@@ -5,7 +5,7 @@
 use core::any::Any;
 use core::mem::{size_of_val, transmute};
 
-use psx::mmio::{int, MMIO};
+use psx::mmio::{irq, MMIO};
 
 use psx::framebuffer::{Framebuffer, UnsafeFramebuffer};
 use psx::printer::UnsafePrinter;
@@ -35,7 +35,7 @@ fn tests_passed() {
 
 fn run_tests(mmio: &mut MMIO) {
     check_sizes(mmio);
-    test_int_mask(&mut mmio.int_mask);
+    test_irq_mask(&mut mmio.irq_mask);
     test_exception(mmio);
 }
 
@@ -50,10 +50,10 @@ fn check_sizes(mmio: &mut MMIO) {
     }
 }
 
-fn test_int_mask(int_mask: &mut int::Mask) {
-    int_mask.disable_all();
-    int_mask.enable(IRQ::Vblank);
-    let mut enabled = int_mask.enabled();
+fn test_irq_mask(irq_mask: &mut irq::Mask) {
+    irq_mask.disable_all();
+    irq_mask.enable(IRQ::Vblank);
+    let mut enabled = irq_mask.enabled();
     assert!(enabled.next() == Some(IRQ::Vblank));
     assert!(enabled.next().is_none());
 }
@@ -79,7 +79,7 @@ fn exception(mut mmio: MMIO) {
                   end fn {}",
                 [
                     EXCEPTION_NUM,
-                    cop0::Cause::read().bits(),
+                    cop0::Cause::read(),
                     cop0::EPC::read(),
                     transmute(main as fn(_)),
                     transmute(test_exception as fn(_)),
@@ -99,7 +99,7 @@ fn exception(mut mmio: MMIO) {
     }
 }
 
-fn test_exception(mmio: &mut MMIO) {
+fn test_exception(_mmio: &mut MMIO) {
     unsafe {
         let exception_addr = transmute::<_, u32>(exception as fn(_));
         let j = (2 << 26) | ((exception_addr & 0x03FF_FFFF) >> 2);
@@ -107,7 +107,7 @@ fn test_exception(mmio: &mut MMIO) {
         // Don't forget to fill the jump delay slot
         core::ptr::write_volatile(0x8000_0084 as *mut u32, 0);
         cop0::Status::read()
-            .enable_hw_int()
+            .set(cop0::Status::IM_HW)
             .enable_interrupts()
             .write();
     }
