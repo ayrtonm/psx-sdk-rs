@@ -29,7 +29,7 @@ pub struct IO {
 #[no_mangle]
 fn main(mut mmio: MMIO, mut gte: GTE) {
     // TODO: This breaks mednafen
-    gte.enable();
+    //gte.enable();
     bios::init_heap(0x9F80_0000, 1024);
     let dma_control = &mut mmio.dma_control;
     let mut io = IO {
@@ -37,7 +37,7 @@ fn main(mut mmio: MMIO, mut gte: GTE) {
         gpu_dma: mmio.gpu_dma.enable(dma_control),
         otc_dma: mmio.otc_dma.enable(dma_control),
     };
-    mmio.int_mask.enable(IRQ::Vblank);
+    mmio.irq_mask.enable(IRQ::Vblank);
     let map = Map::new(vec![
         Wall::new((-4, 2), (0, -2), Color::AQUA),
         Wall::new((0, -2), (4, -2), Color::MINT),
@@ -51,8 +51,8 @@ fn main(mut mmio: MMIO, mut gte: GTE) {
     loop {
         draw(&traversal, &mut io);
         mmio.gpu_stat.sync();
-        mmio.int_stat.ack(IRQ::Vblank);
-        mmio.int_stat.wait(IRQ::Vblank);
+        mmio.irq_stat.ack(IRQ::Vblank);
+        mmio.irq_stat.wait(IRQ::Vblank);
         fb.swap();
     }
 }

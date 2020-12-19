@@ -42,7 +42,7 @@ macro_rules! impl_timer {
                 use super::sources::Sources;
                 use crate::mmio::register::{Read, Write};
 
-                impl_value!(Value, MutValue, crate::mmio::[<timer $offset>]::Mode);
+                impl_mut_value!(crate::mmio::[<timer $offset>]::Mode);
 
                 impl Value {
                     #[inline(always)]
@@ -68,6 +68,7 @@ macro_rules! impl_timer {
                         self.value.bits |= mode.bits();
                         self
                     }
+
                     #[inline(always)]
                     pub fn target_reset(mut self, enable: bool) -> Self {
                         if enable {

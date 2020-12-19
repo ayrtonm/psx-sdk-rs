@@ -1,35 +1,42 @@
-#[macro_use]
+#[macro_export]
 macro_rules! impl_value {
-    ($value:ident, $mut_value:ident, $reg:path) => {
-        pub struct $value {
+    ($reg:path) => {
+        pub struct Value {
             bits: u32,
         }
 
+        impl $reg {
+            #[inline(always)]
+            pub fn get(&self) -> Value {
+                Value {
+                    bits: unsafe { self.read() },
+                }
+            }
+        }
+    };
+}
+#[macro_export]
+macro_rules! impl_mut_value {
+    ($reg:path) => {
+        $crate::impl_value!($reg);
         #[must_use = "MMIO register value must be written to memory"]
-        pub struct $mut_value<'a> {
-            value: $value,
+        pub struct MutValue<'a> {
+            value: Value,
             register: &'a mut $reg,
         }
 
         impl $reg {
             #[inline(always)]
-            pub fn get(&self) -> $value {
-                $value {
-                    bits: unsafe { self.read() },
-                }
-            }
-
-            #[inline(always)]
-            pub fn get_mut(&mut self) -> $mut_value {
-                $mut_value {
+            pub fn get_mut(&mut self) -> MutValue {
+                MutValue {
                     value: self.get(),
                     register: self,
                 }
             }
         }
 
-        impl core::ops::Deref for $mut_value<'_> {
-            type Target = $value;
+        impl core::ops::Deref for MutValue<'_> {
+            type Target = Value;
 
             #[inline(always)]
             fn deref(&self) -> &Self::Target {
@@ -37,7 +44,7 @@ macro_rules! impl_value {
             }
         }
 
-        impl<'a> $mut_value<'a> {
+        impl<'a> MutValue<'a> {
             #[inline(always)]
             pub fn set(self) {
                 unsafe { self.register.write(self.value.bits) }

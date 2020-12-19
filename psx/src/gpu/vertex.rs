@@ -8,22 +8,26 @@ pub struct Vertex {
 }
 
 impl From<Pixel> for Vertex {
+    #[inline(always)]
     fn from(p: Pixel) -> Self {
         Vertex { x: p, y: p }
     }
 }
 
 impl From<(Pixel, Pixel)> for Vertex {
+    #[inline(always)]
     fn from((x, y): (Pixel, Pixel)) -> Self {
         Vertex { x, y }
     }
 }
 
 impl Vertex {
+    #[inline(always)]
     pub fn x(&self) -> Pixel {
         self.x
     }
 
+    #[inline(always)]
     pub fn y(&self) -> Pixel {
         self.y
     }

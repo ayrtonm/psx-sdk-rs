@@ -3,12 +3,12 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::printer::UnsafePrinter;
 use psx::gpu::graphics::primitive::PolyG4;
 use psx::gpu::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 use psx::mmio::MMIO;
+use psx::printer::UnsafePrinter;
 
 #[no_mangle]
 fn main(mut mmio: MMIO) {
