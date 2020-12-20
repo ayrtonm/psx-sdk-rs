@@ -1,5 +1,4 @@
 use crate::mmio::gpu;
-use crate::mmio::register::Read;
 
 impl_value!(gpu::Stat);
 

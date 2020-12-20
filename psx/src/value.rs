@@ -7,6 +7,7 @@ macro_rules! impl_value {
         impl $reg {
             #[inline(always)]
             pub fn get(&self) -> Value {
+                use crate::mmio::register::Read;
                 Value {
                     bits: unsafe { self.read() },
                 }
@@ -46,6 +47,7 @@ macro_rules! impl_mut_value {
         impl<'a> MutValue<'a> {
             #[inline(always)]
             pub fn set(self) -> Value {
+                use crate::mmio::register::Write;
                 unsafe { self.register.write(self.value.bits) };
                 self.value
             }

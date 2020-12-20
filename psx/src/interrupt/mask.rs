@@ -1,6 +1,5 @@
 use super::{ALL_IRQS, IRQ};
 use crate::mmio::irq;
-use crate::mmio::register::{Read, Write};
 
 impl_mut_value!(irq::Mask);
 

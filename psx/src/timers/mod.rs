@@ -38,7 +38,6 @@ macro_rules! impl_timer {
                 use super::SyncMode;
                 use super::Source;
                 use super::timer;
-                use crate::mmio::register::{Read, Write};
 
                 impl_mut_value!(timer::Mode);
 

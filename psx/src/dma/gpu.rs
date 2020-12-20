@@ -4,6 +4,8 @@ use crate::graphics::OT;
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 
+impl_mut_value!(dma::gpu::ChannelControl);
+
 // Let's make these methods more readable
 type Transfer<'a, T> = super::Transfer<'a, dma::gpu::ChannelControl, T>;
 type MaybeTransfer<'a, T> = super::MaybeTransfer<'a, dma::gpu::ChannelControl, T>;

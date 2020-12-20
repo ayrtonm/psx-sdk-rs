@@ -1,10 +1,23 @@
 //! CPU-side DMA channel routines.
-
-use crate::mmio::dma;
 use crate::mmio::register::{Read, Update, Write};
 
-mod gpu;
-mod otc;
+pub mod gpu;
+pub mod otc;
+
+macro_rules! mut_value_mod {
+    ($name:ident) => {
+        pub mod $name {
+            use crate::mmio::dma;
+            impl_mut_value!(dma::$name::ChannelControl);
+        }
+    };
+}
+
+mut_value_mod!(mdec_in);
+mut_value_mod!(mdec_out);
+mut_value_mod!(cdrom);
+mut_value_mod!(spu);
+mut_value_mod!(pio);
 
 pub enum BlockSize {
     Single(usize),
@@ -78,6 +91,7 @@ pub trait BlockControl: Read<u32> + Write<u32> {
             SyncMode::LinkedList => Some(BlockSize::LinkedList),
         }
     }
+
     fn set<T>(&mut self, block_size: T)
     where BlockSize: From<T> {
         let block_size = BlockSize::from(block_size);
@@ -102,18 +116,23 @@ pub trait BlockControl: Read<u32> + Write<u32> {
 }
 
 pub trait ChannelControl: Update<u32> {
+    type Value;
+    //type MutValue;
+
     fn set_direction(&mut self, direction: Direction) -> &mut Self {
         unsafe {
             self.update(|val| val & !1 | (direction as u32));
         }
         self
     }
+
     fn set_step(&mut self, step: Step) -> &mut Self {
         unsafe {
             self.update(|val| val & !0b10 | ((step as u32) << 1));
         }
         self
     }
+
     fn set_chop(&mut self, chop: Option<Chop>) -> &mut Self {
         unsafe {
             self.update(|val| match chop {
@@ -130,12 +149,14 @@ pub trait ChannelControl: Update<u32> {
         }
         self
     }
+
     fn set_sync_mode(&mut self, sync_mode: SyncMode) -> &mut Self {
         unsafe {
             self.update(|val| (val & !(0b11 << 9)) | ((sync_mode as u32) << 9));
         }
         self
     }
+
     fn sync_mode(&self) -> Option<SyncMode> {
         let bits = unsafe { self.read() };
         match (bits >> 9) & 0b11 {
@@ -145,6 +166,7 @@ pub trait ChannelControl: Update<u32> {
             _ => None,
         }
     }
+
     fn start<T>(&mut self, result: T) -> Transfer<Self, T> {
         unsafe {
             match self.sync_mode() {
@@ -157,6 +179,7 @@ pub trait ChannelControl: Update<u32> {
             result,
         }
     }
+
     fn busy(&self) -> bool {
         unsafe { self.read() & (1 << 24) != 0 }
     }
@@ -215,36 +238,40 @@ impl<'a, C: ChannelControl, T> MaybeTransfer<'a, C, T> {
 //    }};
 //}
 
-impl_mut_value!(dma::Control);
+mod control {
+    use crate::mmio::dma;
 
-// Methods for toggling DMA channels via dma::Control
-macro_rules! toggle_fn {
-    ($name:ident, $num:expr) => {
-        #[inline(always)]
-        pub fn $name(mut self, enable: bool) -> Self {
-            let bit = (4 * $num) + 3;
-            if enable {
-                self.value.bits |= 1 << bit;
-            } else {
-                self.value.bits &= !(1 << bit);
+    impl_mut_value!(dma::Control);
+
+    // Methods for toggling DMA channels via dma::Control
+    macro_rules! toggle_fn {
+        ($name:ident, $num:expr) => {
+            #[inline(always)]
+            pub fn $name(mut self, enable: bool) -> Self {
+                let bit = (4 * $num) + 3;
+                if enable {
+                    self.value.bits |= 1 << bit;
+                } else {
+                    self.value.bits &= !(1 << bit);
+                }
+                self
             }
-            self
-        }
-    };
-}
+        };
+    }
 
-impl<'a> MutValue<'a> {
-    toggle_fn!(mdec_in, 0);
+    impl<'a> MutValue<'a> {
+        toggle_fn!(mdec_in, 0);
 
-    toggle_fn!(mdec_out, 1);
+        toggle_fn!(mdec_out, 1);
 
-    toggle_fn!(gpu, 2);
+        toggle_fn!(gpu, 2);
 
-    toggle_fn!(cdrom, 3);
+        toggle_fn!(cdrom, 3);
 
-    toggle_fn!(spu, 4);
+        toggle_fn!(spu, 4);
 
-    toggle_fn!(pio, 5);
+        toggle_fn!(pio, 5);
 
-    toggle_fn!(otc, 6);
+        toggle_fn!(otc, 6);
+    }
 }
