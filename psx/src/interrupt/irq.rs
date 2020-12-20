@@ -34,6 +34,7 @@ impl IntoIterator for IRQ {
 
     type IntoIter = impl Iterator<Item = IRQ>;
 
+    #[inline(always)]
     fn into_iter(self) -> Self::IntoIter {
         iter::once(self)
     }

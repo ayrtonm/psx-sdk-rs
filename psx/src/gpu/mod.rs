@@ -1,9 +1,10 @@
 mod color;
+mod texture;
+mod vertex;
+
 pub mod gp0;
 pub mod gp1;
 pub mod stat;
-mod texture;
-mod vertex;
 
 pub use vertex::Pixel;
 pub use vertex::Vertex;

@@ -3,8 +3,8 @@
 use crate::cop0;
 
 mod irq;
-mod mask;
-mod stat;
+pub mod mask;
+pub mod stat;
 
 pub(self) use irq::ALL_IRQS;
 pub use irq::IRQ;
