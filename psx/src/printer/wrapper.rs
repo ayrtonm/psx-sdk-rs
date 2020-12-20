@@ -1,7 +1,7 @@
 use super::Printer;
 use crate::gpu::Color;
 use crate::gpu::Vertex;
-use crate::mmio::{dma, gpu, Enabled};
+use crate::mmio::{dma, gpu};
 
 impl<const N: usize> Default for UnsafePrinter<N> {
     fn default() -> Self {
@@ -11,7 +11,7 @@ impl<const N: usize> Default for UnsafePrinter<N> {
 
 pub struct UnsafePrinter<const N: usize> {
     printer: Printer<N>,
-    gpu_dma: dma::gpu::Channel<Enabled>,
+    gpu_dma: dma::gpu::Channel,
     gp0: gpu::GP0,
     gp1: gpu::GP1,
 }
@@ -22,6 +22,7 @@ impl<const N: usize> UnsafePrinter<N> {
     ) -> Self
     where Vertex: From<T> + From<U> + From<V> + From<S> {
         unsafe {
+            dma::Control::new().get_mut().otc(true).gpu(true).set();
             UnsafePrinter {
                 printer: Printer::<N>::new(
                     cursor,
@@ -29,9 +30,9 @@ impl<const N: usize> UnsafePrinter<N> {
                     box_offset,
                     box_size,
                     color,
-                    &mut dma::otc::Channel::new().enable(&mut dma::Control::new()),
+                    &mut dma::otc::Channel::new(),
                 ),
-                gpu_dma: dma::gpu::Channel::new().enable(&mut dma::Control::new()),
+                gpu_dma: dma::gpu::Channel::new(),
                 gp0: gpu::GP0::new(),
                 gp1: gpu::GP1::new(),
             }

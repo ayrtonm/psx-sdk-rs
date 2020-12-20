@@ -45,8 +45,9 @@ macro_rules! impl_mut_value {
 
         impl<'a> MutValue<'a> {
             #[inline(always)]
-            pub fn set(self) {
-                unsafe { self.register.write(self.value.bits) }
+            pub fn set(self) -> Value {
+                unsafe { self.register.write(self.value.bits) };
+                self.value
             }
         }
     };

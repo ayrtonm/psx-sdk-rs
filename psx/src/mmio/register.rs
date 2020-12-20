@@ -21,7 +21,7 @@ pub trait Write<T>: Address {
     }
 }
 
-#[deprecated]
+//#[deprecated]
 pub trait Update<T>: Read<T> + Write<T>
 where u32: From<T> {
     unsafe fn update<F>(&mut self, f: F)

@@ -61,6 +61,7 @@ pub trait BaseAddress: Read<u32> + Write<u32> {
         unsafe { self.write(address) }
     }
 }
+
 pub trait BlockControl: Read<u32> + Write<u32> {
     fn get(&self, sync_mode: SyncMode) -> Option<BlockSize> {
         let value = unsafe { self.read() };
@@ -99,6 +100,7 @@ pub trait BlockControl: Read<u32> + Write<u32> {
         }
     }
 }
+
 pub trait ChannelControl: Update<u32> {
     fn set_direction(&mut self, direction: Direction) -> &mut Self {
         unsafe {
@@ -213,26 +215,25 @@ impl<'a, C: ChannelControl, T> MaybeTransfer<'a, C, T> {
 //    }};
 //}
 
+impl_mut_value!(dma::Control);
+
 // Methods for toggling DMA channels via dma::Control
 macro_rules! toggle_fn {
     ($name:ident, $num:expr) => {
-        pub(crate) fn $name(&mut self, enable: bool) -> &mut Self {
+        #[inline(always)]
+        pub fn $name(mut self, enable: bool) -> Self {
             let bit = (4 * $num) + 3;
-            unsafe {
-                self.update(|val| {
-                    if enable {
-                        val | (1 << bit)
-                    } else {
-                        val & !(1 << bit)
-                    }
-                })
+            if enable {
+                self.value.bits |= 1 << bit;
+            } else {
+                self.value.bits &= !(1 << bit);
             }
             self
         }
     };
 }
 
-impl dma::Control {
+impl<'a> MutValue<'a> {
     toggle_fn!(mdec_in, 0);
 
     toggle_fn!(mdec_out, 1);

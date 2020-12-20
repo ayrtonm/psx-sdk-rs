@@ -10,12 +10,6 @@
 mod macros;
 pub mod register;
 
-pub trait MMIOState {}
-pub struct Enabled {}
-pub struct Disabled {}
-impl MMIOState for Enabled {}
-impl MMIOState for Disabled {}
-
 pub mod joy {
     // TODO: This is technically a 1-byte register. Would a 4-byte write be a
     // problem?
@@ -75,33 +69,20 @@ pub mod dma {
     macro_rules! dma_channel {
         ($name:ident, $offset:expr) => {
             pub mod $name {
-                use crate::mmio::{Disabled, Enabled, MMIOState};
-                use core::marker::PhantomData;
-                pub struct Channel<T: MMIOState> {
+                pub struct Channel {
                     pub base_address: BaseAddress,
                     pub block_control: BlockControl,
                     pub channel_control: ChannelControl,
-                    _state: PhantomData<T>,
+                    // Prevents instantiation
+                    _unused: (),
                 }
-                impl Channel<Disabled> {
+                impl Channel {
                     pub(crate) unsafe fn new() -> Self {
                         Self {
                             base_address: BaseAddress::new(),
                             block_control: BlockControl::new(),
                             channel_control: ChannelControl::new(),
-                            _state: PhantomData::<Disabled>,
-                        }
-                    }
-
-                    pub fn enable(self, dma_control: &mut super::Control) -> Channel<Enabled> {
-                        unsafe {
-                            dma_control.$name(true);
-                            Channel {
-                                base_address: BaseAddress::new(),
-                                block_control: BlockControl::new(),
-                                channel_control: ChannelControl::new(),
-                                _state: PhantomData::<Enabled>,
-                            }
+                            _unused: (),
                         }
                     }
                 }
@@ -171,13 +152,13 @@ pub struct MMIO {
     pub dma_control: dma::Control,
     pub dma_interrupt: dma::Interrupt,
 
-    pub mdec_in_dma: dma::mdec_in::Channel<Disabled>,
-    pub mdec_out_dma: dma::mdec_out::Channel<Disabled>,
-    pub gpu_dma: dma::gpu::Channel<Disabled>,
-    pub cdrom_dma: dma::cdrom::Channel<Disabled>,
-    pub spu_dma: dma::spu::Channel<Disabled>,
-    pub pio_dma: dma::pio::Channel<Disabled>,
-    pub otc_dma: dma::otc::Channel<Disabled>,
+    pub mdec_in_dma: dma::mdec_in::Channel,
+    pub mdec_out_dma: dma::mdec_out::Channel,
+    pub gpu_dma: dma::gpu::Channel,
+    pub cdrom_dma: dma::cdrom::Channel,
+    pub spu_dma: dma::spu::Channel,
+    pub pio_dma: dma::pio::Channel,
+    pub otc_dma: dma::otc::Channel,
     // Prevents instantiation
     _unused: (),
 }

@@ -3,7 +3,7 @@ use crate::gpu::Vertex;
 use crate::gpu::{Clut, TexPage};
 use crate::graphics::{Buffer, OT};
 use crate::mmio::register::Write;
-use crate::mmio::{dma, gpu, Enabled};
+use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 
 mod wrapper;
@@ -28,7 +28,7 @@ pub struct Printer<const N: usize> {
 impl<const N: usize> Printer<N> {
     pub fn new<T, U, V, S>(
         cursor: T, font_size: U, box_offset: V, box_size: S, color: Option<Color>,
-        otc_dma: &mut dma::otc::Channel<Enabled>,
+        otc_dma: &mut dma::otc::Channel,
     ) -> Self
     where
         Vertex: From<T> + From<U> + From<V> + From<S>,
@@ -57,7 +57,7 @@ impl<const N: usize> Printer<N> {
         }
     }
 
-    pub fn load_font(&mut self, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel<Enabled>) {
+    pub fn load_font(&mut self, gp1: &mut gpu::GP1, gpu_dma: &mut dma::gpu::Channel) {
         let mut font = unzip_now!("../../small_font_subset.tim.zip");
         let tim = TIM::new(&mut font);
         // TODO: wtf is a 2? use an enum here
@@ -85,7 +85,7 @@ impl<const N: usize> Printer<N> {
     // TODO: make sure we don't overrun the buffer
     pub fn print<'a, M, const A: usize>(
         &mut self, msg: M, args: [u32; A], gp0: &mut gpu::GP0, gp1: &mut gpu::GP1,
-        gpu_dma: &mut dma::gpu::Channel<Enabled>,
+        gpu_dma: &mut dma::gpu::Channel,
     ) where
         M: IntoIterator<Item = &'a u8>,
     {
