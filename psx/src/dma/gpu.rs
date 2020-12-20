@@ -5,7 +5,7 @@ use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 
 impl_mut_value!(dma::gpu::ChannelControl);
-impl_dma_value!(dma::gpu::ChannelControl);
+impl_dma_channel_control!(dma::gpu::ChannelControl);
 
 impl dma::gpu::Channel {
     pub fn prepare_ot(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
@@ -13,8 +13,9 @@ impl dma::gpu::Channel {
         self.block_control.set(BlockSize::LinkedList);
         self.channel_control
             .get_mut()
-            .set_direction(Direction::FromMemory)
-            .set_sync_mode(SyncMode::LinkedList);
+            .direction(Direction::FromMemory)
+            .sync_mode(SyncMode::LinkedList)
+            .set();
         self
     }
 
@@ -32,18 +33,19 @@ impl dma::gpu::Channel {
     pub fn load_tim<'a>(
         &mut self, tim: &TIM,
     ) -> Transfer<fn(&'a mut Self, &'a TIM) -> MaybeTransfer<'a, (TexPage, Option<Clut>)>> {
-        self.channel_control
+        let mut_val = self
+            .channel_control
             .get_mut()
-            .set_direction(Direction::FromMemory)
-            .set_step(Step::Forward)
-            .set_chop(None)
-            .set_sync_mode(SyncMode::Immediate);
+            .direction(Direction::FromMemory)
+            .step(Step::Forward)
+            .chop(None)
+            .sync_mode(SyncMode::Immediate);
 
         let bmp = tim.bitmap().data();
         self.base_address.set(bmp.as_ptr());
         self.block_control.set(bmp.len());
 
-        self.channel_control.get_mut().start(|gpu_dma, tim| {
+        mut_val.start(|gpu_dma, tim| {
             let texpage = tim.texpage();
             let clut = tim.clut();
             let result = (texpage, clut);

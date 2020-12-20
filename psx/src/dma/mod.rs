@@ -1,135 +1,5 @@
 //! CPU-side DMA channel routines.
-use crate::mmio::register::{Read, Update, Write};
-
-macro_rules! impl_dma_value {
-    ($reg:path) => {
-        impl Value {
-            fn sync_mode(&self) -> Option<SyncMode> {
-                match (self.bits >> 9) & 0b11 {
-                    0 => Some(SyncMode::Immediate),
-                    1 => Some(SyncMode::Request),
-                    2 => Some(SyncMode::LinkedList),
-                    _ => None,
-                }
-            }
-            // TODO: This is wrong, it only reads MMIO once
-            fn busy(&self) -> bool {
-                self.bits & (1 << 24) != 0
-            }
-        }
-
-        impl<'a> MutValue<'a> {
-            fn set_direction(mut self, direction: Direction) -> Self {
-                self.value.bits &= !1;
-                self.value.bits |= direction as u32;
-                self
-            }
-
-            fn set_step(mut self, step: Step) -> Self {
-                self.value.bits &= !0b10;
-                self.value.bits |= (step as u32) << 1;
-                self
-            }
-
-            fn set_chop(mut self, chop: Option<Chop>) -> Self {
-                match chop {
-                    Some(chop) => {
-                        if cfg!(debug_assertions) {
-                            if chop.dma > 0b111 || chop.cpu > 0b111 {
-                                panic!("DMA chopping windows are limited to 3 bits");
-                            }
-                        }
-                        self.value.bits |= (1 << 8) | (chop.dma << 16) | (chop.cpu << 20);
-                    },
-                    None => {
-                        self.value.bits &= !(1 << 8);
-                    },
-                }
-                self
-            }
-
-            fn set_sync_mode(mut self, sync_mode: SyncMode) -> Self {
-                self.value.bits = (self.value.bits & !(0b11 << 9)) | ((sync_mode as u32) << 9);
-                self
-            }
-
-            fn start<T>(mut self, result: T) -> Transfer<'a, T> {
-                unsafe {
-                    match self.sync_mode() {
-                        Some(SyncMode::Immediate) => self.value.bits |= (1 << 24) | (1 << 28),
-                        _ => self.value.bits |= 1 << 24,
-                    }
-                }
-                //self.set();
-                Transfer {
-                    channel_control: self.register,
-                    result,
-                }
-            }
-        }
-        #[must_use]
-        pub struct Transfer<'a, T> {
-            channel_control: &'a $reg,
-            result: T,
-        }
-
-        impl<'a, T> Transfer<'a, T> {
-            pub fn busy(&self) -> bool {
-                self.channel_control.get().busy()
-            }
-
-            pub fn wait(self) -> T {
-                while self.busy() {}
-                self.result
-            }
-
-            pub fn consume(self) -> T {
-                self.result
-            }
-        }
-
-        pub enum MaybeTransfer<'a, T> {
-            Transfer(Transfer<'a, T>),
-            Result(T),
-        }
-
-        impl<'a, T> MaybeTransfer<'a, T> {
-            pub fn maybe_wait(self) -> T {
-                match self {
-                    MaybeTransfer::Transfer(t) => t.wait(),
-                    MaybeTransfer::Result(res) => res,
-                }
-            }
-
-            pub fn consume(self) -> T {
-                match self {
-                    MaybeTransfer::Transfer(t) => t.consume(),
-                    MaybeTransfer::Result(res) => res,
-                }
-            }
-        }
-    };
-}
-macro_rules! mut_value_mod {
-    ($name:ident) => {
-        pub mod $name {
-            use super::{Chop, Direction, Step, SyncMode};
-            use crate::mmio::dma;
-
-            impl_mut_value!(dma::$name::ChannelControl);
-            impl_dma_value!(dma::$name::ChannelControl);
-        }
-    };
-}
-
-pub mod gpu;
-pub mod otc;
-
-mut_value_mod!(mdec_in);
-mut_value_mod!(mdec_out);
-mut_value_mod!(cdrom);
-mut_value_mod!(spu);
-mut_value_mod!(pio);
+use crate::mmio::register::{Read, Write};
 
 pub enum BlockSize {
     Single(usize),
@@ -159,8 +29,8 @@ pub enum Step {
 }
 
 pub struct Chop {
-    dma: u32,
-    cpu: u32,
+    pub dma: u32,
+    pub cpu: u32,
 }
 
 pub enum SyncMode {
@@ -227,17 +97,6 @@ pub trait BlockControl: Read<u32> + Write<u32> {
     }
 }
 
-//#[macro_export]
-//macro_rules! if_done {
-//    ($transfer:expr) => {{
-//        if !$transfer.busy() {
-//            Some($transfer.consume())
-//        } else {
-//            None
-//        }
-//    }};
-//}
-
 mod control {
     use crate::mmio::dma;
 
@@ -275,3 +134,143 @@ mod control {
         toggle_fn!(otc, 6);
     }
 }
+
+macro_rules! impl_dma_channel_control {
+    ($reg:path) => {
+        impl $reg {
+            pub fn busy(&self) -> bool {
+                use crate::mmio::register::Read;
+                unsafe { self.read() & (1 << 24) != 0 }
+            }
+        }
+
+        impl Value {
+            #[inline(always)]
+            pub fn current_sync_mode(&self) -> Option<SyncMode> {
+                match (self.bits >> 9) & 0b11 {
+                    0 => Some(SyncMode::Immediate),
+                    1 => Some(SyncMode::Request),
+                    2 => Some(SyncMode::LinkedList),
+                    _ => None,
+                }
+            }
+        }
+
+        impl<'a> MutValue<'a> {
+            #[inline(always)]
+            pub fn direction(mut self, direction: Direction) -> Self {
+                self.value.bits &= !1;
+                self.value.bits |= direction as u32;
+                self
+            }
+
+            #[inline(always)]
+            pub fn step(mut self, step: Step) -> Self {
+                self.value.bits &= !0b10;
+                self.value.bits |= (step as u32) << 1;
+                self
+            }
+
+            #[inline(always)]
+            pub fn chop(mut self, chop: Option<Chop>) -> Self {
+                match chop {
+                    Some(chop) => {
+                        // TODO: Seems like -C debug-assertions is too slow to be practical.
+                        // So what should I do with this?? Maybe make a debug
+                        // feature for libpsx
+                        if cfg!(debug_assertions) {
+                            if chop.dma > 0b111 || chop.cpu > 0b111 {
+                                panic!("DMA chopping windows are limited to 3 bits");
+                            }
+                        }
+                        self.value.bits |= (1 << 8) | (chop.dma << 16) | (chop.cpu << 20);
+                    },
+                    None => {
+                        self.value.bits &= !(1 << 8);
+                    },
+                }
+                self
+            }
+
+            #[inline(always)]
+            pub fn sync_mode(mut self, sync_mode: SyncMode) -> Self {
+                self.value.bits &= !(0b11 << 9);
+                self.value.bits |= (sync_mode as u32) << 9;
+                self
+            }
+
+            #[inline(always)]
+            pub fn start<T>(mut self, result: T) -> Transfer<'a, T> {
+                self.value.bits |= match self.current_sync_mode() {
+                    Some(SyncMode::Immediate) => (1 << 24) | (1 << 28),
+                    _ => 1 << 24,
+                };
+                Transfer {
+                    channel_control: self.take(),
+                    result,
+                }
+            }
+        }
+        #[must_use]
+        pub struct Transfer<'a, T> {
+            channel_control: &'a $reg,
+            result: T,
+        }
+
+        impl<'a, T> Transfer<'a, T> {
+            pub fn busy(&self) -> bool {
+                self.channel_control.busy()
+            }
+
+            pub fn wait(self) -> T {
+                while self.busy() {}
+                self.result
+            }
+
+            pub fn consume(self) -> T {
+                self.result
+            }
+        }
+
+        pub enum MaybeTransfer<'a, T> {
+            Transfer(Transfer<'a, T>),
+            Result(T),
+        }
+
+        impl<'a, T> MaybeTransfer<'a, T> {
+            pub fn maybe_wait(self) -> T {
+                match self {
+                    MaybeTransfer::Transfer(t) => t.wait(),
+                    MaybeTransfer::Result(res) => res,
+                }
+            }
+
+            pub fn consume(self) -> T {
+                match self {
+                    MaybeTransfer::Transfer(t) => t.consume(),
+                    MaybeTransfer::Result(res) => res,
+                }
+            }
+        }
+    };
+}
+
+macro_rules! value_mod {
+    ($name:ident) => {
+        pub mod $name {
+            use super::{Chop, Direction, Step, SyncMode};
+            use crate::mmio::dma;
+
+            impl_mut_value!(dma::$name::ChannelControl);
+            impl_dma_channel_control!(dma::$name::ChannelControl);
+        }
+    };
+}
+
+pub mod gpu;
+pub mod otc;
+value_mod!(mdec_in);
+value_mod!(mdec_out);
+value_mod!(cdrom);
+value_mod!(spu);
+value_mod!(pio);

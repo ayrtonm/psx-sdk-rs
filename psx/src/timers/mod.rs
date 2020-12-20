@@ -50,7 +50,7 @@ macro_rules! impl_timer {
 
                 impl<'a> MutValue<'a> {
                     #[inline(always)]
-                    pub fn enable_sync(mut self, sync: bool) -> Self {
+                    pub fn sync(mut self, sync: bool) -> Self {
                         if sync {
                             self.value.bits |= 1;
                         } else {
