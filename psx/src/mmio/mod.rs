@@ -92,10 +92,6 @@ pub mod dma {
 
                 impl crate::dma::BaseAddress for BaseAddress {}
                 impl crate::dma::BlockControl for BlockControl {}
-                impl crate::dma::ChannelControl for ChannelControl {
-                    type Value = crate::dma::$name::Value;
-                    //type MutValue = crate::dma::$name::MutValue<'a>;
-                }
             }
         };
     }
