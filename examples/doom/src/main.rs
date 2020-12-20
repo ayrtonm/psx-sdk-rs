@@ -11,7 +11,7 @@ use psx::gpu::Color;
 use psx::gte::GTE;
 use psx::interrupt::IRQ;
 use psx::mmio::gpu::GP1;
-use psx::mmio::{dma, Enabled, MMIO};
+use psx::mmio::{dma, MMIO};
 
 mod draw;
 mod map;
@@ -22,8 +22,8 @@ pub use crate::wall::Wall;
 
 pub struct IO {
     gp1: GP1,
-    gpu_dma: dma::gpu::Channel<Enabled>,
-    otc_dma: dma::otc::Channel<Enabled>,
+    gpu_dma: dma::gpu::Channel,
+    otc_dma: dma::otc::Channel,
 }
 
 #[no_mangle]
@@ -31,13 +31,13 @@ fn main(mut mmio: MMIO, mut gte: GTE) {
     // TODO: This breaks mednafen
     //gte.enable();
     bios::init_heap(0x9F80_0000, 1024);
-    let dma_control = &mut mmio.dma_control;
+    mmio.dma_control.get_mut().otc(true).gpu(true).set();
     let mut io = IO {
         gp1: mmio.gp1,
-        gpu_dma: mmio.gpu_dma.enable(dma_control),
-        otc_dma: mmio.otc_dma.enable(dma_control),
+        gpu_dma: mmio.gpu_dma,
+        otc_dma: mmio.otc_dma,
     };
-    mmio.irq_mask.enable(IRQ::Vblank);
+    mmio.irq_mask.get_mut().enable(IRQ::Vblank).set();
     let map = Map::new(vec![
         Wall::new((-4, 2), (0, -2), Color::AQUA),
         Wall::new((0, -2), (4, -2), Color::MINT),

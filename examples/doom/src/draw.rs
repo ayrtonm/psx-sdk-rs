@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use core::cmp::{max, min};
 use core::ops::RangeInclusive;
 
-use psx::gpu::graphics::{SingleBuffer, SingleOT};
+use psx::graphics::{Buffer, OT};
 use psx::gpu::{Color, Vertex};
 
 fn resize_aerial(v: Vertex) -> Vertex {
@@ -33,8 +33,8 @@ pub fn draw(walls: &Vec<&Wall>, io: &mut IO) {
     let gpu_dma = &mut io.gpu_dma;
     let gp1 = &mut io.gp1;
 
-    let buffer = SingleBuffer::<96>::new();
-    let mut ot = SingleOT::<3>::new();
+    let buffer = Buffer::<96>::new();
+    let mut ot = OT::<3>::new();
     otc_dma.clear(&ot).wait();
 
     let mut ranges_drawn = Vec::<RangeInclusive<i16>>::new();

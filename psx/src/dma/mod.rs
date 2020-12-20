@@ -50,9 +50,12 @@ pub trait BaseAddress: Read<u32> + Write<u32> {
     /// from/writing to.
     fn set(&mut self, address: *const u32) {
         let address = address as u32;
-        if cfg!(debug_assertions) {
-            assert_eq!(address >> 24, 0);
-        }
+        //#[cfg(feature = "pretty_panic")]
+        //{
+        //    if address >> 24 != 0 {
+        //        panic!("got here4");
+        //    }
+        //}
         unsafe { self.write(address) }
     }
 }
@@ -82,9 +85,11 @@ pub trait BlockControl: Read<u32> + Write<u32> {
                 0..=0xFFFF => words as u32,
                 0x1_0000 => 0,
                 _ => {
-                    if cfg!(debug_assertions) {
+                    #[cfg(feature = "pretty_panic")]
+                    {
                         panic!("Number of words can't exceed 0x1_0000");
-                    };
+                    }
+                    #[cfg(not(feature = "pretty_panic"))]
                     0
                 },
             },
@@ -175,10 +180,8 @@ macro_rules! impl_dma_channel_control {
             pub fn chop(mut self, chop: Option<Chop>) -> Self {
                 match chop {
                     Some(chop) => {
-                        // TODO: Seems like -C debug-assertions is too slow to be practical.
-                        // So what should I do with this?? Maybe make a debug
-                        // feature for libpsx
-                        if cfg!(debug_assertions) {
+                        #[cfg(feature = "pretty_panic")]
+                        {
                             if chop.dma > 0b111 || chop.cpu > 0b111 {
                                 panic!("DMA chopping windows are limited to 3 bits");
                             }

@@ -3,23 +3,23 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::graphics::primitive::PolyG3;
-use psx::gpu::graphics::{packet_size, DoubleBuffer, DoubleOT};
+use psx::graphics::primitive::PolyG3;
+use psx::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 use psx::mmio::MMIO;
 
 #[no_mangle]
 fn main(mut mmio: MMIO) {
-    // Borrow all the IO ports we'll need
-    let dma_control = &mut mmio.dma_control;
     // Make sure to enable the DMA channels to get access to their methods
-    let otc_dma = &mut mmio.otc_dma.enable(dma_control);
-    let gpu_dma = &mut mmio.gpu_dma.enable(dma_control);
+    mmio.dma_control.get_mut().otc(true).gpu(true).set();
+    // Borrow all the IO ports we'll need
+    let otc_dma = &mut mmio.otc_dma;
+    let gpu_dma = &mut mmio.gpu_dma;
     let gp1 = &mut mmio.gp1;
     let gpu_stat = &mut mmio.gpu_stat;
-    let int_mask = &mut mmio.int_mask;
-    let int_stat = &mut mmio.int_stat;
+    let irq_mask = &mut mmio.irq_mask;
+    let irq_stat = &mut mmio.irq_stat;
 
     // Construct some higher-level utilities
     let mut fb = UnsafeFramebuffer::default();
@@ -59,7 +59,7 @@ fn main(mut mmio: MMIO) {
 
     let mut theta = 0.0;
     gpu_dma.prepare_ot(gp1);
-    int_mask.enable(IRQ::Vblank);
+    irq_mask.get_mut().enable(IRQ::Vblank).set();
     loop {
         // Send an ordering table
         let send_ot = gpu_dma.send(&ot);
@@ -85,8 +85,8 @@ fn main(mut mmio: MMIO) {
         // Wait until the GPU is done
         gpu_stat.sync();
         // Wait until the next vblank
-        int_stat.ack(IRQ::Vblank);
-        int_stat.wait(IRQ::Vblank);
+        irq_stat.ack(IRQ::Vblank);
+        irq_stat.wait(IRQ::Vblank);
         // Show the ordering table we sent at the beginning of the loop
         fb.swap();
     }

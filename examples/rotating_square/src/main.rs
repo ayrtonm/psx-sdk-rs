@@ -3,9 +3,9 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::graphics::primitive::PolyG4;
-use psx::gpu::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::gpu::{Color, Pixel, Vertex};
+use psx::graphics::primitive::PolyG4;
+use psx::graphics::{packet_size, DoubleBuffer, DoubleOT};
 use psx::interrupt::IRQ;
 use psx::mmio::MMIO;
 use psx::printer::UnsafePrinter;
@@ -14,8 +14,9 @@ use psx::printer::UnsafePrinter;
 fn main(mut mmio: MMIO) {
     // Borrow all the IO ports we'll need
     let dma_control = &mut mmio.dma_control;
-    let otc_dma = &mut mmio.otc_dma.enable(dma_control);
-    let gpu_dma = &mut mmio.gpu_dma.enable(dma_control);
+    dma_control.get_mut().otc(true).gpu(true).set();
+    let otc_dma = &mut mmio.otc_dma; //.enable(dma_control);
+    let gpu_dma = &mut mmio.gpu_dma; //.enable(dma_control);
     let gp1 = &mut mmio.gp1;
     let gpu_stat = &mut mmio.gpu_stat;
     let irq_mask = &mut mmio.irq_mask;
@@ -60,7 +61,7 @@ fn main(mut mmio: MMIO) {
     ot.swap();
     let mut theta = 0.0;
     gpu_dma.prepare_ot(gp1);
-    irq_mask.enable(IRQ::Vblank);
+    irq_mask.get_mut().disable_all().enable(IRQ::Vblank).set();
     loop {
         // Send an ordering table
         // While the ordering table is being sent to the GPU, we can keep working if

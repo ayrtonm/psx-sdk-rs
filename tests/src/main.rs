@@ -36,7 +36,7 @@ fn tests_passed() {
 fn run_tests(mmio: &mut MMIO) {
     check_sizes(mmio);
     test_irq_mask(&mut mmio.irq_mask);
-    test_exception(mmio);
+    //test_exception(mmio);
 }
 
 fn check_sizes(mmio: &mut MMIO) {
@@ -51,9 +51,8 @@ fn check_sizes(mmio: &mut MMIO) {
 }
 
 fn test_irq_mask(irq_mask: &mut irq::Mask) {
-    irq_mask.disable_all();
-    irq_mask.enable(IRQ::Vblank);
-    let mut enabled = irq_mask.enabled();
+    let val = irq_mask.get_mut().disable_all().enable(IRQ::Vblank).set();
+    let mut enabled = val.enabled();
     assert!(enabled.next() == Some(IRQ::Vblank));
     assert!(enabled.next().is_none());
 }
