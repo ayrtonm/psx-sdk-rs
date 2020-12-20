@@ -1,15 +1,10 @@
-use crate::mmio::register::{Read, Write};
-
-pub(crate) mod modes;
-pub(crate) mod sources;
-
-pub use modes::{Mode0, Mode1, Mode2};
-pub use sources::{Source0, Source1, Source2};
-
 macro_rules! impl_timer {
     ($offset:expr) => {
         paste::paste! {
-            impl crate::mmio::[<timer $offset>]::Current {
+            use crate::mmio::register::{Read, Write};
+            use crate::mmio::[<timer $offset>] as timer;
+
+            impl timer::Current {
                 pub fn get(&self) -> u16 {
                     unsafe {
                         self.read() as u16
@@ -23,9 +18,11 @@ macro_rules! impl_timer {
                 }
             }
 
-            impl crate::mmio::[<timer $offset>]::Target {
+            impl timer::Target {
+                #[inline(always)]
                 pub fn get(&self) -> u16 {
                     unsafe {
+                        self.read() as u16;
                         self.read() as u16
                     }
                 }
@@ -37,12 +34,13 @@ macro_rules! impl_timer {
                 }
             }
 
-            pub mod [<timer $offset>] {
-                use super::modes::Modes;
-                use super::sources::Sources;
+            pub mod mode {
+                use super::SyncMode;
+                use super::Source;
+                use super::timer;
                 use crate::mmio::register::{Read, Write};
 
-                impl_mut_value!(crate::mmio::[<timer $offset>]::Mode);
+                impl_mut_value!(timer::Mode);
 
                 impl Value {
                     #[inline(always)]
@@ -63,9 +61,9 @@ macro_rules! impl_timer {
                     }
 
                     #[inline(always)]
-                    pub fn sync_mode(mut self, mode: super::[<Mode $offset>]) -> Self {
+                    pub fn sync_mode(mut self, sync_mode: SyncMode) -> Self {
                         self.value.bits &= !(0b11 << 1);
-                        self.value.bits |= mode.bits();
+                        self.value.bits |= sync_mode as u32;
                         self
                     }
 
@@ -80,9 +78,9 @@ macro_rules! impl_timer {
                     }
 
                     #[inline(always)]
-                    pub fn source(mut self, source: super::[<Source $offset>]) -> Self {
+                    pub fn source(mut self, source: Source) -> Self {
                         self.value.bits &= !(0b11 << 8);
-                        self.value.bits |= source.bits();
+                        self.value.bits |= source as u32;
                         self
                     }
                 }
@@ -91,6 +89,6 @@ macro_rules! impl_timer {
     };
 }
 
-impl_timer!(0);
-impl_timer!(1);
-impl_timer!(2);
+pub mod timer0;
+pub mod timer1;
+pub mod timer2;

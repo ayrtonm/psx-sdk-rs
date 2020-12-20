@@ -9,10 +9,10 @@
 //! time we swap buffers. In exchange for this flexibility, we have to apply the
 //! borrow checker rules dynamically and get run-time errors instead.
 
-use crate::gpu::graphics::primitive::Tile;
 use crate::gpu::Color;
 use crate::gpu::Vertex;
 use crate::gpu::{Depth, Vmode};
+use crate::graphics::primitive::Tile;
 use crate::mmio::gpu::{GP0, GP1};
 
 mod wrapper;

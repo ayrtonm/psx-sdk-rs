@@ -1,11 +1,9 @@
 use super::{BaseAddress, BlockControl, ChannelControl, Step, SyncMode, Transfer};
-use crate::gpu::graphics::SingleOT;
+use crate::graphics::OT;
 use crate::mmio::{dma, Enabled};
 
 impl dma::otc::Channel<Enabled> {
-    pub fn clear<const N: usize>(
-        &mut self, ot: &SingleOT<N>,
-    ) -> Transfer<dma::otc::ChannelControl, ()> {
+    pub fn clear<const N: usize>(&mut self, ot: &OT<N>) -> Transfer<dma::otc::ChannelControl, ()> {
         self.base_address.set(ot.first_entry());
         self.block_control.set(N as u32);
         self.channel_control

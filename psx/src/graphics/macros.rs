@@ -7,13 +7,13 @@ macro_rules! impl_prim {
         }
 
         paste::paste! {
-            impl<const N: usize> SingleBuffer<N> {
-                pub fn [<$name:lower>](&self) -> Option<&mut SinglePacket<$name>> {
+            impl<const N: usize> Buffer<N> {
+                pub fn [<$name:lower>](&self) -> Option<&mut Packet<$name>> {
                     self.alloc()
                 }
             }
-            impl<const N: usize> SingleBuffer<N> {
-                pub fn [<$name:lower _ array>]<const M: usize>(&self) -> Option<[&mut SinglePacket<$name>; M]> {
+            impl<const N: usize> Buffer<N> {
+                pub fn [<$name:lower _ array>]<const M: usize>(&self) -> Option<[&mut Packet<$name>; M]> {
                     self.alloc_array()
                 }
             }

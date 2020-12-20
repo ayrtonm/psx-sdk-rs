@@ -202,16 +202,16 @@ impl<'a, C: ChannelControl, T> MaybeTransfer<'a, C, T> {
     }
 }
 
-#[macro_export]
-macro_rules! if_done {
-    ($transfer:expr) => {{
-        if !$transfer.busy() {
-            Some($transfer.consume())
-        } else {
-            None
-        }
-    }};
-}
+//#[macro_export]
+//macro_rules! if_done {
+//    ($transfer:expr) => {{
+//        if !$transfer.busy() {
+//            Some($transfer.consume())
+//        } else {
+//            None
+//        }
+//    }};
+//}
 
 // Methods for toggling DMA channels via dma::Control
 macro_rules! toggle_fn {

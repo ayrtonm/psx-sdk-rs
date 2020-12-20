@@ -8,7 +8,7 @@
 // These struct constructors are all pub(crate) for use in Unsafe wrappers, but not all are used
 #![allow(dead_code)]
 mod macros;
-pub(crate) mod register;
+pub mod register;
 
 pub trait MMIOState {}
 pub struct Enabled {}

@@ -1,10 +1,9 @@
-use crate::impl_value;
 use crate::mmio::gpu;
 use crate::mmio::register::Read;
 
 impl_value!(gpu::Stat);
 
-// TODO: Remove this after making the gpu::Stat::Value methods from the consts 
+// TODO: Remove this after making the gpu::Stat::Value methods from the consts
 #[allow(dead_code)]
 impl gpu::Stat {
     // TODO: Turn these into gpu::Stat::Value methods
@@ -34,7 +33,8 @@ impl gpu::Stat {
     const DMA_DIRECTION: u32 = 3 << 29;
     const INTERLACE_PARITY: u32 = 1 << 31;
 
-    // This method has to reread from memory which is why it's not implemented for gpu::Stat::Value
+    // This method has to reread from memory which is why it's not implemented for
+    // gpu::Stat::Value
     #[inline(always)]
     pub fn sync(&self) {
         while self.get().bits & (1 << 28) == 0 {}

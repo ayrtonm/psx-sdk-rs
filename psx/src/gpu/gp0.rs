@@ -1,5 +1,5 @@
-use super::graphics::Primitive;
 use super::vertex::Vertex;
+use crate::graphics::Primitive;
 use crate::mmio::gpu;
 use crate::mmio::register::Write;
 

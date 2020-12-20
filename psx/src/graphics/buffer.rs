@@ -1,10 +1,10 @@
 use core::cell::UnsafeCell;
 use core::mem::{size_of, MaybeUninit};
 
-use super::{packet_size, DoublePacket, Init, SinglePacket};
+use super::{packet_size, DoublePacket, Init, Packet};
 
 /// A bump allocator for a single-buffered prim array.
-pub struct SingleBuffer<const N: usize> {
+pub struct Buffer<const N: usize> {
     cell: UnsafeCell<InnerBuffer<N>>,
 }
 
@@ -13,9 +13,9 @@ struct InnerBuffer<const N: usize> {
     next: usize,
 }
 
-impl<const N: usize> SingleBuffer<N> {
+impl<const N: usize> Buffer<N> {
     pub fn new() -> Self {
-        SingleBuffer {
+        Buffer {
             cell: UnsafeCell::new(InnerBuffer {
                 data: [0; N],
                 next: 0,
@@ -23,8 +23,8 @@ impl<const N: usize> SingleBuffer<N> {
         }
     }
 
-    pub fn alloc<T: Init>(&self) -> Option<&mut SinglePacket<T>> {
-        self.generic_alloc::<SinglePacket<T>>().map(|p| {
+    pub fn alloc<T: Init>(&self) -> Option<&mut Packet<T>> {
+        self.generic_alloc::<Packet<T>>().map(|p| {
             p.tag = (packet_size::<T>() << 24) as u32;
             p.packet.init();
             p
@@ -53,8 +53,8 @@ impl<const N: usize> SingleBuffer<N> {
         }
     }
 
-    pub fn alloc_array<T: Init, const M: usize>(&self) -> Option<[&mut SinglePacket<T>; M]> {
-        let mut ar: [&mut SinglePacket<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
+    pub fn alloc_array<T: Init, const M: usize>(&self) -> Option<[&mut Packet<T>; M]> {
+        let mut ar: [&mut Packet<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
         for i in 0..M {
             self.alloc().map(|t| ar[i] = t).or_else(|| return None);
         }
@@ -65,16 +65,16 @@ impl<const N: usize> SingleBuffer<N> {
 // TODO: remove one instance of InnerBuffer::next. This is low priority, get a
 // working double buffer first.
 pub struct DoubleBuffer<const N: usize> {
-    buffer_1: SingleBuffer<N>,
-    buffer_2: SingleBuffer<N>,
+    buffer_1: Buffer<N>,
+    buffer_2: Buffer<N>,
     swapped: UnsafeCell<bool>,
 }
 
 impl<const N: usize> DoubleBuffer<N> {
     pub fn new() -> Self {
         DoubleBuffer {
-            buffer_1: SingleBuffer::<N>::new(),
-            buffer_2: SingleBuffer::<N>::new(),
+            buffer_1: Buffer::<N>::new(),
+            buffer_2: Buffer::<N>::new(),
             swapped: UnsafeCell::new(false),
         }
     }

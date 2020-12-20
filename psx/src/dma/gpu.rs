@@ -1,6 +1,6 @@
 use super::{BaseAddress, BlockControl, BlockSize, ChannelControl, Direction, Step, SyncMode};
-use crate::gpu::graphics::SingleOT;
 use crate::gpu::{Clut, TexPage};
+use crate::graphics::OT;
 use crate::mmio::{dma, gpu, Enabled};
 use crate::tim::TIM;
 
@@ -18,13 +18,13 @@ impl dma::gpu::Channel<Enabled> {
         self
     }
 
-    pub fn send<'a, const N: usize>(&mut self, ot: &'a SingleOT<N>) -> Transfer<&'a SingleOT<N>> {
+    pub fn send<'a, const N: usize>(&mut self, ot: &'a OT<N>) -> Transfer<&'a OT<N>> {
         self.send_offset(ot, ot.start())
     }
 
     pub fn send_offset<'a, const N: usize>(
-        &mut self, ot: &'a SingleOT<N>, n: usize,
-    ) -> Transfer<&'a SingleOT<N>> {
+        &mut self, ot: &'a OT<N>, n: usize,
+    ) -> Transfer<&'a OT<N>> {
         self.base_address.set(ot.entry(n));
         self.channel_control.start(ot)
     }

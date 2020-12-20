@@ -8,17 +8,20 @@ pub trait Address: Sized {
 }
 
 pub trait Read<T>: Address {
+    #[inline(always)]
     unsafe fn read(&self) -> T {
         read_volatile(Self::ADDRESS as *const T)
     }
 }
 
 pub trait Write<T>: Address {
+    #[inline(always)]
     unsafe fn write(&mut self, value: T) {
         write_volatile(Self::ADDRESS as *mut T, value)
     }
 }
 
+#[deprecated]
 pub trait Update<T>: Read<T> + Write<T>
 where u32: From<T> {
     unsafe fn update<F>(&mut self, f: F)

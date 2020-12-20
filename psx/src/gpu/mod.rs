@@ -1,7 +1,6 @@
 mod color;
 pub mod gp0;
 pub mod gp1;
-pub mod graphics;
 pub mod stat;
 mod texture;
 mod vertex;

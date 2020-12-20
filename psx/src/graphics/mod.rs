@@ -10,9 +10,9 @@ mod ot;
 mod packet;
 pub mod primitive;
 
-pub use buffer::{DoubleBuffer, SingleBuffer};
-pub use ot::{DoubleOT, SingleOT};
-pub use packet::{DoublePacket, SinglePacket};
+pub use buffer::{Buffer, DoubleBuffer};
+pub use ot::{DoubleOT, OT};
+pub use packet::{DoublePacket, Packet};
 
 pub trait Primitive: Sized {
     fn as_slice(&self) -> &[u32] {
@@ -33,7 +33,7 @@ pub trait Init {
 impl<T> Primitive for T where T: Init {}
 
 pub const fn packet_size<T>() -> usize {
-    size_of::<SinglePacket<T>>() / 4
+    size_of::<Packet<T>>() / 4
 }
 
 use primitive::LineF;

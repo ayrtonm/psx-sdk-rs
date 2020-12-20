@@ -11,21 +11,26 @@
 //#![deny(missing_docs)]
 
 mod allocator;
-pub mod bios;
 mod builtins;
+#[macro_use]
+mod macros;
+mod panic;
+#[macro_use]
+mod value;
+
+pub mod bios;
 pub mod cop0;
 pub mod dma;
-pub mod framebuffer;
 pub mod gpu;
 pub mod gte;
 pub mod interrupt;
-#[macro_use]
-mod macros;
 pub mod mmio;
-mod panic;
-pub mod printer;
 pub mod tim;
-pub mod timer;
+pub mod timers;
+
+pub mod framebuffer;
+pub mod graphics;
+pub mod printer;
 pub mod unzip;
 
 pub fn delay(n: u32) {
