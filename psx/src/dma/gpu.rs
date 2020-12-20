@@ -8,6 +8,7 @@ impl_mut_value!(dma::gpu::ChannelControl);
 impl_dma_channel_control!(dma::gpu::ChannelControl);
 
 impl dma::gpu::Channel {
+    #[inline(always)]
     pub fn prepare_ot(&mut self, gp1: &mut gpu::GP1) -> &mut Self {
         gp1.dma_direction(2);
         self.block_control.set(BlockSize::LinkedList);

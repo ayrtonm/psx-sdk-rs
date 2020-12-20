@@ -18,7 +18,11 @@ const TASKS: [fn(); 2] = [do_this, do_that];
 #[no_mangle]
 fn main(mut mmio: MMIO) -> ! {
     install_vector(scheduler);
-    mmio.irq_mask.get_mut().disable_all().enable(IRQ::Vblank).set();
+    mmio.irq_mask
+        .get_mut()
+        .disable_all()
+        .enable(IRQ::Vblank)
+        .set();
     cop0::Status::read().set(cop0::Status::IM_HW).write();
     cop0::Status::read().enable_interrupts().write();
     loop {}

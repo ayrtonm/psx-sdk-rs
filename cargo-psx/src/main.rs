@@ -47,12 +47,12 @@ fn main() {
     let mut args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
         println!("cargo-psx");
-        println!("Runs a cargo subcommand then repackages the resulting ELF as a PSEXE\n");
+        println!("Runs a cargo build then repackages the resulting ELF as a PSEXE\n");
         println!("USAGE:");
-        println!("  cargo psx [clean] [check] [OPTIONS]\n");
+        println!("  cargo psx [clean|check] [OPTIONS]\n");
         println!("OPTIONS:");
         println!("  --help, -h           Prints help information");
-        println!("  --debug              Builds in debug mode");
+        println!("  --debug              Builds in release mode with debug info");
         println!(
             "  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)"
         );
@@ -97,19 +97,19 @@ fn main() {
         cargo_args.push("--features".to_string());
         cargo_args.push("psx/pretty_panic".to_string());
     };
-    let lto_flags = "-C lto=fat -C codegen-units=1 -C embed-bitcode=yes".to_string();
-    let size_flag = "-C opt-level=s".to_string();
-    let rustflags = &match (env::var("RUSTFLAGS").ok(), lto, size) {
-        (None, false, false) => "".to_string(),
-        (None, true, false) => lto_flags,
-        (None, false, true) => size_flag,
-        (None, true, true) => format!("{} {}", lto_flags, size_flag),
 
-        (Some(flags), false, false) => flags,
-        (Some(flags), true, false) => format!("{} {}", flags, lto_flags),
-        (Some(flags), false, true) => format!("{} {}", flags, size_flag),
-        (Some(flags), true, true) => format!("{} {} {}", flags, lto_flags, size_flag),
-    };
+    let lto_flags = " -C lto=fat -C codegen-units=1 -C embed-bitcode=yes";
+    let size_flag = " -C opt-level=s";
+    let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or("".to_string());
+    if lto {
+        rustflags.push_str(lto_flags);
+    }
+    if size {
+        rustflags.push_str(size_flag);
+    }
+    if debug {
+        rustflags.push_str(" -g");
+    }
 
     let target_triple = "mipsel-sony-psx";
 
@@ -120,18 +120,13 @@ fn main() {
         "build"
     };
 
-    if !debug {
-        cargo_args.push("--release".to_string());
-    }
+    cargo_args.push("--release".to_string());
 
     // Gets cargo metadata for `clean` and `pack` steps
     let metadata = &MetadataCommand::new()
         .exec()
         .expect("Could not parse cargo metadata");
-    let profile = env::args()
-        .any(|arg| arg == "--debug")
-        .then_some("debug")
-        .unwrap_or("release");
+    let profile = "release";
 
     if clean {
         skip_build = true;

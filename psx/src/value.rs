@@ -52,6 +52,7 @@ macro_rules! impl_mut_value {
                 self.value
             }
             #[allow(dead_code)]
+            #[inline(always)]
             pub(crate) fn take(self) -> &'a mut $reg {
                 use crate::mmio::register::Write;
                 unsafe { self.register.write(self.value.bits) };

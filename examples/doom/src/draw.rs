@@ -4,8 +4,8 @@ use alloc::vec::Vec;
 use core::cmp::{max, min};
 use core::ops::RangeInclusive;
 
-use psx::graphics::{Buffer, OT};
 use psx::gpu::{Color, Vertex};
+use psx::graphics::{Buffer, OT};
 
 fn resize_aerial(v: Vertex) -> Vertex {
     v.scale(3).shift(20)

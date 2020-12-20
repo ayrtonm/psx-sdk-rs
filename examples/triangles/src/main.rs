@@ -3,9 +3,9 @@
 #![feature(array_map)]
 
 use psx::framebuffer::UnsafeFramebuffer;
+use psx::gpu::{Color, Pixel, Vertex};
 use psx::graphics::primitive::PolyG3;
 use psx::graphics::{packet_size, DoubleBuffer, DoubleOT};
-use psx::gpu::{Color, Pixel, Vertex};
 use psx::interrupt::IRQ;
 use psx::mmio::MMIO;
 

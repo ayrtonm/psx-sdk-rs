@@ -8,11 +8,13 @@ pub enum BlockSize {
 }
 
 impl From<usize> for BlockSize {
+    #[inline(always)]
     fn from(words: usize) -> Self {
         BlockSize::Single(words)
     }
 }
 impl From<u32> for BlockSize {
+    #[inline(always)]
     fn from(words: u32) -> Self {
         BlockSize::Single(words as usize)
     }
@@ -143,6 +145,7 @@ mod control {
 macro_rules! impl_dma_channel_control {
     ($reg:path) => {
         impl $reg {
+            #[inline(always)]
             pub fn busy(&self) -> bool {
                 use crate::mmio::register::Read;
                 unsafe { self.read() & (1 << 24) != 0 }
