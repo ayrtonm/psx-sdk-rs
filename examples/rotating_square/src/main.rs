@@ -47,14 +47,14 @@ fn main(mut mmio: MMIO) {
     let pal = [Color::AQUA, Color::MINT, Color::INDIGO, Color::ORANGE];
     poly.vertices(init).color(pal);
     // Insert that packet into an ordering table
-    ot.insert(&mut poly, 0);
+    ot.add_prim(&mut poly, 0);
     // Switch over to the other prim buffer
     buffer.swap();
     // Initialize the other copy of the packet as an orange rectangle
     poly.vertices(init).color(pal);
     // Insert that packet into the other ordering table
     ot.swap();
-    ot.insert(&mut poly, 0);
+    ot.add_prim(&mut poly, 0);
 
     //Let's start by sending buffer 1
     buffer.swap();

@@ -31,7 +31,9 @@ impl<const N: usize> OT<N> {
         self.add_prim(prim, z)
     }
 
-    pub fn add_prim<T: Init>(&mut self, prim: &mut Packet<T>, z: usize) -> &mut Self {
+    pub fn add_prim<'a, T: 'a + Init, U: 'a>(&mut self, prim: &'a mut U, z: usize) -> &mut Self
+    where &'a mut Packet<T>: From<&'a mut U> {
+        let prim = <&'a mut Packet<T> as From<&'a mut U>>::from(prim);
         let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;

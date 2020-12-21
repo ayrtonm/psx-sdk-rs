@@ -1,5 +1,13 @@
 use core::ops::{Deref, DerefMut};
 
+impl<'a, T, U> From<&'a mut U> for &'a mut Packet<T>
+where U: Deref<Target = Packet<T>> + DerefMut
+{
+    fn from(u: &'a mut U) -> &'a mut Packet<T> {
+        u
+    }
+}
+
 #[repr(C)]
 pub struct Packet<T> {
     pub(crate) tag: u32,
