@@ -57,6 +57,9 @@ fn main() {
         "A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);",
         "A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);",
         "A(44h) flush_cache();",
+        "B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);",
+        "B(13h) start_pad();",
+        "B(14h) stop_pad();",
     ];
     let src_file = "src/bios.rs";
     let src = bios_functions.iter().fold(String::new(), |s, f| s + &mk_bios_fn(f));

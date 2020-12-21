@@ -194,3 +194,36 @@ pub extern "C" fn flush_cache() {
                lateout("$2") _);
     }
 }
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize) {
+    unsafe {
+        asm!("li $9, 0x12
+              j 0xB0",
+               lateout("$2") _);
+    }
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn start_pad() {
+    unsafe {
+        asm!("li $9, 0x13
+              j 0xB0",
+               lateout("$2") _);
+    }
+}
+
+#[allow(unused_variables)]
+#[naked]
+#[inline(never)]
+pub extern "C" fn stop_pad() {
+    unsafe {
+        asm!("li $9, 0x14
+              j 0xB0",
+               lateout("$2") _);
+    }
+}
