@@ -145,7 +145,8 @@ mod control {
 macro_rules! impl_dma_channel_control {
     ($reg:path) => {
         impl $reg {
-            #[inline(always)]
+            // TODO: Disasm looks good in objdump, but needs testing with ghidra before being inlined
+            //#[inline(always)]
             pub fn busy(&self) -> bool {
                 use crate::mmio::register::Read;
                 unsafe { self.read() & (1 << 24) != 0 }
@@ -224,10 +225,12 @@ macro_rules! impl_dma_channel_control {
         }
 
         impl<'a, T> Transfer<'a, T> {
+            #[inline(always)]
             pub fn busy(&self) -> bool {
                 self.channel_control.busy()
             }
 
+            #[inline(always)]
             pub fn wait(self) -> T {
                 while self.busy() {}
                 self.result
