@@ -4,6 +4,8 @@ This is a preliminary list of things missing in psx (which is quite a bit...)
 
 - [ ] Timers
 - [ ] Controllers
+    - [x] Via kernel
+    - [ ] Via MMIO
 - [ ] Exceptions
     - [x] Install exception vectors
     - [x] Call fn from exception
