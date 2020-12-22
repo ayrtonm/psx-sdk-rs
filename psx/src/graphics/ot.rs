@@ -8,6 +8,14 @@ pub struct OT<const N: usize> {
     entries: [u32; N],
 }
 
+impl Default for OT<1> {
+    fn default() -> Self {
+        OT {
+            entries: [0x00FF_FFFF; 1],
+        }
+    }
+}
+
 impl<const N: usize> OT<N> {
     pub fn new() -> Self {
         OT { entries: [0; N] }
@@ -31,9 +39,9 @@ impl<const N: usize> OT<N> {
         self.add_prim(prim, z)
     }
 
-    pub fn add_prim<'a, T: 'a + Init, U: 'a>(&mut self, prim: &'a mut U, z: usize) -> &mut Self
+    pub fn add_prim<'a, T: 'a + Init, U>(&mut self, prim: &'a mut U, z: usize) -> &mut Self
     where &'a mut Packet<T>: From<&'a mut U> {
-        let prim = <&'a mut Packet<T> as From<&'a mut U>>::from(prim);
+        let prim = <&mut Packet<T>>::from(prim);
         let tag = prim as *mut _ as *mut u32;
         unsafe {
             *tag &= !0x00FF_FFFF;

@@ -145,7 +145,8 @@ mod control {
 macro_rules! impl_dma_channel_control {
     ($reg:path) => {
         impl $reg {
-            // TODO: Disasm looks good in objdump, but needs testing with ghidra before being inlined
+            // TODO: Disasm looks good in objdump, but needs testing with ghidra before
+            // being inlined
             //#[inline(always)]
             pub fn busy(&self) -> bool {
                 use crate::mmio::register::Read;

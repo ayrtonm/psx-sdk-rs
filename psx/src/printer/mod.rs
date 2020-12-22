@@ -28,20 +28,14 @@ pub struct Printer<const N: usize> {
 impl<const N: usize> Printer<N> {
     pub fn new<T, U, V, S>(
         cursor: T, font_size: U, box_offset: V, box_size: S, color: Option<Color>,
-        otc_dma: &mut dma::otc::Channel,
     ) -> Self
-    where
-        Vertex: From<T> + From<U> + From<V> + From<S>,
-    {
+    where Vertex: From<T> + From<U> + From<V> + From<S> {
         let cursor = Vertex::from(cursor);
         let font_size = Vertex::from(font_size);
         let box_offset = Vertex::from(box_offset);
         let box_size = Vertex::from(box_size);
         let buffer = Buffer::<N>::new();
-        let ot = OT::<1>::new();
-        // How unnecessary is this to not lock up the GPU? In case it is needed, I could
-        // just write the single value straight to the ordering table
-        otc_dma.clear(&ot).wait();
+        let mut ot = OT::default();
         Printer {
             tpage: None,
             clut: None,

@@ -22,16 +22,9 @@ impl<const N: usize> UnsafePrinter<N> {
     ) -> Self
     where Vertex: From<T> + From<U> + From<V> + From<S> {
         unsafe {
-            dma::Control::new().get_mut().otc(true).gpu(true).set();
+            dma::Control::new().get_mut().gpu(true).set();
             UnsafePrinter {
-                printer: Printer::<N>::new(
-                    cursor,
-                    font_size,
-                    box_offset,
-                    box_size,
-                    color,
-                    &mut dma::otc::Channel::new(),
-                ),
+                printer: Printer::<N>::new(cursor, font_size, box_offset, box_size, color),
                 gpu_dma: dma::gpu::Channel::new(),
                 gp0: gpu::GP0::new(),
                 gp1: gpu::GP1::new(),
