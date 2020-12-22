@@ -35,7 +35,7 @@ impl<const N: usize> Printer<N> {
         let box_offset = Vertex::from(box_offset);
         let box_size = Vertex::from(box_size);
         let buffer = Buffer::<N>::new();
-        let mut ot = OT::default();
+        let ot = OT::default();
         Printer {
             tpage: None,
             clut: None,
