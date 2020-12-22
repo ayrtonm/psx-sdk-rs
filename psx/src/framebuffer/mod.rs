@@ -9,10 +9,10 @@
 //! time we swap buffers. In exchange for this flexibility, we have to apply the
 //! borrow checker rules dynamically and get run-time errors instead.
 
-use crate::gpu::Color;
-use crate::gpu::Vertex;
-use crate::gpu::{Depth, Vmode};
+use crate::gpu::{Color, Depth, DrawEnv, Vertex, Vmode};
 use crate::graphics::primitive::Tile;
+use crate::graphics::{Packet, OT};
+use crate::mmio::dma;
 use crate::mmio::gpu::{GP0, GP1};
 
 mod wrapper;
@@ -29,16 +29,26 @@ pub struct Framebuffer {
     display: Buffer,
     buffers: (Vertex, Vertex),
     res: Vertex,
+    draw_envs: (Packet<DrawEnv>, Packet<DrawEnv>),
     clear: Color,
 }
 
 impl Framebuffer {
-    pub fn new<T, U, V>(buf0: T, buf1: U, res: V, gp0: &mut GP0, gp1: &mut GP1) -> Self
+    pub fn new<T, U, V>(
+        buf0: T, buf1: U, res: V, gp0: &mut GP0, gp1: &mut GP1, gpu_dma: &mut dma::gpu::Channel,
+    ) -> Self
     where Vertex: From<T> + From<U> + From<V> {
+        let res = Vertex::from(res);
+        let buf0 = Vertex::from(buf0);
+        let buf1 = Vertex::from(buf1);
         let mut fb = Framebuffer {
             display: Buffer::One,
             buffers: (Vertex::from(buf0), Vertex::from(buf1)),
-            res: Vertex::from(res),
+            res,
+            draw_envs: (
+                DrawEnv::new(buf0, Vertex::from(buf0).shift(res), buf0),
+                DrawEnv::new(buf1, Vertex::from(buf1).shift(res), buf1),
+            ),
             clear: Color::BLACK,
         };
         // Magic constants from nocash specs. If I remember correctly some PS1 games
@@ -48,22 +58,22 @@ impl Framebuffer {
         gp1.horizontal(hoffset, hoffset + (fb.res.x() * 8))
             .vertical(vmid - (fb.res.y() / 2), vmid + (fb.res.y() / 2))
             .mode(fb.res.x(), fb.res.y(), Vmode::NTSC, Depth::Lo, false);
-        fb.draw(Buffer::Two, gp0);
+        fb.draw(Buffer::Two, gp0, gp1, gpu_dma);
         fb.display(Buffer::One, gp0, gp1);
         gp1.on();
         fb
     }
 
-    pub fn swap(&mut self, gp0: &mut GP0, gp1: &mut GP1) {
+    pub fn swap(&mut self, gp0: &mut GP0, gp1: &mut GP1, gpu_dma: &mut dma::gpu::Channel) {
         match self.display {
             Buffer::One => {
                 self.display = Buffer::Two;
-                self.draw(Buffer::One, gp0);
+                self.draw(Buffer::One, gp0, gp1, gpu_dma);
                 self.display(Buffer::Two, gp0, gp1);
             },
             Buffer::Two => {
                 self.display = Buffer::One;
-                self.draw(Buffer::Two, gp0);
+                self.draw(Buffer::Two, gp0, gp1, gpu_dma);
                 self.display(Buffer::One, gp0, gp1);
             },
         }
@@ -76,9 +86,12 @@ impl Framebuffer {
         }
     }
 
-    fn draw(&mut self, buffer: Buffer, gp0: &mut GP0) {
-        let buffer = self.buffer(buffer);
-        gp0.start(buffer).end(buffer.shift(self.res)).offset(buffer);
+    fn draw(
+        &mut self, buffer: Buffer, gp0: &mut GP0, gp1: &mut GP1, gpu_dma: &mut dma::gpu::Channel,
+    ) {
+        let buffer = self.buffers.0;
+        gpu_dma.prepare_ot(gp1).send_packet(&self.draw_envs.0).wait();
+        //gp0.start(buffer).end(buffer.shift(self.res)).offset(buffer);
     }
 
     fn display(&mut self, buffer: Buffer, gp0: &mut GP0, gp1: &mut GP1) {

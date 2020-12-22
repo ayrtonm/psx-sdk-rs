@@ -2,12 +2,16 @@ mod color;
 mod texture;
 mod vertex;
 
+mod disp_env;
+mod draw_env;
+
 pub mod gp0;
 pub mod gp1;
 pub mod stat;
 
-pub mod draw_env;
+pub use draw_env::DrawEnv;
 
+pub use vertex::PackedVertex;
 pub use vertex::Pixel;
 pub use vertex::Vertex;
 

@@ -1,7 +1,7 @@
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
-use super::{Init, Packet};
+use super::{Packet, Primitive};
 
 /// A depth [ordering table](http://problemkaputt.de/psx-spx.htm#gpudepthordering)
 pub struct OT<const N: usize> {
@@ -34,12 +34,13 @@ impl<const N: usize> OT<N> {
     }
 
     // TODO: combine `insert` and `add_prim` into one function
-    pub fn insert<T: Init, U>(&mut self, prim: &mut U, z: usize) -> &mut Self
+    #[deprecated]
+    pub fn insert<T: Primitive, U>(&mut self, prim: &mut U, z: usize) -> &mut Self
     where U: Deref<Target = Packet<T>> + DerefMut {
         self.add_prim(prim, z)
     }
 
-    pub fn add_prim<'a, T: 'a + Init, U>(&mut self, prim: &'a mut U, z: usize) -> &mut Self
+    pub fn add_prim<'a, T: 'a + Primitive, U>(&mut self, prim: &'a mut U, z: usize) -> &mut Self
     where &'a mut Packet<T>: From<&'a mut U> {
         let prim = <&mut Packet<T>>::from(prim);
         let tag = prim as *mut _ as *mut u32;

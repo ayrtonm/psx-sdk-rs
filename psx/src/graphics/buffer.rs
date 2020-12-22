@@ -1,7 +1,7 @@
 use core::cell::UnsafeCell;
 use core::mem::{size_of, MaybeUninit};
 
-use super::{packet_size, DoublePacket, Init, Packet};
+use super::{packet_size, DoublePacket, Packet, Primitive};
 
 /// A bump allocator for a single-buffered prim array.
 pub struct Buffer<const N: usize> {
@@ -23,7 +23,7 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn alloc<T: Init>(&self) -> Option<&mut Packet<T>> {
+    pub fn alloc<T: Primitive>(&self) -> Option<&mut Packet<T>> {
         self.generic_alloc::<Packet<T>>().map(|p| {
             p.tag = (packet_size::<T>() << 24) as u32;
             p.packet.init();
@@ -53,7 +53,7 @@ impl<const N: usize> Buffer<N> {
         }
     }
 
-    pub fn alloc_array<T: Init, const M: usize>(&self) -> Option<[&mut Packet<T>; M]> {
+    pub fn alloc_array<T: Primitive, const M: usize>(&self) -> Option<[&mut Packet<T>; M]> {
         let mut ar: [&mut Packet<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
         for i in 0..M {
             self.alloc().map(|t| ar[i] = t).or_else(|| return None);
@@ -83,7 +83,7 @@ impl<const N: usize> DoubleBuffer<N> {
     // you should be able to plan on being able to make some max number of
     // primitives. On the other hand, this could be useful for knowing when to
     // reset the buffer without having to plan so carefully.
-    pub fn alloc<T: Init>(&self) -> Option<DoublePacket<T>> {
+    pub fn alloc<T: Primitive>(&self) -> Option<DoublePacket<T>> {
         let opt = self
             .buffer_1
             .alloc::<T>()
@@ -110,7 +110,7 @@ impl<const N: usize> DoubleBuffer<N> {
         }
     }
 
-    pub fn alloc_array<T: Init, const M: usize>(&self) -> Option<[DoublePacket<T>; M]> {
+    pub fn alloc_array<T: Primitive, const M: usize>(&self) -> Option<[DoublePacket<T>; M]> {
         let mut ar: [DoublePacket<T>; M] = unsafe { MaybeUninit::zeroed().assume_init() };
         for i in 0..M {
             self.alloc().map(|t| ar[i] = t).or_else(|| return None);

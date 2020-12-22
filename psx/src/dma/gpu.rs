@@ -1,6 +1,6 @@
 use super::{BaseAddress, BlockControl, BlockSize, Chop, Direction, Step, SyncMode};
 use crate::gpu::{Clut, TexPage};
-use crate::graphics::OT;
+use crate::graphics::{Packet, OT};
 use crate::mmio::{dma, gpu};
 use crate::tim::TIM;
 
@@ -18,6 +18,11 @@ impl dma::gpu::Channel {
             .sync_mode(SyncMode::LinkedList)
             .set();
         self
+    }
+
+    pub fn send_packet<'a, T>(&mut self, packet: &'a Packet<T>) -> Transfer<&'a Packet<T>> {
+        self.base_address.set(packet.address());
+        self.channel_control.get_mut().start(packet)
     }
 
     pub fn send<'a, const N: usize>(&mut self, ot: &'a OT<N>) -> Transfer<&'a OT<N>> {

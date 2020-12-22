@@ -1,3 +1,5 @@
+use core::slice;
+use super::packet_size;
 use core::ops::{Deref, DerefMut};
 
 impl<'a, T, U> From<&'a mut U> for &'a mut Packet<T>
@@ -12,6 +14,18 @@ where U: Deref<Target = Packet<T>> + DerefMut
 pub struct Packet<T> {
     pub(crate) tag: u32,
     pub(crate) packet: T,
+}
+
+impl<T> Packet<T> {
+    pub fn new(t: T) -> Self {
+        Packet {
+            tag: 0x03FF_FFFF,
+            packet: t,
+        }
+    }
+    pub fn address(&self) -> *const u32 {
+        &self.tag as *const u32
+    }
 }
 
 impl<T> Deref for Packet<T> {

@@ -1,5 +1,6 @@
 use super::Framebuffer;
 use crate::gpu::Vertex;
+use crate::mmio::dma;
 use crate::mmio::gpu::{GP0, GP1};
 use core::cell::RefCell;
 
@@ -13,18 +14,29 @@ pub struct UnsafeFramebuffer {
     fb: Framebuffer,
     gp0: GP0,
     gp1: GP1,
+    gpu_dma: dma::gpu::Channel,
 }
 
 impl UnsafeFramebuffer {
     pub fn new<T, U, V>(buf0: T, buf1: U, res: V) -> Self
     where Vertex: From<T> + From<U> + From<V> {
-        let (mut gp0, mut gp1) = unsafe { (GP0::new(), GP1::new()) };
-        let fb = Framebuffer::new(buf0, buf1, res, &mut gp0, &mut gp1);
-        UnsafeFramebuffer { fb, gp0, gp1 }
+        unsafe {
+            let mut gp0 = GP0::new();
+            let mut gp1 = GP1::new();
+            let mut gpu_dma = dma::gpu::Channel::new();
+            let fb = Framebuffer::new(buf0, buf1, res, &mut gp0, &mut gp1, &mut gpu_dma);
+            UnsafeFramebuffer {
+                fb,
+                gp0,
+                gp1,
+                gpu_dma,
+            }
+        }
     }
 
     pub fn swap(&mut self) {
-        self.fb.swap(&mut self.gp0, &mut self.gp1)
+        self.fb
+            .swap(&mut self.gp0, &mut self.gp1, &mut self.gpu_dma)
     }
 }
 
@@ -33,6 +45,7 @@ pub struct UncheckedFramebuffer<'a, 'b> {
     gp0: &'a RefCell<GP0>,
     gp1: &'b RefCell<GP1>,
 }
+/*
 
 impl<'a, 'b> UncheckedFramebuffer<'a, 'b> {
     pub fn new<T, U, V>(
@@ -57,3 +70,4 @@ impl<'a, 'b> UncheckedFramebuffer<'a, 'b> {
             .swap(&mut self.gp0.borrow_mut(), &mut self.gp1.borrow_mut())
     }
 }
+*/

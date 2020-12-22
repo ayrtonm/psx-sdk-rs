@@ -1,6 +1,6 @@
 macro_rules! impl_prim {
     ($name:ident, $cmd:expr) => {
-        impl Init for $name {
+        impl Primitive for $name {
             fn init(&mut self) {
                 self.cmd();
             }
