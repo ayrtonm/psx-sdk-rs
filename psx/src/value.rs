@@ -1,73 +1,75 @@
 use core::marker::PhantomData;
-use core::ops::{Deref, DerefMut};
 
-/// An interface for loading a generic register.
-pub trait Load<T> {
-    /// Loads a generic register.
-    unsafe fn load(&self) -> T;
+/// An interface for reading a generic register from memory or a coprocessor.
+pub trait Read<T>: Sized {
+    /// Reads from the register.
+    unsafe fn read(&self) -> T;
 }
 
-/// An interface for storing a generic register.
-pub trait Store<T> {
-    /// Stores a generic register.
-    unsafe fn store(&mut self, value: T);
+/// An interface for writing a generic register to memory or a coprocessor.
+pub trait Write<T>: Sized {
+    /// Writes to the register.
+    unsafe fn write(&mut self, value: T);
 }
 
-/// A read-ony copy of the value of an I/O register previously read from memory.
-pub struct Value<R, T> {
+/// A read-only copy of a value previously read from a generic register.
+pub struct Value<'r, T, R: Read<T>> {
     pub(crate) bits: T,
-    _reg: PhantomData<R>,
+    reg: PhantomData<&'r R>,
 }
 
-/// A read-write copy of the value of an I/O register previously read from
-/// memory. Mutably borrows the loaded register to ensure exclusive access.
-#[must_use = "MutValue must be stored in memory"]
-pub struct MutValue<'a, R, T> {
-    value: Value<R, T>,
-    reg: &'a mut R,
+/// A mutable copy of a value previously read from a generic register. The value
+/// must be written back to the register.
+#[must_use]
+pub struct MutValue<'r, T, R: Read<T> + Write<T>> {
+    /// The current value.
+    pub value: Value<'r, T, R>,
+    reg: &'r mut R,
 }
 
-impl<'a, R: Load<T>, T: Copy> Value<R, T> {
-    /// Calls [`Load::load`] once to load an I/O register from memory.
+/// An interface for getting a [`Value`] from an implementor for [`Read`].
+pub trait Load<T: Copy>
+where Self: Read<T> {
+    /// Calls [`Read::read`] **once** to get a [`Value`], borrowing the register
+    /// to ensure no mutable references to it exist.
     #[inline(always)]
-    pub fn load(r: &R) -> Self {
+    fn load(&self) -> Value<T, Self> {
         Value {
-            bits: unsafe { r.load() },
-            _reg: PhantomData::<R>,
+            bits: unsafe { self.read() },
+            reg: PhantomData::<&Self>,
         }
     }
 }
 
-impl<'a, R: Load<T> + Store<T>, T: Copy> MutValue<'a, R, T> {
-    /// Calls [`Load::load`] once to load an I/O register from memory.
+/// An interface for getting a [`MutValue`] from an implementor for [`Read`] and
+/// [`Write`].
+pub trait LoadMut<T: Copy>
+where Self: Read<T> + Write<T> {
+    /// Calls [`Read::read`] **once** to get a [`Value`], mutably borrowing the
+    /// register to ensure exclusive access to it.
     #[inline(always)]
-    pub fn load_mut(r: &'a mut R) -> Self {
+    fn load_mut(&mut self) -> MutValue<T, Self> {
         MutValue {
-            value: Value::load(&*r),
-            reg: r,
+            value: Value {
+                bits: unsafe { self.read() },
+                reg: PhantomData::<&Self>,
+            },
+            reg: self,
         }
     }
-
-    /// Calls [`Store::store`] to store an I/O register in memory. Returns a
-    /// read-only copy of the stored [`Value`].
-    #[inline(always)]
-    pub fn store(self) -> Value<R, T> {
-        unsafe { self.reg.store(self.value.bits) };
-        self.value
-    }
 }
 
-impl<R, T> Deref for MutValue<'_, R, T> {
-    type Target = Value<R, T>;
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
-}
+impl<T: Copy, R: LoadMut<T>> Load<T> for R {}
 
-impl<R, T> DerefMut for MutValue<'_, R, T> {
+impl<'r, T: Copy, R: Read<T> + Write<T>> MutValue<'r, T, R> {
+    /// Calls [`Write::write`] to write the current [`Self::value`] to the
+    /// register. Returns a [`Value`] with a copy of the written value.
     #[inline(always)]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.value
+    pub fn store(self) -> Value<'r, T, R> {
+        unsafe { self.reg.write(self.value.bits) }
+        Value {
+            bits: self.value.bits,
+            reg: PhantomData::<&'r R>,
+        }
     }
 }

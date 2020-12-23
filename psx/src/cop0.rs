@@ -1,7 +1,31 @@
-use crate::value::{Load, MutValue, Store, Value};
+use crate::value::{Load, LoadMut, MutValue, Read, Value, Write};
 
 /// System status register ([cop0r12](http://problemkaputt.de/psx-spx.htm#cop0registersummary))
 pub struct Status;
+
+/// Exception cause register ([cop0r13](http://problemkaputt.de/psx-spx.htm#cop0registersummary))
+pub struct Cause;
+
+/// Exception program counter register ([cop0r14](http://problemkaputt.de/psx-spx.htm#cop0registersummary))
+pub struct EPC;
+
+impl Read<u32> for Status {
+    #[inline(always)]
+    unsafe fn read(&self) -> u32 {
+        let status;
+        asm!("mfc0 $2, $12", out("$2") status);
+        status
+    }
+}
+
+impl Write<u32> for Status {
+    #[inline(always)]
+    unsafe fn write(&mut self, status: u32) {
+        asm!("mtc0 $2, $12", in("$2") status)
+    }
+}
+
+impl LoadMut<u32> for Status {}
 
 impl Status {
     /// Current Interrupt Enable
@@ -40,37 +64,14 @@ impl Status {
     pub const CU0: u32 = 1 << 28;
     /// Graphics transformation engine (Coprocessor 2) enabled.
     pub const CU2: u32 = 1 << 30;
-
-    /// Loads the `Status` register from coprocessor 0, immutably borrowing the
-    /// register.
-    pub fn load(&self) -> Value<Self, u32> {
-        Value::load(self)
-    }
-
-    /// Loads the `Status` register from coprocessor 0, exclusively borrowing
-    /// the register.
-    pub fn load_mut(&mut self) -> MutValue<Self, u32> {
-        MutValue::load_mut(self)
-    }
 }
 
-impl Load<u32> for Status {
-    #[inline(always)]
-    unsafe fn load(&self) -> u32 {
-        let status;
-        asm!("mfc0 $2, $12", out("$2") status);
-        status
-    }
-}
+/// A [`Value`] for [`Status`].
+pub type StatusValue<'r> = Value<'r, u32, Status>;
+/// A [`MutValue`] for [`Status`].
+pub type StatusMutValue<'r> = MutValue<'r, u32, Status>;
 
-impl Store<u32> for Status {
-    #[inline(always)]
-    unsafe fn store(&mut self, status: u32) {
-        asm!("mtc0 $2, $12", in("$2") status)
-    }
-}
-
-impl Value<Status, u32> {
+impl StatusValue<'_> {
     /// Checks if interrupts are enabled in the value loaded from the `Status`
     /// register.
     #[inline(always)]
@@ -79,12 +80,12 @@ impl Value<Status, u32> {
     }
 }
 
-impl MutValue<'_, Status, u32> {
+impl StatusMutValue<'_> {
     /// Sets the given `flags` in `Status`. This has no effect until `Status`
     /// is stored in coprocessor 0.
     #[inline(always)]
     pub fn set(mut self, flags: u32) -> Self {
-        self.bits |= flags;
+        self.value.bits |= flags;
         self
     }
 
@@ -92,7 +93,7 @@ impl MutValue<'_, Status, u32> {
     /// is stored in coprocessor 0.
     #[inline(always)]
     pub fn clear(mut self, flags: u32) -> Self {
-        self.bits &= !flags;
+        self.value.bits &= !flags;
         self
     }
 
@@ -100,7 +101,7 @@ impl MutValue<'_, Status, u32> {
     /// stored in coprocessor 0.
     #[inline(always)]
     pub fn enable_interrupts(mut self) -> Self {
-        self.bits |= Status::IEc;
+        self.value.bits |= Status::IEc;
         self
     }
 
@@ -108,7 +109,57 @@ impl MutValue<'_, Status, u32> {
     /// stored in coprocessor 0.
     #[inline(always)]
     pub fn disable_interrupts(mut self) -> Self {
-        self.bits &= !Status::IEc;
+        self.value.bits &= !Status::IEc;
         self
+    }
+}
+
+impl Read<u32> for Cause {
+    #[inline(always)]
+    unsafe fn read(&self) -> u32 {
+        let cause;
+        asm!("mfc0 $2, $13", out("$2") cause);
+        cause
+    }
+}
+
+impl Write<u32> for Cause {
+    #[inline(always)]
+    unsafe fn write(&mut self, cause: u32) {
+        asm!("mtc0 $2, $13", in("$2") cause)
+    }
+}
+
+impl LoadMut<u32> for Cause {}
+
+impl Cause {
+    /// Pending bit for software interrupt 1 (R/W). Causes an interrupt when set
+    /// if [`Status::ImSw1`] is set in the status register.
+    pub const ImSw1: u32 = 1 << 8;
+    /// Pending bit for software interrupt 2 (R/W). Causes an interrupt when set
+    /// if [`Status::ImSw2`] is set in the status register.
+    pub const ImSw2: u32 = 1 << 9;
+    /// Pending bit for hardware interrupts (R). Causes an interrupt when set if
+    /// [`Status::ImHw`] is set in the status register.
+    pub const ImHw: u32 = 1 << 10;
+}
+
+impl Read<u32> for EPC {
+    #[inline(always)]
+    unsafe fn read(&self) -> u32 {
+        let epc;
+        asm!("mfc0 $2, $14", out("$2") epc);
+        epc
+    }
+}
+
+impl Load<u32> for EPC {}
+
+/// Executes the coprocessor RFE instruction ([cop0cmd=10h](http://problemkaputt.de/psx-spx.htm#cop0exceptionhandling)).
+/// This prepares for a return from an exception.
+#[inline(always)]
+pub fn rfe() {
+    unsafe {
+        asm!(".word 0x42000010");
     }
 }
