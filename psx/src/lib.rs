@@ -1,42 +1,28 @@
+//! IO routines for the original Sony PlayStation.
+//!
+//! This crate contains routines for using PSX peripherals and coprocessors.
 #![no_std]
-// Pretty much required to implement certain things
-#![feature(min_const_generics)]
-// Used for error messages
-#![feature(panic_info_message, fmt_as_str, alloc_error_handler)]
-// Could probably get away with not using these if necessary
-#![feature(bool_to_option, array_map, type_alias_impl_trait)]
-// Only used for bios trampolines so far
-#![feature(asm, naked_functions)]
-// TODO: I should start using this eventually
 //#![deny(missing_docs)]
+#![allow(non_upper_case_globals)]
+// Required for BIOS function wrappers.
+#![feature(asm, naked_functions)]
+// Required for allocator error handling.
+#![feature(alloc_error_handler)]
+#![feature(min_const_generics)]
 
-mod allocator;
-mod builtins;
-#[macro_use]
+//mod allocator;
 mod macros;
 mod panic;
-#[macro_use]
-mod value;
 
+/// Wrappers for BIOS functions.
 pub mod bios;
+/// Coprocessor 0 routines.
 pub mod cop0;
+/// DMA channel routines.
 pub mod dma;
-pub mod gpu;
-pub mod gte;
+/// Interrupt routines.
 pub mod interrupt;
+/// Traits for accessing memory-mapped I/O registers.
 pub mod mmio;
-pub mod tim;
-pub mod timers;
-
-pub mod framebuffer;
-pub mod graphics;
-pub mod printer;
-pub mod unzip;
-
-pub fn delay(n: u32) {
-    for _ in 0..n {
-        unsafe {
-            core::ptr::read_volatile(0 as *mut u32);
-        }
-    }
-}
+/// Methods for accessing coprocessor and memory-mapped I/O registers.
+pub mod value;

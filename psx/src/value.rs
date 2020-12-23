@@ -1,63 +1,73 @@
-macro_rules! impl_value {
-    ($reg:path) => {
-        pub struct Value {
-            bits: u32,
-        }
+use core::marker::PhantomData;
+use core::ops::{Deref, DerefMut};
 
-        impl $reg {
-            #[inline(always)]
-            pub fn get(&self) -> Value {
-                use crate::mmio::register::Read;
-                Value {
-                    bits: unsafe { self.read() },
-                }
-            }
-        }
-    };
+/// An interface for loading a generic register.
+pub trait Load<T> {
+    /// Loads a generic register.
+    unsafe fn load(&self) -> T;
 }
 
-macro_rules! impl_mut_value {
-    ($reg:path) => {
-        impl_value!($reg);
-        #[must_use = "MMIO register value must be written to memory"]
-        pub struct MutValue<'a> {
-            value: Value,
-            register: &'a mut $reg,
-        }
+/// An interface for storing a generic register.
+pub trait Store<T> {
+    /// Stores a generic register.
+    unsafe fn store(&mut self, value: T);
+}
 
-        impl $reg {
-            #[inline(always)]
-            pub fn get_mut(&mut self) -> MutValue {
-                MutValue {
-                    value: self.get(),
-                    register: self,
-                }
-            }
-        }
+/// A read-ony copy of the value of an I/O register previously read from memory.
+pub struct Value<R, T> {
+    pub(crate) bits: T,
+    _reg: PhantomData<R>,
+}
 
-        impl core::ops::Deref for MutValue<'_> {
-            type Target = Value;
+/// A read-write copy of the value of an I/O register previously read from
+/// memory. Mutably borrows the loaded register to ensure exclusive access.
+#[must_use = "MutValue must be stored in memory"]
+pub struct MutValue<'a, R, T> {
+    value: Value<R, T>,
+    reg: &'a mut R,
+}
 
-            #[inline(always)]
-            fn deref(&self) -> &Self::Target {
-                &self.value
-            }
+impl<'a, R: Load<T>, T: Copy> Value<R, T> {
+    /// Calls [`Load::load`] once to load an I/O register from memory.
+    #[inline(always)]
+    pub fn load(r: &R) -> Self {
+        Value {
+            bits: unsafe { r.load() },
+            _reg: PhantomData::<R>,
         }
+    }
+}
 
-        impl<'a> MutValue<'a> {
-            #[inline(always)]
-            pub fn set(self) -> Value {
-                use crate::mmio::register::Write;
-                unsafe { self.register.write(self.value.bits) };
-                self.value
-            }
-            #[allow(dead_code)]
-            #[inline(always)]
-            pub(crate) fn take(self) -> &'a mut $reg {
-                use crate::mmio::register::Write;
-                unsafe { self.register.write(self.value.bits) };
-                self.register
-            }
+impl<'a, R: Load<T> + Store<T>, T: Copy> MutValue<'a, R, T> {
+    /// Calls [`Load::load`] once to load an I/O register from memory.
+    #[inline(always)]
+    pub fn load_mut(r: &'a mut R) -> Self {
+        MutValue {
+            value: Value::load(&*r),
+            reg: r,
         }
-    };
+    }
+
+    /// Calls [`Store::store`] to store an I/O register in memory. Returns a
+    /// read-only copy of the stored [`Value`].
+    #[inline(always)]
+    pub fn store(self) -> Value<R, T> {
+        unsafe { self.reg.store(self.value.bits) };
+        self.value
+    }
+}
+
+impl<R, T> Deref for MutValue<'_, R, T> {
+    type Target = Value<R, T>;
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<R, T> DerefMut for MutValue<'_, R, T> {
+    #[inline(always)]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.value
+    }
 }
