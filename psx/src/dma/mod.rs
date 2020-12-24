@@ -15,7 +15,6 @@ pub mod otc;
 pub mod transfer;
 
 /// A [DMA channel](http://problemkaputt.de/psx-spx.htm#dmachannels).
-#[repr(u32)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Channel {
     /// DMA channel for RAM to Macroblock Decoder transfers.
@@ -152,12 +151,7 @@ pub trait ChannelControl: LoadMut<u32> {
     const SYNC_MODE: u32 = 9;
     const DMA_WIN: u32 = 16;
     const CPU_WIN: u32 = 20;
-    const BUSY: u32 = 28;
-
-    #[inline(always)]
-    fn busy(&self) -> bool {
-        unsafe { self.read() & (1 << Self::BUSY) != 0 }
-    }
+    const BUSY: u32 = 24;
 }
 
 /// A [`value::Value`] alias for DMA channel control registers.
@@ -176,6 +170,12 @@ impl<R: ChannelControl> Value<'_, R> {
             2 => Some(SyncMode::LinkedList),
             _ => None,
         }
+    }
+
+    /// Checks if the DMA channel is busy.
+    #[inline(always)]
+    pub fn busy(&self) -> bool {
+        self.contains(1 << R::BUSY)
     }
 }
 
@@ -213,6 +213,7 @@ impl<'r, R: ChannelControl> MutValue<'r, R> {
     /// resulting [`Transfer`] shared access to the register.
     #[inline(always)]
     pub fn start<T>(self, result: T) -> Transfer<'r, T, R> {
+        // TODO: Set the bits to actually start the transfer.
         Transfer::new(self.take(), result)
     }
 }

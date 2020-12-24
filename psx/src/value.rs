@@ -99,6 +99,12 @@ impl<'r, T: Copy + Default, R: LoadMut<T>> MutValue<'r, T, R> {
 impl<T: Copy + Default, R: LoadMut<T>> Load<T> for R {}
 
 impl<R: Load<u32>> Value<'_, u32, R> {
+    #[inline(always)]
+    /// Checks if any of the given `flags` are set.
+    pub fn any(&self, flags: u32) -> bool {
+        self.bits & flags != 0
+    }
+
     /// Checks if the given `flags` are all set.
     #[inline(always)]
     pub fn contains(&self, flags: u32) -> bool {
@@ -113,15 +119,26 @@ impl<R: Load<u32>> Value<'_, u32, R> {
 }
 
 impl<R: LoadMut<u32>> MutValue<'_, u32, R> {
+    /// Sets all bits.
+    #[inline(always)]
+    pub fn set_all(mut self) -> Self {
+        self.value.bits |= !0;
+        self
+    }
+
+    /// Clears all bits.
+    #[inline(always)]
+    pub fn clear_all(mut self) -> Self {
+        self.value.bits &= 0;
+        self
+    }
     /// Sets the given `flags`.
     #[inline(always)]
     pub fn set(mut self, flags: u32) -> Self {
         self.value.bits |= flags;
         self
     }
-}
 
-impl<R: LoadMut<u32>> MutValue<'_, u32, R> {
     /// Clears the given `flags`.
     #[inline(always)]
     pub fn clear(mut self, flags: u32) -> Self {

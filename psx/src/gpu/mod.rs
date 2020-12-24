@@ -1,5 +1,8 @@
 use crate::mmio::{Address, Write};
 
+/// GPU Status register.
+pub mod stat;
+
 /// [GP0](http://problemkaputt.de/psx-spx.htm#gpuioportsdmachannelscommandsvram) register at `0x1F80_1810`.
 /// Used to send commands for rendering and VRAM access.
 pub struct GP0;
