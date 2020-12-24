@@ -14,30 +14,33 @@ impl Address<u32> for Control {
 }
 impl LoadMut<u32> for Control {}
 
+impl Control {
+    #[inline(always)]
+    fn enable_bit(ch: Channel) -> u32 {
+        let bit = (ch as u32 * 4) + 3;
+        1 << bit
+    }
+}
+
 impl ControlValue<'_> {
     /// Checks if the given DMA channel is enabled.
     #[inline(always)]
     pub fn enabled(&self, ch: Channel) -> bool {
-        let bit = (ch as u32 * 4) + 3;
-        self.bits & bit != 0
+        self.contains(Control::enable_bit(ch))
     }
 }
 
 impl ControlMutValue<'_> {
     /// Enables the given DMA channel.
     #[inline(always)]
-    pub fn enable(mut self, ch: Channel) -> Self {
-        let bit = (ch as u32 * 4) + 3;
-        self.value.bits |= 1 << bit;
-        self
+    pub fn enable(self, ch: Channel) -> Self {
+        self.set(Control::enable_bit(ch))
     }
 
     /// Disables the given DMA channel.
     #[inline(always)]
-    pub fn disable(mut self, ch: Channel) -> Self {
-        let bit = (ch as u32 * 4) + 3;
-        self.value.bits &= !(1 << bit);
-        self
+    pub fn disable(self, ch: Channel) -> Self {
+        self.clear(Control::enable_bit(ch))
     }
 }
 

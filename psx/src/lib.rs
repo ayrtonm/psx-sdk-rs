@@ -1,11 +1,13 @@
-//! IO routines for the original Sony PlayStation.
+//! Library for the original Sony PlayStation.
 //!
-//! This crate contains routines for using PSX peripherals and coprocessors.
+//! This crate contains routines for using PSX peripherals, coprocessors and
+//! memory-mapped I/O registers.
 #![no_std]
 #![deny(missing_docs)]
 #![deny(warnings)]
+// Allowed to match nomenclature in [nocash specs](http://problemkaputt.de/psx-spx.htm).
 #![allow(non_upper_case_globals)]
-// Required for BIOS function wrappers.
+// Required for BIOS function wrappers and coprocessors.
 #![feature(asm, naked_functions)]
 // Required for allocator error handling.
 #![feature(alloc_error_handler)]
@@ -16,17 +18,15 @@ mod panic;
 
 /// Wrappers for BIOS functions.
 pub mod bios;
-
-/// Methods for accessing coprocessor and memory-mapped I/O registers.
+/// Traits for accessing coprocessor and memory-mapped I/O registers.
 pub mod value;
 
-/// Coprocessor 0 routines.
+/// Coprocessor 0 registers and routines.
 pub mod cop0;
-/// Traits for accessing memory-mapped I/O registers.
+/// Traits for addressing memory-mapped I/O registers.
 pub mod mmio;
 
 /// Interrupt routines.
 pub mod interrupt;
-
-/// DMA channel routines.
+/// DMA routines.
 pub mod dma;

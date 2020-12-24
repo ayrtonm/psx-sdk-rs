@@ -1,7 +1,8 @@
-use crate::value::{Load, LoadMut, Read, Write};
 use core::ptr::{read_volatile, write_volatile};
 
-/// A read/write memory-mapped I/O register of size `S`.
+use crate::value::{Load, LoadMut, Read, Write};
+
+/// An addressable memory-mapped I/O register.
 pub trait Address<T> {
     /// The memory address the register is mapped to.
     const ADDRESS: u32;

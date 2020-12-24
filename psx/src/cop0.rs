@@ -72,45 +72,36 @@ pub type StatusValue<'r> = Value<'r, u32, Status>;
 pub type StatusMutValue<'r> = MutValue<'r, u32, Status>;
 
 impl StatusValue<'_> {
-    /// Checks if interrupts are enabled in the value loaded from the `Status`
-    /// register.
+    /// Checks if interrupts are enabled.
     #[inline(always)]
     pub fn interrupts_enabled(&self) -> bool {
-        self.bits & Status::IEc != 0
+        self.contains(Status::IEc)
     }
 }
 
 impl StatusMutValue<'_> {
-    /// Sets the given `flags` in `Status`. This has no effect until `Status`
-    /// is stored in coprocessor 0.
+    /// Enters a critical section.
     #[inline(always)]
-    pub fn set(mut self, flags: u32) -> Self {
-        self.value.bits |= flags;
-        self
+    pub fn enter_critical_section(self) -> Self {
+        self.set(Status::IEp | Status::ImHw)
     }
 
-    /// Clears the given `flags` in `Status`. This has no effect until `Status`
-    /// is stored in coprocessor 0.
+    /// Exits a critical section.
     #[inline(always)]
-    pub fn clear(mut self, flags: u32) -> Self {
-        self.value.bits &= !flags;
-        self
+    pub fn exit_critical_section(self) -> Self {
+        self.clear(Status::IEp | Status::ImHw)
     }
 
-    /// Enables interrupts in `Status`. This has no effect until `Status` is
-    /// stored in coprocessor 0.
+    /// Enables interrupts in `Status`.
     #[inline(always)]
-    pub fn enable_interrupts(mut self) -> Self {
-        self.value.bits |= Status::IEc;
-        self
+    pub fn enable_interrupts(self) -> Self {
+        self.set(Status::IEc)
     }
 
-    /// Disables interrupts in `Status`. This has no effect until `Status` is
-    /// stored in coprocessor 0.
+    /// Disables interrupts in `Status`.
     #[inline(always)]
-    pub fn disable_interrupts(mut self) -> Self {
-        self.value.bits &= !Status::IEc;
-        self
+    pub fn disable_interrupts(self) -> Self {
+        self.clear(Status::IEc)
     }
 }
 

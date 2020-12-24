@@ -2,35 +2,20 @@ use core::marker::PhantomData;
 
 /// An interface for reading a generic register from memory or a coprocessor.
 pub trait Read<T>: Sized {
-    /// Reads from the register.
+    /// Reads the register.
     unsafe fn read(&self) -> T;
 }
 
 /// An interface for writing a generic register to memory or a coprocessor.
 pub trait Write<T>: Sized {
-    /// Writes to the register.
+    /// Writes the register.
     unsafe fn write(&mut self, value: T);
 }
 
-/// A read-only copy of a value previously read from a generic register.
-pub struct Value<'r, T, R: Read<T>> {
-    pub(crate) bits: T,
-    reg: PhantomData<&'r R>,
-}
-
-/// A mutable copy of a value previously read from a generic register. The value
-/// must be written back to the register.
-#[must_use]
-pub struct MutValue<'r, T, R: Read<T> + Write<T>> {
-    /// The current value.
-    pub value: Value<'r, T, R>,
-    reg: &'r mut R,
-}
-
-/// An interface for getting a [`Value`] from an implementor for [`Read`].
+/// An interface for getting a [`Value`] from a register implementing [`Read`].
 pub trait Load<T: Copy>
 where Self: Read<T> {
-    /// Calls [`Read::read`] **once** to get a [`Value`], borrowing the register
+    /// Calls [`Read::read`] once to get a [`Value`], borrowing the register
     /// to ensure no mutable references to it exist.
     #[inline(always)]
     fn load(&self) -> Value<T, Self> {
@@ -41,11 +26,11 @@ where Self: Read<T> {
     }
 }
 
-/// An interface for getting a [`MutValue`] from an implementor for [`Read`] and
-/// [`Write`].
+/// An interface for getting a [`MutValue`] from a register implementing
+/// [`Read`] and [`Write`].
 pub trait LoadMut<T: Copy>
 where Self: Read<T> + Write<T> {
-    /// Calls [`Read::read`] **once** to get a [`Value`], mutably borrowing the
+    /// Calls [`Read::read`] once to get a [`MutValue`], mutably borrowing the
     /// register to ensure exclusive access to it.
     #[inline(always)]
     fn load_mut(&mut self) -> MutValue<T, Self> {
@@ -59,9 +44,22 @@ where Self: Read<T> + Write<T> {
     }
 }
 
-impl<T: Copy, R: LoadMut<T>> Load<T> for R {}
+/// A read-only copy of a value previously read from a generic register.
+pub struct Value<'r, T: Copy, R: Load<T>> {
+    pub(crate) bits: T,
+    reg: PhantomData<&'r R>,
+}
 
-impl<'r, T: Copy, R: Read<T> + Write<T>> MutValue<'r, T, R> {
+/// A mutable copy of a value previously read from a generic register. The value
+/// must be written back to the register.
+#[must_use]
+pub struct MutValue<'r, T: Copy, R: LoadMut<T>> {
+    /// The current value.
+    pub value: Value<'r, T, R>,
+    reg: &'r mut R,
+}
+
+impl<'r, T: Copy, R: LoadMut<T>> MutValue<'r, T, R> {
     /// Calls [`Write::write`] to write the current [`Self::value`] to the
     /// register. Returns a [`Value`] with a copy of the written value.
     #[inline(always)]
@@ -71,5 +69,40 @@ impl<'r, T: Copy, R: Read<T> + Write<T>> MutValue<'r, T, R> {
             bits: self.value.bits,
             reg: PhantomData::<&'r R>,
         }
+    }
+}
+
+// Types that can produce a `MutValue` should also be able to produce a `Value`.
+impl<T: Copy, R: LoadMut<T>> Load<T> for R {}
+
+impl<R: Load<u32>> Value<'_, u32, R> {
+    /// Checks if the given `flags` are all set.
+    #[inline(always)]
+    pub fn contains(&self, flags: u32) -> bool {
+        self.bits & flags == flags
+    }
+
+    /// Checks if the given `flags` are all cleared.
+    #[inline(always)]
+    pub fn cleared(&self, flags: u32) -> bool {
+        self.bits & flags == 0
+    }
+}
+
+impl<R: LoadMut<u32>> MutValue<'_, u32, R> {
+    /// Sets the given `flags`.
+    #[inline(always)]
+    pub fn set(mut self, flags: u32) -> Self {
+        self.value.bits |= flags;
+        self
+    }
+}
+
+impl<R: LoadMut<u32>> MutValue<'_, u32, R> {
+    /// Clears the given `flags`.
+    #[inline(always)]
+    pub fn clear(mut self, flags: u32) -> Self {
+        self.value.bits &= !flags;
+        self
     }
 }
