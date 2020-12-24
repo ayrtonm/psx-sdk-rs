@@ -1,3 +1,4 @@
+use core::default::Default;
 use core::marker::PhantomData;
 
 /// An interface for reading a generic register from memory or a coprocessor.
@@ -28,7 +29,7 @@ where Self: Read<T> {
 
 /// An interface for getting a [`MutValue`] from a register implementing
 /// [`Read`] and [`Write`].
-pub trait LoadMut<T: Copy>
+pub trait LoadMut<T: Copy + Default>
 where Self: Read<T> + Write<T> {
     /// Calls [`Read::read`] once to get a [`MutValue`], mutably borrowing the
     /// register to ensure exclusive access to it.
@@ -37,6 +38,20 @@ where Self: Read<T> + Write<T> {
         MutValue {
             value: Value {
                 bits: unsafe { self.read() },
+                reg: PhantomData::<&Self>,
+            },
+            reg: self,
+        }
+    }
+
+    /// Creates an uninitialized [`MutValue`]. Although no load occurs, the
+    /// register is still mutably borrowed to ensure exclusive access for any
+    /// future stores.
+    #[inline(always)]
+    fn skip_load(&mut self) -> MutValue<T, Self> {
+        MutValue {
+            value: Value {
+                bits: Default::default(),
                 reg: PhantomData::<&Self>,
             },
             reg: self,
@@ -53,13 +68,13 @@ pub struct Value<'r, T: Copy, R: Load<T>> {
 /// A mutable copy of a value previously read from a generic register. The value
 /// must be written back to the register.
 #[must_use]
-pub struct MutValue<'r, T: Copy, R: LoadMut<T>> {
+pub struct MutValue<'r, T: Copy + Default, R: LoadMut<T>> {
     /// The current value.
     pub value: Value<'r, T, R>,
     reg: &'r mut R,
 }
 
-impl<'r, T: Copy, R: LoadMut<T>> MutValue<'r, T, R> {
+impl<'r, T: Copy + Default, R: LoadMut<T>> MutValue<'r, T, R> {
     /// Calls [`Write::write`] to write the current [`Self::value`] to the
     /// register. Returns a [`Value`] with a copy of the written value.
     #[inline(always)]
@@ -81,7 +96,7 @@ impl<'r, T: Copy, R: LoadMut<T>> MutValue<'r, T, R> {
 }
 
 // Types that can produce a `MutValue` should also be able to produce a `Value`.
-impl<T: Copy, R: LoadMut<T>> Load<T> for R {}
+impl<T: Copy + Default, R: LoadMut<T>> Load<T> for R {}
 
 impl<R: Load<u32>> Value<'_, u32, R> {
     /// Checks if the given `flags` are all set.

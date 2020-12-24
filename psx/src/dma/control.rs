@@ -19,10 +19,20 @@ impl LoadMut<u32> for Control {}
 
 impl Control {
     #[inline(always)]
-    fn enable_bit(ch: Channel) -> u32 {
+    const fn enable_bit(ch: Channel) -> u32 {
         let bit = (ch as u32 * 4) + 3;
         1 << bit
     }
+
+    const enable_bits: u32 = {
+        Self::enable_bit(Channel::MDECin) |
+            Self::enable_bit(Channel::MDECout) |
+            Self::enable_bit(Channel::GPU) |
+            Self::enable_bit(Channel::CDROM) |
+            Self::enable_bit(Channel::SPU) |
+            Self::enable_bit(Channel::PIO) |
+            Self::enable_bit(Channel::OTC)
+    };
 }
 
 impl Value<'_> {
@@ -44,5 +54,17 @@ impl MutValue<'_> {
     #[inline(always)]
     pub fn disable(self, ch: Channel) -> Self {
         self.clear(Control::enable_bit(ch))
+    }
+
+    /// Enables all DMA channels.
+    #[inline(always)]
+    pub fn enable_all(self) -> Self {
+        self.set(Control::enable_bits)
+    }
+
+    /// Disables all DMA channels.
+    #[inline(always)]
+    pub fn disable_all(self) -> Self {
+        self.clear(Control::enable_bits)
     }
 }

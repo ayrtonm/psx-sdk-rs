@@ -32,6 +32,7 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     let mut ret = String::new();
     ret.push_str("\n");
     ret.push_str("#[naked]\n");
+    ret.push_str("#[no_mangle]\n");
     ret.push_str("#[inline(never)]\n");
     ret.push_str(&format!(
         "/// [BIOS Function {}({}h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)\n",

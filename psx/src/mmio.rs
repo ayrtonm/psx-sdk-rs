@@ -28,8 +28,8 @@ impl<T: Copy, R: Read<T>> value::Read<T> for R {
 
 // Implementing `LoadMut<T>` for a memory-mapped I/O register automatically
 // provides an implementation of `value::Write`.
-impl<T: Copy, R: LoadMut<T> + Address<T>> Write<T> for R {}
-impl<T: Copy, R: Write<T>> value::Write<T> for R {
+impl<T: Copy + Default, R: LoadMut<T> + Address<T>> Write<T> for R {}
+impl<T: Copy + Default, R: Write<T>> value::Write<T> for R {
     /// Stores an I/O register in memory. Use sparingly as calls cannot be
     /// optimized out by the compiler.
     #[inline(always)]
