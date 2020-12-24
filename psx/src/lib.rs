@@ -26,7 +26,7 @@ pub mod cop0;
 /// Traits for addressing memory-mapped I/O registers.
 pub mod mmio;
 
-/// Interrupt routines.
-pub mod interrupt;
 /// DMA routines.
 pub mod dma;
+/// Interrupt routines.
+pub mod interrupt;

@@ -1,7 +1,7 @@
 use super::{BaseAddress, BlockControl, ChannelControl};
 
-use crate::value::LoadMut;
 use crate::mmio::Address;
+use crate::value::LoadMut;
 
 /// [GPU DMA base address](http://problemkaputt.de/psx-spx.htm#dmachannels) register at `0x1F80_10A0`.
 /// Used to set the DMA channel's base address.
