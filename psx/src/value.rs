@@ -70,6 +70,14 @@ impl<'r, T: Copy, R: LoadMut<T>> MutValue<'r, T, R> {
             reg: PhantomData::<&'r R>,
         }
     }
+
+    /// Calls [`Write::write`] to write the current [`Self::value`] to the
+    /// register. Returns a mutable reference to the register.
+    #[inline(always)]
+    pub fn take(self) -> &'r mut R {
+        unsafe { self.reg.write(self.value.bits) }
+        self.reg
+    }
 }
 
 // Types that can produce a `MutValue` should also be able to produce a `Value`.

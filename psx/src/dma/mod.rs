@@ -1,3 +1,4 @@
+use transfer::Transfer;
 use crate::value;
 use crate::value::LoadMut;
 
@@ -7,6 +8,9 @@ pub mod control;
 pub mod gpu;
 /// DMA interrupt register. Used to enable and force DMA IRQs.
 pub mod interrupt;
+
+/// Representation of a DMA transfer.
+pub mod transfer;
 
 /// A [DMA channel](http://problemkaputt.de/psx-spx.htm#dmachannels).
 #[repr(u32)]
@@ -173,7 +177,7 @@ impl<R: ChannelControl> Value<'_, R> {
     }
 }
 
-impl<R: ChannelControl> MutValue<'_, R> {
+impl<'r, R: ChannelControl> MutValue<'r, R> {
     /// Sets the DMA channel's transfer direction.
     #[inline(always)]
     pub fn direction(self, direction: Direction) -> Self {
@@ -201,5 +205,12 @@ impl<R: ChannelControl> MutValue<'_, R> {
     pub fn sync_mode(self, sync_mode: SyncMode) -> Self {
         self.clear(0b11 << R::SYNC_MODE)
             .set((sync_mode as u32) << R::SYNC_MODE)
+    }
+
+    /// Starts a DMA transfer, consuming the [`MutValue`] and giving the
+    /// resulting [`Transfer`] shared access to the register.
+    #[inline(always)]
+    pub fn start<T>(self, result: T) -> Transfer<'r, T, R> {
+        Transfer::new(self.take(), result)
     }
 }
