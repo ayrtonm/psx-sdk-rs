@@ -73,26 +73,33 @@ fn mk_bios_fn(fn_desc: &str) -> String {
 }
 fn main() {
     let bios_functions = [
+        "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
+
         "A(33h) malloc(size: usize) -> *mut u8;",
         "A(34h) free(buf: *mut u8);",
         "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
         "A(38h) realloc(old_buf: *const u8, new_size: usize);",
         "A(39h) init_heap(addr: usize, size: usize);",
         "A(3Fh) printf(s: *const u8, v: u32);",
+
+        "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
+        "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",
+        "A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);",
+        "A(44h) flush_cache();",
         "A(47h) gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32);",
         "A(48h) gpu_gp1_command_word(cmd: u32);",
         "A(49h) gpu_command_word(cmd: u32);",
         "A(4Ah) gpu_command_word_params(src: *const u32, num: usize);",
         "A(4Dh) gpu_get_status() -> u32;",
-        "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
-        "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
-        "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",
-        "A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);",
+
         "A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);",
-        "A(44h) flush_cache();",
+
+        "A(72h) cd_remove();",
+
         "B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);",
         "B(13h) start_pad();",
         "B(14h) stop_pad();",
+
         "SYS(01h) enter_critical_section() -> u8;",
         "SYS(02h) exit_critical_section();",
     ];

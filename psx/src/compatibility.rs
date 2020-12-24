@@ -27,17 +27,28 @@ const sr_msg: &'static [u8] = b"replace me\0";
 pub fn reset_graph() {
     bios::printf(reset_graph_msg.as_ptr(), 0xdead_beef);
     bios::printf(sr_msg.as_ptr(), 0xdead_beef);
-    dma::control::Control
-        .skip_load()
-        .disable_all()
-        .enable(Channel::GPU)
-        .enable(Channel::OTC)
-        .store();
-    dma::interrupt::Interrupt
-        .skip_load()
-        .clear(0xFFFF_FFFF)
-        .store();
+    critical_section(|| {
+        dma::control::Control
+            .skip_load()
+            .disable_all()
+            .enable(Channel::GPU)
+            .enable(Channel::OTC)
+            .store();
+        dma::interrupt::Interrupt
+            .skip_load()
+            .clear(0xFFFF_FFFF)
+            .store();
+        interrupt_callback();
+        restart_callback();
+        bios::cd_remove();
+    });
 }
+
+#[no_mangle]
+pub fn interrupt_callback() {}
+
+#[no_mangle]
+pub fn restart_callback() {}
 
 #[no_mangle]
 pub fn vsync() {

@@ -4,6 +4,21 @@
 #[naked]
 #[no_mangle]
 #[inline(never)]
+/// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn file_open(filename: *const u8, accessmode: u32) -> u8 {
+    let ret: u8;
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x00",
+                lateout("$2") ret);
+    }
+    ret
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
 /// [BIOS Function A(33h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub extern "C" fn malloc(size: usize) -> *mut u8 {
     let ret: *mut u8;
@@ -86,6 +101,58 @@ pub extern "C" fn printf(s: *const u8, v: u32) {
 #[naked]
 #[no_mangle]
 #[inline(never)]
+/// [BIOS Function A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn load_exe_header(filename: *const u8, headerbuf: *mut u8) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x41",
+                lateout("$2") _);
+    }
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
+/// [BIOS Function A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn load_exe_file(filename: *const u8, headerbuf: *mut u8) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x42",
+                lateout("$2") _);
+    }
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
+/// [BIOS Function A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x43",
+                lateout("$2") _);
+    }
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
+/// [BIOS Function A(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn flush_cache() {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x44",
+                lateout("$2") _);
+    }
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
 /// [BIOS Function A(47h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub extern "C" fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
     unsafe {
@@ -153,60 +220,6 @@ pub extern "C" fn gpu_get_status() -> u32 {
 #[naked]
 #[no_mangle]
 #[inline(never)]
-/// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn file_open(filename: *const u8, accessmode: u32) -> u8 {
-    let ret: u8;
-    unsafe {
-        asm!(".set noreorder
-              j 0xA0
-              li $9, 0x00",
-                lateout("$2") ret);
-    }
-    ret
-}
-
-#[naked]
-#[no_mangle]
-#[inline(never)]
-/// [BIOS Function A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn load_exe_header(filename: *const u8, headerbuf: *mut u8) {
-    unsafe {
-        asm!(".set noreorder
-              j 0xA0
-              li $9, 0x41",
-                lateout("$2") _);
-    }
-}
-
-#[naked]
-#[no_mangle]
-#[inline(never)]
-/// [BIOS Function A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn load_exe_file(filename: *const u8, headerbuf: *mut u8) {
-    unsafe {
-        asm!(".set noreorder
-              j 0xA0
-              li $9, 0x42",
-                lateout("$2") _);
-    }
-}
-
-#[naked]
-#[no_mangle]
-#[inline(never)]
-/// [BIOS Function A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32) {
-    unsafe {
-        asm!(".set noreorder
-              j 0xA0
-              li $9, 0x43",
-                lateout("$2") _);
-    }
-}
-
-#[naked]
-#[no_mangle]
-#[inline(never)]
 /// [BIOS Function A(51h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub extern "C" fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32) {
     unsafe {
@@ -220,12 +233,12 @@ pub extern "C" fn load_and_execute(filename: *const u8, stackbase: u32, stackoff
 #[naked]
 #[no_mangle]
 #[inline(never)]
-/// [BIOS Function A(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn flush_cache() {
+/// [BIOS Function A(72h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn cd_remove() {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x44",
+              li $9, 0x72",
                 lateout("$2") _);
     }
 }
