@@ -1,15 +1,15 @@
-use transfer::Transfer;
 use crate::value;
 use crate::value::LoadMut;
+use transfer::Transfer;
 
 /// DMA control register. Used to enable DMA channels and set priorities.
 pub mod control;
 /// Methods for using the Graphics Processing Unit DMA channel.
 pub mod gpu;
-/// Methods for using the Ordering table clear DMA channel.
-pub mod otc;
 /// DMA interrupt register. Used to enable and force DMA IRQs.
 pub mod interrupt;
+/// Methods for using the Ordering table clear DMA channel.
+pub mod otc;
 
 /// Representation of a DMA transfer.
 pub mod transfer;

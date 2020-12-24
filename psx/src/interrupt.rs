@@ -15,11 +15,3 @@ pub fn free<F: FnOnce() -> R, R>(f: F) -> R {
         f()
     }
 }
-
-/// Executes the given closure in a critical section and returns the result.
-pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
-    cop0::Status.load_mut().enter_critical_section().store();
-    let r = f();
-    cop0::Status.load_mut().exit_critical_section().store();
-    r
-}

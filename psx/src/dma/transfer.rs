@@ -15,10 +15,7 @@ pub struct Transfer<'r, T, R: ChannelControl> {
 impl<'r, T, R: ChannelControl> Transfer<'r, T, R> {
     /// Creates a new DMA transfer.
     pub fn new(reg: &'r R, result: T) -> Self {
-        Transfer {
-            reg,
-            result,
-        }
+        Transfer { reg, result }
     }
     /// Waits until the DMA transfer ends then returns the result.
     pub fn wait(self) -> T {
@@ -37,4 +34,3 @@ impl<'r, T: Copy, R: ChannelControl> Future for Transfer<'r, T, R> {
         }
     }
 }
-

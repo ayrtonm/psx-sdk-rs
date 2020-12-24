@@ -23,6 +23,11 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     } else {
         format!("j 0x{}0", fn_type)
     };
+    let stmts = if is_syscall {
+        [li_stmt, j_stmt]
+    } else {
+        [j_stmt, li_stmt]
+    };
     let returns: bool;
     let mut ret = String::new();
     ret.push_str("\n");
@@ -45,13 +50,14 @@ fn mk_bios_fn(fn_desc: &str) -> String {
         None => returns = false,
     }
     ret.push_str("    unsafe {\n");
-    ret.push_str("        asm!(\"");
-    ret.push_str(li_stmt);
+    ret.push_str("        asm!(\".set noreorder\n");
+    ret.push_str("              ");
+    ret.push_str(stmts[0]);
     ret.push_str("\n");
     ret.push_str("              ");
-    ret.push_str(j_stmt);
+    ret.push_str(stmts[1]);
     ret.push_str("\",\n");
-    ret.push_str("               lateout(\"$2\") ");
+    ret.push_str("                lateout(\"$2\") ");
     if returns {
         ret.push_str("ret);\n");
     } else {

@@ -26,7 +26,11 @@ pub mod cop0;
 /// Traits for addressing memory-mapped I/O registers.
 pub mod mmio;
 
+/// Routines from PSY-Q/PSn00bSDK
+pub mod compatibility;
 /// DMA routines.
 pub mod dma;
+/// GPU routines.
+pub mod gpu;
 /// Interrupt routines.
 pub mod interrupt;
