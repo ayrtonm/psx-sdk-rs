@@ -6,6 +6,8 @@ use crate::value::LoadMut;
 pub mod control;
 /// Methods for using the Graphics Processing Unit DMA channel.
 pub mod gpu;
+/// Methods for using the Ordering table clear DMA channel.
+pub mod otc;
 /// DMA interrupt register. Used to enable and force DMA IRQs.
 pub mod interrupt;
 
