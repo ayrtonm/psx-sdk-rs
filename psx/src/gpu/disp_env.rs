@@ -2,15 +2,17 @@ use crate::gpu::{PackedVertex, Vertex, GP1};
 
 /// Display environment settings.
 pub struct DispEnv {
-    horizontal_range: PackedVertex<12, 12>,
-    vertical_range: PackedVertex<10, 10>,
-    offset: PackedVertex<10, 9>,
-    //disp_mode: u8,
+    horizontal_range: PackedVertex<3, 12, 12>,
+    vertical_range: PackedVertex<3, 10, 10>,
+    offset: PackedVertex<3, 10, 9>,
+    //video_mode: Option<VideoMode>,
 }
 
 impl DispEnv {
     /// Constructs a new display environment.
-    pub fn new<T: Copy, U: Copy>(offset: T, size: U) -> Self
+    pub fn new<T: Copy, U: Copy>(
+        offset: T, size: U, /* , video_mode: Option<VideoMode> */
+    ) -> Self
     where Vertex: From<T> + From<U> {
         let size = Vertex::from(size);
         DispEnv {
@@ -22,6 +24,7 @@ impl DispEnv {
     }
 
     /// Sets the display environment.
+    #[inline(always)]
     pub fn set(&self) {
         GP1.start_display_area(self.offset)
             .horizontal_range(self.horizontal_range)

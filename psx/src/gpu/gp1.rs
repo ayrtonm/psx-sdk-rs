@@ -45,21 +45,21 @@ impl GP1 {
 
     /// Sets the start of the display area with GP1 command 0x05.
     #[inline(always)]
-    pub fn start_display_area(&mut self, start: PackedVertex<10, 9>) -> &mut Self {
+    pub fn start_display_area(&mut self, start: PackedVertex<3, 10, 9>) -> &mut Self {
         unsafe { self.write(0x0500_0000 | start.as_u32()) }
         self
     }
 
     /// Sets the horizontal display range with GP1 command 0x06.
     #[inline(always)]
-    pub fn horizontal_range(&mut self, range: PackedVertex<12, 12>) -> &mut Self {
+    pub fn horizontal_range(&mut self, range: PackedVertex<3, 12, 12>) -> &mut Self {
         unsafe { self.write(0x0600_0000 | range.as_u32()) }
         self
     }
 
     /// Sets the vertical display range with GP1 command 0x07.
     #[inline(always)]
-    pub fn vertical_range(&mut self, range: PackedVertex<10, 10>) -> &mut Self {
+    pub fn vertical_range(&mut self, range: PackedVertex<3, 10, 10>) -> &mut Self {
         unsafe { self.write(0x0700_0000 | range.as_u32()) }
         self
     }

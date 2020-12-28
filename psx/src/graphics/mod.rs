@@ -7,6 +7,9 @@ pub mod ot;
 /// Single- and Double-buffered packets.
 pub mod packet;
 
+/// Primitive definitions.
+pub mod primitive;
+
 /// An interface for initializing graphics primitives.
 pub trait InitPrimitive: Sized {
     /// Sets the GPU commands for the primitive data in a packet.

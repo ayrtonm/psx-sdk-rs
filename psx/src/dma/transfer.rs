@@ -16,17 +16,20 @@ pub struct Transfer<'r, T, R: ChannelControl> {
 
 impl<'r, T, R: ChannelControl> Transfer<'r, T, R> {
     /// Creates a new DMA transfer.
+    #[inline(always)]
     pub fn new(reg: &'r R, result: T) -> Self {
         Transfer { reg, result }
     }
 
     /// Waits until the DMA transfer ends then returns the result.
+    #[inline(always)]
     pub fn wait(self) -> T {
         while self.reg.load().busy() {}
         self.result
     }
 
     /// Immutably borrows the register used to start the transfer.
+    #[inline(always)]
     pub fn borrow(&self) -> &R {
         self.reg
     }

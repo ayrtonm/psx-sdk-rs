@@ -1,76 +1,101 @@
+use core::ops::{Add, Div, Mul, Sub};
+
 type Pixel = i16;
 
-/// A pair of signed 16-bit coordinates.
+/// A pair of coordinates.
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Vertex {
+pub struct GenericVertex<P: Copy> {
     /// The x coordinate.
-    pub x: Pixel,
+    pub x: P,
     /// The y coordinate.
-    pub y: Pixel,
+    pub y: P,
 }
 
-impl From<Pixel> for Vertex {
+/// A pair of signed 16-bit coordinates.
+pub type Vertex = GenericVertex<Pixel>;
+/// A pair of signed 8-bit coordinates.
+pub type SmallVertex = GenericVertex<i8>;
+
+impl<P: Copy> From<P> for GenericVertex<P> {
     #[inline(always)]
-    fn from(p: Pixel) -> Self {
+    fn from(p: P) -> Self {
         (p, p).into()
     }
 }
 
-impl From<(Pixel, Pixel)> for Vertex {
+impl<P: Copy> From<(P, P)> for GenericVertex<P> {
     #[inline(always)]
-    fn from((x, y): (Pixel, Pixel)) -> Self {
-        Vertex { x, y }
+    fn from((x, y): (P, P)) -> Self {
+        GenericVertex { x, y }
     }
 }
 
-impl Vertex {
+impl<P> GenericVertex<P>
+where P: Copy + Add<Output = P> + Mul<Output = P> + Sub<Output = P> + Div<Output = P>
+{
     /// Adds vertices component-wise.
     #[inline(always)]
     pub fn shift<T>(&self, other: T) -> Self
-    where Vertex: From<T> {
-        let other = Vertex::from(other);
+    where Self: From<T> {
+        let other = GenericVertex::from(other);
         (self.x + other.x, self.y + other.y).into()
     }
 
     /// Multiplies vertices component-wise.
     #[inline(always)]
     pub fn scale<T>(&self, scale: T) -> Self
-    where Vertex: From<T> {
-        let scale = Vertex::from(scale);
+    where Self: From<T> {
+        let scale = GenericVertex::from(scale);
         (self.x * scale.x, self.y * scale.y).into()
+    }
+
+    /// Subtracts vertices component-wise.
+    #[inline(always)]
+    pub fn subtract<T>(&self, other: T) -> Self
+    where Self: From<T> {
+        let other = GenericVertex::from(other);
+        (self.x - other.x, self.y - other.y).into()
     }
 
     /// Divides vertices component-wise.
     #[inline(always)]
     pub fn divide<T>(&self, scale: T) -> Self
-    where Vertex: From<T> {
-        let scale = Vertex::from(scale);
+    where Self: From<T> {
+        let scale = GenericVertex::from(scale);
         (self.x / scale.x, self.y / scale.y).into()
     }
 }
 
-/// A pair of coordinates packed into `X + Y <= 24` bits.
+/// A pair of `X` and `Y` bit coordinates packed into `N` bytes.
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct PackedVertex<const X: usize, const Y: usize> {
-    data: [u8; 3],
+pub struct PackedVertex<const N: usize, const X: usize, const Y: usize> {
+    data: [u8; N],
 }
 
-impl<T, const X: usize, const Y: usize> From<T> for PackedVertex<X, Y>
+impl<T, const N: usize, const X: usize, const Y: usize> From<T> for PackedVertex<N, X, Y>
 where Vertex: From<T>
 {
     #[inline(always)]
     fn from(t: T) -> Self {
-        let v = Vertex::from(t);
-        let mut data = [0; 3];
+        let v = GenericVertex::from(t);
+        let mut data = [0; N];
         let value = (v.x as u32) | ((v.y as u32) << X);
-        data.copy_from_slice(&value.to_le_bytes()[0..3]);
+        data.copy_from_slice(&value.to_le_bytes()[0..N]);
         PackedVertex { data }
     }
 }
 
-impl<const X: usize, const Y: usize> PackedVertex<X, Y> {
+impl<const X: usize, const Y: usize> PackedVertex<2, X, Y> {
+    /// Converts a `PackedVertex` to a u32. The upper two bytes are guaranteed
+    /// to be zero.
+    pub fn as_u32(&self) -> u32 {
+        self.data[0] as u32 | (self.data[1] as u32) << 8
+    }
+}
+
+impl<const X: usize, const Y: usize> PackedVertex<3, X, Y> {
     /// Converts a `PackedVertex` to a u32. The upper byte is guaranteed to be
     /// zero.
     pub fn as_u32(&self) -> u32 {

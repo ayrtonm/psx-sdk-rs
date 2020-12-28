@@ -9,7 +9,7 @@
 #![feature(asm, naked_functions)]
 // Required for allocator error handling.
 #![feature(alloc_error_handler)]
-#![feature(min_const_generics, exclusive_range_pattern)]
+#![feature(min_const_generics, exclusive_range_pattern, array_map)]
 
 // These are internally used modules.
 mod allocator;

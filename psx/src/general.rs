@@ -25,11 +25,13 @@ pub fn reset_graphics() {
 }
 
 /// Enables the display.
+#[inline(always)]
 pub fn enable_display() {
     GP1.display_enable(true);
 }
 
 /// Waits for the next vertical blank.
+#[inline(always)]
 pub fn vsync() {
     ISTAT.load_mut().ack(IRQ::Vblank).store();
     ISTAT.wait(IRQ::Vblank);

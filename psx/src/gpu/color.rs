@@ -12,6 +12,12 @@ pub struct Color {
     pub blue: Component,
 }
 
+impl From<(Component, Component, Component)> for Color {
+    fn from((r, g, b): (Component, Component, Component)) -> Self {
+        Color::rgb(r, g, b)
+    }
+}
+
 #[allow(missing_docs)]
 impl Color {
     pub const BLACK: Self = Color::rgb(0, 0, 0);

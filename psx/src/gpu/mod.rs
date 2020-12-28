@@ -38,6 +38,7 @@ mod disp_env;
 mod draw_env;
 
 mod color;
+mod texture;
 mod vertex;
 
 pub use color::Color;
@@ -46,4 +47,5 @@ pub use draw_env::DrawEnv;
 pub use gp0::GP0;
 pub use gp1::GP1;
 pub use stat::GPUSTAT;
-pub use vertex::{PackedVertex, Vertex};
+pub use texture::{Clut, TexCoord, TexPage};
+pub use vertex::{GenericVertex, PackedVertex, SmallVertex, Vertex};
