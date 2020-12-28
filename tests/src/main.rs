@@ -1,16 +1,21 @@
 #![no_std]
 #![no_main]
 
+use core::mem::size_of;
+use psx::graphics::primitive::PolyF3;
+use psx::graphics::packet::Packet;
+
+use psx::bios;
 use psx::dma;
 use psx::framebuffer::Framebuffer;
 use psx::general::*;
-use psx::gpu::Color;
-use psx::graphics::buffer::Buffer;
-use psx::graphics::ot::OT;
+use psx::gpu::{Color, Vertex};
+use psx::graphics::buffer::DoubleBuffer;
+use psx::graphics::ot::DoubleOT;
 
 #[no_mangle]
 fn main(mut gpu_dma: dma::gpu::CHCR) {
-    reset_graphics();
+    reset_graphics(&mut gpu_dma);
     let mut fb = Framebuffer::new(
         (0, 0),
         (0, 240),
@@ -20,16 +25,43 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
     );
     enable_display();
 
-    let buffer = Buffer::<256>::new();
-    let mut ot = OT::default();
-    let tr = buffer.PolyF3().unwrap();
-    tr.set_color(Color::GREEN)
-        .set_vertices([(0, 0), (50, 0), (0, 50)]);
-    ot.insert(tr, 0);
+    bios::srand(0xdead_beef);
+
+    const NUM: usize = 200;
+    const BUF: usize = NUM * (size_of::<Packet<PolyF3>>() / 4);
+    let buffer = DoubleBuffer::<BUF>::new();
+    let mut ot = DoubleOT::default();
+    let mut trs = buffer.poly_f3_array::<NUM>().unwrap();
+
+    for tr in &mut trs {
+        ot.insert(tr, 0);
+    }
+    buffer.swap();
+    ot.swap();
+    for tr in &mut trs {
+        ot.insert(tr, 0);
+    }
 
     loop {
-        gpu_dma.send_list(&ot);
+        let transfer = gpu_dma.send_list(&ot);
+        buffer.swap();
+        for tr in &mut trs {
+            tr.set_color(random_color()).set_vertices(random_triangle());
+        }
+        transfer.wait().swap();
         vsync();
         fb.swap(&mut gpu_dma);
     }
+}
+
+fn random_vertex() -> Vertex {
+    (bios::rand() % 320, bios::rand() % 240).into()
+}
+
+fn random_triangle() -> [Vertex; 3] {
+    [random_vertex(), random_vertex(), random_vertex()]
+}
+
+fn random_color() -> Color {
+    (bios::rand() as u8, bios::rand() as u8, bios::rand() as u8).into()
 }

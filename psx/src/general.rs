@@ -1,4 +1,5 @@
 use crate::cop0;
+use crate::dma;
 use crate::dma::{Channel, DPCR};
 use crate::gpu::GP1;
 use crate::irq::{IMASK, IRQ, ISTAT};
@@ -14,11 +15,18 @@ pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
 }
 
 /// Resets the GPU.
-pub fn reset_graphics() {
+pub fn reset_graphics(gpu_dma: &mut dma::gpu::CHCR) {
     DPCR.skip_load()
         .disable_all()
         .enable(Channel::GPU)
         .enable(Channel::OTC)
+        .store();
+    gpu_dma
+        .load_mut()
+        .chop(Some(dma::Chop {
+            dma_window: 0,
+            cpu_window: 0,
+        }))
         .store();
     GP1.reset_gpu();
     IMASK.skip_load().disable_all().enable(IRQ::Vblank).store();

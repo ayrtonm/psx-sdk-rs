@@ -19,6 +19,34 @@ pub extern "C" fn file_open(filename: *const u8, accessmode: u32) -> u8 {
 #[naked]
 #[no_mangle]
 #[inline(never)]
+/// [BIOS Function A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn rand() -> i16 {
+    let ret: i16;
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x2F",
+                lateout("$2") ret);
+    }
+    ret
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
+/// [BIOS Function A(30h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn srand(seed: u32) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x30",
+                lateout("$2") _);
+    }
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
 /// [BIOS Function A(33h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub extern "C" fn malloc(size: usize) -> *mut u8 {
     let ret: *mut u8;

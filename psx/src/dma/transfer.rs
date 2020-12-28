@@ -8,7 +8,7 @@ use crate::value::Load;
 
 /// Represents a DMA transfer with a precomputed result that can only be
 /// accessed after the transfer ends.
-#[must_use]
+#[must_use = "`Transfer` must be waited on or assumed to be done. Otherwise it may be cancelled by subsequent transfers."]
 pub struct Transfer<'r, T, R: ChannelControl> {
     reg: &'r R,
     result: T,
@@ -32,6 +32,12 @@ impl<'r, T, R: ChannelControl> Transfer<'r, T, R> {
     #[inline(always)]
     pub fn borrow(&self) -> &R {
         self.reg
+    }
+
+    /// Assumes that a transfer is done and gets the result.
+    #[inline(always)]
+    pub fn assume_done(self) -> T {
+        self.result
     }
 }
 

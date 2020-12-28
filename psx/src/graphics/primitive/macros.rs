@@ -1,5 +1,5 @@
 macro_rules! impl_primitive {
-    ($name:ident, $cmd:expr) => {
+    ($name:ident, $alloc_fn:ident, $array_alloc_fn:ident, $cmd:expr) => {
         impl InitPrimitive for $name {
             #[inline(always)]
             fn init_primitive(&mut self) {
@@ -10,16 +10,28 @@ macro_rules! impl_primitive {
         impl<const N: usize> Buffer<N> {
             /// Allocates a single packet. Returns `None` if remaining buffer space is
             /// insufficient.
-            pub fn $name(&self) -> Option<&mut Packet<$name>> {
+            pub fn $alloc_fn(&self) -> Option<&mut Packet<$name>> {
                 self.alloc()
+            }
+
+            /// Allocates an array of packets. Returns `None` if remaining buffer space
+            /// is insufficient.
+            pub fn $array_alloc_fn<const M: usize>(&self) -> Option<[&mut Packet<$name>; M]> {
+                self.alloc_array()
             }
         }
 
         impl<const N: usize> DoubleBuffer<N> {
             /// Allocates a double-buffered packet. Returns `None` if remaining buffer
             /// space is insufficient.
-            pub fn $name(&self) -> Option<DoublePacket<$name>> {
+            pub fn $alloc_fn(&self) -> Option<DoublePacket<$name>> {
                 self.alloc()
+            }
+
+            /// Allocates an array of double-buffered packets. Returns `None` if
+            /// remaining buffer space is insufficient.
+            pub fn $array_alloc_fn<const M: usize>(&self) -> Option<[DoublePacket<$name>; M]> {
+                self.alloc_array()
             }
         }
     };
@@ -31,6 +43,12 @@ macro_rules! vertices_fn {
         #[inline(always)]
         pub fn get_vertices(&self) -> [Vertex; 3] {
             [self.v0, self.v1, self.v2]
+        }
+
+        /// Returns mutable references to the primitive's vertices.
+        #[inline(always)]
+        pub fn get_vertices_mut(&mut self) -> [&mut Vertex; 3] {
+            [&mut self.v0, &mut self.v1, &mut self.v2]
         }
 
         /// Sets the primitive's vertices.
@@ -49,6 +67,12 @@ macro_rules! vertices_fn {
         #[inline(always)]
         pub fn get_vertices(&self) -> [Vertex; 4] {
             [self.v0, self.v1, self.v2, self.v3]
+        }
+
+        ///Returns mutable references to the primitive's vertices.
+        #[inline(always)]
+        pub fn get_vertices_mut(&mut self) -> [&mut Vertex; 4] {
+            [&mut self.v0, &mut self.v1, &mut self.v2, &mut self.v3]
         }
 
         /// Sets the primitive's vertices.
@@ -91,6 +115,12 @@ macro_rules! gouraud_fn {
             [self.color0, self.color1, self.color2]
         }
 
+        /// Returns mutable references to the primitive's colors.
+        #[inline(always)]
+        pub fn get_colors_mut(&mut self) -> [&mut Color; 3] {
+            [&mut self.color0, &mut self.color1, &mut self.color2]
+        }
+
         /// Sets the primitive's color.
         #[inline(always)]
         pub fn colors<T>(&mut self, colors: [T; 3]) -> &mut Self
@@ -107,6 +137,17 @@ macro_rules! gouraud_fn {
         #[inline(always)]
         pub fn get_colors(&self) -> [Color; 4] {
             [self.color0, self.color1, self.color2, self.color3]
+        }
+
+        /// Returns mutable references to the primitive's colors.
+        #[inline(always)]
+        pub fn get_colors_mut(&mut self) -> [&mut Color; 4] {
+            [
+                &mut self.color0,
+                &mut self.color1,
+                &mut self.color2,
+                &mut self.color3,
+            ]
         }
 
         /// Sets the primitive's color.
@@ -196,13 +237,19 @@ macro_rules! tex_coord_fn {
     (3) => {
         /// Gets the primitive's texcoords.
         #[inline(always)]
-        pub fn get_tex_coord(&self) -> [TexCoord; 3] {
+        pub fn get_tex_coords(&self) -> [TexCoord; 3] {
             [self.t0, self.t1, self.t2]
+        }
+
+        /// Returns mutable references to the primitive's texcoord.
+        #[inline(always)]
+        pub fn get_tex_coords_mut(&mut self) -> [&mut TexCoord; 3] {
+            [&mut self.t0, &mut self.t1, &mut self.t2]
         }
 
         /// Sets the primitive's texcoords.
         #[inline(always)]
-        pub fn set_tex_coord<T>(&mut self, tex_coords: [T; 3]) -> &mut Self
+        pub fn set_tex_coords<T>(&mut self, tex_coords: [T; 3]) -> &mut Self
         where TexCoord: From<T> {
             let tex_coords = tex_coords.map(|t| TexCoord::from(t));
             self.t0 = tex_coords[0];
@@ -216,6 +263,12 @@ macro_rules! tex_coord_fn {
         #[inline(always)]
         pub fn get_tex_coord(&self) -> [TexCoord; 4] {
             [self.t0, self.t1, self.t2, self.t3]
+        }
+
+        /// Returns mutable references to the primitive's texcoord.
+        #[inline(always)]
+        pub fn get_tex_coords_mut(&mut self) -> [&mut TexCoord; 4] {
+            [&mut self.t0, &mut self.t1, &mut self.t2, &mut self.t3]
         }
 
         /// Sets the primitive's texcoords.

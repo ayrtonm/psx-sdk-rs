@@ -12,16 +12,11 @@ pub struct OT<const N: usize> {
 
 impl Default for OT<1> {
     /// Creates an initialized 1-word ordering table.
+    #[inline(always)]
     fn default() -> Self {
         OT {
             entries: [TERMINATION; 1],
         }
-    }
-}
-
-impl<const N: usize> LinkedList for OT<N> {
-    fn start_address(&self) -> u32 {
-        &self.entries[N - 1] as *const u32 as u32
     }
 }
 
@@ -52,11 +47,29 @@ impl<const N: usize> OT<N> {
     }
 }
 
+impl<const N: usize> LinkedList for OT<N> {
+    fn start_address(&self) -> u32 {
+        &self.entries[N - 1] as *const u32 as u32
+    }
+}
+
 /// An `N`-entry double-buffered ordering table.
 pub struct DoubleOT<const N: usize> {
     ot_0: OT<N>,
     ot_1: OT<N>,
     swapped: UnsafeCell<bool>,
+}
+
+impl Default for DoubleOT<1> {
+    /// Creates an initialized double-buffered ordering table.
+    #[inline(always)]
+    fn default() -> Self {
+        DoubleOT {
+            ot_0: OT::default(),
+            ot_1: OT::default(),
+            swapped: UnsafeCell::new(false),
+        }
+    }
 }
 
 impl<const N: usize> DoubleOT<N> {
@@ -96,5 +109,11 @@ impl<const N: usize> DerefMut for DoubleOT<N> {
         } else {
             &mut self.ot_1
         }
+    }
+}
+
+impl<const N: usize> LinkedList for DoubleOT<N> {
+    fn start_address(&self) -> u32 {
+        self.deref().start_address()
     }
 }

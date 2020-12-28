@@ -107,6 +107,11 @@ impl<const N: usize> DoubleBuffer<N> {
         }
     }
 
+    /// Checks if the buffer is swapped.
+    pub fn swapped(&self) -> bool {
+        unsafe { *self.swapped.get() }
+    }
+
     /// Allocate a double-buffered packet of type `T`. Returns `None` if
     /// remaining buffer space is insufficient.
     pub fn alloc<T: InitPrimitive>(&self) -> Option<DoublePacket<T>> {

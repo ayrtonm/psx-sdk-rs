@@ -249,19 +249,19 @@ pub struct Sprt16 {
     clut: Clut,
 }
 
-impl_primitive!(PolyF3, 0x20);
+impl_primitive!(PolyF3, poly_f3, poly_f3_array, 0x20);
 impl PolyF3 {
     vertices_fn!(3);
     color_fn!();
 }
 
-impl_primitive!(PolyF4, 0x28);
+impl_primitive!(PolyF4, poly_f4, poly_f4_array, 0x28);
 impl PolyF4 {
     vertices_fn!(4);
     color_fn!();
 }
 
-impl_primitive!(PolyFT3, 0x24);
+impl_primitive!(PolyFT3, poly_ft3, poly_ft3_array, 0x24);
 impl PolyFT3 {
     vertices_fn!(3);
     color_fn!();
@@ -270,7 +270,7 @@ impl PolyFT3 {
     tex_coord_fn!(3);
 }
 
-impl_primitive!(PolyFT4, 0x2C);
+impl_primitive!(PolyFT4, poly_ft4, poly_ft4_array, 0x2C);
 impl PolyFT4 {
     vertices_fn!(4);
     color_fn!();
@@ -279,19 +279,19 @@ impl PolyFT4 {
     tex_coord_fn!(4);
 }
 
-impl_primitive!(PolyG3, 0x30);
+impl_primitive!(PolyG3, poly_g3, poly_g3_array, 0x30);
 impl PolyG3 {
     vertices_fn!(3);
     gouraud_fn!(3);
 }
 
-impl_primitive!(PolyG4, 0x38);
+impl_primitive!(PolyG4, poly_g4, poly_g4_array, 0x38);
 impl PolyG4 {
     vertices_fn!(4);
     gouraud_fn!(4);
 }
 
-impl_primitive!(PolyGT3, 0x34);
+impl_primitive!(PolyGT3, poly_gt3, poly_gt3_array, 0x34);
 impl PolyGT3 {
     vertices_fn!(3);
     gouraud_fn!(3);
@@ -300,7 +300,7 @@ impl PolyGT3 {
     tex_coord_fn!(3);
 }
 
-impl_primitive!(PolyGT4, 0x3C);
+impl_primitive!(PolyGT4, poly_gt4, poly_gt4_array, 0x3C);
 impl PolyGT4 {
     vertices_fn!(4);
     gouraud_fn!(4);
@@ -309,32 +309,32 @@ impl PolyGT4 {
     tex_coord_fn!(4);
 }
 
-impl_primitive!(Tile, 0x60);
+impl_primitive!(Tile, tile, tile_array, 0x60);
 impl Tile {
     color_fn!();
     offset_fn!();
     size_fn!();
 }
 
-impl_primitive!(Tile1, 0x68);
+impl_primitive!(Tile1, tile1, tile1_array, 0x68);
 impl Tile1 {
     color_fn!();
     offset_fn!();
 }
 
-impl_primitive!(Tile8, 0x70);
+impl_primitive!(Tile8, tile8, tile8_array, 0x70);
 impl Tile8 {
     color_fn!();
     offset_fn!();
 }
 
-impl_primitive!(Tile16, 0x78);
+impl_primitive!(Tile16, tile16, tile16_array, 0x78);
 impl Tile16 {
     color_fn!();
     offset_fn!();
 }
 
-impl_primitive!(Sprt, 0x64);
+impl_primitive!(Sprt, sprt, sprt_array, 0x64);
 impl Sprt {
     color_fn!();
     offset_fn!();
@@ -343,7 +343,7 @@ impl Sprt {
     tex_coord_fn!(1);
 }
 
-impl_primitive!(Sprt8, 0x74);
+impl_primitive!(Sprt8, sprt8, sprt8_array, 0x74);
 impl Sprt8 {
     color_fn!();
     offset_fn!();
@@ -351,7 +351,7 @@ impl Sprt8 {
     tex_coord_fn!(1);
 }
 
-impl_primitive!(Sprt16, 0x7C);
+impl_primitive!(Sprt16, sprt16, sprt16_array, 0x7C);
 impl Sprt16 {
     color_fn!();
     offset_fn!();

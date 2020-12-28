@@ -13,6 +13,7 @@ pub struct Color {
 }
 
 impl From<(Component, Component, Component)> for Color {
+    #[inline(always)]
     fn from((r, g, b): (Component, Component, Component)) -> Self {
         Color::rgb(r, g, b)
     }
@@ -38,6 +39,7 @@ impl Color {
     pub const INDIGO: Self = Color::BLUE.average(&Color::VIOLET);
 
     /// Constructs a new color.
+    #[inline(always)]
     pub const fn rgb(red: Component, green: Component, blue: Component) -> Self {
         Color { red, green, blue }
     }

@@ -51,6 +51,7 @@ where Self: Read<T> + Write<T> {
         }
     }
 
+    // TODO: Mark this unsafe
     /// Creates an uninitialized [`MutValue`]. Although no load occurs, the
     /// register is still mutably borrowed to ensure exclusive access for any
     /// future stores.
@@ -74,7 +75,7 @@ pub struct Value<'r, T: Copy, R: Load<T>> {
 
 /// A mutable copy of a value previously read from a generic register. The value
 /// must be written back to the register.
-#[must_use]
+#[must_use = "`MutValue` must be written back to its register"]
 pub struct MutValue<'r, T: Copy + Default, R: LoadMut<T>> {
     /// The current value.
     pub value: Value<'r, T, R>,

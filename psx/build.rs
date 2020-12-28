@@ -75,6 +75,9 @@ fn main() {
     let bios_functions = [
         "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
 
+        "A(2Fh) rand() -> i16;",
+
+        "A(30h) srand(seed: u32);",
         "A(33h) malloc(size: usize) -> *mut u8;",
         "A(34h) free(buf: *mut u8);",
         "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
