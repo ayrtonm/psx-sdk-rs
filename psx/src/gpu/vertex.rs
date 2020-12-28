@@ -1,6 +1,7 @@
 use core::ops::{Add, Div, Mul, Sub};
 
-type Pixel = i16;
+/// An alias for a signed 16-bit integer.
+pub type Pixel = i16;
 
 /// A pair of coordinates.
 #[repr(C)]

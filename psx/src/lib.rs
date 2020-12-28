@@ -57,6 +57,8 @@ pub mod framebuffer;
 pub mod general;
 /// Ordering table and primitive buffer routines.
 pub mod graphics;
+/// Parsing texture data in TIM format.
+pub mod tim;
 
 /// Used for testing only.
 pub fn delay(n: u32) {

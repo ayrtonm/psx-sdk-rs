@@ -27,6 +27,16 @@ pub enum VideoMode {
     PAL,
 }
 
+/// Bits per pixel.
+pub enum Bpp {
+    /// 4-bits per pixel.
+    Bit4,
+    /// 8-bits per pixel.
+    Bit8,
+    /// 15-bits per pixel.
+    Bit15,
+}
+
 /// GP0 register.
 pub mod gp0;
 /// GP1 register.
@@ -48,4 +58,4 @@ pub use gp0::GP0;
 pub use gp1::GP1;
 pub use stat::GPUSTAT;
 pub use texture::{Clut, TexCoord, TexPage};
-pub use vertex::{GenericVertex, PackedVertex, SmallVertex, Vertex};
+pub use vertex::{GenericVertex, PackedVertex, Pixel, SmallVertex, Vertex};
