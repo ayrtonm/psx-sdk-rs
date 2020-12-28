@@ -1,14 +1,11 @@
-use crate::gpu::{PackedVertex, Vertex};
+use crate::gpu::{PackedVertex, Vertex, GP1};
 
 /// Display environment settings.
 pub struct DispEnv {
-    /// The horizontal range of the display area.
-    pub horizontal_range: PackedVertex<12, 12>,
-    /// The vertical range of the display area.
-    pub vertical_range: PackedVertex<10, 10>,
-    /// The start of the display area in VRAM.
-    pub offset: PackedVertex<10, 9>,
-    //pub disp_mode: u8,
+    horizontal_range: PackedVertex<12, 12>,
+    vertical_range: PackedVertex<10, 10>,
+    offset: PackedVertex<10, 9>,
+    //disp_mode: u8,
 }
 
 impl DispEnv {
@@ -22,5 +19,12 @@ impl DispEnv {
             vertical_range: Vertex::from((-1, 1)).scale(size.y / 2).shift(0x88).into(),
             //disp_mode: 0x01,
         }
+    }
+
+    /// Sets the display environment.
+    pub fn set(&self) {
+        GP1.start_display_area(self.offset)
+            .horizontal_range(self.horizontal_range)
+            .vertical_range(self.vertical_range);
     }
 }

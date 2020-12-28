@@ -49,8 +49,11 @@ pub mod compatibility;
 // These modules are roughly at the same level of abstraction as
 // `compatibility`, but take different approaches to appear more
 // high-level/ergonomic.
+
 /// Framebuffer routines.
 pub mod framebuffer;
+/// General routines intended to be alternatives to the PSY-Q routines.
+pub mod general;
 /// Ordering table and primitive buffer routines.
 pub mod graphics;
 

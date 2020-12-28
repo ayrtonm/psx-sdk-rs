@@ -1,7 +1,10 @@
-use super::{BaseAddress, BlockControl, ChannelControl};
+use super::{BaseAddress, BlockControl, BlockMode, ChannelControl, Direction, SyncMode, Transfer};
 
+use crate::gpu;
+use crate::gpu::{GP1, GPUSTAT};
+use crate::graphics::LinkedList;
 use crate::mmio::Address;
-use crate::value::LoadMut;
+use crate::value::{Load, LoadMut};
 
 /// [GPU DMA base address](http://problemkaputt.de/psx-spx.htm#dmachannels) register at `0x1F80_10A0`.
 /// Used to set the DMA channel's base address.
@@ -21,6 +24,18 @@ impl CHCR {
     #[inline(always)]
     pub const unsafe fn new() -> Self {
         CHCR(())
+    }
+
+    /// Sends a linked list to the GPU.
+    pub fn send_list<'l, L: LinkedList>(&mut self, list: &'l L) -> Transfer<&'l L, Self> {
+        GP1.dma_direction(gpu::Direction::ToGPU);
+        while !GPUSTAT.load().cmd_ready() {}
+        MADR.set(list.start_address());
+        BCR.set(BlockMode::LinkedList);
+        self.load_mut()
+            .direction(Direction::FromMemory)
+            .sync_mode(SyncMode::LinkedList)
+            .start(list)
     }
 }
 

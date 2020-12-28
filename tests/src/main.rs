@@ -1,26 +1,25 @@
 #![no_std]
 #![no_main]
 
-use psx::compatibility::*;
+use psx::general::*;
 use psx::dma;
 use psx::framebuffer::Framebuffer;
 use psx::gpu::Color;
 
 #[no_mangle]
 fn main(mut gpu_dma: dma::gpu::CHCR) {
-    ResetGraph(0, &mut gpu_dma);
+    reset_graphics();
     let mut fb = Framebuffer::new(
         (0, 0),
         (0, 240),
         (320, 240),
-        Some(Color::INDIGO),
+        Some(Color::WHITE),
         &mut gpu_dma,
     );
+    enable_display();
 
     loop {
-        DrawSync(0, &gpu_dma);
-        //VSync(0);
+        vsync();
         fb.swap(&mut gpu_dma);
-        SetDispMask(1);
     }
 }

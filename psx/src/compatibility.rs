@@ -3,8 +3,7 @@ use crate::bios;
 use crate::value::{Load, LoadMut};
 
 use crate::dma;
-use crate::dma::{BaseAddress, BlockControl, BlockMode, Channel, Transfer};
-use crate::gpu;
+use crate::dma::{BlockControl, BlockMode, Channel, Transfer};
 use crate::gpu::{DispEnv, DrawEnv};
 use crate::graphics::packet::Packet;
 use crate::graphics::LinkedList;
@@ -20,7 +19,7 @@ static mut VSYNC_RCNT: u32 = 0;
 
 /// Executes the given closure in a critical section and returns the result.
 #[inline(always)]
-pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
+pub fn CriticalSection<F: FnOnce() -> R, R>(f: F) -> R {
     bios::enter_critical_section();
     let r = f();
     bios::exit_critical_section();
@@ -30,7 +29,7 @@ pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
 /// Resets the GPU and installs a VSync event handler
 #[no_mangle]
 pub fn ResetGraph(mode: u32, gpu_dma: &mut dma::gpu::CHCR) {
-    critical_section(|| {
+    CriticalSection(|| {
         DPCR.skip_load()
             .disable_all()
             .enable(Channel::GPU)
@@ -135,23 +134,13 @@ pub fn SetDispMask(mut mode: u32) {
 pub fn DrawOTag<'l, 'r, L: LinkedList>(
     list: &'l L, gpu_dma: &'r mut dma::gpu::CHCR,
 ) -> Transfer<'r, &'l L, dma::gpu::CHCR> {
-    GP1.dma_direction(gpu::Direction::ToGPU);
-    while !GPUSTAT.load().cmd_ready() {}
-    dma::gpu::MADR.set(list.start_address());
-    dma::gpu::BCR.set(BlockMode::LinkedList);
-    gpu_dma
-        .load_mut()
-        .direction(dma::Direction::FromMemory)
-        .sync_mode(dma::SyncMode::LinkedList)
-        .start(list)
+    gpu_dma.send_list(list)
 }
 
 /// Sets the display environment.
 #[no_mangle]
 pub fn PutDispEnv(disp_env: &DispEnv) {
-    GP1.start_display_area(disp_env.offset)
-        .horizontal_range(disp_env.horizontal_range)
-        .vertical_range(disp_env.vertical_range);
+    disp_env.set();
 }
 
 /// Sets the drawing environment.
@@ -159,5 +148,5 @@ pub fn PutDispEnv(disp_env: &DispEnv) {
 pub fn PutDrawEnv<'l, 'r>(
     draw_env: &'l Packet<DrawEnv>, gpu_dma: &'r mut dma::gpu::CHCR,
 ) -> Transfer<'r, &'l Packet<DrawEnv>, dma::gpu::CHCR> {
-    DrawOTag(draw_env, gpu_dma)
+    gpu_dma.send_list(draw_env)
 }

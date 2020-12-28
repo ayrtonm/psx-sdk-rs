@@ -1,4 +1,3 @@
-use crate::compatibility::{PutDispEnv, PutDrawEnv};
 use crate::dma;
 use crate::gpu::{Color, DispEnv, DrawEnv, Vertex};
 use crate::graphics::packet::Packet;
@@ -22,8 +21,8 @@ impl Framebuffer {
             DrawEnv::new(buffer_1, res, bg_color),
             DrawEnv::new(buffer_0, res, bg_color),
         );
-        PutDispEnv(&disp_envs.0);
-        PutDrawEnv(&draw_envs.1, gpu_dma).wait();
+        disp_envs.0.set();
+        gpu_dma.send_list(&draw_envs.1).wait();
         Framebuffer {
             disp_envs,
             draw_envs,
@@ -39,7 +38,7 @@ impl Framebuffer {
         } else {
             (&self.disp_envs.0, &self.draw_envs.1)
         };
-        PutDispEnv(disp_env);
-        PutDrawEnv(draw_env, gpu_dma).wait();
+        disp_env.set();
+        gpu_dma.send_list(draw_env).wait();
     }
 }
