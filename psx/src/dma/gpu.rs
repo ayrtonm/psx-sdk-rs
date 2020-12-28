@@ -13,7 +13,16 @@ pub struct BCR;
 
 /// [GPU DMA channel control](http://problemkaputt.de/psx-spx.htm#dmachannels) register at `0x1F80_10A8`.
 /// Used to control the DMA channel.
-pub struct CHCR;
+pub struct CHCR(());
+
+impl CHCR {
+    /// Creates a new instance of the GPU DMA channel's control register. Take
+    /// care to only call this once.
+    #[inline(always)]
+    pub const unsafe fn new() -> Self {
+        CHCR(())
+    }
+}
 
 impl Address<u32> for MADR {
     const ADDRESS: u32 = 0x1F80_10A0;

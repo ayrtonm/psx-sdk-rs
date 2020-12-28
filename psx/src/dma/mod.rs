@@ -1,6 +1,5 @@
 use crate::value;
 use crate::value::LoadMut;
-use transfer::Transfer;
 
 /// DMA control register. Used to enable DMA channels and set priorities.
 pub mod control;
@@ -13,6 +12,10 @@ pub mod otc;
 
 /// Representation of a DMA transfer.
 pub mod transfer;
+
+pub use control::DPCR;
+pub use interrupt::DICR;
+pub use transfer::Transfer;
 
 /// A [DMA channel](http://problemkaputt.de/psx-spx.htm#dmachannels).
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -145,7 +148,7 @@ pub trait BlockControl: LoadMut<u32> {
 /// A marker for DMA channel control registers.
 #[allow(missing_docs)]
 pub trait ChannelControl: LoadMut<u32> {
-    const DIRECTION: u32 = 1 << 0;
+    const DIRECTION: u32 = 0;
     const STEP: u32 = 1;
     const CHOP: u32 = 8;
     const SYNC_MODE: u32 = 9;
@@ -197,6 +200,7 @@ impl<'r, R: ChannelControl> MutValue<'r, R> {
     pub fn chop(self, chop: Option<Chop>) -> Self {
         match chop {
             Some(chop) => self
+                .clear(chop.cpu_window << R::CPU_WIN | chop.dma_window << R::DMA_WIN)
                 .set(1 << R::CHOP | chop.cpu_window << R::CPU_WIN | chop.dma_window << R::DMA_WIN),
             None => self.clear(1 << R::CHOP),
         }
@@ -213,7 +217,13 @@ impl<'r, R: ChannelControl> MutValue<'r, R> {
     /// resulting [`Transfer`] shared access to the register.
     #[inline(always)]
     pub fn start<T>(self, result: T) -> Transfer<'r, T, R> {
-        // TODO: Set the bits to actually start the transfer.
-        Transfer::new(self.take(), result)
+        // TODO: Add bit 28 for sync mode = 0.
+        Transfer::new(self.set(1 << R::BUSY).take(), result)
+    }
+
+    /// Stops any ongoing DMA transfer for the given channel.
+    #[inline(always)]
+    pub fn stop(self) -> Self {
+        self.clear(1 << R::BUSY)
     }
 }

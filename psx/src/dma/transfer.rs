@@ -19,10 +19,16 @@ impl<'r, T, R: ChannelControl> Transfer<'r, T, R> {
     pub fn new(reg: &'r R, result: T) -> Self {
         Transfer { reg, result }
     }
+
     /// Waits until the DMA transfer ends then returns the result.
     pub fn wait(self) -> T {
         while self.reg.load().busy() {}
         self.result
+    }
+
+    /// Immutably borrows the register used to start the transfer.
+    pub fn borrow(&self) -> &R {
+        self.reg
     }
 }
 

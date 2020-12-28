@@ -5,32 +5,60 @@
 #![no_std]
 #![deny(missing_docs)]
 #![deny(warnings)]
-// Allowed to match nomenclature in [nocash specs](http://problemkaputt.de/psx-spx.htm).
-#![allow(non_upper_case_globals)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(asm, naked_functions)]
 // Required for allocator error handling.
 #![feature(alloc_error_handler)]
-#![feature(min_const_generics)]
+#![feature(min_const_generics, exclusive_range_pattern)]
 
+// These are internally used modules.
 mod allocator;
 mod panic;
 
+// These are the lowest-level public modules.
 /// Wrappers for BIOS functions.
 pub mod bios;
 /// Traits for accessing coprocessor and memory-mapped I/O registers.
 pub mod value;
 
+// These are slightly higher level public modules in that they make use of the
+// `value` module.
 /// Coprocessor 0 registers and routines.
 pub mod cop0;
 /// Traits for addressing memory-mapped I/O registers.
 pub mod mmio;
 
-/// Routines from PSY-Q/PSn00bSDK
-pub mod compatibility;
+// These correspond to the different types of I/O registers and make use of the
+// `mmio` module.
 /// DMA routines.
 pub mod dma;
 /// GPU routines.
 pub mod gpu;
 /// Interrupt routines.
 pub mod interrupt;
+/// Interrupt request masking, acknowledge and wait routines.
+pub mod irq;
+/// Timer routines.
+pub mod timer;
+
+// This uses the I/O register methods to provide PSY-Q-compatible functions
+// where it makes sense.
+/// Routines from PSY-Q/PSn00bSDK
+pub mod compatibility;
+
+// These modules are roughly at the same level of abstraction as
+// `compatibility`, but take different approaches to appear more
+// high-level/ergonomic.
+/// Framebuffer routines.
+pub mod framebuffer;
+/// Ordering table and primitive buffer routines.
+pub mod graphics;
+
+/// Used for testing only.
+pub fn delay(n: u32) {
+    for _ in 0..n {
+        unsafe {
+            core::ptr::read_volatile(0 as *mut u32);
+        }
+    }
+}

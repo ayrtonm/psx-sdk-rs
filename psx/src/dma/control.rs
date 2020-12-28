@@ -6,25 +6,25 @@ use crate::value::LoadMut;
 
 /// [DMA Control](http://problemkaputt.de/psx-spx.htm#dmachannels) register at `0x1F80_10F0`.
 /// Used to enable DMA channels and set priorities.
-pub struct Control;
-/// A [`value::Value`] alias for [`Control`].
-pub type Value<'r> = value::Value<'r, u32, Control>;
-/// A [`value::MutValue`] alias for [`Control`].
-pub type MutValue<'r> = value::MutValue<'r, u32, Control>;
+pub struct DPCR;
+/// A [`value::Value`] alias for [`DPCR`].
+pub type Value<'r> = value::Value<'r, u32, DPCR>;
+/// A [`value::MutValue`] alias for [`DPCR`].
+pub type MutValue<'r> = value::MutValue<'r, u32, DPCR>;
 
-impl Address<u32> for Control {
+impl Address<u32> for DPCR {
     const ADDRESS: u32 = 0x1F80_10F0;
 }
-impl LoadMut<u32> for Control {}
+impl LoadMut<u32> for DPCR {}
 
-impl Control {
+impl DPCR {
     #[inline(always)]
     const fn enable_bit(ch: Channel) -> u32 {
         let bit = (ch as u32 * 4) + 3;
         1 << bit
     }
 
-    const enable_bits: u32 = {
+    const ENABLE_BITS: u32 = {
         Self::enable_bit(Channel::MDECin) |
             Self::enable_bit(Channel::MDECout) |
             Self::enable_bit(Channel::GPU) |
@@ -39,7 +39,7 @@ impl Value<'_> {
     /// Checks if the given DMA channel is enabled.
     #[inline(always)]
     pub fn enabled(&self, ch: Channel) -> bool {
-        self.contains(Control::enable_bit(ch))
+        self.contains(DPCR::enable_bit(ch))
     }
 }
 
@@ -47,24 +47,24 @@ impl MutValue<'_> {
     /// Enables the given DMA channel.
     #[inline(always)]
     pub fn enable(self, ch: Channel) -> Self {
-        self.set(Control::enable_bit(ch))
+        self.set(DPCR::enable_bit(ch))
     }
 
     /// Disables the given DMA channel.
     #[inline(always)]
     pub fn disable(self, ch: Channel) -> Self {
-        self.clear(Control::enable_bit(ch))
+        self.clear(DPCR::enable_bit(ch))
     }
 
     /// Enables all DMA channels.
     #[inline(always)]
     pub fn enable_all(self) -> Self {
-        self.set(Control::enable_bits)
+        self.set(DPCR::ENABLE_BITS)
     }
 
     /// Disables all DMA channels.
     #[inline(always)]
     pub fn disable_all(self) -> Self {
-        self.clear(Control::enable_bits)
+        self.clear(DPCR::ENABLE_BITS)
     }
 }

@@ -1,3 +1,6 @@
+// Allowed to match nomenclature in [nocash specs](http://problemkaputt.de/psx-spx.htm).
+#![allow(non_upper_case_globals)]
+
 use crate::value::{Load, LoadMut, MutValue, Read, Value, Write};
 
 /// System status register ([cop0r12](http://problemkaputt.de/psx-spx.htm#cop0registersummary))

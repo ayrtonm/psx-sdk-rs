@@ -2,15 +2,22 @@ use core::default::Default;
 use core::marker::PhantomData;
 
 /// An interface for reading a generic register from memory or a coprocessor.
-pub trait Read<T>: Sized {
+pub trait Read<T: Copy>: Sized {
     /// Reads the register.
     unsafe fn read(&self) -> T;
 }
 
 /// An interface for writing a generic register to memory or a coprocessor.
-pub trait Write<T>: Sized {
-    /// Writes the register.
+pub trait Write<T: Copy>: Sized {
+    /// Writes a value to the register.
     unsafe fn write(&mut self, value: T);
+
+    /// Writes a slice of values to the register.
+    unsafe fn write_slice(&mut self, values: &[T]) {
+        for &value in values {
+            self.write(value)
+        }
+    }
 }
 
 /// An interface for getting a [`Value`] from a register implementing [`Read`].

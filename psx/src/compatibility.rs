@@ -1,80 +1,163 @@
-#![allow(missing_docs)]
-#![allow(warnings)]
-use core::ffi::c_void;
-
+#![allow(non_snake_case)]
 use crate::bios;
-use crate::cop0;
+use crate::value::{Load, LoadMut};
+
 use crate::dma;
-use crate::dma::{BlockControl, BlockMode, SyncMode};
-use crate::gpu::stat::GPUStat;
-use crate::value::{Load, LoadMut, Read};
+use crate::dma::{BaseAddress, BlockControl, BlockMode, Channel, Transfer};
+use crate::gpu;
+use crate::gpu::{DispEnv, DrawEnv};
+use crate::graphics::packet::Packet;
+use crate::graphics::LinkedList;
+use crate::timer::timer1::Source;
+
+use crate::dma::{DICR, DPCR};
+use crate::gpu::{GP1, GPUSTAT};
+use crate::irq::IMASK;
+use crate::timer::timer1;
+
+static mut VSYNC_LASTHBLANK: u16 = 0;
+static mut VSYNC_RCNT: u32 = 0;
 
 /// Executes the given closure in a critical section and returns the result.
-#[no_mangle]
+#[inline(always)]
 pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
     bios::enter_critical_section();
-    //cop0::Status.load_mut().enter_critical_section().store();
     let r = f();
     bios::exit_critical_section();
-    //cop0::Status.load_mut().exit_critical_section().store();
     r
 }
 
-const reset_graph_msg: &'static [u8] = b"hello world\0";
-const sr_msg: &'static [u8] = b"replace me\0";
-
 /// Resets the GPU and installs a VSync event handler
 #[no_mangle]
-pub fn ResetGraph() {
-    bios::printf(reset_graph_msg.as_ptr(), 0xdead_beef);
-    bios::printf(sr_msg.as_ptr(), 0xdead_beef);
+pub fn ResetGraph(mode: u32, gpu_dma: &mut dma::gpu::CHCR) {
     critical_section(|| {
-        dma::control::Control
-            .skip_load()
+        DPCR.skip_load()
             .disable_all()
-            .enable(dma::Channel::GPU)
-            .enable(dma::Channel::OTC)
+            .enable(Channel::GPU)
+            .enable(Channel::OTC)
             .store();
-        dma::interrupt::Interrupt.skip_load().clear_all().store();
-        InterruptCallback();
-        RestartCallback();
+        DICR.skip_load().clear_all().store();
+        IMASK.skip_load().clear_all().store();
         bios::cd_remove();
     });
+    timer1::MODE
+        .skip_load()
+        .sync_mode(timer1::SyncMode::Pause)
+        .source(Source::Hblank)
+        .store();
+    match mode {
+        1 => {
+            gpu_dma.skip_load().stop().store();
+            GP1.reset_command_buffer();
+        },
+        3 => {
+            GP1.reset_command_buffer();
+        },
+        _ => {
+            GP1.reset_gpu();
+        },
+    }
 }
 
-/// Waits for drawing to terminate if `i == 0`. Otherwise returns the number of
-/// positions in the current queue.
+/// Waits for drawing to terminate if `mode == 0`. Otherwise returns the number
+/// of positions in the current queue.
 #[no_mangle]
-pub fn DrawSync(i: u32) -> Option<u16> {
-    use dma::gpu::{BCR, CHCR};
-    if i == 0 {
-        if GPUStat.load().dma_enabled() {
-            // Wait for GPU to be ready for next DMA
-            while CHCR.load().busy() {}
+pub fn DrawSync(mode: u32, gpu_dma: &dma::gpu::CHCR) -> u16 {
+    if mode == 0 {
+        if GPUSTAT.load().dma_enabled() {
+            while gpu_dma.load().busy() {}
             while {
-                let gpu_stat = GPUStat.load();
-                !gpu_stat.cmd_ready() && !gpu_stat.dma_ready()
+                let stat = GPUSTAT.load();
+                !(stat.cmd_ready() && stat.dma_ready())
             } {}
+            5
         } else {
-            while !GPUStat.load().dma_ready() {}
+            while !GPUSTAT.load().dma_ready() {}
+            1
         }
-        None
     } else {
-        if let Some(BlockMode::Multi { words, blocks }) = BCR.get(SyncMode::Request) {
-            Some(blocks)
+        if let Some(BlockMode::Multi { words: _, blocks }) =
+            dma::gpu::BCR.get(dma::SyncMode::Request)
+        {
+            blocks
         } else {
             unreachable!("")
         }
     }
 }
 
+/// Waits for the next vertical blank or return the vertical blank counter
+/// value.
 #[no_mangle]
-pub fn InterruptCallback() {}
+pub fn VSync(mode: i32) -> u32 {
+    let mut stat = GPUSTAT.load();
+    let hblank = timer1::CNT.wait();
+    let ret = unsafe { (hblank - VSYNC_LASTHBLANK) as u32 };
+    match mode {
+        i32::MIN..0 => unsafe { VSYNC_RCNT },
+        1 => unsafe {
+            VSYNC_LASTHBLANK = timer1::CNT.wait();
+            ret
+        },
+        _ => {
+            let vblanks = if mode == 0 { 1 } else { mode as u32 };
+            unsafe {
+                fn vsync_sub(vsync_tgt: u32, _a1: u32) {
+                    if unsafe { vsync_tgt > VSYNC_RCNT } {
+                        bios::change_clear_pad(0);
+                        bios::change_clear_rcnt(3, 0);
+                    }
+                }
+                vsync_sub(VSYNC_RCNT + vblanks, vblanks + 1);
+                if stat.interlaced() {
+                    let mut new_stat = GPUSTAT.load();
+                    while stat.line() == new_stat.line() {
+                        stat = new_stat;
+                        new_stat = GPUSTAT.load();
+                    }
+                } else {
+                    VSYNC_LASTHBLANK = timer1::CNT.wait();
+                }
+                ret
+            }
+        },
+    }
+}
 
+/// Sets the display mask.
 #[no_mangle]
-pub fn RestartCallback() {}
+pub fn SetDispMask(mut mode: u32) {
+    mode &= 1;
+    GP1.display_enable(mode != 0);
+}
 
+/// Sends an ordering table through to the GPU via DMA.
+pub fn DrawOTag<'l, 'r, L: LinkedList>(
+    list: &'l L, gpu_dma: &'r mut dma::gpu::CHCR,
+) -> Transfer<'r, &'l L, dma::gpu::CHCR> {
+    GP1.dma_direction(gpu::Direction::ToGPU);
+    while !GPUSTAT.load().cmd_ready() {}
+    dma::gpu::MADR.set(list.start_address());
+    dma::gpu::BCR.set(BlockMode::LinkedList);
+    gpu_dma
+        .load_mut()
+        .direction(dma::Direction::FromMemory)
+        .sync_mode(dma::SyncMode::LinkedList)
+        .start(list)
+}
+
+/// Sets the display environment.
 #[no_mangle]
-pub fn VSync() {
-    todo!("")
+pub fn PutDispEnv(disp_env: &DispEnv) {
+    GP1.start_display_area(disp_env.offset)
+        .horizontal_range(disp_env.horizontal_range)
+        .vertical_range(disp_env.vertical_range);
+}
+
+/// Sets the drawing environment.
+#[no_mangle]
+pub fn PutDrawEnv<'l, 'r>(
+    draw_env: &'l Packet<DrawEnv>, gpu_dma: &'r mut dma::gpu::CHCR,
+) -> Transfer<'r, &'l Packet<DrawEnv>, dma::gpu::CHCR> {
+    DrawOTag(draw_env, gpu_dma)
 }
