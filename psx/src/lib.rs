@@ -13,6 +13,7 @@
 
 // These are internally used modules.
 mod allocator;
+mod builtins;
 mod panic;
 
 // These are the lowest-level public modules.
