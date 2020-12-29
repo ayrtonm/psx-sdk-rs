@@ -9,7 +9,14 @@
 #![feature(asm, naked_functions)]
 // Required for allocator error handling.
 #![feature(alloc_error_handler)]
-#![feature(min_const_generics, exclusive_range_pattern, array_map)]
+// Required for panic messages
+#![feature(panic_info_message, fmt_as_str)]
+#![feature(
+    min_const_generics,
+    exclusive_range_pattern,
+    array_map,
+    unsafe_cell_get_mut
+)]
 
 // These are internally used modules.
 mod allocator;

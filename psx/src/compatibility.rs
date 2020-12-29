@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 use crate::bios;
 use crate::value::{Load, LoadMut};
+use core::hint::unreachable_unchecked;
 
 use crate::dma;
 use crate::dma::{BlockControl, BlockMode, Channel, Transfer};
@@ -80,7 +81,7 @@ pub fn DrawSync(mode: u32, gpu_dma: &dma::gpu::CHCR) -> u16 {
         {
             blocks
         } else {
-            unreachable!("")
+            unsafe { unreachable_unchecked() }
         }
     }
 }

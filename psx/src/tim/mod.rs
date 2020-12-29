@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+use core::hint::unreachable_unchecked;
+
 use crate::gpu::{Bpp, Clut, TexPage};
 use bitmap::Bitmap;
 
@@ -20,7 +22,7 @@ impl<'a> TIM<'a> {
             0 => Bpp::Bit4,
             1 => Bpp::Bit8,
             2 => Bpp::Bit15,
-            _ => unreachable!("TIM contained invalid bpp"),
+            _ => unsafe { unreachable_unchecked() },
         };
         let (clut_bitmap, rest) = if (src[1] & 8) != 0 {
             let (bitmap, rest) = Bitmap::new(&mut src[2..]);

@@ -1,3 +1,5 @@
+use core::hint::unreachable_unchecked;
+
 use crate::mmio::Address;
 use crate::value;
 use crate::value::{Load, LoadMut};
@@ -83,7 +85,7 @@ impl Value<'_> {
             1 => SyncMode::Reset,
             2 => SyncMode::Count,
             3 => SyncMode::FreeRun,
-            _ => unreachable!("Invalid sync mode"),
+            _ => unsafe { unreachable_unchecked() },
         }
     }
 

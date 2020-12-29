@@ -6,6 +6,7 @@ use crate::dma::{BaseAddress, BlockControl, SyncMode};
 use crate::gpu::{Clut, Color, TexPage, Vertex};
 use crate::graphics::buffer::Buffer;
 use crate::graphics::ot::OT;
+use crate::graphics::packet::Packet;
 use crate::graphics::primitive::Sprt8;
 use crate::tim::TIM;
 use crate::value::LoadMut;
@@ -27,7 +28,7 @@ pub struct Printer<const N: usize> {
     color: Color,
 }
 
-const MIN_SIZE: usize = size_of::<Sprt8>();
+const MIN_SIZE: usize = size_of::<Packet<Sprt8>>() / 4;
 
 impl Printer<MIN_SIZE> {
     /// Creates a new printer with the minimum buffer size.
@@ -38,7 +39,9 @@ impl Printer<MIN_SIZE> {
 }
 impl<const N: usize> Printer<N> {
     /// Creates a new printer.
-    pub fn with_buffer<T, U, V>(cursor: T, box_offset: U, box_size: V, color: Option<Color>) -> Self
+    pub fn with_buffer<T, U, V>(
+        cursor: T, box_offset: U, box_size: V, color: Option<Color>,
+    ) -> Self
     where Vertex: From<T> + From<U> + From<V> {
         Printer {
             font: None,
@@ -84,7 +87,7 @@ impl<const N: usize> Printer<N> {
 
     /// Moves the cursor to the initial position on the next line.
     pub fn newline(&mut self) {
-        self.cursor = self.cursor.shift((-self.cursor.x, 8));
+        self.cursor = (0, self.cursor.y + 8).into();
     }
 
     /// Resets the cursor's position to the box's offset.
@@ -104,7 +107,7 @@ impl<const N: usize> Printer<N> {
             let ascii = ascii - (2 * ascii_per_row);
             let xoffset = (ascii % ascii_per_row) * w;
             let yoffset = (ascii / ascii_per_row) * h;
-            let letter = match printer.buffer.sprt8() {
+            let mut letter = match printer.buffer.sprt8() {
                 Some(sprt) => sprt,
                 None => {
                     gpu_dma.send_list(&ot).wait();
@@ -117,7 +120,7 @@ impl<const N: usize> Printer<N> {
                 .set_offset(printer.cursor.shift(printer.box_offset))
                 .set_tex_coord((xoffset, yoffset))
                 .set_clut(printer.font.as_ref().map(|f| f.clut).flatten());
-            ot.insert(letter, 0);
+            ot.insert(&mut letter, 0);
             if printer.cursor.x + 8 >= printer.box_offset.x + printer.box_size.x {
                 printer.newline();
             } else {
@@ -135,7 +138,7 @@ impl<const N: usize> Printer<N> {
                 b'{' if !fmt_arg => fmt_arg = true,
                 b'{' if fmt_arg => {
                     fmt_arg = false;
-                    print_char(self, b'{')
+                    print_char(self, b'{');
                 },
                 b'}' if fmt_arg => {
                     fmt_arg = false;
@@ -144,13 +147,13 @@ impl<const N: usize> Printer<N> {
                     leading_zeros = false;
                     for &c in &formatted {
                         if c != b'\0' {
-                            print_char(self, c)
+                            print_char(self, c);
                         }
                     }
                 },
                 _ => {
                     if !fmt_arg {
-                        print_char(self, ascii)
+                        print_char(self, ascii);
                     }
                 },
             }

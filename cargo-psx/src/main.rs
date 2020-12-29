@@ -42,34 +42,32 @@ fn psexe_name(name: &str, profile: &str, region: &str) -> String {
     format!("{}_{}_{}.psexe", name, profile, region)
 }
 
+fn print_help() {
+    println!("cargo-psx");
+    println!("Runs a cargo build then repackages the resulting ELF as a PSEXE\n");
+    println!("USAGE:");
+    println!("  cargo psx [clean|check] [OPTIONS] [cargo-build OPTIONS]\n");
+    println!("OPTIONS:");
+    println!("  --help, -h           Prints help information");
+    println!("  --debug              Builds in release mode with debug info");
+    println!("  --toolchain <NAME>   Sets the rustup toolchain to use (defaults to `psx`)");
+    println!("  --region <REGION>    Sets the game region to NA, EU or JP (default)");
+    println!("  --skip-build         Skips build and only packages an existing ELF into a PSEXE");
+    println!("  --skip-pack          Skips packaging and only builds an ELF");
+    println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
+    println!("  --no-alloc           Avoids building the `alloc` crate");
+    println!("  --lto                Enables link-time optimization and sets codegen units to 1");
+    println!("  --small              Sets opt-level=s to optimize for size (may increase size without --lto)");
+    println!("  --panic              Enables panic messages (may add ~10 KB)");
+    println!("");
+    println!("Run `cargo build -h` for build options");
+}
+
 fn main() {
     // Skips `cargo psx`
     let mut args = env::args().skip(2).collect::<Vec<String>>();
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
-        println!("cargo-psx");
-        println!("Runs a cargo build then repackages the resulting ELF as a PSEXE\n");
-        println!("USAGE:");
-        println!("  cargo psx [clean|check] [OPTIONS]\n");
-        println!("OPTIONS:");
-        println!("  --help, -h           Prints help information");
-        println!("  --debug              Builds in release mode with debug info");
-        println!(
-            "  --toolchain <NAME>   Sets the name of the rustup toolchain to use (defaults to `psx`)"
-        );
-        println!("  --region <REGION>    Sets the game region to NA, EU or JP (default)");
-        println!(
-            "  --skip-build         Skips building and only packages an existing ELF into a PSEXE"
-        );
-        println!("  --skip-pack          Skips packaging and only builds an ELF");
-        println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
-        println!("  --no-alloc           Avoids building the `alloc` crate");
-        println!(
-            "  --lto                Enables link-time optimization and set codegen units to 1"
-        );
-        println!("  --size               Sets opt-level=s to optimize for size");
-        println!("  --panic              Enables panic messages (may add ~10 KB)");
-        println!("");
-        println!("Run `cargo build -h` for build options");
+        print_help();
         return
     };
     let cargo_args = &mut args;
@@ -87,7 +85,7 @@ fn main() {
     let no_pad = extract_flag("--no-pad", cargo_args);
     let no_alloc = extract_flag("--no-alloc", cargo_args);
     let lto = extract_flag("--lto", cargo_args);
-    let size = extract_flag("--size", cargo_args);
+    let small = extract_flag("--small", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
 
     let region = region.unwrap_or("JP".to_string());
@@ -99,14 +97,14 @@ fn main() {
     };
 
     let lto_flags = " -C lto=fat -C codegen-units=1 -C embed-bitcode=yes";
-    let size_flag = " -C opt-level=s";
+    let small_flag = " -C opt-level=s";
     let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or("".to_string());
     if lto {
         rustflags.push_str(lto_flags);
     }
-    if size {
-        rustflags.push_str(size_flag);
-    }
+    if small {
+        rustflags.push_str(small_flag);
+    };
     if debug {
         rustflags.push_str(" -g");
     }

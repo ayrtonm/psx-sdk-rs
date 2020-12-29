@@ -4,6 +4,7 @@ use crate::gpu::{PackedVertex, SmallVertex};
 pub type Clut = PackedVertex<2, 6, 9>;
 
 impl From<Option<Clut>> for Clut {
+    #[inline(always)]
     fn from(clut: Option<Clut>) -> Self {
         clut.unwrap_or(0.into())
     }

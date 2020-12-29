@@ -22,6 +22,7 @@ impl Default for OT<1> {
 
 impl OT<1> {
     /// Empties the ordering table by storing the termination code in the entry.
+    #[inline(always)]
     pub fn empty(&mut self) -> &mut Self {
         self.entries[0] = TERMINATION;
         self
@@ -63,8 +64,8 @@ impl<const N: usize> LinkedList for OT<N> {
 
 /// An `N`-entry double-buffered ordering table.
 pub struct DoubleOT<const N: usize> {
-    ot_0: OT<N>,
-    ot_1: OT<N>,
+    ot_0: UnsafeCell<OT<N>>,
+    ot_1: UnsafeCell<OT<N>>,
     swapped: UnsafeCell<bool>,
 }
 
@@ -73,59 +74,93 @@ impl Default for DoubleOT<1> {
     #[inline(always)]
     fn default() -> Self {
         DoubleOT {
-            ot_0: OT::default(),
-            ot_1: OT::default(),
+            ot_0: UnsafeCell::new(OT::default()),
+            ot_1: UnsafeCell::new(OT::default()),
             swapped: UnsafeCell::new(false),
         }
     }
 }
 
-impl DoubleOT<1> {
-    /// Empties the ordering tables by storing the termination code in each
-    /// entry.
-    pub fn empty(&mut self) -> &mut Self {
-        self.ot_0.entries[0] = TERMINATION;
-        self.ot_1.entries[0] = TERMINATION;
-        self
-    }
-}
+//impl DoubleOT<1> {
+//    /// Empties the current ordering table by storing the termination code in
+//    /// its entry.
+//    #[inline(always)]
+//    pub fn empty(&self) -> &Self {
+//        self.unsafe_deref().empty();
+//        self
+//    }
+//}
 
 impl<const N: usize> DoubleOT<N> {
     /// Creates an uninitialized double-buffered ordering table.
     pub fn new() -> Self {
         DoubleOT {
-            ot_0: OT::new(),
-            ot_1: OT::new(),
+            ot_0: UnsafeCell::new(OT::new()),
+            ot_1: UnsafeCell::new(OT::new()),
             swapped: UnsafeCell::new(false),
         }
     }
 
     /// Swaps the currently selected ordering table.
-    pub fn swap(&self) {
+    pub fn swap(&self) -> &Self {
         unsafe {
             *self.swapped.get() = !*self.swapped.get();
         }
+        self
     }
+
+    /*
+    /// Gets a mutable reference to the current ordering table.
+    pub unsafe fn get_mut(&self) -> &mut OT<N> {
+        if *self.swapped.get() {
+            &mut *self.ot_0.get()
+        } else {
+            &mut *self.ot_1.get()
+        }
+    }
+
+    /// Gets a mutable reference to the alternate ordering table.
+    pub unsafe fn alt_get_mut(&self) -> &mut OT<N> {
+        if !*self.swapped.get() {
+            &mut *self.ot_0.get()
+        } else {
+            &mut *self.ot_1.get()
+        }
+    }
+
+    /// Returns mutable references to the current and alternate ordering
+    /// tables respectively.
+    pub fn split(&self) -> (&mut OT<N>, &mut OT<N>) {
+        unsafe {
+            let current = self.get_mut();
+            let alt = self.alt_get_mut();
+            (current, alt)
+        }
+    }
+    */
 }
 
 impl<const N: usize> Deref for DoubleOT<N> {
     type Target = OT<N>;
 
     fn deref(&self) -> &Self::Target {
-        if unsafe { *self.swapped.get() } {
-            &self.ot_0
-        } else {
-            &self.ot_1
+        // Not actually unsafe since the *mut OT<N> are cast to &OT<N>
+        unsafe {
+            if *self.swapped.get() {
+                &*self.ot_0.get()
+            } else {
+                &*self.ot_1.get()
+            }
         }
     }
 }
 
 impl<const N: usize> DerefMut for DoubleOT<N> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        if unsafe { *self.swapped.get() } {
-            &mut self.ot_0
+        if *self.swapped.get_mut() {
+            self.ot_0.get_mut()
         } else {
-            &mut self.ot_1
+            self.ot_1.get_mut()
         }
     }
 }

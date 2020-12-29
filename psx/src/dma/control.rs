@@ -17,29 +17,27 @@ impl Address<u32> for DPCR {
 }
 impl LoadMut<u32> for DPCR {}
 
-impl DPCR {
-    #[inline(always)]
-    const fn enable_bit(ch: Channel) -> u32 {
-        let bit = (ch as u32 * 4) + 3;
-        1 << bit
-    }
-
-    const ENABLE_BITS: u32 = {
-        Self::enable_bit(Channel::MDECin) |
-            Self::enable_bit(Channel::MDECout) |
-            Self::enable_bit(Channel::GPU) |
-            Self::enable_bit(Channel::CDROM) |
-            Self::enable_bit(Channel::SPU) |
-            Self::enable_bit(Channel::PIO) |
-            Self::enable_bit(Channel::OTC)
-    };
+#[inline(always)]
+const fn enable_bit(ch: Channel) -> u32 {
+    let bit = (ch as u32 * 4) + 3;
+    1 << bit
 }
+
+const ENABLE_BITS: u32 = {
+    enable_bit(Channel::MDECin) |
+        enable_bit(Channel::MDECout) |
+        enable_bit(Channel::GPU) |
+        enable_bit(Channel::CDROM) |
+        enable_bit(Channel::SPU) |
+        enable_bit(Channel::PIO) |
+        enable_bit(Channel::OTC)
+};
 
 impl Value<'_> {
     /// Checks if the given DMA channel is enabled.
     #[inline(always)]
     pub fn enabled(&self, ch: Channel) -> bool {
-        self.contains(DPCR::enable_bit(ch))
+        self.contains(enable_bit(ch))
     }
 }
 
@@ -47,24 +45,24 @@ impl MutValue<'_> {
     /// Enables the given DMA channel.
     #[inline(always)]
     pub fn enable(self, ch: Channel) -> Self {
-        self.set(DPCR::enable_bit(ch))
+        self.set(enable_bit(ch))
     }
 
     /// Disables the given DMA channel.
     #[inline(always)]
     pub fn disable(self, ch: Channel) -> Self {
-        self.clear(DPCR::enable_bit(ch))
+        self.clear(enable_bit(ch))
     }
 
     /// Enables all DMA channels.
     #[inline(always)]
     pub fn enable_all(self) -> Self {
-        self.set(DPCR::ENABLE_BITS)
+        self.set(ENABLE_BITS)
     }
 
     /// Disables all DMA channels.
     #[inline(always)]
     pub fn disable_all(self) -> Self {
-        self.clear(DPCR::ENABLE_BITS)
+        self.clear(ENABLE_BITS)
     }
 }

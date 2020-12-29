@@ -1,3 +1,26 @@
+/// GP0 register.
+pub mod gp0;
+/// GP1 register.
+pub mod gp1;
+/// GPU Status register.
+pub mod stat;
+
+mod disp_env;
+mod draw_env;
+
+mod color;
+mod texture;
+mod vertex;
+
+pub use color::Color;
+pub use disp_env::DispEnv;
+pub use draw_env::DrawEnv;
+pub use gp0::GP0;
+pub use gp1::GP1;
+pub use stat::GPUSTAT;
+pub use texture::{Clut, TexCoord, TexPage};
+pub use vertex::{GenericVertex, PackedVertex, Pixel, SmallVertex, Vertex};
+
 /// Parity of the interlaced line being drawn.
 #[derive(PartialEq, Eq)]
 pub enum Parity {
@@ -37,25 +60,7 @@ pub enum Bpp {
     Bit15,
 }
 
-/// GP0 register.
-pub mod gp0;
-/// GP1 register.
-pub mod gp1;
-/// GPU Status register.
-pub mod stat;
-
-mod disp_env;
-mod draw_env;
-
-mod color;
-mod texture;
-mod vertex;
-
-pub use color::Color;
-pub use disp_env::DispEnv;
-pub use draw_env::DrawEnv;
-pub use gp0::GP0;
-pub use gp1::GP1;
-pub use stat::GPUSTAT;
-pub use texture::{Clut, TexCoord, TexPage};
-pub use vertex::{GenericVertex, PackedVertex, Pixel, SmallVertex, Vertex};
+#[inline(always)]
+const fn cmd(cmd: u8) -> u32 {
+    (cmd as u32) << 24
+}

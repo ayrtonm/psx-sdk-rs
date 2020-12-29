@@ -101,10 +101,11 @@ impl<const N: usize> DoubleBuffer<N> {
 
     /// Swaps the currently selected buffer. This changes the result of
     /// dereferencing any `DoublePacket` allocated from this buffer.
-    pub fn swap(&self) {
+    pub fn swap(&self) -> &Self {
         unsafe {
             *self.swapped.get() = !*self.swapped.get();
         }
+        self
     }
 
     /// Checks if the buffer is swapped.
