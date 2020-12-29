@@ -28,7 +28,8 @@ pub struct Printer<const N: usize> {
     color: Color,
 }
 
-const MIN_SIZE: usize = size_of::<Packet<Sprt8>>() / 4;
+/// The minimum buffer size for a printer.
+pub const MIN_SIZE: usize = size_of::<Packet<Sprt8>>() / 4;
 
 impl Printer<MIN_SIZE> {
     /// Creates a new printer with the minimum buffer size.

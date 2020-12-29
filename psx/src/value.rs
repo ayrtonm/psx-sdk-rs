@@ -69,7 +69,8 @@ where Self: Read<T> + Write<T> {
 
 /// A read-only copy of a value previously read from a generic register.
 pub struct Value<'r, T: Copy, R: Load<T>> {
-    pub(crate) bits: T,
+    /// The value's raw bits.
+    pub bits: T,
     reg: PhantomData<&'r R>,
 }
 

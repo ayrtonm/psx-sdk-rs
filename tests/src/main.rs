@@ -1,78 +1,92 @@
 #![no_std]
 #![no_main]
+#![feature(once_cell, const_fn_fn_ptr_basics)]
 
 use core::mem::size_of;
-use psx::graphics::packet::Packet;
-use psx::graphics::primitive::PolyF3;
 
 use psx::bios;
+use psx::graphics::buffer::Buffer;
+use psx::graphics::packet::Packet;
+use psx::graphics::InitPrimitive;
+use psx::compatibility::*;
 use psx::dma;
-use psx::framebuffer::Framebuffer;
-use psx::general::*;
-use psx::gpu::{Color, Vertex};
-use psx::graphics::buffer::DoubleBuffer;
-use psx::graphics::ot::DoubleOT;
-use psx::printer::Printer;
+use psx::gpu;
+use psx::irq;
+use psx::mmio::Address;
+use psx::timer;
+use psx::value::Load;
 
-#[no_mangle]
-fn main(mut gpu_dma: dma::gpu::CHCR) {
-    reset_graphics(&mut gpu_dma);
-    let mut fb = Framebuffer::new(
-        (0, 0),
-        (0, 240),
-        (320, 240),
-        Some(Color::INDIGO),
-        &mut gpu_dma,
-    );
-    enable_display();
+mod framework;
 
-    // The printer's buffer size doesn't really matter as long as it can hold at least one sprite
-    let mut printer = Printer::new(0, 0, (320, 240), Some(Color::WHITE));
-    printer.load_font(&mut gpu_dma);
+type Test = fn() -> bool;
 
-    bios::srand(0xdead_beef);
+pub const TESTS: [Test; 4] = [test_1, test_2, mmio_addresses, buffer];
 
-    const NUM: usize = 100;
-    const BUF: usize = NUM * (size_of::<Packet<PolyF3>>() / 4);
-    let buffer = DoubleBuffer::<BUF>::new();
-    let mut ot = DoubleOT::default();
-    let mut trs = buffer.poly_f3_array::<NUM>().unwrap();
-
-    for tr in &mut trs {
-        ot.insert(tr, 0);
-    }
-    buffer.swap();
-    ot.swap();
-    for tr in &mut trs {
-        ot.insert(tr, 0);
-    }
-
-    loop {
-        let transfer = gpu_dma.send_list(&ot);
-        buffer.swap();
-        for tr in &mut trs {
-            tr.set_color(random_color()).set_vertices(random_triangle());
-        }
-        transfer.wait().swap();
-        printer.print(
-            b"\nHello world! {} {0}",
-            [0xdead_beef, 0xffff_0000],
-            &mut gpu_dma,
-        );
-        printer.reset();
-        vsync();
-        fb.swap(&mut gpu_dma);
-    }
+fn test_1() -> bool {
+    bios::gpu_get_status() == gpu::GPUSTAT.load().bits
 }
 
-fn random_vertex() -> Vertex {
-    (bios::rand() % 320, bios::rand() % 240).into()
+fn test_2() -> bool {
+    CriticalSection(|| bios::enter_critical_section() == 0)
 }
 
-fn random_triangle() -> [Vertex; 3] {
-    [random_vertex(), random_vertex(), random_vertex()]
+fn mmio_addresses() -> bool {
+    0x1F801810 == gpu::GP0::ADDRESS &&
+    0x1F801814 == gpu::GP1::ADDRESS &&
+    //0x1F801810 == gpu::GPUREAD::ADDRESS &&
+    0x1F801814 == gpu::GPUSTAT::ADDRESS &&
+    0x1F801070 == irq::ISTAT::ADDRESS &&
+    0x1F801074 == irq::IMASK::ADDRESS &&
+    //0x1F801100 == timer::timer0::CNT::ADDRESS &&
+    //0x1F801104 == timer::timer0::MODE::ADDRESS &&
+    //0x1F801108 == timer::timer0::TGT::ADDRESS &&
+    0x1F801110 == timer::timer1::CNT::ADDRESS &&
+    0x1F801114 == timer::timer1::MODE::ADDRESS &&
+    0x1F801118 == timer::timer1::TGT::ADDRESS &&
+    //0x1F801120 == timer::timer2::CNT::ADDRESS &&
+    //0x1F801124 == timer::timer2::MODE::ADDRESS &&
+    //0x1F801128 == timer::timer2::TGT::ADDRESS &&
+    0x1F8010F0 == dma::DPCR::ADDRESS &&
+    0x1F8010F4 == dma::DICR::ADDRESS &&
+    //0x1F801080 == dma::MDECin::MADR::ADDRESS &&
+    //0x1F801084 == dma::MDECin::BCR::ADDRESS &&
+    //0x1F801088 == dma::MDECin::CHCR::ADDRESS &&
+    //0x1F801090 == dma::MDECout::MADR::ADDRESS &&
+    //0x1F801094 == dma::MDECout::BCR::ADDRESS &&
+    //0x1F801098 == dma::MDECout::CHCR::ADDRESS &&
+    0x1F8010A0 == dma::gpu::MADR::ADDRESS &&
+    0x1F8010A4 == dma::gpu::BCR::ADDRESS &&
+    0x1F8010A8 == dma::gpu::CHCR::ADDRESS &&
+    //0x1F8010B0 == dma::cdrom::MADR::ADDRESS &&
+    //0x1F8010B4 == dma::cdrom::BCR::ADDRESS &&
+    //0x1F8010B8 == dma::cdrom::CHCR::ADDRESS &&
+    //0x1F8010C0 == dma::spu::MADR::ADDRESS &&
+    //0x1F8010C4 == dma::spu::BCR::ADDRESS &&
+    //0x1F8010C8 == dma::spu::CHCR::ADDRESS &&
+    //0x1F8010D0 == dma::pio::MADR::ADDRESS &&
+    //0x1F8010D4 == dma::pio::BCR::ADDRESS &&
+    //0x1F8010D8 == dma::pio::CHCR::ADDRESS &&
+    0x1F8010E0 == dma::otc::MADR::ADDRESS &&
+    0x1F8010E4 == dma::otc::BCR::ADDRESS &&
+    0x1F8010E8 == dma::otc::CHCR::ADDRESS
 }
 
-fn random_color() -> Color {
-    (bios::rand() as u8, bios::rand() as u8, bios::rand() as u8).into()
+fn buffer() -> bool {
+    struct X([u32; 8]);
+    impl InitPrimitive for X {
+        fn init_primitive(&mut self) {}
+    }
+
+    const BUF: usize = size_of::<Packet<X>>() / 4;
+    let buffer = Buffer::<BUF>::new();
+    let initial_size = buffer.words_remaining();
+    match buffer.alloc::<X>() {
+        Some(x) => {
+            initial_size == BUF &&
+            buffer.words_remaining() == 0 &&
+            x.0 == [0, 0, 0, 0, 0, 0, 0, 0] &&
+            buffer.alloc::<X>().is_none()
+        },
+        None => false,
+    }
 }
