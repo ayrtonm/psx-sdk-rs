@@ -13,4 +13,8 @@ impl<'a> Bitmap<'a> {
     pub fn offset(&self) -> Vertex {
         (self.0[1] as Pixel, (self.0[1] >> 16) as Pixel).into()
     }
+
+    pub fn data(&self) -> &[u32] {
+        self.0
+    }
 }

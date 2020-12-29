@@ -13,7 +13,7 @@ pub struct DrawEnv {
     lower_right_cmd: u8,
     offset: PackedVertex<3, 11, 11>,
     offset_cmd: u8,
-    //// TODO: The following commands should be optional
+    // TODO: The following commands should be optional
     bg_color: Color,
     bg_color_cmd: u8,
     bg_offset: Vertex,
@@ -34,7 +34,8 @@ impl DrawEnv {
                 offset_cmd: 0xE5,
                 bg_color_cmd: 0x02,
 
-                texpage: 1 << 10,
+                // TODO: make this configurable
+                texpage: (1 << 10) | 10,
                 upper_left: offset.into(),
                 lower_right: offset.shift(size).into(),
                 offset: offset.into(),

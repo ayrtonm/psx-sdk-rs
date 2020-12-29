@@ -2,8 +2,8 @@
 #![no_main]
 
 use core::mem::size_of;
-use psx::graphics::primitive::PolyF3;
 use psx::graphics::packet::Packet;
+use psx::graphics::primitive::PolyF3;
 
 use psx::bios;
 use psx::dma;
@@ -12,6 +12,7 @@ use psx::general::*;
 use psx::gpu::{Color, Vertex};
 use psx::graphics::buffer::DoubleBuffer;
 use psx::graphics::ot::DoubleOT;
+use psx::printer::Printer;
 
 #[no_mangle]
 fn main(mut gpu_dma: dma::gpu::CHCR) {
@@ -20,14 +21,18 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
         (0, 0),
         (0, 240),
         (320, 240),
-        Some(Color::WHITE),
+        Some(Color::INDIGO),
         &mut gpu_dma,
     );
     enable_display();
 
+    // The printer's buffer size doesn't really matter as long as it can hold at least one sprite
+    let mut printer = Printer::new(0, 0, (320, 240), Some(Color::WHITE));
+    printer.load_font(&mut gpu_dma);
+
     bios::srand(0xdead_beef);
 
-    const NUM: usize = 200;
+    const NUM: usize = 100;
     const BUF: usize = NUM * (size_of::<Packet<PolyF3>>() / 4);
     let buffer = DoubleBuffer::<BUF>::new();
     let mut ot = DoubleOT::default();
@@ -49,6 +54,12 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
             tr.set_color(random_color()).set_vertices(random_triangle());
         }
         transfer.wait().swap();
+        printer.print(
+            b"\nHello world! {} {0}",
+            [0xdead_beef, 0xffff_0000],
+            &mut gpu_dma,
+        );
+        printer.reset();
         vsync();
         fb.swap(&mut gpu_dma);
     }

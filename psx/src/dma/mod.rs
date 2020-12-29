@@ -53,8 +53,16 @@ pub enum BlockMode {
 }
 
 impl From<u32> for BlockMode {
+    #[inline(always)]
     fn from(words: u32) -> BlockMode {
         BlockMode::Single(words)
+    }
+}
+
+impl From<usize> for BlockMode {
+    #[inline(always)]
+    fn from(words: usize) -> BlockMode {
+        BlockMode::Single(words as u32)
     }
 }
 
@@ -103,8 +111,8 @@ pub trait BaseAddress: LoadMut<u32> {
 
     /// Sets the DMA channel's base address.
     #[inline(always)]
-    fn set(&mut self, addr: u32) {
-        unsafe { self.write(addr) }
+    fn set(&mut self, addr: &u32) {
+        unsafe { self.write(addr as *const u32 as u32) }
     }
 }
 
@@ -116,7 +124,7 @@ pub trait BlockControl: LoadMut<u32> {
         let bits = unsafe { self.read() };
         match sync_mode {
             SyncMode::Immediate => match bits {
-                0 => Some(0x1_0000.into()),
+                0 => Some(0x1_0000u32.into()),
                 1..=0xFFFF => Some(bits.into()),
                 _ => None,
             },

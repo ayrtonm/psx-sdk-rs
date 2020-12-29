@@ -1,4 +1,4 @@
-#![allow(warnings)]
+#![allow(dead_code)]
 use crate::gpu::{Bpp, Clut, TexPage};
 use bitmap::Bitmap;
 
@@ -7,8 +7,10 @@ mod bitmap;
 /// Parsed TIM data.
 pub struct TIM<'a> {
     bpp: Bpp,
-    bitmap: Bitmap<'a>,
-    clut_bitmap: Option<Bitmap<'a>>,
+    /// Image bitmap data.
+    pub bitmap: Bitmap<'a>,
+    /// Color lookup table bitmap data.
+    pub clut_bitmap: Option<Bitmap<'a>>,
 }
 
 impl<'a> TIM<'a> {
@@ -37,8 +39,7 @@ impl<'a> TIM<'a> {
     /// Gets the TIM data's texture page.
     pub fn tex_page(&self) -> TexPage {
         let bmp = self.bitmap.offset();
-        ((bmp.x / 64) as u8, (bmp.y / 256) as u8);
-        todo!("Add BPP to TexPage")
+        ((bmp.x / 64) % 0xff, (bmp.y / 256) % 0xff).into()
     }
 
     /// Gets the TIM data's color lookup table. Returns `None` if it doesn't

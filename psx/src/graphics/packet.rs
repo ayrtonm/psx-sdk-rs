@@ -46,8 +46,8 @@ where P: Deref<Target = Packet<T>> + DerefMut
 }
 
 impl<T> LinkedList for Packet<T> {
-    fn start_address(&self) -> u32 {
-        &self.tag as *const u32 as u32
+    fn start_address(&self) -> &u32 {
+        &self.tag
     }
 }
 

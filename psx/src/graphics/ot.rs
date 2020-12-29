@@ -20,6 +20,14 @@ impl Default for OT<1> {
     }
 }
 
+impl OT<1> {
+    /// Empties the ordering table by storing the termination code in the entry.
+    pub fn empty(&mut self) -> &mut Self {
+        self.entries[0] = TERMINATION;
+        self
+    }
+}
+
 impl<const N: usize> OT<N> {
     /// Creates an uninitialized ordering table.
     pub fn new() -> Self {
@@ -48,8 +56,8 @@ impl<const N: usize> OT<N> {
 }
 
 impl<const N: usize> LinkedList for OT<N> {
-    fn start_address(&self) -> u32 {
-        &self.entries[N - 1] as *const u32 as u32
+    fn start_address(&self) -> &u32 {
+        &self.entries[N - 1]
     }
 }
 
@@ -69,6 +77,16 @@ impl Default for DoubleOT<1> {
             ot_1: OT::default(),
             swapped: UnsafeCell::new(false),
         }
+    }
+}
+
+impl DoubleOT<1> {
+    /// Empties the ordering tables by storing the termination code in each
+    /// entry.
+    pub fn empty(&mut self) -> &mut Self {
+        self.ot_0.entries[0] = TERMINATION;
+        self.ot_1.entries[0] = TERMINATION;
+        self
     }
 }
 
@@ -113,7 +131,7 @@ impl<const N: usize> DerefMut for DoubleOT<N> {
 }
 
 impl<const N: usize> LinkedList for DoubleOT<N> {
-    fn start_address(&self) -> u32 {
+    fn start_address(&self) -> &u32 {
         self.deref().start_address()
     }
 }

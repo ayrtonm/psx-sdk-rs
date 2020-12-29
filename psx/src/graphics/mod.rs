@@ -19,7 +19,7 @@ pub trait InitPrimitive: Sized {
 /// An interface for accessing linked lists.
 pub trait LinkedList {
     /// Gets the start address of the linked list.
-    fn start_address(&self) -> u32;
+    fn start_address(&self) -> &u32;
 }
 
 pub(self) const TERMINATION: u32 = 0x00FF_FFFF;

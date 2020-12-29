@@ -15,8 +15,8 @@ pub struct GenericVertex<P: Copy> {
 
 /// A pair of signed 16-bit coordinates.
 pub type Vertex = GenericVertex<Pixel>;
-/// A pair of signed 8-bit coordinates.
-pub type SmallVertex = GenericVertex<i8>;
+/// A pair of unsigned 8-bit coordinates.
+pub type SmallVertex = GenericVertex<u8>;
 
 impl<P: Copy> From<P> for GenericVertex<P> {
     #[inline(always)]

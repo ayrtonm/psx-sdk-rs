@@ -21,6 +21,9 @@ mod panic;
 pub mod bios;
 /// Traits for accessing coprocessor and memory-mapped I/O registers.
 pub mod value;
+/// Routines for including data from external files.
+#[macro_use]
+mod include;
 
 // These are slightly higher level public modules in that they make use of the
 // `value` module.
@@ -57,6 +60,8 @@ pub mod framebuffer;
 pub mod general;
 /// Ordering table and primitive buffer routines.
 pub mod graphics;
+/// Printing routines.
+pub mod printer;
 /// Parsing texture data in TIM format.
 pub mod tim;
 

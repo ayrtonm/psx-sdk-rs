@@ -1,4 +1,3 @@
-#![allow(non_snake_case)]
 use crate::gpu::{Clut, Color, TexCoord, TexPage, Vertex};
 
 // imports for impl_primitive macro
