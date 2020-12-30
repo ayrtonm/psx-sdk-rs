@@ -13,6 +13,7 @@ pub trait Write<T: Copy>: Sized {
     unsafe fn write(&mut self, value: T);
 
     /// Writes a slice of values to the register.
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     unsafe fn write_slice(&mut self, values: &[T]) {
         for &value in values {
             self.write(value)

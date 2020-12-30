@@ -1,131 +1,75 @@
 #![no_std]
 #![no_main]
-#![feature(array_map)]
 
-use psx::framebuffer::UnsafeFramebuffer;
-use psx::gpu::{Color, Pixel, Vertex};
+use core::mem::size_of;
+
+use psx::bios;
+use psx::dma;
+use psx::general::{reset_graphics, enable_display, vsync};
+use psx::framebuffer::Framebuffer;
+use psx::printer::Printer;
+use psx::graphics::buffer::DoubleBuffer;
+use psx::graphics::packet::Packet;
 use psx::graphics::primitive::PolyG3;
-use psx::graphics::{packet_size, DoubleBuffer, DoubleOT};
-use psx::interrupt::IRQ;
-use psx::mmio::MMIO;
+use psx::graphics::ot::DoubleOT;
+use psx::gpu::{Vertex, Color};
+use psx::workarounds::UnwrapUnchecked;
 
 #[no_mangle]
-fn main(mut mmio: MMIO) {
-    // Make sure to enable the DMA channels to get access to their methods
-    mmio.dma_control.get_mut().otc(true).gpu(true).set();
-    // Borrow all the IO ports we'll need
-    let otc_dma = &mut mmio.otc_dma;
-    let gpu_dma = &mut mmio.gpu_dma;
-    let gp1 = &mut mmio.gp1;
-    let gpu_stat = &mut mmio.gpu_stat;
-    let irq_mask = &mut mmio.irq_mask;
-    let irq_stat = &mut mmio.irq_stat;
+fn main(mut gpu_dma: dma::gpu::CHCR) {
+    let gpu_dma = &mut gpu_dma;
+    reset_graphics(gpu_dma);
+    let mut fb = Framebuffer::new(0, (0, 240), (320, 240), None, gpu_dma);
 
-    // Construct some higher-level utilities
-    let mut fb = UnsafeFramebuffer::default();
-    // Size the buffer so it fits exactly 50 (double-buffered) PolyG3s
-    const T_NUM: usize = 50;
-    const BUFFER_SIZE: usize = packet_size::<PolyG3>() * T_NUM;
-    let buffer = DoubleBuffer::<BUFFER_SIZE>::new();
-    let mut ot = DoubleOT::<1>::new();
+    let mut p = Printer::new(0, 0, (320, 8), None);
+    p.load_font(gpu_dma);
 
-    // Initialize *both* ordering tables
-    otc_dma.clear(&ot).wait();
-    otc_dma.clear(&ot.swap()).wait();
+    bios::srand(0xdead_beef);
 
-    let position = |i, theta, a| {
-        [(0.0, 0.0), (a / 2.0, sin(60.0) * a), (a, 0.0)]
-            .map(|(x, y)| ((x - a / 2.0) as Pixel, (y - sin(60.0) * a / 2.0) as Pixel))
-            .map(|v| rotate_point(v, theta, 0).shift(i as Pixel + 10))
-    };
-    // Allocate 50 double-buffered PolyG3s. Note the array `triangles` below only holds handles to
-    // the allocated PolyG3s. The PolyG3s themselves are in the buffer's backing arrays.
-    let mut triangles = buffer.polyg3_array::<T_NUM>().unwrap();
+    const MAX_TRIANGLES: usize = 200;
+    const BUF: usize = MAX_TRIANGLES * (size_of::<Packet<PolyG3>>() / 4);
+    let mut buffer = DoubleBuffer::<BUF>::new();
+    let mut poly_g3s = buffer.poly_g3_array::<MAX_TRIANGLES>().unwrap_unchecked();
+    let mut ot = DoubleOT::default();
 
-    // Colors will be constant within the loop, so let's initialize them now. Since the PolyG3s are
-    // double-buffered, the colors must be initialized for both copies. Let's use a closure to
-    // simplify this.
-    let mut init_packet = |ot: &mut DoubleOT<1>| {
-        for i in 0..T_NUM {
-            triangles[i].color([Color::RED, Color::GREEN, Color::BLUE]);
-            // Don't forget to insert the triangles into onne of ther ordering tables
-            ot.add_prim(&mut triangles[i], 0);
-        }
-    };
-    init_packet(&mut ot);
-    buffer.swap();
+    for poly_g3 in &mut poly_g3s {
+        ot.insert(poly_g3, 0);
+    }
     ot.swap();
-    init_packet(&mut ot);
+    buffer.swap();
+    for poly_g3 in &mut poly_g3s {
+        ot.insert(poly_g3, 0);
+    }
 
-    let mut theta = 0.0;
-    gpu_dma.prepare_ot(gp1);
-    irq_mask.get_mut().enable(IRQ::Vblank).set();
+    enable_display();
+    let mut i = 0;
     loop {
-        // Send an ordering table
-        let send_ot = gpu_dma.send(&ot);
-        theta += 5.0;
-        if theta == 360.0 {
-            theta = 0.0;
-        };
-        // Rotate the triangles in the other buffer
-        buffer.swap();
-        // This is kind of a dumb example since the vertices are rotated wrt their init position.
-        // Rotating them wrt to the previous (currently being drawn) frame's position would be a
-        // better example of the advantage of double buffering primitives, but this leads to floats
-        // being truncated at every step which along with the flawed trig fn skews the results badly
-        for i in 0..T_NUM {
-            triangles[i].vertices(position(i, theta, 10.0));
+        let transfer = gpu_dma.send_list(ot.swap());
+        for poly_g3 in &mut poly_g3s {
+            poly_g3.set_vertices(rand_triangle()).set_colors(rand_colors());
         }
-        // Swap the ordering tables for the next frame
-        ot.swap();
-        // If we needed to rearrange anything within the OT, we'd do it here
-
-        // Wait until the DMA transfer is done
-        send_ot.wait();
-        // Wait until the GPU is done
-        gpu_stat.sync();
-        // Wait until the next vblank
-        irq_stat.ack(IRQ::Vblank);
-        irq_stat.wait(IRQ::Vblank);
-        // Show the ordering table we sent at the beginning of the loop
-        fb.swap();
+        buffer.swap();
+        transfer.wait();
+        p.print(b"drawing frame {}", [i], gpu_dma);
+        p.reset();
+        i += 1;
+        vsync();
+        fb.swap(gpu_dma);
     }
 }
 
-fn sin(mut x: f32) -> f32 {
-    fn approx_sin(z: f32) -> f32 {
-        4.0 * z * (180.0 - z) / (40500.0 - (z * (180.0 - z)))
-    }
-    while x < 0.0 {
-        x += 360.0;
-    }
-    while x > 360.0 {
-        x -= 360.0;
-    }
-    if x <= 180.0 {
-        approx_sin(x)
-    } else {
-        -approx_sin(x - 180.0)
-    }
+fn rand_vertex() -> Vertex {
+    (bios::rand() % 320, bios::rand() % 240).into()
 }
 
-fn cos(x: f32) -> f32 {
-    let y = 90.0 - x;
-    sin(y)
+fn rand_triangle() -> [Vertex; 3] {
+    [rand_vertex(), rand_vertex(), rand_vertex()]
 }
 
-// Rotation is better handled by the GTE but this'll do for a demo
-fn rotate_point<T, U>(p: T, theta: f32, c: U) -> Vertex
-where
-    Vertex: From<T> + From<U>,
-{
-    let p = Vertex::from(p);
-    let c = Vertex::from(c);
-    let dx = p.x() as f32 - c.x() as f32;
-    let dy = p.y() as f32 - c.y() as f32;
-    let xp = dx * cos(theta) - dy * sin(theta);
-    let yp = dy * cos(theta) + dx * sin(theta);
-    let xf = xp + c.x() as f32;
-    let yf = yp + c.y() as f32;
-    (xf as Pixel, yf as Pixel).into()
+fn rand_color() -> Color {
+    Color::rgb(bios::rand() as u8, bios::rand() as u8, bios::rand() as u8)
+}
+
+fn rand_colors() -> [Color; 3] {
+    [rand_color(), rand_color(), rand_color()]
 }

@@ -123,7 +123,7 @@ macro_rules! gouraud_fn {
 
         /// Sets the primitive's color.
         #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
-        pub fn colors<T>(&mut self, colors: [T; 3]) -> &mut Self
+        pub fn set_colors<T>(&mut self, colors: [T; 3]) -> &mut Self
         where Color: From<T> {
             let colors = colors.map(|t| Color::from(t));
             self.color0 = colors[0];

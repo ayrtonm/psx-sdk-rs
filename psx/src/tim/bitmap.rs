@@ -22,6 +22,7 @@ impl<'a> Bitmap<'a> {
         }
     }
 
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn data(&self) -> &[u32] {
         self.0
     }

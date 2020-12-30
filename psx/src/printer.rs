@@ -22,6 +22,7 @@ pub struct Font {
 pub struct Printer<const N: usize> {
     font: Option<Font>,
     buffer: Buffer<N>,
+    ot: OT<1>,
     cursor: Vertex,
     //font_size: FontSize,
     box_offset: Vertex,
@@ -48,6 +49,7 @@ impl<const N: usize> Printer<N> {
         Printer {
             font: None,
             buffer: Buffer::new(),
+            ot: OT::default(),
             cursor: cursor.into(),
             box_offset: box_offset.into(),
             box_size: box_size.into(),
@@ -98,38 +100,38 @@ impl<const N: usize> Printer<N> {
         self.cursor = self.box_offset;
     }
 
+    fn print_char(&mut self, ascii: u8, gpu_dma: &mut dma::gpu::CHCR) {
+        let (w, h) = (8, 8);
+        let ascii_per_row = 128 / w;
+        // Offset ascii values to work with font subset stored in VRAM.
+        let ascii = ascii - (2 * ascii_per_row);
+        let xoffset = (ascii % ascii_per_row) * w;
+        let yoffset = (ascii / ascii_per_row) * h;
+        let mut letter = match self.buffer.sprt8() {
+            Some(sprt) => sprt,
+            None => {
+                gpu_dma.send_list(&self.ot).wait();
+                self.ot.empty();
+                self.buffer.empty().sprt8().unwrap_unchecked()
+            },
+        };
+        letter
+            .set_color(self.color)
+            .set_offset(self.cursor.shift(self.box_offset))
+            .set_tex_coord((xoffset, yoffset))
+            .set_clut(self.font.as_ref().map(|f| f.clut).flatten());
+        self.ot.insert(&mut letter, 0);
+        if self.cursor.x + 8 >= self.box_offset.x + self.box_size.x {
+            self.newline();
+        } else {
+            self.cursor = self.cursor.shift((8, 0));
+        };
+    }
+
     /// Prints a message with the given formatted arguments.
     pub fn print<'a, M, const A: usize>(
         &mut self, msg: M, args: [u32; A], gpu_dma: &mut dma::gpu::CHCR,
     ) where M: IntoIterator<Item = &'a u8> {
-        let (w, h) = (8, 8);
-        let ascii_per_row = 128 / w;
-        let mut ot = OT::default();
-        let mut print_char = |printer: &mut Self, ascii: u8| {
-            // Offset ascii values to work with font subset stored in VRAM.
-            let ascii = ascii - (2 * ascii_per_row);
-            let xoffset = (ascii % ascii_per_row) * w;
-            let yoffset = (ascii / ascii_per_row) * h;
-            let mut letter = match printer.buffer.sprt8() {
-                Some(sprt) => sprt,
-                None => {
-                    gpu_dma.send_list(&ot).wait();
-                    ot.empty();
-                    printer.buffer.empty().sprt8().unwrap_unchecked()
-                },
-            };
-            letter
-                .set_color(printer.color)
-                .set_offset(printer.cursor.shift(printer.box_offset))
-                .set_tex_coord((xoffset, yoffset))
-                .set_clut(printer.font.as_ref().map(|f| f.clut).flatten());
-            ot.insert(&mut letter, 0);
-            if printer.cursor.x + 8 >= printer.box_offset.x + printer.box_size.x {
-                printer.newline();
-            } else {
-                printer.cursor = printer.cursor.shift((8, 0));
-            };
-        };
         let mut fmt_arg = false;
         let mut leading_zeros = false;
         let mut args = args.iter();
@@ -141,7 +143,7 @@ impl<const N: usize> Printer<N> {
                 b'{' if !fmt_arg => fmt_arg = true,
                 b'{' if fmt_arg => {
                     fmt_arg = false;
-                    print_char(self, b'{');
+                    self.print_char(b'{', gpu_dma);
                 },
                 b'}' if fmt_arg => {
                     fmt_arg = false;
@@ -150,18 +152,18 @@ impl<const N: usize> Printer<N> {
                     leading_zeros = false;
                     for &c in &formatted {
                         if c != b'\0' {
-                            print_char(self, c);
+                            self.print_char(c, gpu_dma);
                         }
                     }
                 },
                 _ => {
                     if !fmt_arg {
-                        print_char(self, ascii);
+                        self.print_char(ascii, gpu_dma);
                     }
                 },
             }
         }
-        gpu_dma.send_list(&ot).wait();
+        gpu_dma.send_list(&self.ot).wait();
     }
 
     fn format_u32(x: u32, leading_zeros: bool) -> [u8; 9] {

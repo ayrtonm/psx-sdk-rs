@@ -25,9 +25,7 @@ impl<const N: usize> Buffer<N> {
     /// Empties the buffer invalidating previously allocated primitives.
     /// Allocated data remains intact until new allocations overwrite it.
     pub fn empty(&mut self) -> &mut Self {
-        unsafe {
-            (*self.0.get()).next = 0;
-        }
+        self.0.get_mut().next = 0;
         self
     }
 

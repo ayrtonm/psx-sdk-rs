@@ -1,6 +1,5 @@
 use core::cell::UnsafeCell;
 use core::hint::unreachable_unchecked;
-
 use core::lazy::Lazy;
 
 /// A global variable with lazy initialization.
