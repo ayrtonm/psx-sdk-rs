@@ -8,7 +8,7 @@ use crate::dma::{BlockControl, BlockMode, Channel, Transfer};
 use crate::gpu::{DispEnv, DrawEnv};
 use crate::graphics::packet::Packet;
 use crate::graphics::LinkedList;
-use crate::timer::timer1::Source;
+use crate::timer::{Source, SyncMode, TimerCounter};
 
 use crate::dma::{DICR, DPCR};
 use crate::gpu::{GP1, GPUSTAT};
@@ -42,8 +42,8 @@ pub fn ResetGraph(mode: u32, gpu_dma: &mut dma::gpu::CHCR) {
     });
     timer1::MODE
         .skip_load()
-        .sync_mode(timer1::SyncMode::Pause)
-        .source(Source::Hblank)
+        .sync_mode(SyncMode::Pause)
+        .source(Source::Alternate)
         .store();
     match mode {
         1 => {
@@ -77,7 +77,7 @@ pub fn DrawSync(mode: u32, gpu_dma: &dma::gpu::CHCR) -> u16 {
         }
     } else {
         if let Some(BlockMode::Multi { words: _, blocks }) =
-            dma::gpu::BCR.get(dma::SyncMode::Request)
+            dma::gpu::BCR.get(dma::TransferMode::Request)
         {
             blocks
         } else {

@@ -155,3 +155,52 @@ impl<R: LoadMut<u32>> MutValue<'_, u32, R> {
         self
     }
 }
+
+impl<R: Load<u16>> Value<'_, u16, R> {
+    #[inline(always)]
+    /// Checks if any of the given `flags` are set.
+    pub fn any(&self, flags: u16) -> bool {
+        self.bits & flags != 0
+    }
+
+    /// Checks if the given `flags` are all set.
+    #[inline(always)]
+    pub fn contains(&self, flags: u16) -> bool {
+        self.bits & flags == flags
+    }
+
+    /// Checks if the given `flags` are all cleared.
+    #[inline(always)]
+    pub fn cleared(&self, flags: u16) -> bool {
+        self.bits & flags == 0
+    }
+}
+
+impl<R: LoadMut<u16>> MutValue<'_, u16, R> {
+    /// Sets all bits.
+    #[inline(always)]
+    pub fn set_all(mut self) -> Self {
+        self.value.bits |= !0;
+        self
+    }
+
+    /// Clears all bits.
+    #[inline(always)]
+    pub fn clear_all(mut self) -> Self {
+        self.value.bits &= 0;
+        self
+    }
+    /// Sets the given `flags`.
+    #[inline(always)]
+    pub fn set(mut self, flags: u16) -> Self {
+        self.value.bits |= flags;
+        self
+    }
+
+    /// Clears the given `flags`.
+    #[inline(always)]
+    pub fn clear(mut self, flags: u16) -> Self {
+        self.value.bits &= !flags;
+        self
+    }
+}

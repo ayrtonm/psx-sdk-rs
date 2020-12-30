@@ -2,7 +2,7 @@
 use core::mem::size_of;
 
 use crate::dma;
-use crate::dma::{BaseAddress, BlockControl, SyncMode};
+use crate::dma::{BaseAddress, BlockControl, TransferMode};
 use crate::gpu::{Clut, Color, TexPage, Vertex};
 use crate::graphics::buffer::Buffer;
 use crate::graphics::ot::OT;
@@ -57,8 +57,8 @@ impl<const N: usize> Printer<N> {
     /// Loads the default font into VRAM.
     pub fn load_font(&mut self, gpu_dma: &mut dma::gpu::CHCR) {
         let current = gpu_dma.load_mut();
-        let old_sync_mode = current.value.sync_mode();
-        current.sync_mode(SyncMode::Immediate).store();
+        let old_transfer_mode = current.value.transfer_mode();
+        current.transfer_mode(TransferMode::Immediate).store();
 
         let mut font = include_u32!("../font.tim");
         let tim = TIM::new(&mut font);
@@ -79,8 +79,8 @@ impl<const N: usize> Printer<N> {
             gpu_dma.load_mut().start(()).wait();
         });
 
-        old_sync_mode.map(|old_sync_mode| {
-            gpu_dma.load_mut().sync_mode(old_sync_mode).store();
+        old_transfer_mode.map(|old_transfer_mode| {
+            gpu_dma.load_mut().transfer_mode(old_transfer_mode).store();
         });
 
         self.font = Some(font);

@@ -1,4 +1,5 @@
-use super::{BaseAddress, BlockControl, BlockMode, ChannelControl, Direction, SyncMode, Transfer};
+use super::{BaseAddress, BlockControl, BlockMode, ChannelControl, Direction, Transfer,
+            TransferMode};
 
 use crate::gpu;
 use crate::gpu::GP1;
@@ -34,7 +35,7 @@ impl CHCR {
         BCR.set(BlockMode::LinkedList);
         self.load_mut()
             .direction(Direction::FromMemory)
-            .sync_mode(SyncMode::LinkedList)
+            .transfer_mode(TransferMode::LinkedList)
             .start(list)
     }
 }

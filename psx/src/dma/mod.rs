@@ -91,8 +91,8 @@ pub struct Chop {
     pub cpu_window: u32,
 }
 
-/// A DMA channel's sync mode.
-pub enum SyncMode {
+/// A DMA channel's transfer mode.
+pub enum TransferMode {
     /// Starts immediately and transfers all at once.
     Immediate = 0,
     /// Sync blocks to DMA requests.
@@ -118,21 +118,21 @@ pub trait BaseAddress: LoadMut<u32> {
 
 /// A marker for DMA block control registers.
 pub trait BlockControl: LoadMut<u32> {
-    /// Gets the DMA channel's block size with the given `SyncMode`. Returns
+    /// Gets the DMA channel's block size with the given `TransferMode`. Returns
     /// `None` if the register contains an invalid value.
-    fn get(&self, sync_mode: SyncMode) -> Option<BlockMode> {
+    fn get(&self, transfer_mode: TransferMode) -> Option<BlockMode> {
         let bits = unsafe { self.read() };
-        match sync_mode {
-            SyncMode::Immediate => match bits {
+        match transfer_mode {
+            TransferMode::Immediate => match bits {
                 0 => Some(0x1_0000u32.into()),
                 1..=0xFFFF => Some(bits.into()),
                 _ => None,
             },
-            SyncMode::Request => Some(BlockMode::Multi {
+            TransferMode::Request => Some(BlockMode::Multi {
                 words: bits as u16,
                 blocks: (bits >> 16) as u16,
             }),
-            SyncMode::LinkedList => Some(BlockMode::LinkedList),
+            TransferMode::LinkedList => Some(BlockMode::LinkedList),
         }
     }
 
@@ -159,7 +159,7 @@ pub trait ChannelControl: LoadMut<u32> {
     const DIRECTION: u32 = 0;
     const STEP: u32 = 1;
     const CHOP: u32 = 8;
-    const SYNC_MODE: u32 = 9;
+    const TRANSFER_MODE: u32 = 9;
     const DMA_WIN: u32 = 16;
     const CPU_WIN: u32 = 20;
     const BUSY: u32 = 24;
@@ -171,14 +171,14 @@ pub type Value<'r, R> = value::Value<'r, u32, R>;
 pub type MutValue<'r, R> = value::MutValue<'r, u32, R>;
 
 impl<R: ChannelControl> Value<'_, R> {
-    /// Gets the DMA channel's sync mode. Returns `None` if the register
+    /// Gets the DMA channel's transfer mode. Returns `None` if the register
     /// contains an invalid value.
     #[inline(always)]
-    pub fn sync_mode(&self) -> Option<SyncMode> {
-        match (self.bits >> R::SYNC_MODE) & 0b11 {
-            0 => Some(SyncMode::Immediate),
-            1 => Some(SyncMode::Request),
-            2 => Some(SyncMode::LinkedList),
+    pub fn transfer_mode(&self) -> Option<TransferMode> {
+        match (self.bits >> R::TRANSFER_MODE) & 0b11 {
+            0 => Some(TransferMode::Immediate),
+            1 => Some(TransferMode::Request),
+            2 => Some(TransferMode::LinkedList),
             _ => None,
         }
     }
@@ -214,18 +214,18 @@ impl<'r, R: ChannelControl> MutValue<'r, R> {
         }
     }
 
-    /// Sets the DMA channel's sync mode.
+    /// Sets the DMA channel's transfer mode.
     #[inline(always)]
-    pub fn sync_mode(self, sync_mode: SyncMode) -> Self {
-        self.clear(0b11 << R::SYNC_MODE)
-            .set((sync_mode as u32) << R::SYNC_MODE)
+    pub fn transfer_mode(self, transfer_mode: TransferMode) -> Self {
+        self.clear(0b11 << R::TRANSFER_MODE)
+            .set((transfer_mode as u32) << R::TRANSFER_MODE)
     }
 
     /// Starts a DMA transfer, consuming the [`MutValue`] and giving the
     /// resulting [`Transfer`] shared access to the register.
     #[inline(always)]
     pub fn start<T>(self, result: T) -> Transfer<'r, T, R> {
-        // TODO: Add bit 28 for sync mode = 0.
+        // TODO: Add bit 28 for transfer mode = 0.
         Transfer::new(self.set(1 << R::BUSY).take(), result)
     }
 

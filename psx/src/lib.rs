@@ -14,6 +14,7 @@
 #![feature(
     min_const_generics,
     exclusive_range_pattern,
+    negative_impls,
     array_map,
     unsafe_cell_get_mut
 )]
