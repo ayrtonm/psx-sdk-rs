@@ -50,7 +50,13 @@ pub trait TimerCounter: Load<u16> {
 #[allow(missing_docs)]
 pub trait TimerMode: LoadMut<u16> {
     const SYNC_MODE: u32 = 1;
+    const TARGET_RESET: u32 = 3;
+    const TARGET_IRQ: u32 = 4;
+    const OVERFLOW_IRQ: u32 = 5;
+    const REPEAT_MODE: u32 = 6;
     const SOURCE: u32 = 8;
+    const REACHED_TARGET: u32 = 11;
+    const REACHED_OVERFLOW: u32 = 12;
 }
 
 /// A [`value::Value`] alias for the timer mode registers.
@@ -80,18 +86,83 @@ impl<R: TimerMode> Value<'_, R> {
             Source::System
         }
     }
+
+    /// Checks if the counter will reset after hitting the target.
+    #[inline(always)]
+    pub fn target_reset(&self) -> bool {
+        self.contains(1 << R::TARGET_RESET)
+    }
+
+    /// Checks if the counter will trigger an IRQ after hitting the target.
+    #[inline(always)]
+    pub fn target_irq(&self) -> bool {
+        self.contains(1 << R::TARGET_IRQ)
+    }
+
+    /// Checks if the counter will trigger an IRQ after overflowing.
+    #[inline(always)]
+    pub fn overflow_irq(&self) -> bool {
+        self.contains(1 << R::OVERFLOW_IRQ)
+    }
+
+    /// Checks if the counter reached its target.
+    #[inline(always)]
+    pub fn reached_target(&self) -> bool {
+        self.contains(1 << R::REACHED_TARGET)
+    }
+
+    /// Checks if the counter overflowed.
+    #[inline(always)]
+    pub fn reached_overflow(&self) -> bool {
+        self.contains(1 << R::REACHED_OVERFLOW)
+    }
+
+    /// Checks if oneshot mode is enabled.
+    #[inline(always)]
+    pub fn oneshot_mode(&self) -> bool {
+        self.cleared(1 << R::REPEAT_MODE)
+    }
 }
 
 impl<R: TimerMode> MutValue<'_, R> {
     /// Sets the synchronization mode.
     #[inline(always)]
     pub fn sync_mode(self, mode: SyncMode) -> Self {
-        self.set((mode as u16) << R::SYNC_MODE)
+        self.clear(0b11 << R::SYNC_MODE)
+            .set((mode as u16) << R::SYNC_MODE)
     }
 
     /// Sets the clock source.
     #[inline(always)]
     pub fn source(self, src: Source) -> Self {
-        self.set((src as u16) << R::SOURCE)
+        self.clear(1 << R::SOURCE).set((src as u16) << R::SOURCE)
+    }
+
+    /// Sets whether the counter resets after hitting the target or not.
+    #[inline(always)]
+    pub fn target_reset(self, reset: bool) -> Self {
+        self.clear(1 << R::TARGET_RESET)
+            .set((reset as u16) << R::TARGET_RESET)
+    }
+
+    /// Sets if the counter triggers an IRQ after hitting the target.
+    #[inline(always)]
+    pub fn target_irq(self, enabled: bool) -> Self {
+        self.clear(1 << R::TARGET_IRQ)
+            .set((enabled as u16) << R::TARGET_IRQ)
+    }
+
+    /// Sets if the counter triggers an IRQ after overflowing.
+    #[inline(always)]
+    pub fn overflow_irq(self, enabled: bool) -> Self {
+        self.clear(1 << R::OVERFLOW_IRQ)
+            .set((enabled as u16) << R::OVERFLOW_IRQ)
+    }
+
+    /// Sets one-shot mode.
+    #[inline(always)]
+    pub fn oneshot_mode(self, enabled: bool) -> Self {
+        self.clear(1 << R::REPEAT_MODE)
+            .set((!enabled as u16) << R::REPEAT_MODE)
     }
 }

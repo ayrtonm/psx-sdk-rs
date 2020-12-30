@@ -11,13 +11,12 @@
 #![feature(alloc_error_handler)]
 // Required for panic messages
 #![feature(panic_info_message, fmt_as_str)]
-#![feature(
-    min_const_generics,
-    exclusive_range_pattern,
-    negative_impls,
-    array_map,
-    unsafe_cell_get_mut
-)]
+// Pretty much required for this crate.
+#![feature(min_const_generics, unsafe_cell_get_mut)]
+// Required for global variable workaround.
+#![feature(once_cell, const_fn_fn_ptr_basics)]
+// Could be removed if necessary.
+#![feature(exclusive_range_pattern, array_map)]
 
 // These are internally used modules.
 mod allocator;
@@ -32,11 +31,15 @@ pub mod value;
 /// Routines for including data from external files.
 #[macro_use]
 mod include;
+/// Workarounds for using global variables.
+pub mod global;
 
 // These are slightly higher level public modules in that they make use of the
 // `value` module.
 /// Coprocessor 0 registers and routines.
 pub mod cop0;
+/// Graphics transformation engine (coprocessor 2) routines.
+pub mod gte;
 /// Traits for addressing memory-mapped I/O registers.
 pub mod mmio;
 

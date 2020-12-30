@@ -17,6 +17,7 @@ impl DispEnv {
         let size = Vertex::from(size);
         DispEnv {
             offset: offset.into(),
+            // TODO: Add magic constants for PAL
             horizontal_range: Vertex::from((0, size.x * 8)).shift(0x260).into(),
             vertical_range: Vertex::from((-1, 1)).scale(224 / 2).shift(0x88).into(),
             //disp_mode: 0x01,

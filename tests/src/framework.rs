@@ -1,9 +1,9 @@
 use core::cell::UnsafeCell;
-use core::lazy::Lazy;
 
 use psx::dma;
 use psx::framebuffer::Framebuffer;
 use psx::general::*;
+use psx::global::Global;
 use psx::printer::{Printer, MIN_SIZE};
 
 #[allow(dead_code)]
@@ -17,35 +17,23 @@ const RUN_CONST_TESTS: () = {
     }
 };
 
-// TODO: Find a better alternative for dealing with global variables in rust.
-// Lazy is required to initialize with non-const functions
-// UnsafeCell provides ergonomic mutable access to a static
-pub struct Static<T>(Lazy<UnsafeCell<T>>);
-unsafe impl<T> Sync for Static<T> {}
-impl<T> Static<T> {
-    pub const fn new(f: fn() -> UnsafeCell<T>) -> Self {
-        Static(Lazy::new(f))
-    }
-    pub fn get(&self) -> &mut T {
-        unsafe { &mut *self.0.get() }
-    }
-}
-
-pub static PRINTER: Static<Printer<MIN_SIZE>> = Static::new(|| {
-    let mut printer = Printer::new(0, 0, (320, 240), None);
-    unsafe { printer.load_font(&mut dma::gpu::CHCR::new()) };
-    UnsafeCell::new(printer)
-});
+pub static PRINTER: Global<Printer<MIN_SIZE>> = unsafe {
+    Global::new(|| {
+        let mut printer = Printer::new(0, 0, (320, 240), None);
+        printer.load_font(&mut dma::gpu::CHCR::new());
+        UnsafeCell::new(printer)
+    })
+};
 
 macro_rules! print {
     ($msg:expr) => {
         $crate::framework::PRINTER
-            .get()
+            .get_mut()
             .print($msg, [], &mut unsafe { dma::gpu::CHCR::new() });
     };
     ($msg:expr, $arg0:expr) => {
         $crate::framework::PRINTER
-            .get()
+            .get_mut()
             .print($msg, [$arg0], &mut unsafe { dma::gpu::CHCR::new() });
     };
 }
