@@ -13,7 +13,7 @@ pub struct Cause;
 pub struct EPC;
 
 impl Read<u32> for Status {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     unsafe fn read(&self) -> u32 {
         let status;
         asm!("mfc0 $2, $12", out("$2") status);
@@ -22,7 +22,7 @@ impl Read<u32> for Status {
 }
 
 impl Write<u32> for Status {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     unsafe fn write(&mut self, status: u32) {
         asm!("mtc0 $2, $12", in("$2") status)
     }
@@ -76,7 +76,7 @@ pub type StatusMutValue<'r> = MutValue<'r, u32, Status>;
 
 impl StatusValue<'_> {
     /// Checks if interrupts are enabled.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn interrupts_enabled(&self) -> bool {
         self.contains(Status::IEc)
     }
@@ -84,32 +84,32 @@ impl StatusValue<'_> {
 
 impl StatusMutValue<'_> {
     /// Enters a critical section.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn enter_critical_section(self) -> Self {
         self.set(Status::IEp | Status::ImHw)
     }
 
     /// Exits a critical section.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn exit_critical_section(self) -> Self {
         self.clear(Status::IEp | Status::ImHw)
     }
 
     /// Enables interrupts in `Status`.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn enable_interrupts(self) -> Self {
         self.set(Status::IEc)
     }
 
     /// Disables interrupts in `Status`.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn disable_interrupts(self) -> Self {
         self.clear(Status::IEc)
     }
 }
 
 impl Read<u32> for Cause {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     unsafe fn read(&self) -> u32 {
         let cause;
         asm!("mfc0 $2, $13", out("$2") cause);
@@ -118,7 +118,7 @@ impl Read<u32> for Cause {
 }
 
 impl Write<u32> for Cause {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     unsafe fn write(&mut self, cause: u32) {
         asm!("mtc0 $2, $13", in("$2") cause)
     }
@@ -139,7 +139,7 @@ impl Cause {
 }
 
 impl Read<u32> for EPC {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     unsafe fn read(&self) -> u32 {
         let epc;
         asm!("mfc0 $2, $14", out("$2") epc);
@@ -151,7 +151,7 @@ impl Load<u32> for EPC {}
 
 /// Executes the coprocessor RFE instruction ([cop0cmd=10h](http://problemkaputt.de/psx-spx.htm#cop0exceptionhandling)).
 /// This prepares for a return from an exception.
-#[inline(always)]
+#[cfg_attr(feature = "inline_hints", inline(always))]
 pub fn rfe() {
     unsafe {
         asm!(".word 0x42000010");

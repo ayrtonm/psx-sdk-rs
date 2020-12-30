@@ -20,7 +20,7 @@ static mut VSYNC_LASTHBLANK: u16 = 0;
 static mut VSYNC_RCNT: u32 = 0;
 
 /// Executes the given closure in a critical section and returns the result.
-#[inline(always)]
+#[cfg_attr(feature = "inline_hints", inline(always))]
 pub fn CriticalSection<F: FnOnce() -> R, R>(f: F) -> R {
     bios::enter_critical_section();
     let r = f();

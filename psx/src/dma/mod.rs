@@ -53,14 +53,14 @@ pub enum BlockMode {
 }
 
 impl From<u32> for BlockMode {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     fn from(words: u32) -> BlockMode {
         BlockMode::Single(words)
     }
 }
 
 impl From<usize> for BlockMode {
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     fn from(words: usize) -> BlockMode {
         BlockMode::Single(words as u32)
     }
@@ -104,13 +104,13 @@ pub enum TransferMode {
 /// A marker for DMA base address registers.
 pub trait BaseAddress: LoadMut<u32> {
     /// Gets the DMA channel's base address.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     fn get(&self) -> u32 {
         unsafe { self.read() }
     }
 
     /// Sets the DMA channel's base address.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     fn set(&mut self, addr: &u32) {
         unsafe { self.write(addr as *const u32 as u32) }
     }
@@ -173,7 +173,7 @@ pub type MutValue<'r, R> = value::MutValue<'r, u32, R>;
 impl<R: ChannelControl> Value<'_, R> {
     /// Gets the DMA channel's transfer mode. Returns `None` if the register
     /// contains an invalid value.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn transfer_mode(&self) -> Option<TransferMode> {
         match (self.bits >> R::TRANSFER_MODE) & 0b11 {
             0 => Some(TransferMode::Immediate),
@@ -184,7 +184,7 @@ impl<R: ChannelControl> Value<'_, R> {
     }
 
     /// Checks if the DMA channel is busy.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn busy(&self) -> bool {
         self.contains(1 << R::BUSY)
     }
@@ -192,19 +192,19 @@ impl<R: ChannelControl> Value<'_, R> {
 
 impl<'r, R: ChannelControl> MutValue<'r, R> {
     /// Sets the DMA channel's transfer direction.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn direction(self, direction: Direction) -> Self {
         self.clear(1).set(direction as u32)
     }
 
     /// Sets the DMA channel's transfer step.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn step(self, step: Step) -> Self {
         self.clear(1 << R::STEP).set((step as u32) << R::STEP)
     }
 
     /// Sets the DMA channel's chop settings.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn chop(self, chop: Option<Chop>) -> Self {
         match chop {
             Some(chop) => self
@@ -215,7 +215,7 @@ impl<'r, R: ChannelControl> MutValue<'r, R> {
     }
 
     /// Sets the DMA channel's transfer mode.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn transfer_mode(self, transfer_mode: TransferMode) -> Self {
         self.clear(0b11 << R::TRANSFER_MODE)
             .set((transfer_mode as u32) << R::TRANSFER_MODE)
@@ -223,14 +223,14 @@ impl<'r, R: ChannelControl> MutValue<'r, R> {
 
     /// Starts a DMA transfer, consuming the [`MutValue`] and giving the
     /// resulting [`Transfer`] shared access to the register.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn start<T>(self, result: T) -> Transfer<'r, T, R> {
         // TODO: Add bit 28 for transfer mode = 0.
         Transfer::new(self.set(1 << R::BUSY).take(), result)
     }
 
     /// Stops any ongoing DMA transfer for the given channel.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn stop(self) -> Self {
         self.clear(1 << R::BUSY)
     }

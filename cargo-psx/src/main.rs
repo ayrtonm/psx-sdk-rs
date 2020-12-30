@@ -57,8 +57,9 @@ fn print_help() {
     println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
     println!("  --no-alloc           Avoids building the `alloc` crate");
     println!("  --lto                Enables link-time optimization and sets codegen units to 1");
-    println!("  --small              Sets opt-level=s to optimize for size (may increase size without --lto)");
-    println!("  --panic              Enables panic messages (adds ~3-6 KB)");
+    println!("  --small              Sets opt-level=s to optimize for size");
+    println!("  --inline             Inlines code aggressively using hints");
+    println!("  --panic              Enables panic messages");
     println!("");
     println!("Run `cargo build -h` for build options");
 }
@@ -87,13 +88,20 @@ fn main() {
     let lto = extract_flag("--lto", cargo_args);
     let small = extract_flag("--small", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
+    let inline_hints = extract_flag("--inline", cargo_args);
 
     let region = region.unwrap_or("NA".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
-    if pretty_panic {
+    if pretty_panic || inline_hints {
         cargo_args.push("--features".to_string());
-        cargo_args.push("psx/pretty_panic".to_string());
+        if pretty_panic {
+            cargo_args.push("psx/pretty_panic".to_string());
+        };
+
+        if inline_hints {
+            cargo_args.push("psx/inline_hints".to_string());
+        };
     };
 
     let lto_flags = " -C lto=fat -C codegen-units=1 -C embed-bitcode=yes";

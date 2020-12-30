@@ -28,31 +28,31 @@ pub type Value<'r> = value::Value<'r, u32, GPUSTAT>;
 
 impl Value<'_> {
     /// Checks if video is interlaced.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn interlaced(&self) -> bool {
         self.contains(1 << GPUSTAT::INTERLACE)
     }
 
     /// Checks if DMA is enabled for the GPU.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn dma_enabled(&self) -> bool {
         self.any(0b11 << GPUSTAT::DMA_DIRECTION)
     }
 
     /// Checks if the GPU is ready to receive a DMA block.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn dma_ready(&self) -> bool {
         self.contains(1 << GPUSTAT::DMA_READY)
     }
 
     /// Checks if the GPU is ready to receive a command.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn cmd_ready(&self) -> bool {
         self.contains(1 << GPUSTAT::CMD_READY)
     }
 
     /// Gets the current video mode.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn video_mode(&self) -> VideoMode {
         if self.contains(1 << GPUSTAT::VIDEO_MODE) {
             VideoMode::PAL
@@ -62,7 +62,7 @@ impl Value<'_> {
     }
 
     /// Gets the parity of the line being drawn.
-    #[inline(always)]
+    #[cfg_attr(feature = "inline_hints", inline(always))]
     pub fn line(&self) -> Parity {
         if self.contains(1 << GPUSTAT::LINE_PARITY) {
             Parity::Odd
