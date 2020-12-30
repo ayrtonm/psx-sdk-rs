@@ -75,7 +75,7 @@ cargo install --path .
 The `examples` directory has some demos which may or may not be broken at the
 moment due to changes in the `psx` crate. To try one out just run `cargo psx`
 from the demo's directory. This defaults to building an ELF using a toolchain
-named `psx` and repackaging it into a PSEXE with region `JP`. See `cargo psx -h`
+named `psx` and repackaging it into a PSEXE with region `NA`. See `cargo psx -h`
 for more.
 
 ### Program template
@@ -88,10 +88,10 @@ under `[dependencies]`. Note the modified, unmangled main interface.
 #![no_std]
 #![no_main]
 
-use psx::mmio::MMIO;
+use psx::dma;
 
 #[no_mangle]
-fn main(mut mmio: MMIO) {
+fn main(mut gpu_dma: dma::gpu::CHCR) {
 }
 ```
 
