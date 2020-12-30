@@ -63,4 +63,11 @@ impl GP1 {
         unsafe { self.write(cmd(0x07) | range.as_u32()) }
         self
     }
+
+    /// Sets the resolution, video mode, color depth and interlacing with GP1
+    /// command 0x08.
+    #[inline(always)]
+    pub fn display_mode(&mut self) -> &mut Self {
+        todo!("Implement this")
+    }
 }

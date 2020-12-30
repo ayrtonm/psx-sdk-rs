@@ -56,7 +56,7 @@ fn main(mut gpu_dma: dma::gpu::CHCR) -> ! {
     let _fb = Framebuffer::new((0, 0), (0, 240), (320, 240), None, &mut gpu_dma);
     enable_display();
 
-    print!(b"\nRunning tests...\n");
+    print!(b"Running tests...\n");
     for &t in &super::TESTS {
         run_test(t);
     }

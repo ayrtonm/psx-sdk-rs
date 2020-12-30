@@ -60,7 +60,8 @@ impl<const N: usize> Printer<N> {
         let old_transfer_mode = current.value.transfer_mode();
         current.transfer_mode(TransferMode::Immediate).store();
 
-        let mut font = include_u32!("../font.tim");
+        // Use a zipped font to save ~2 KB
+        let mut font = unzip!("../font.tim.zip");
         let tim = TIM::new(&mut font);
         let font = Font {
             tpage: tim.tex_page(),

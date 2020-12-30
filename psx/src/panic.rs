@@ -17,6 +17,8 @@ fn panic(panic_info: &PanicInfo) -> ! {
     if let Some(msg) = panic_info.message() {
         if let Some(msg) = msg.as_str() {
             printer.print(msg.as_bytes(), [], gpu_dma);
+        } else {
+            printer.print(b"Panic message contained formatted arguments", [], gpu_dma);
         }
     };
     // TODO: Why is the printer writing to the top buffer?

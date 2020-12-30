@@ -72,6 +72,8 @@ pub mod graphics;
 pub mod printer;
 /// Parsing texture data in TIM format.
 pub mod tim;
+/// Method for unzipping files.
+pub mod unzip;
 
 /// Used for testing only.
 pub fn delay(n: u32) {

@@ -18,7 +18,7 @@ impl DispEnv {
         DispEnv {
             offset: offset.into(),
             horizontal_range: Vertex::from((0, size.x * 8)).shift(0x260).into(),
-            vertical_range: Vertex::from((-1, 1)).scale(size.y / 2).shift(0x88).into(),
+            vertical_range: Vertex::from((-1, 1)).scale(224 / 2).shift(0x88).into(),
             //disp_mode: 0x01,
         }
     }

@@ -51,14 +51,14 @@ fn print_help() {
     println!("  --help, -h           Prints help information");
     println!("  --debug              Builds in release mode with debug info");
     println!("  --toolchain <NAME>   Sets the rustup toolchain to use (defaults to `psx`)");
-    println!("  --region <REGION>    Sets the game region to NA, EU or JP (default)");
+    println!("  --region <REGION>    Sets the game region to NA (default), EU or JP");
     println!("  --skip-build         Skips build and only packages an existing ELF into a PSEXE");
     println!("  --skip-pack          Skips packaging and only builds an ELF");
     println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
     println!("  --no-alloc           Avoids building the `alloc` crate");
     println!("  --lto                Enables link-time optimization and sets codegen units to 1");
     println!("  --small              Sets opt-level=s to optimize for size (may increase size without --lto)");
-    println!("  --panic              Enables panic messages (may add ~10 KB)");
+    println!("  --panic              Enables panic messages (adds ~6 KB)");
     println!("");
     println!("Run `cargo build -h` for build options");
 }
@@ -88,7 +88,7 @@ fn main() {
     let small = extract_flag("--small", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
 
-    let region = region.unwrap_or("JP".to_string());
+    let region = region.unwrap_or("NA".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
     if pretty_panic {

@@ -39,3 +39,24 @@ macro_rules! include_u32 {
         AR
     }};
 }
+
+/// Gets a zipped file's decompressed size from its header.
+#[macro_export]
+macro_rules! unzipped_size {
+    ($file:literal) => {{
+        use $crate::include_u32;
+        const N: usize = include_u32!($file)[0] as usize;
+        N
+    }};
+}
+
+/// Decompresses a zipped file with a coerced return type.
+#[macro_export]
+macro_rules! unzip {
+    ($file:literal) => {{
+        use $crate::unzip::unzip;
+        use $crate::{include_u32, unzipped_size};
+        const N: usize = unzipped_size!($file);
+        unzip(include_u32!($file)) as [u32; N]
+    }};
+}
