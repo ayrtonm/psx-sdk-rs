@@ -50,13 +50,13 @@ macro_rules! unzipped_size {
     }};
 }
 
-/// Decompresses a zipped file with a coerced return type.
+/// Decompresses a zipped file.
 #[macro_export]
 macro_rules! unzip {
     ($file:literal) => {{
         use $crate::unzip::unzip;
         use $crate::{include_u32, unzipped_size};
         const N: usize = unzipped_size!($file);
-        unzip(include_u32!($file)) as [u32; N]
+        unsafe { unzip(include_u32!($file)) as [u32; N] }
     }};
 }

@@ -1,9 +1,7 @@
-use core::cell::UnsafeCell;
-
 use psx::dma;
 use psx::framebuffer::Framebuffer;
 use psx::general::*;
-use psx::global::Global;
+use psx::lazy_global;
 use psx::printer::{Printer, MIN_SIZE};
 
 #[allow(dead_code)]
@@ -17,23 +15,21 @@ const RUN_CONST_TESTS: () = {
     }
 };
 
-pub static PRINTER: Global<Printer<MIN_SIZE>> = unsafe {
-    Global::new(|| {
-        let mut printer = Printer::new(0, 0, (320, 240), None);
-        printer.load_font(&mut dma::gpu::CHCR::new());
-        UnsafeCell::new(printer)
-    })
-};
+lazy_global!(let PRINTER: Printer<MIN_SIZE> = {
+    let mut printer = Printer::new(0, 0, (320, 240), None);
+    printer.load_font(&mut dma::gpu::CHCR::new());
+    printer
+});
 
 macro_rules! print {
     ($msg:expr) => {
         $crate::framework::PRINTER
-            .get_mut()
+            .get()
             .print($msg, [], &mut unsafe { dma::gpu::CHCR::new() });
     };
     ($msg:expr, $arg0:expr) => {
         $crate::framework::PRINTER
-            .get_mut()
+            .get()
             .print($msg, [$arg0], &mut unsafe { dma::gpu::CHCR::new() });
     };
 }

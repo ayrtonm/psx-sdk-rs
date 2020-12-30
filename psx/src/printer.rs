@@ -10,6 +10,7 @@ use crate::graphics::packet::Packet;
 use crate::graphics::primitive::Sprt8;
 use crate::tim::TIM;
 use crate::value::LoadMut;
+use crate::workarounds::UnwrapUnchecked;
 
 /// A font stored in the framebuffer
 pub struct Font {
@@ -69,13 +70,13 @@ impl<const N: usize> Printer<N> {
         };
 
         let bmp = tim.bitmap.data();
-        dma::gpu::MADR.set(bmp.first().unwrap());
+        dma::gpu::MADR.set(bmp.first().unwrap_unchecked());
         dma::gpu::BCR.set(bmp.len());
         gpu_dma.load_mut().start(()).wait();
 
         tim.clut_bitmap.map(|clut_bitmap| {
             let clut = clut_bitmap.data();
-            dma::gpu::MADR.set(clut.first().unwrap());
+            dma::gpu::MADR.set(clut.first().unwrap_unchecked());
             dma::gpu::BCR.set(clut.len());
             gpu_dma.load_mut().start(()).wait();
         });
@@ -104,7 +105,7 @@ impl<const N: usize> Printer<N> {
         let (w, h) = (8, 8);
         let ascii_per_row = 128 / w;
         let mut ot = OT::default();
-        let mut print_char = |printer: &mut Self, ascii| {
+        let mut print_char = |printer: &mut Self, ascii: u8| {
             // Offset ascii values to work with font subset stored in VRAM.
             let ascii = ascii - (2 * ascii_per_row);
             let xoffset = (ascii % ascii_per_row) * w;
@@ -114,7 +115,7 @@ impl<const N: usize> Printer<N> {
                 None => {
                     gpu_dma.send_list(&ot).wait();
                     ot.empty();
-                    printer.buffer.empty().sprt8().unwrap()
+                    printer.buffer.empty().sprt8().unwrap_unchecked()
                 },
             };
             letter
@@ -144,7 +145,7 @@ impl<const N: usize> Printer<N> {
                 },
                 b'}' if fmt_arg => {
                     fmt_arg = false;
-                    let arg = args.next().unwrap();
+                    let arg = args.next().unwrap_unchecked();
                     let formatted = Self::format_u32(*arg, leading_zeros);
                     leading_zeros = false;
                     for &c in &formatted {
@@ -174,13 +175,13 @@ impl<const N: usize> Printer<N> {
             };
             if !leading {
                 let as_char = core::char::from_digit(nibble, 16)
-                    .unwrap()
+                    .unwrap_unchecked()
                     .to_ascii_uppercase();
-                ar[j] = as_char as u8;
+                unsafe { *ar.get_unchecked_mut(j) = as_char as u8 };
                 j += 1;
             }
         }
-        ar[j] = b'h';
+        unsafe { *ar.get_unchecked_mut(j) = b'h' };
         ar
     }
 }

@@ -37,7 +37,7 @@ impl<const N: usize> OT<N> {
 
     /// Gets the nth entry in an ordering table.
     pub fn entry(&self, n: usize) -> &u32 {
-        &self.entries[n]
+        unsafe { self.entries.get_unchecked(n) }
     }
 
     /// Inserts a packet into the nth slot in an ordering table.
@@ -49,9 +49,9 @@ impl<const N: usize> OT<N> {
         let tag = packet as *mut _ as *mut u32;
         unsafe {
             *tag &= !TERMINATION;
-            *tag |= self.entries[n];
+            *tag |= *self.entries.get_unchecked(n);
+            *self.entries.get_unchecked_mut(n) = (tag as u32) & TERMINATION;
         }
-        self.entries[n] = (tag as u32) & TERMINATION;
         self
     }
 }

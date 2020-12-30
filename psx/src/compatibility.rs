@@ -1,10 +1,11 @@
 #![allow(non_snake_case)]
-use crate::bios;
-use crate::value::{Load, LoadMut};
 use core::hint::unreachable_unchecked;
 
+use crate::bios;
+use crate::value::{Load, LoadMut};
+
 use crate::dma;
-use crate::dma::{BlockControl, BlockMode, Channel, Transfer};
+use crate::dma::{BlockControl, BlockMode, Channel};
 use crate::gpu::{DispEnv, DrawEnv};
 use crate::graphics::packet::Packet;
 use crate::graphics::LinkedList;
@@ -132,10 +133,8 @@ pub fn SetDispMask(mut mode: u32) {
 }
 
 /// Sends an ordering table through to the GPU via DMA.
-pub fn DrawOTag<'l, 'r, L: LinkedList>(
-    list: &'l L, gpu_dma: &'r mut dma::gpu::CHCR,
-) -> Transfer<'r, &'l L, dma::gpu::CHCR> {
-    gpu_dma.send_list(list)
+pub fn DrawOTag<L: LinkedList>(list: &L, gpu_dma: &mut dma::gpu::CHCR) {
+    let _ = gpu_dma.send_list(list);
 }
 
 /// Sets the display environment.
@@ -146,8 +145,6 @@ pub fn PutDispEnv(disp_env: &DispEnv) {
 
 /// Sets the drawing environment.
 #[no_mangle]
-pub fn PutDrawEnv<'l, 'r>(
-    draw_env: &'l Packet<DrawEnv>, gpu_dma: &'r mut dma::gpu::CHCR,
-) -> Transfer<'r, &'l Packet<DrawEnv>, dma::gpu::CHCR> {
-    gpu_dma.send_list(draw_env)
+pub fn PutDrawEnv(draw_env: &Packet<DrawEnv>, gpu_dma: &mut dma::gpu::CHCR) {
+    let _ = gpu_dma.send_list(draw_env);
 }

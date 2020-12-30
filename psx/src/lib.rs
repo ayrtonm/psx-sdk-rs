@@ -31,8 +31,9 @@ pub mod value;
 /// Routines for including data from external files.
 #[macro_use]
 mod include;
-/// Workarounds for using global variables.
-pub mod global;
+/// Workarounds for global variables and panic-less functions.
+#[macro_use]
+pub mod workarounds;
 
 // These are slightly higher level public modules in that they make use of the
 // `value` module.

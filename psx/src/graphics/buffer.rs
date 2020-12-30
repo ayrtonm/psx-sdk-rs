@@ -64,7 +64,8 @@ impl<const N: usize> Buffer<N> {
         if end <= N {
             unsafe {
                 (*self.0.get()).next += words;
-                let slice = &mut (*self.0.get()).data[start..end];
+                // TODO: why is unchecked ok here?
+                let slice = &mut (*self.0.get()).data.get_unchecked_mut(start..end);
                 let ptr = slice.as_mut_ptr().cast::<T>();
                 ptr.as_mut()
             }

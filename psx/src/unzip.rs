@@ -1,20 +1,21 @@
-/// Decompresses a zipped Huffman-encoded file using the dictionary in the file
-/// header.
-pub fn unzip<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
+// TODO: why is unchecked ok here?
+/// Decompresses a zipped file. Not intended to be called directly. Use
+/// [`crate::unzip!`] instead.
+pub unsafe fn unzip<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
     // The zip file starts with 8 bits containing the number of symbols to unzip (as
     // a u32) followed by the number of entries in the dictionary (as a u32).
-    let num_symbols = zip[0] as usize;
-    let num_entries = zip[1] as usize;
+    let num_symbols = *zip.get_unchecked(0) as usize;
+    let num_entries = *zip.get_unchecked(1) as usize;
 
     // Then come the dictionary codes
     let code_start = 2;
     let code_end = code_start + num_entries;
-    let codes = &zip[code_start..code_end];
+    let codes = zip.get_unchecked(code_start..code_end);
 
     // The come the corresponding dictionary symbols
     let sym_start = code_end;
     let sym_end = sym_start + num_entries;
-    let symbols = &zip[sym_start..sym_end];
+    let symbols = zip.get_unchecked(sym_start..sym_end);
 
     // Finally we reach the compressed data
     let file_start = sym_end;
@@ -22,7 +23,7 @@ pub fn unzip<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
     let mut possible_code = 0;
     let mut possible_code_len = 0;
     let mut ret_idx = 0;
-    for &word in &zip[file_start..] {
+    for &word in zip.get_unchecked(file_start..) {
         let mut remaining_bits = 32;
         let mut stream = word as u64 | ((possible_code as u64) << 32);
         while remaining_bits != 0 {
@@ -34,7 +35,7 @@ pub fn unzip<const M: usize, const N: usize>(zip: [u32; M]) -> [u32; N] {
                 .binary_search(&(possible_code | (1 << possible_code_len)))
                 .map(|idx| {
                     if ret_idx < num_symbols {
-                        ret[ret_idx] = symbols[idx];
+                        *ret.get_unchecked_mut(ret_idx) = *symbols.get_unchecked(idx);
                         ret_idx += 1;
                         stream &= 0x0000_0000_FFFF_FFFF;
                         possible_code_len = 0;

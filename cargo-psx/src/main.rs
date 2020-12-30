@@ -58,7 +58,7 @@ fn print_help() {
     println!("  --no-alloc           Avoids building the `alloc` crate");
     println!("  --lto                Enables link-time optimization and sets codegen units to 1");
     println!("  --small              Sets opt-level=s to optimize for size (may increase size without --lto)");
-    println!("  --panic              Enables panic messages (adds ~6 KB)");
+    println!("  --panic              Enables panic messages (adds ~3-6 KB)");
     println!("");
     println!("Run `cargo build -h` for build options");
 }

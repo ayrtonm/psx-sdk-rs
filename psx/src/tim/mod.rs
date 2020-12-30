@@ -17,18 +17,19 @@ pub struct TIM<'a> {
 
 impl<'a> TIM<'a> {
     /// Parses a slice of data in TIM format.
+    // TODO: why is unchecked ok here?
     pub fn new(src: &'a mut [u32]) -> Self {
-        let bpp = match src[1] & 0b11 {
+        let bpp = match unsafe { src.get_unchecked(1) } & 0b11 {
             0 => Bpp::Bit4,
             1 => Bpp::Bit8,
             2 => Bpp::Bit15,
             _ => unsafe { unreachable_unchecked() },
         };
-        let (clut_bitmap, rest) = if (src[1] & 8) != 0 {
-            let (bitmap, rest) = Bitmap::new(&mut src[2..]);
+        let (clut_bitmap, rest) = if (unsafe { src.get_unchecked(1) } & 8) != 0 {
+            let (bitmap, rest) = Bitmap::new(unsafe { src.get_unchecked_mut(2..) });
             (Some(bitmap), rest)
         } else {
-            (None, &mut src[2..])
+            (None, unsafe { src.get_unchecked_mut(2..) })
         };
         let (bitmap, _) = Bitmap::new(rest);
         TIM {
