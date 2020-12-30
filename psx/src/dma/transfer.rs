@@ -16,26 +16,26 @@ pub struct Transfer<'r, T, R: ChannelControl> {
 
 impl<'r, T, R: ChannelControl> Transfer<'r, T, R> {
     /// Creates a new DMA transfer.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn new(reg: &'r R, result: T) -> Self {
         Transfer { reg, result }
     }
 
     /// Waits until the DMA transfer ends then returns the result.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn wait(self) -> T {
         while self.reg.load().busy() {}
         self.result
     }
 
     /// Immutably borrows the register used to start the transfer.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn borrow(&self) -> &R {
         self.reg
     }
 
     /// Assumes that a transfer is done and gets the result.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn assume_done(self) -> T {
         self.result
     }

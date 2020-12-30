@@ -36,7 +36,7 @@ pub enum SyncMode {
 /// A marker to timer counter registers.
 pub trait TimerCounter: Load<u16> {
     /// Waits until the counter stops.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn wait(&mut self) -> u16 {
         let mut bits = self.load().bits;
         while self.load().bits != bits {
@@ -66,7 +66,7 @@ pub type MutValue<'r, R> = value::MutValue<'r, u16, R>;
 
 impl<R: TimerMode> Value<'_, R> {
     /// Gets the synchronization mode.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn sync_mode(&self) -> SyncMode {
         match (self.bits >> R::SYNC_MODE) & 0b11 {
             0 => SyncMode::Pause,
@@ -78,7 +78,7 @@ impl<R: TimerMode> Value<'_, R> {
     }
 
     /// Gets the clock source.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn source(&self) -> Source {
         if self.contains(1 << R::SOURCE) {
             Source::Alternate
@@ -88,37 +88,37 @@ impl<R: TimerMode> Value<'_, R> {
     }
 
     /// Checks if the counter will reset after hitting the target.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn target_reset(&self) -> bool {
         self.contains(1 << R::TARGET_RESET)
     }
 
     /// Checks if the counter will trigger an IRQ after hitting the target.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn target_irq(&self) -> bool {
         self.contains(1 << R::TARGET_IRQ)
     }
 
     /// Checks if the counter will trigger an IRQ after overflowing.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn overflow_irq(&self) -> bool {
         self.contains(1 << R::OVERFLOW_IRQ)
     }
 
     /// Checks if the counter reached its target.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn reached_target(&self) -> bool {
         self.contains(1 << R::REACHED_TARGET)
     }
 
     /// Checks if the counter overflowed.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn reached_overflow(&self) -> bool {
         self.contains(1 << R::REACHED_OVERFLOW)
     }
 
     /// Checks if oneshot mode is enabled.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn oneshot_mode(&self) -> bool {
         self.cleared(1 << R::REPEAT_MODE)
     }
@@ -126,41 +126,41 @@ impl<R: TimerMode> Value<'_, R> {
 
 impl<R: TimerMode> MutValue<'_, R> {
     /// Sets the synchronization mode.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn sync_mode(self, mode: SyncMode) -> Self {
         self.clear(0b11 << R::SYNC_MODE)
             .set((mode as u16) << R::SYNC_MODE)
     }
 
     /// Sets the clock source.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn source(self, src: Source) -> Self {
         self.clear(1 << R::SOURCE).set((src as u16) << R::SOURCE)
     }
 
     /// Sets whether the counter resets after hitting the target or not.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn target_reset(self, reset: bool) -> Self {
         self.clear(1 << R::TARGET_RESET)
             .set((reset as u16) << R::TARGET_RESET)
     }
 
     /// Sets if the counter triggers an IRQ after hitting the target.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn target_irq(self, enabled: bool) -> Self {
         self.clear(1 << R::TARGET_IRQ)
             .set((enabled as u16) << R::TARGET_IRQ)
     }
 
     /// Sets if the counter triggers an IRQ after overflowing.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn overflow_irq(self, enabled: bool) -> Self {
         self.clear(1 << R::OVERFLOW_IRQ)
             .set((enabled as u16) << R::OVERFLOW_IRQ)
     }
 
     /// Sets one-shot mode.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn oneshot_mode(self, enabled: bool) -> Self {
         self.clear(1 << R::REPEAT_MODE)
             .set((!enabled as u16) << R::REPEAT_MODE)

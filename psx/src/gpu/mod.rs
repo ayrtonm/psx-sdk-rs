@@ -60,7 +60,7 @@ pub enum Bpp {
     Bit15,
 }
 
-#[cfg_attr(feature = "inline_hints", inline(always))]
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 const fn cmd(cmd: u8) -> u32 {
     (cmd as u32) << 24
 }

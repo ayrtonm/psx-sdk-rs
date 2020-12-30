@@ -13,7 +13,7 @@ pub struct Color {
 }
 
 impl From<(Component, Component, Component)> for Color {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn from((r, g, b): (Component, Component, Component)) -> Self {
         Color::rgb(r, g, b)
     }
@@ -39,7 +39,7 @@ impl Color {
     pub const INDIGO: Self = Color::BLUE.average(&Color::VIOLET);
 
     /// Constructs a new color.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub const fn rgb(red: Component, green: Component, blue: Component) -> Self {
         Color { red, green, blue }
     }

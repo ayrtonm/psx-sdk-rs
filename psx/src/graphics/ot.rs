@@ -12,7 +12,7 @@ pub struct OT<const N: usize> {
 
 impl Default for OT<1> {
     /// Creates an initialized 1-word ordering table.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn default() -> Self {
         OT {
             entries: [TERMINATION; 1],
@@ -22,7 +22,7 @@ impl Default for OT<1> {
 
 impl OT<1> {
     /// Empties the ordering table by storing the termination code in the entry.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn empty(&mut self) -> &mut Self {
         self.entries[0] = TERMINATION;
         self
@@ -71,7 +71,7 @@ pub struct DoubleOT<const N: usize> {
 
 impl Default for DoubleOT<1> {
     /// Creates an initialized double-buffered ordering table.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn default() -> Self {
         DoubleOT {
             ot_0: UnsafeCell::new(OT::default()),
@@ -84,7 +84,7 @@ impl Default for DoubleOT<1> {
 //impl DoubleOT<1> {
 //    /// Empties the current ordering table by storing the termination code in
 //    /// its entry.
-//    #[cfg_attr(feature = "inline_hints", inline(always))]
+//    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 //    pub fn empty(&self) -> &Self {
 //        self.unsafe_deref().empty();
 //        self

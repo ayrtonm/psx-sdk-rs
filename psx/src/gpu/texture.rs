@@ -4,7 +4,7 @@ use crate::gpu::{PackedVertex, SmallVertex};
 pub type Clut = PackedVertex<2, 6, 9>;
 
 impl From<Option<Clut>> for Clut {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn from(clut: Option<Clut>) -> Self {
         clut.unwrap_or(0.into())
     }

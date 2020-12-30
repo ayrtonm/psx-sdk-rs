@@ -17,7 +17,7 @@ impl Address<u32> for DPCR {
 }
 impl LoadMut<u32> for DPCR {}
 
-#[cfg_attr(feature = "inline_hints", inline(always))]
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 const fn enable_bit(ch: Channel) -> u32 {
     let bit = (ch as u32 * 4) + 3;
     1 << bit
@@ -35,7 +35,7 @@ const ENABLE_BITS: u32 = {
 
 impl Value<'_> {
     /// Checks if the given DMA channel is enabled.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn enabled(&self, ch: Channel) -> bool {
         self.contains(enable_bit(ch))
     }
@@ -43,25 +43,25 @@ impl Value<'_> {
 
 impl MutValue<'_> {
     /// Enables the given DMA channel.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn enable(self, ch: Channel) -> Self {
         self.set(enable_bit(ch))
     }
 
     /// Disables the given DMA channel.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn disable(self, ch: Channel) -> Self {
         self.clear(enable_bit(ch))
     }
 
     /// Enables all DMA channels.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn enable_all(self) -> Self {
         self.set(ENABLE_BITS)
     }
 
     /// Disables all DMA channels.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn disable_all(self) -> Self {
         self.clear(ENABLE_BITS)
     }

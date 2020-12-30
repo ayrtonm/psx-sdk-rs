@@ -10,4 +10,4 @@ edition = "2018"
 
 [features]
 pretty_panic = []
-inline_hints = []
+no_inline_hints = []

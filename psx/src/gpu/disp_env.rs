@@ -25,7 +25,7 @@ impl DispEnv {
     }
 
     /// Sets the display environment.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn set(&self) {
         GP1.start_display_area(self.offset)
             .horizontal_range(self.horizontal_range)

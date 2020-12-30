@@ -22,7 +22,7 @@ pub struct CHCR(());
 impl CHCR {
     /// Creates a new instance of the GPU DMA channel's control register. Take
     /// care to only call this once.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub const unsafe fn new() -> Self {
         CHCR(())
     }

@@ -38,7 +38,7 @@ pub trait UnwrapUnchecked<T> {
 }
 
 impl<T> UnwrapUnchecked<T> for Option<T> {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn unwrap_unchecked(self) -> T {
         match self {
             Some(val) => val,
@@ -55,7 +55,7 @@ pub trait SplitAtMutNoCheck<T> {
 }
 
 impl<T> SplitAtMutNoCheck<T> for [T] {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn split_at_mut_no_check(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
         use core::slice;
 

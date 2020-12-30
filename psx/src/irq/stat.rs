@@ -20,7 +20,7 @@ type MutValue<'r> = value::MutValue<'r, u32, ISTAT>;
 
 impl ISTAT {
     /// Wait for the given interrupt request.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn wait(&self, irq: IRQ) {
         while !self.load().requested(irq) {}
     }
@@ -28,7 +28,7 @@ impl ISTAT {
 
 impl Value<'_> {
     /// Checks if the given interrupt has been requested.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn requested(&self, irq: IRQ) -> bool {
         self.contains(1 << (irq as u32))
     }
@@ -36,13 +36,13 @@ impl Value<'_> {
 
 impl MutValue<'_> {
     /// Acknowledge the given interrupt reqest.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn ack(self, irq: IRQ) -> Self {
         self.clear(1 << (irq as u32))
     }
 
     /// Acknowledge all interrupt requests.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn ack_all(self) -> Self {
         self.clear_all()
     }

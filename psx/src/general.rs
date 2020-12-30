@@ -6,7 +6,7 @@ use crate::irq::{IMASK, IRQ, ISTAT};
 use crate::value::LoadMut;
 
 /// Executes the given closure in a critical section and returns the result.
-#[cfg_attr(feature = "inline_hints", inline(always))]
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
     cop0::Status.load_mut().enter_critical_section().store();
     let r = f();
@@ -33,13 +33,13 @@ pub fn reset_graphics(gpu_dma: &mut dma::gpu::CHCR) {
 }
 
 /// Enables the display.
-#[cfg_attr(feature = "inline_hints", inline(always))]
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 pub fn enable_display() {
     GP1.display_enable(true);
 }
 
 /// Waits for the next vertical blank.
-#[cfg_attr(feature = "inline_hints", inline(always))]
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 pub fn vsync() {
     ISTAT.load_mut().ack(IRQ::Vblank).store();
     ISTAT.wait(IRQ::Vblank);

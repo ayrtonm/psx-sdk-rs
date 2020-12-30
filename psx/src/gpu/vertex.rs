@@ -19,14 +19,14 @@ pub type Vertex = GenericVertex<Pixel>;
 pub type SmallVertex = GenericVertex<u8>;
 
 impl<P: Copy> From<P> for GenericVertex<P> {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn from(p: P) -> Self {
         (p, p).into()
     }
 }
 
 impl<P: Copy> From<(P, P)> for GenericVertex<P> {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn from((x, y): (P, P)) -> Self {
         GenericVertex { x, y }
     }
@@ -36,7 +36,7 @@ impl<P> GenericVertex<P>
 where P: Copy + Add<Output = P> + Mul<Output = P> + Sub<Output = P> + Div<Output = P>
 {
     /// Adds vertices component-wise.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn shift<T>(&self, other: T) -> Self
     where Self: From<T> {
         let other = GenericVertex::from(other);
@@ -44,7 +44,7 @@ where P: Copy + Add<Output = P> + Mul<Output = P> + Sub<Output = P> + Div<Output
     }
 
     /// Multiplies vertices component-wise.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn scale<T>(&self, scale: T) -> Self
     where Self: From<T> {
         let scale = GenericVertex::from(scale);
@@ -52,7 +52,7 @@ where P: Copy + Add<Output = P> + Mul<Output = P> + Sub<Output = P> + Div<Output
     }
 
     /// Subtracts vertices component-wise.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn subtract<T>(&self, other: T) -> Self
     where Self: From<T> {
         let other = GenericVertex::from(other);
@@ -60,7 +60,7 @@ where P: Copy + Add<Output = P> + Mul<Output = P> + Sub<Output = P> + Div<Output
     }
 
     /// Divides vertices component-wise.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn divide<T>(&self, scale: T) -> Self
     where Self: From<T> {
         let scale = GenericVertex::from(scale);
@@ -78,7 +78,7 @@ pub struct PackedVertex<const N: usize, const X: usize, const Y: usize> {
 impl<T, const N: usize, const X: usize, const Y: usize> From<T> for PackedVertex<N, X, Y>
 where Vertex: From<T>
 {
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn from(t: T) -> Self {
         let v = GenericVertex::from(t);
         let mut data = [0; N];

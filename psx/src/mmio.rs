@@ -20,7 +20,7 @@ impl<T: Copy, R: Load<T> + Address<T>> Read<T> for R {}
 impl<T: Copy, R: Read<T>> value::Read<T> for R {
     /// Loads an I/O register from memory. Use sparingly as calls cannot be
     /// optimized out by the compiler.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     unsafe fn read(&self) -> T {
         read_volatile(Self::ADDRESS as *const T)
     }
@@ -32,7 +32,7 @@ impl<T: Copy + Default, R: LoadMut<T> + Address<T>> Write<T> for R {}
 impl<T: Copy + Default, R: Write<T>> value::Write<T> for R {
     /// Stores an I/O register in memory. Use sparingly as calls cannot be
     /// optimized out by the compiler.
-    #[cfg_attr(feature = "inline_hints", inline(always))]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     unsafe fn write(&mut self, value: T) {
         write_volatile(Self::ADDRESS as *mut T, value)
     }
