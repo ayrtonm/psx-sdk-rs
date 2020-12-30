@@ -5,32 +5,62 @@
 use core::mem::size_of;
 
 use psx::bios;
-use psx::graphics::buffer::Buffer;
-use psx::graphics::packet::Packet;
-use psx::graphics::InitPrimitive;
 use psx::compatibility::*;
 use psx::dma;
 use psx::gpu;
+use psx::graphics::buffer::Buffer;
+use psx::graphics::packet::Packet;
+use psx::graphics::InitPrimitive;
 use psx::irq;
 use psx::mmio::Address;
 use psx::timer;
 use psx::value::Load;
 
+// This provides a `print` macro for debugging
+#[macro_use]
 mod framework;
 
-type Test = fn() -> bool;
+// Tests simply return true is they pass or false if they fail.
+type TestResult = bool;
+type Test = fn() -> TestResult;
 
-pub const TESTS: [Test; 4] = [test_1, test_2, mmio_addresses, buffer];
+// These are runtime tests to be evaluated by the emulator.
+const TESTS: [Test; 3] = [test_1, test_2, buffer];
+// These are compile-time tests to be evaluated by the compiler.
+const CONST_TESTS: [TestResult; 1] = [mmio_addresses()];
 
 fn test_1() -> bool {
     bios::gpu_get_status() == gpu::GPUSTAT.load().bits
 }
 
+// Make sure that tests undo any changes to global state (e.g. exit a critical
+// section before returning)
 fn test_2() -> bool {
     CriticalSection(|| bios::enter_critical_section() == 0)
 }
 
-fn mmio_addresses() -> bool {
+fn buffer() -> bool {
+    //print!(b"Testing Buffer");
+    struct X([u32; 8]);
+    impl InitPrimitive for X {
+        fn init_primitive(&mut self) {}
+    }
+
+    const BUF: usize = size_of::<Packet<X>>() / 4;
+    let buffer = Buffer::<BUF>::new();
+    let initial_size = buffer.words_remaining();
+    match buffer.alloc::<X>() {
+        Some(x) => {
+            initial_size == BUF &&
+                buffer.words_remaining() == 0 &&
+                x.0 == [0; 8] &&
+                buffer.alloc::<X>().is_none()
+        },
+        None => false,
+    }
+}
+
+const fn mmio_addresses() -> bool {
     0x1F801810 == gpu::GP0::ADDRESS &&
     0x1F801814 == gpu::GP1::ADDRESS &&
     //0x1F801810 == gpu::GPUREAD::ADDRESS &&
@@ -69,24 +99,4 @@ fn mmio_addresses() -> bool {
     0x1F8010E0 == dma::otc::MADR::ADDRESS &&
     0x1F8010E4 == dma::otc::BCR::ADDRESS &&
     0x1F8010E8 == dma::otc::CHCR::ADDRESS
-}
-
-fn buffer() -> bool {
-    struct X([u32; 8]);
-    impl InitPrimitive for X {
-        fn init_primitive(&mut self) {}
-    }
-
-    const BUF: usize = size_of::<Packet<X>>() / 4;
-    let buffer = Buffer::<BUF>::new();
-    let initial_size = buffer.words_remaining();
-    match buffer.alloc::<X>() {
-        Some(x) => {
-            initial_size == BUF &&
-            buffer.words_remaining() == 0 &&
-            x.0 == [0, 0, 0, 0, 0, 0, 0, 0] &&
-            buffer.alloc::<X>().is_none()
-        },
-        None => false,
-    }
 }
