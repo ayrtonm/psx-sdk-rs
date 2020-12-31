@@ -16,10 +16,16 @@ use psx::mmio::Address;
 use psx::printer::format_u32;
 use psx::timer;
 use psx::value::Load;
+use psx::{include_u32, unzip};
+
+use const_fn::{cmp_u8, cmp_u32};
 
 // This provides a `print` macro for debugging
 #[macro_use]
 mod framework;
+
+// Provides workarounds for const testing.
+mod const_fn;
 
 // Tests simply return true is they pass or false if they fail.
 type TestResult = bool;
@@ -28,7 +34,7 @@ type Test = fn() -> TestResult;
 // These are runtime tests to be evaluated by the emulator.
 const TESTS: [Test; 3] = [test_1, test_2, buffer];
 // These are compile-time tests to be evaluated by the compiler.
-const CONST_TESTS: [TestResult; 2] = [mmio_addresses(), format_u32_tests()];
+const CONST_TESTS: [TestResult; 3] = [mmio_addresses(), format_u32_tests(), unzip_test()];
 
 fn test_1() -> bool {
     bios::gpu_get_status() == gpu::GPUSTAT.load().bits
@@ -40,46 +46,72 @@ fn test_2() -> bool {
     CriticalSection(|| bios::enter_critical_section() == 0)
 }
 
+const fn unzip_test() -> bool {
+    cmp_u32(&unzip!("../font.tim.zip"), &include_u32!("../font.tim"))
+}
+
 const fn format_u32_tests() -> bool {
-    const fn cmp(a: &[u8], b: &[u8]) -> bool {
-        let min_idx = if a.len() != b.len() {
-            return false
-        } else {
-            a.len()
-        };
-        let mut ret = true;
-        let mut i = 0;
-        while i < min_idx {
-            ret = ret && a[i] == b[i];
-            i += 1;
-        }
-        ret
-    }
-    let test1 = cmp(&format_u32(29, false, false), b"29\0\0\0\0\0\0\0\0");
-    let test2 = cmp(&format_u32(0xFFFF_FFFF, false, false), b"4294967295");
-    let test3 = cmp(&format_u32(0, false, false), b"0\0\0\0\0\0\0\0\0\0");
-    let test4 = cmp(&format_u32(29, false, true), b"1Dh\0\0\0\0\0\0\0");
-    let test5 = cmp(&format_u32(0xFFFF_FFFF, false, true), b"FFFFFFFFh\0");
-    let test6 = cmp(&format_u32(0, false, true), b"0h\0\0\0\0\0\0\0\0");
-    test1 && test2 && test3 && test4 && test5 && test6
+    let mut ret = true;
+    let hex = false;
+    let leading = false;
+    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"29\0\0\0\0\0\0\0\0");
+    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295");
+    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"0\0\0\0\0\0\0\0\0\0");
+    let hex = true;
+    let leading = false;
+    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"1Dh\0\0\0\0\0\0\0");
+    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0");
+    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"0h\0\0\0\0\0\0\0\0");
+    let hex = false;
+    let leading = true;
+    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"0000000029");
+    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295");
+    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"0000000000");
+    let hex = true;
+    let leading = true;
+    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"0000001Dh\0");
+    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0");
+    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"00000000h\0");
+    ret
 }
 
 fn buffer() -> bool {
     struct X([u32; 8]);
+    struct Y([u32; 2]);
     impl InitPrimitive for X {
         fn init_primitive(&mut self) {}
     }
+    impl InitPrimitive for Y {
+        fn init_primitive(&mut self) {
+            self.0[0] = 0xFFFF_FFFF;
+        }
+    }
 
     const BUF: usize = size_of::<Packet<X>>() / 4;
-    let buffer = Buffer::<BUF>::new();
+    let mut buffer = Buffer::<BUF>::new();
     let initial_size = buffer.words_remaining();
     match buffer.alloc::<X>() {
         Some(x) => {
-            initial_size == BUF &&
+            // Checks that `words_remaining` works
+            let ret = initial_size == BUF &&
                 buffer.words_remaining() == 0 &&
+                // Checks that `X` is initialized as expected
                 x.0 == [0; 8] &&
-                buffer.alloc::<X>().is_none()
+                // Checks that the buffer is full
+                buffer.alloc::<X>().is_none() &&
+                buffer.alloc::<Y>().is_none();
+            x.0 = [0, 0xDEAD_BEEF, 0, 0, 0, 0, 0, 0];
+            buffer.empty();
+            match buffer.alloc::<Y>() {
+                Some(y) => {
+                    // Checks that Y was initialized and contains the old data written to X
+                    ret && y.0 == [0xFFFF_FFFF, 0xDEAD_BEEF]
+                },
+                // Checks that we can allocate a `Y` after emptying the buffer
+                None => false,
+            }
         },
+        // Checks that we can allocate at least one `X`
         None => false,
     }
 }

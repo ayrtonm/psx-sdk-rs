@@ -23,6 +23,8 @@
     const_raw_ptr_deref,
     const_int_pow
 )]
+// Const feature to improve performance at the risk of UB while using const testing.
+#![feature(const_unreachable_unchecked)]
 // Could be removed if necessary.
 #![feature(array_map)]
 #![feature(unsafe_cell_get_mut)]
