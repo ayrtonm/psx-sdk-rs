@@ -51,7 +51,7 @@ pub const unsafe fn unzip<const M: usize, const N: usize>(zip: [u32; M]) -> [u32
     let mut i = 0;
     let remaining_data = get_unchecked_slice_from(&zip, file_start..);
     while i < remaining_data.len() {
-        let word = remaining_data[i];
+        let word = *get_unchecked(remaining_data, i);
         i += 1;
         let mut remaining_bits = 32;
         let mut stream = word as u64 | ((possible_code as u64) << 32);
@@ -60,17 +60,17 @@ pub const unsafe fn unzip<const M: usize, const N: usize>(zip: [u32; M]) -> [u32
             remaining_bits -= 1;
             possible_code_len += 1;
             possible_code = (stream >> 32) as u32;
-            // TODO: Replace with const Option::map
-            match binary_search(codes, possible_code | (1 << possible_code_len)) {
-                Some(idx) => {
-                    if ret_idx < num_symbols {
+            if ret_idx < num_symbols {
+                // TODO: Replace with const Option::map
+                match binary_search(codes, possible_code | (1 << possible_code_len)) {
+                    Some(idx) => {
                         *get_unchecked_mut(&mut ret, ret_idx) = *get_unchecked(symbols, idx);
                         ret_idx += 1;
                         stream &= 0x0000_0000_FFFF_FFFF;
                         possible_code_len = 0;
-                    }
-                },
-                None => (),
+                    },
+                    None => (),
+                }
             };
         }
         possible_code = (stream >> 32) as u32;

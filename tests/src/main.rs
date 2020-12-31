@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-#![feature(once_cell, const_fn_fn_ptr_basics, array_map)]
+#![feature(const_panic)]
 
 use core::mem::size_of;
 

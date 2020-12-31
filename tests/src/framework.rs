@@ -10,7 +10,9 @@ const RUN_CONST_TESTS: () = {
 
     let mut i = 0;
     while i < CONST_TESTS.len() {
-        let _ = CONST_TESTS[i] as usize - 1;
+        if !CONST_TESTS[i] {
+            panic!("Failed a const test");
+        }
         i += 1;
     }
 };
