@@ -10,7 +10,7 @@ use crate::graphics::packet::Packet;
 use crate::graphics::primitive::Sprt8;
 use crate::tim::TIM;
 use crate::value::LoadMut;
-use crate::workarounds::UnwrapUnchecked;
+use crate::workarounds::{get_unchecked_mut, UnwrapUnchecked};
 
 /// A font stored in the framebuffer
 pub struct Font {
@@ -72,13 +72,13 @@ impl<const N: usize> Printer<N> {
         };
 
         let bmp = tim.bitmap.data();
-        dma::gpu::MADR.set(bmp.first().unwrap_unchecked());
+        dma::gpu::MADR.set(unsafe { bmp.first().unwrap_unchecked() });
         dma::gpu::BCR.set(bmp.len());
         gpu_dma.load_mut().start(()).wait();
 
         tim.clut_bitmap.map(|clut_bitmap| {
             let clut = clut_bitmap.data();
-            dma::gpu::MADR.set(clut.first().unwrap_unchecked());
+            dma::gpu::MADR.set(unsafe { clut.first().unwrap_unchecked() });
             dma::gpu::BCR.set(clut.len());
             gpu_dma.load_mut().start(()).wait();
         });
@@ -112,7 +112,7 @@ impl<const N: usize> Printer<N> {
             None => {
                 gpu_dma.send_list(&self.ot).wait();
                 self.ot.empty();
-                self.buffer.empty().sprt8().unwrap_unchecked()
+                unsafe { self.buffer.empty().sprt8().unwrap_unchecked() }
             },
         };
         letter
@@ -149,7 +149,7 @@ impl<const N: usize> Printer<N> {
                 },
                 b'}' if fmt_arg => {
                     fmt_arg = false;
-                    let arg = args.next().unwrap_unchecked();
+                    let arg = unsafe { args.next().unwrap_unchecked() };
                     let formatted = format_u32(*arg, leading_zeros, hexdecimal);
                     leading_zeros = false;
                     hexdecimal = false;
@@ -171,39 +171,41 @@ impl<const N: usize> Printer<N> {
 }
 
 /// Formats a 32-bit number in ascii
-pub fn format_u32(x: u32, leading_zeros: bool, hexdecimal: bool) -> [u8; 10] {
+pub const fn format_u32(x: u32, leading_zeros: bool, hexdecimal: bool) -> [u8; 10] {
+    const fn to_hexdecimal_digit(x: u8) -> u8 {
+        if x < 10 {
+            b'0' + x
+        } else {
+            b'A' + x - 10
+        }
+    }
     let mut leading = !leading_zeros;
     let mut ar = [0; 10];
     let mut j = 0;
-    if hexdecimal {
-        for i in 0..8 {
-            let nibble = (x >> ((7 - i) * 4)) & 0xF;
-            if nibble != 0 || i == 7 {
-                leading = false;
-            };
-            if !leading {
-                let as_char = core::char::from_digit(nibble, 16)
-                    .unwrap_unchecked()
-                    .to_ascii_uppercase();
-                unsafe { *ar.get_unchecked_mut(j) = as_char as u8 };
-                j += 1;
-            }
-        }
-        unsafe { *ar.get_unchecked_mut(j) = b'h' };
-    } else {
-        let mut y = x;
-        for i in 0..10 {
+    let max_digits = if hexdecimal { 8 } else { 10 };
+    let mut y = x;
+    let mut i = 0;
+    // TODO: Replace with a const for loop
+    while i < max_digits {
+        let digit = if hexdecimal {
+            (x >> ((7 - i) * 4)) & 0xF
+        } else {
             let digit = y / 10u32.pow(9 - i);
             y -= digit * 10u32.pow(9 - i);
-            if digit != 0 || i == 9 {
-                leading = false;
-            };
-            if !leading {
-                let as_char = b'0' + digit as u8;
-                unsafe { *ar.get_unchecked_mut(j) = as_char };
-                j += 1;
-            }
+            digit
+        };
+        if digit != 0 || i == max_digits - 1 {
+            leading = false;
+        };
+        if !leading {
+            let as_char = to_hexdecimal_digit(digit as u8);
+            unsafe { *get_unchecked_mut(&mut ar, j) = as_char };
+            j += 1;
         }
+        i += 1;
+    }
+    if hexdecimal {
+        unsafe { *get_unchecked_mut(&mut ar, j) = b'h' };
     }
     ar
 }

@@ -1,6 +1,7 @@
 use core::cell::UnsafeCell;
 use core::hint::unreachable_unchecked;
 use core::lazy::Lazy;
+use core::ptr::slice_from_raw_parts_mut;
 
 /// A global variable with lazy initialization.
 pub struct LazyGlobal<T>(Lazy<UnsafeCell<T>>);
@@ -33,38 +34,34 @@ impl<T> LazyGlobal<T> {
 /// undefined behavior.
 pub trait UnwrapUnchecked<T> {
     /// Returns a result without runtime checks.
-    fn unwrap_unchecked(self) -> T;
+    unsafe fn unwrap_unchecked(self) -> T;
 }
 
 impl<T> UnwrapUnchecked<T> for Option<T> {
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
-    fn unwrap_unchecked(self) -> T {
+    unsafe fn unwrap_unchecked(self) -> T {
         match self {
             Some(val) => val,
-            None => unsafe { unreachable_unchecked() },
+            None => unreachable_unchecked(),
         }
     }
 }
 
-/// Removes runtime panic-checks when splitting slices at the risk of undefined
+/// Returns two mutable slices without runtime checks at the risk of undefined
 /// behavior.
-pub trait SplitAtMutNoCheck<T> {
-    /// Returns two mutable slices without runtime checks.
-    fn split_at_mut_no_check(&mut self, mid: usize) -> (&mut [T], &mut [T]);
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
+pub const unsafe fn split_at_mut<T>(slice: &mut [T], mid: usize) -> (&mut [T], &mut [T]) {
+    let len = slice.len();
+    let ptr = slice.as_mut_ptr();
+    (
+        &mut *slice_from_raw_parts_mut(ptr, mid),
+        &mut *slice_from_raw_parts_mut(ptr.add(mid), len - mid),
+    )
 }
 
-impl<T> SplitAtMutNoCheck<T> for [T] {
-    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
-    fn split_at_mut_no_check(&mut self, mid: usize) -> (&mut [T], &mut [T]) {
-        use core::slice;
-
-        let len = self.len();
-        let ptr = self.as_mut_ptr();
-        unsafe {
-            (
-                slice::from_raw_parts_mut(ptr, mid),
-                slice::from_raw_parts_mut(ptr.add(mid), len - mid),
-            )
-        }
-    }
+/// Returns a mutable reference to a slice element without runtime checks at the
+/// risk of undefined behavior.
+#[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
+pub const unsafe fn get_unchecked_mut<T>(slice: &mut [T], idx: usize) -> &mut T {
+    &mut *slice.as_mut_ptr().add(idx)
 }

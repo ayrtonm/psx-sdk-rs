@@ -1,5 +1,5 @@
 use crate::gpu::{Pixel, Vertex};
-use crate::workarounds::SplitAtMutNoCheck;
+use crate::workarounds::split_at_mut;
 
 pub struct Bitmap<'a>(&'a [u32]);
 
@@ -8,7 +8,7 @@ impl<'a> Bitmap<'a> {
     pub fn new(src: &'a mut [u32]) -> (Self, &'a mut [u32]) {
         let words = unsafe { src.get_unchecked(0) } / 4;
         unsafe { *src.get_unchecked_mut(0) = 0xA0 << 24 };
-        let (data, other) = src.split_at_mut_no_check(words as usize);
+        let (data, other) = unsafe { split_at_mut(src, words as usize) };
         (Bitmap(data), other)
     }
 

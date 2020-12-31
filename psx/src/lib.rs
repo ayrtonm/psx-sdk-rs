@@ -12,11 +12,21 @@
 // Required for panic messages
 #![feature(panic_info_message, fmt_as_str)]
 // Pretty much required for this crate.
-#![feature(min_const_generics, unsafe_cell_get_mut)]
+#![feature(min_const_generics)]
 // Required for global variable workaround.
 #![feature(once_cell, const_fn_fn_ptr_basics)]
+// Const features used to increase the potential scope of const testing.
+#![feature(
+    const_ptr_offset,
+    const_mut_refs,
+    const_slice_from_raw_parts,
+    const_raw_ptr_deref,
+    const_int_pow
+)]
 // Could be removed if necessary.
-#![feature(exclusive_range_pattern, array_map)]
+#![feature(array_map)]
+#![feature(unsafe_cell_get_mut)]
+#![feature(exclusive_range_pattern)]
 
 // These are internally used modules.
 mod allocator;
