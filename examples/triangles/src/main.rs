@@ -5,14 +5,14 @@ use core::mem::size_of;
 
 use psx::bios;
 use psx::dma;
-use psx::general::{reset_graphics, enable_display, vsync};
 use psx::framebuffer::Framebuffer;
-use psx::printer::Printer;
+use psx::general::{draw_sync, enable_display, reset_graphics, vsync};
+use psx::gpu::{Color, Vertex};
 use psx::graphics::buffer::DoubleBuffer;
+use psx::graphics::ot::DoubleOT;
 use psx::graphics::packet::Packet;
 use psx::graphics::primitive::PolyG3;
-use psx::graphics::ot::DoubleOT;
-use psx::gpu::{Vertex, Color};
+use psx::printer::Printer;
 use psx::workarounds::UnwrapUnchecked;
 
 #[no_mangle]
@@ -28,7 +28,7 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
 
     const MAX_TRIANGLES: usize = 200;
     const BUF: usize = MAX_TRIANGLES * (size_of::<Packet<PolyG3>>() / 4);
-    let mut buffer = DoubleBuffer::<BUF>::new();
+    let buffer = DoubleBuffer::<BUF>::new();
     let mut poly_g3s = buffer.poly_g3_array::<MAX_TRIANGLES>().unwrap_unchecked();
     let mut ot = DoubleOT::default();
 
@@ -42,18 +42,22 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
     }
 
     enable_display();
-    let mut i = 0;
+    const FPS_FACTOR: u32 = 44100 * 768 * 11 / (7 * 3413);
+    const FLOAT_FACTOR: u32 = 100;
+    let mut fps = 1;
     loop {
         let transfer = gpu_dma.send_list(ot.swap());
         for poly_g3 in &mut poly_g3s {
-            poly_g3.set_vertices(rand_triangle()).set_colors(rand_colors());
+            poly_g3
+                .set_vertices(rand_triangle())
+                .set_colors(rand_colors());
         }
         buffer.swap();
         transfer.wait();
-        p.print(b"drawing frame {}", [i], gpu_dma);
+        p.print(b"Frame per second: {}", [1 * FPS_FACTOR / fps], gpu_dma);
         p.reset();
-        i += 1;
-        vsync();
+        draw_sync();
+        fps = vsync().into();
         fb.swap(gpu_dma);
     }
 }

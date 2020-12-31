@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-#![feature(once_cell, const_fn_fn_ptr_basics)]
+#![feature(once_cell, const_fn_fn_ptr_basics, array_map)]
 
 use core::mem::size_of;
 
@@ -13,6 +13,7 @@ use psx::graphics::packet::Packet;
 use psx::graphics::InitPrimitive;
 use psx::irq;
 use psx::mmio::Address;
+use psx::printer;
 use psx::timer;
 use psx::value::Load;
 
@@ -25,7 +26,7 @@ type TestResult = bool;
 type Test = fn() -> TestResult;
 
 // These are runtime tests to be evaluated by the emulator.
-const TESTS: [Test; 3] = [test_1, test_2, buffer];
+const TESTS: [Test; 4] = [test_1, test_2, buffer, format_u32];
 // These are compile-time tests to be evaluated by the compiler.
 const CONST_TESTS: [TestResult; 1] = [mmio_addresses()];
 
@@ -37,6 +38,15 @@ fn test_1() -> bool {
 // section before returning)
 fn test_2() -> bool {
     CriticalSection(|| bios::enter_critical_section() == 0)
+}
+
+fn format_u32() -> bool {
+    printer::format_u32(29, false, false) == *b"29\0\0\0\0\0\0\0\0" &&
+        printer::format_u32(0xFFFF_FFFF, false, false) == *b"4294967295" &&
+        printer::format_u32(0, false, false) == *b"0\0\0\0\0\0\0\0\0\0" &&
+        printer::format_u32(29, false, true) == *b"1Dh\0\0\0\0\0\0\0" &&
+        printer::format_u32(0xFFFF_FFFF, false, true) == *b"FFFFFFFFh\0" &&
+        printer::format_u32(0, false, true) == *b"0h\0\0\0\0\0\0\0\0"
 }
 
 fn buffer() -> bool {

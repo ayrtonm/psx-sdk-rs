@@ -11,7 +11,7 @@ unsafe impl<T> Sync for LazyGlobal<T> {}
 #[macro_export]
 macro_rules! lazy_global {
     (let $binding:ident : $type:ty = $value:expr) => {
-        static $binding: $crate::workarounds::LazyGlobal<$type> =
+        pub static $binding: $crate::workarounds::LazyGlobal<$type> =
             $crate::workarounds::LazyGlobal::new(|| core::cell::UnsafeCell::new(unsafe { $value }));
     };
 }
@@ -23,7 +23,7 @@ impl<T> LazyGlobal<T> {
     }
 
     /// Gets a mutable reference to the global.
-    #[inline(never)]
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn get(&self) -> &mut T {
         unsafe { &mut *self.0.get() }
     }

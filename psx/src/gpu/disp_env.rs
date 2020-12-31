@@ -1,4 +1,5 @@
 use crate::gpu::{PackedVertex, Vertex, GP1};
+use crate::value::Write;
 
 /// Display environment settings.
 pub struct DispEnv {
@@ -27,6 +28,8 @@ impl DispEnv {
     /// Sets the display environment.
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn set(&self) {
+        // TODO: Add VideoMode instead of hardcoding 320x240
+        unsafe { GP1.write(0x0800_0001) };
         GP1.start_display_area(self.offset)
             .horizontal_range(self.horizontal_range)
             .vertical_range(self.vertical_range);

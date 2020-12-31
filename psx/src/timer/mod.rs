@@ -65,6 +65,11 @@ pub type Value<'r, R> = value::Value<'r, u16, R>;
 pub type MutValue<'r, R> = value::MutValue<'r, u16, R>;
 
 impl<R: TimerMode> Value<'_, R> {
+    /// Checks if synchronization is enabled.
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
+    pub fn sync_enabled(&self) -> bool {
+        self.contains(1)
+    }
     /// Gets the synchronization mode.
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn sync_mode(&self) -> SyncMode {
@@ -125,6 +130,11 @@ impl<R: TimerMode> Value<'_, R> {
 }
 
 impl<R: TimerMode> MutValue<'_, R> {
+    /// Enables synchronization.
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
+    pub fn enable_sync(self, enabled: bool) -> Self {
+        self.clear(1).set(enabled as u16)
+    }
     /// Sets the synchronization mode.
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     pub fn sync_mode(self, mode: SyncMode) -> Self {

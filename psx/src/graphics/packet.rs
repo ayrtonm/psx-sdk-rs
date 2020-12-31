@@ -13,7 +13,7 @@ pub struct Packet<T> {
 impl<T> Packet<T> {
     /// Creates a new standalone packet.
     pub fn new(data: T, size: Option<u32>) -> Packet<T> {
-        let size = size.unwrap_or(((size_of::<Self>() / 4) << 24) as u32);
+        let size = size.unwrap_or((size_of::<T>() / 4) as u32) << 24;
         Packet {
             tag: size | TERMINATION,
             data,

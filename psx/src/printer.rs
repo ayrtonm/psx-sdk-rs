@@ -134,12 +134,14 @@ impl<const N: usize> Printer<N> {
     ) where M: IntoIterator<Item = &'a u8> {
         let mut fmt_arg = false;
         let mut leading_zeros = false;
+        let mut hexdecimal = false;
         let mut args = args.iter();
         for &ascii in msg {
             match ascii {
                 b'\n' => self.newline(),
                 b'\0' => break,
                 b'0' if fmt_arg => leading_zeros = true,
+                b'x' if fmt_arg => hexdecimal = true,
                 b'{' if !fmt_arg => fmt_arg = true,
                 b'{' if fmt_arg => {
                     fmt_arg = false;
@@ -148,8 +150,9 @@ impl<const N: usize> Printer<N> {
                 b'}' if fmt_arg => {
                     fmt_arg = false;
                     let arg = args.next().unwrap_unchecked();
-                    let formatted = Self::format_u32(*arg, leading_zeros);
+                    let formatted = format_u32(*arg, leading_zeros, hexdecimal);
                     leading_zeros = false;
+                    hexdecimal = false;
                     for &c in &formatted {
                         if c != b'\0' {
                             self.print_char(c, gpu_dma);
@@ -165,11 +168,14 @@ impl<const N: usize> Printer<N> {
         }
         gpu_dma.send_list(&self.ot).wait();
     }
+}
 
-    fn format_u32(x: u32, leading_zeros: bool) -> [u8; 9] {
-        let mut leading = !leading_zeros;
-        let mut ar = [0; 9];
-        let mut j = 0;
+/// Formats a 32-bit number in ascii
+pub fn format_u32(x: u32, leading_zeros: bool, hexdecimal: bool) -> [u8; 10] {
+    let mut leading = !leading_zeros;
+    let mut ar = [0; 10];
+    let mut j = 0;
+    if hexdecimal {
         for i in 0..8 {
             let nibble = (x >> ((7 - i) * 4)) & 0xF;
             if nibble != 0 || i == 7 {
@@ -184,6 +190,20 @@ impl<const N: usize> Printer<N> {
             }
         }
         unsafe { *ar.get_unchecked_mut(j) = b'h' };
-        ar
+    } else {
+        let mut y = x;
+        for i in 0..10 {
+            let digit = y / 10u32.pow(9 - i);
+            y -= digit * 10u32.pow(9 - i);
+            if digit != 0 || i == 9 {
+                leading = false;
+            };
+            if !leading {
+                let as_char = b'0' + digit as u8;
+                unsafe { *ar.get_unchecked_mut(j) = as_char };
+                j += 1;
+            }
+        }
     }
+    ar
 }

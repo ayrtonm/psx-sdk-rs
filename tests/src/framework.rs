@@ -15,12 +15,15 @@ const RUN_CONST_TESTS: () = {
     }
 };
 
-lazy_global!(let PRINTER: Printer<MIN_SIZE> = {
-    let mut printer = Printer::new(0, 0, (320, 240), None);
-    printer.load_font(&mut dma::gpu::CHCR::new());
-    printer
-});
+lazy_global! {
+    let PRINTER: Printer<MIN_SIZE> = {
+        let mut printer = Printer::new(0, 0, (320, 240), None);
+        printer.load_font(&mut dma::gpu::CHCR::new());
+        printer
+    }
+}
 
+// TODO: make this concise
 macro_rules! print {
     ($msg:expr) => {
         $crate::framework::PRINTER
@@ -31,6 +34,13 @@ macro_rules! print {
         $crate::framework::PRINTER
             .get()
             .print($msg, [$arg0], &mut unsafe { dma::gpu::CHCR::new() });
+    };
+    ($msg:expr, $arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr) => {
+        $crate::framework::PRINTER
+            .get()
+            .print($msg, [$arg0, $arg1, $arg2, $arg3], &mut unsafe {
+                dma::gpu::CHCR::new()
+            });
     };
 }
 
