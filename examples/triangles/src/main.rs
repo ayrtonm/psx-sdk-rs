@@ -29,7 +29,7 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
     const MAX_TRIANGLES: usize = 200;
     const BUF: usize = MAX_TRIANGLES * (size_of::<Packet<PolyG3>>() / 4);
     let buffer = DoubleBuffer::<BUF>::new();
-    let mut poly_g3s = buffer.poly_g3_array::<MAX_TRIANGLES>().unwrap_unchecked();
+    let mut poly_g3s = unsafe { buffer.poly_g3_array::<MAX_TRIANGLES>().unwrap_unchecked() };
     let mut ot = DoubleOT::default();
 
     for poly_g3 in &mut poly_g3s {
@@ -54,7 +54,11 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
         }
         buffer.swap();
         transfer.wait();
-        p.print(b"Frame per second: {}", [1 * FPS_FACTOR / fps], gpu_dma);
+        p.print(
+            b"Frame per second: {}",
+            [FLOAT_FACTOR * FPS_FACTOR / fps],
+            gpu_dma,
+        );
         p.reset();
         draw_sync();
         fps = vsync().into();

@@ -18,7 +18,7 @@ use psx::timer;
 use psx::value::Load;
 use psx::{include_u32, unzip};
 
-use const_fn::{cmp_u8, cmp_u32};
+use const_fn::{cmp_u32, cmp_u8};
 
 // This provides a `print` macro for debugging
 #[macro_use]

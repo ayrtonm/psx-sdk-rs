@@ -64,6 +64,7 @@ impl<const N: usize> Printer<N> {
         current.transfer_mode(TransferMode::Immediate).store();
 
         // Use a zipped font to save ~2 KB
+        // Borrowing font later on guarantees this won't be evaluated at compile-time
         let mut font = unzip!("../font.tim.zip");
         let tim = TIM::new(&mut font);
         let font = Font {
@@ -88,6 +89,12 @@ impl<const N: usize> Printer<N> {
         });
 
         self.font = Some(font);
+        // Set the sprite colors and CLUTs ahead of time
+        while let Some(sprt) = self.buffer.sprt8() {
+            sprt.set_color(self.color)
+                .set_clut(self.font.as_ref().map(|f| f.clut).flatten());
+        }
+        self.buffer.empty();
     }
 
     /// Moves the cursor to the initial position on the next line.
@@ -116,10 +123,8 @@ impl<const N: usize> Printer<N> {
             },
         };
         letter
-            .set_color(self.color)
             .set_offset(self.cursor.shift(self.box_offset))
-            .set_tex_coord((xoffset, yoffset))
-            .set_clut(self.font.as_ref().map(|f| f.clut).flatten());
+            .set_tex_coord((xoffset, yoffset));
         self.ot.insert(&mut letter, 0);
         if self.cursor.x + 8 >= self.box_offset.x + self.box_size.x {
             self.newline();
