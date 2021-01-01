@@ -1,4 +1,3 @@
-use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
 use super::{InitPrimitive, LinkedList, TERMINATION};
@@ -62,11 +61,14 @@ impl<const N: usize> LinkedList for OT<N> {
     }
 }
 
-/// An `N`-entry double-buffered ordering table.
+/// An `N`-entry double-buffered ordering table. Can be implicitly dereferenced
+/// to get the current ordering table. Must call `swap` to switch the current
+/// and alternative ordering tables and implicitly dereference to the
+/// alternative.
 pub struct DoubleOT<const N: usize> {
-    ot_0: UnsafeCell<OT<N>>,
-    ot_1: UnsafeCell<OT<N>>,
-    swapped: UnsafeCell<bool>,
+    ot_0: OT<N>,
+    ot_1: OT<N>,
+    swapped: bool,
 }
 
 impl Default for DoubleOT<1> {
@@ -74,93 +76,58 @@ impl Default for DoubleOT<1> {
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn default() -> Self {
         DoubleOT {
-            ot_0: UnsafeCell::new(OT::default()),
-            ot_1: UnsafeCell::new(OT::default()),
-            swapped: UnsafeCell::new(false),
+            ot_0: OT::default(),
+            ot_1: OT::default(),
+            swapped: false,
         }
     }
 }
-
-//impl DoubleOT<1> {
-//    /// Empties the current ordering table by storing the termination code in
-//    /// its entry.
-//    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
-//    pub fn empty(&self) -> &Self {
-//        self.unsafe_deref().empty();
-//        self
-//    }
-//}
 
 impl<const N: usize> DoubleOT<N> {
     /// Creates an uninitialized double-buffered ordering table.
     pub fn new() -> Self {
         DoubleOT {
-            ot_0: UnsafeCell::new(OT::new()),
-            ot_1: UnsafeCell::new(OT::new()),
-            swapped: UnsafeCell::new(false),
+            ot_0: OT::new(),
+            ot_1: OT::new(),
+            swapped: false,
         }
     }
 
-    /// Swaps the currently selected ordering table.
-    pub fn swap(&self) -> &Self {
-        unsafe {
-            *self.swapped.get() = !*self.swapped.get();
-        }
-        self
-    }
-
-    /*
-    /// Gets a mutable reference to the current ordering table.
-    pub unsafe fn get_mut(&self) -> &mut OT<N> {
-        if *self.swapped.get() {
-            &mut *self.ot_0.get()
+    /// Gets mutable references to the current and alternative ordering tables
+    /// respectively.
+    pub fn split(&mut self) -> (&mut OT<N>, &mut OT<N>) {
+        if self.swapped {
+            (&mut self.ot_0, &mut self.ot_1)
         } else {
-            &mut *self.ot_1.get()
+            (&mut self.ot_1, &mut self.ot_0)
         }
     }
 
-    /// Gets a mutable reference to the alternate ordering table.
-    pub unsafe fn alt_get_mut(&self) -> &mut OT<N> {
-        if !*self.swapped.get() {
-            &mut *self.ot_0.get()
-        } else {
-            &mut *self.ot_1.get()
-        }
+    /// Swaps the current and alternative ordering tables.
+    #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
+    pub fn swap(&mut self) {
+        self.swapped = !self.swapped;
     }
-
-    /// Returns mutable references to the current and alternate ordering
-    /// tables respectively.
-    pub fn split(&self) -> (&mut OT<N>, &mut OT<N>) {
-        unsafe {
-            let current = self.get_mut();
-            let alt = self.alt_get_mut();
-            (current, alt)
-        }
-    }
-    */
 }
 
 impl<const N: usize> Deref for DoubleOT<N> {
     type Target = OT<N>;
 
     fn deref(&self) -> &Self::Target {
-        // Not actually unsafe since the *mut OT<N> are cast to &OT<N>
-        unsafe {
-            if *self.swapped.get() {
-                &*self.ot_0.get()
-            } else {
-                &*self.ot_1.get()
-            }
+        if self.swapped {
+            &self.ot_0
+        } else {
+            &self.ot_1
         }
     }
 }
 
 impl<const N: usize> DerefMut for DoubleOT<N> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        if *self.swapped.get_mut() {
-            self.ot_0.get_mut()
+        if self.swapped {
+            &mut self.ot_0
         } else {
-            self.ot_1.get_mut()
+            &mut self.ot_1
         }
     }
 }

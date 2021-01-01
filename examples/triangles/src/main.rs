@@ -46,14 +46,25 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
     const FLOAT_FACTOR: u32 = 100;
     let mut fps = 1;
     loop {
-        let transfer = gpu_dma.send_list(ot.swap());
+        // Split the ordering tables
+        let (current_ot, _alt_ot) = ot.split();
+        // Send the current OT to the GPU
+        let transfer = gpu_dma.send_list(current_ot);
+        // Modify polygons in the alt buffer
+        buffer.swap();
         for poly_g3 in &mut poly_g3s {
             poly_g3
                 .set_vertices(rand_triangle())
                 .set_colors(rand_colors());
         }
-        buffer.swap();
+        // If we wanted to modify the alternate OT, we could do it here using the handle from `split`
+        //alt_ot.insert(poly_g3, 0);
+        // Swapping ordering tables wouldn't be allowed though
+        //ot.swap(); /// ~ERROR
         transfer.wait();
+        // After the transfer ends, `&current_ot` is release from the `Transfer` letting us swap the
+        // ordering tables.
+        ot.swap();
         p.print(
             b"Frame per second: {}",
             [FLOAT_FACTOR * FPS_FACTOR / fps],
