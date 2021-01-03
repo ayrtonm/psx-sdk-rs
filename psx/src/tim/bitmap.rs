@@ -1,5 +1,5 @@
 use crate::gpu::{Pixel, Vertex};
-use crate::workarounds::split_at_mut;
+use crate::unchecked::split_at_mut;
 
 pub struct Bitmap<'a>(&'a [u32]);
 

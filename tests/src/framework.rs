@@ -1,7 +1,7 @@
 use psx::dma;
 use psx::framebuffer::Framebuffer;
 use psx::general::*;
-use psx::lazy_global;
+use psx::global;
 use psx::printer::{Printer, MIN_SIZE};
 
 #[allow(dead_code)]
@@ -17,7 +17,7 @@ const RUN_CONST_TESTS: () = {
     }
 };
 
-lazy_global! {
+global! {
     let PRINTER: Printer<MIN_SIZE> = {
         let mut printer = Printer::new(0, 0, (320, 240), None);
         printer.load_font(&mut dma::gpu::CHCR::new());

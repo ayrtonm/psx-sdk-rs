@@ -1,6 +1,6 @@
 use crate::const_for_tests;
-use crate::workarounds::{get_unchecked, get_unchecked_mut, get_unchecked_slice,
-                         get_unchecked_slice_from};
+use crate::unchecked::{get_unchecked, get_unchecked_mut, get_unchecked_slice,
+                       get_unchecked_slice_from};
 
 // TODO: why is unchecked ok here?
 const_for_tests! {

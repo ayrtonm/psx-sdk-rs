@@ -13,7 +13,7 @@ use psx::graphics::ot::DoubleOT;
 use psx::graphics::packet::Packet;
 use psx::graphics::primitive::PolyG3;
 use psx::printer::Printer;
-use psx::workarounds::UnwrapUnchecked;
+use psx::unchecked::UnwrapUnchecked;
 
 #[no_mangle]
 fn main(mut gpu_dma: dma::gpu::CHCR) {
@@ -74,6 +74,7 @@ fn main(mut gpu_dma: dma::gpu::CHCR) {
         draw_sync();
         fps = vsync().into();
         fb.swap(gpu_dma);
+        psx::delay(1000000);
     }
 }
 

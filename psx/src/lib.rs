@@ -49,9 +49,12 @@ pub mod value;
 /// Routines for including data from external files.
 #[macro_use]
 mod include;
-/// Workarounds for global variables and panic-less functions.
+/// Panic-less functions.
+pub mod unchecked;
+/// Workaround for non-const initialized global variables (e.g. a global
+/// `Printer`).
 #[macro_use]
-pub mod workarounds;
+pub mod lazy_global;
 /// Approximations for trigonometry functions.
 pub mod approx;
 

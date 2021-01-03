@@ -11,7 +11,7 @@ use crate::graphics::packet::Packet;
 use crate::graphics::primitive::Sprt8;
 use crate::tim::TIM;
 use crate::value::LoadMut;
-use crate::workarounds::{get_unchecked_mut, UnwrapUnchecked};
+use crate::unchecked::{get_unchecked_mut, UnwrapUnchecked};
 
 /// A font stored in the framebuffer
 pub struct Font {
