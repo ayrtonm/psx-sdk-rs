@@ -19,6 +19,12 @@ impl<T> Packet<T> {
             data,
         }
     }
+
+    /// Resets a packet's tag separating it from any linked list it belongs to.
+    pub fn reset(&mut self) {
+        let size = ((size_of::<T>() / 4) as u32) << 24;
+        self.tag = size | TERMINATION;
+    }
 }
 
 impl<T> Deref for Packet<T> {
@@ -60,6 +66,18 @@ pub struct DoublePacket<'a, T> {
     pub(crate) swapped: &'a bool,
 }
 
+impl<T> DoublePacket<'_, T> {
+    /// Gets mutable references to the current and alternative packets
+    /// respectively.
+    pub fn split(&mut self) -> (&mut Packet<T>, &mut Packet<T>) {
+        if *self.swapped {
+            (self.data_0, self.data_1)
+        } else {
+            (self.data_1, self.data_0)
+        }
+    }
+}
+
 impl<'a, T> Deref for DoublePacket<'a, T> {
     type Target = Packet<T>;
 
@@ -79,5 +97,11 @@ impl<'a, T> DerefMut for DoublePacket<'a, T> {
         } else {
             &mut self.data_1
         }
+    }
+}
+
+impl<T> LinkedList for DoublePacket<'_, T> {
+    fn start_address(&self) -> &u32 {
+        self.deref().start_address()
     }
 }

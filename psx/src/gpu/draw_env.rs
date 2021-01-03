@@ -1,3 +1,5 @@
+use core::mem::size_of;
+
 use crate::gpu::{Color, PackedVertex, Vertex};
 use crate::graphics::packet::Packet;
 
@@ -22,10 +24,14 @@ pub struct DrawEnv {
 
 impl DrawEnv {
     /// Constructs a new drawing environment.
-    pub fn new<T: Copy, U: Copy>(offset: T, size: U, bg_color: Color) -> Packet<Self>
+    pub fn new<T: Copy, U: Copy>(offset: T, size: U, bg_color: Option<Color>) -> Packet<Self>
     where Vertex: From<T> + From<U> {
         let offset = Vertex::from(offset);
         let size = Vertex::from(size);
+        // Subtract the 3 words for color command if no bg color was provided
+        let packet_size = bg_color
+            .is_none()
+            .then_some((size_of::<Self>() / 4) as u32 - 3);
         Packet::new(
             DrawEnv {
                 texpage_cmd: 0xE1,
@@ -39,13 +45,13 @@ impl DrawEnv {
                 upper_left: offset.into(),
                 lower_right: offset.shift(size).into(),
                 offset: offset.into(),
-                bg_color,
+                bg_color: bg_color.unwrap_or(Color::BLACK),
                 bg_offset: offset.into(),
                 bg_size: size.into(),
 
                 _pad: 0,
             },
-            None,
+            packet_size,
         )
     }
 }

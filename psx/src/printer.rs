@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use core::mem::size_of;
 
+use crate::const_for_tests;
 use crate::dma;
 use crate::dma::{BaseAddress, BlockControl, TransferMode};
 use crate::gpu::{Clut, Color, TexPage, Vertex};
@@ -175,42 +176,44 @@ impl<const N: usize> Printer<N> {
     }
 }
 
-/// Formats a 32-bit number in ascii
-pub const fn format_u32(x: u32, leading_zeros: bool, hexdecimal: bool) -> [u8; 10] {
-    const fn to_hexdecimal_digit(x: u8) -> u8 {
-        if x < 10 {
-            b'0' + x
-        } else {
-            b'A' + x - 10
+const_for_tests! {
+    /// Formats a 32-bit number in ascii
+    pub fn format_u32(x: u32, leading_zeros: bool, hexdecimal: bool) -> [u8; 10] {
+        const fn to_hexdecimal_digit(x: u8) -> u8 {
+            if x < 10 {
+                b'0' + x
+            } else {
+                b'A' + x - 10
+            }
         }
-    }
-    let mut leading = !leading_zeros;
-    let mut ar = [0; 10];
-    let mut j = 0;
-    let max_digits = if hexdecimal { 8 } else { 10 };
-    let mut y = x;
-    let mut i = 0;
-    // TODO: Replace with a const for loop
-    while i < max_digits {
-        let digit = if hexdecimal {
-            (x >> ((7 - i) * 4)) & 0xF
-        } else {
-            let digit = y / 10u32.pow(9 - i);
-            y -= digit * 10u32.pow(9 - i);
-            digit
-        };
-        if digit != 0 || i == max_digits - 1 {
-            leading = false;
-        };
-        if !leading {
-            let as_char = to_hexdecimal_digit(digit as u8);
-            unsafe { *get_unchecked_mut(&mut ar, j) = as_char };
-            j += 1;
+        let mut leading = !leading_zeros;
+        let mut ar = [0; 10];
+        let mut j = 0;
+        let max_digits = if hexdecimal { 8 } else { 10 };
+        let mut y = x;
+        let mut i = 0;
+        // TODO: Replace with a const for loop
+        while i < max_digits {
+            let digit = if hexdecimal {
+                (x >> ((7 - i) * 4)) & 0xF
+            } else {
+                let digit = y / 10u32.pow(9 - i);
+                y -= digit * 10u32.pow(9 - i);
+                digit
+            };
+            if digit != 0 || i == max_digits - 1 {
+                leading = false;
+            };
+            if !leading {
+                let as_char = to_hexdecimal_digit(digit as u8);
+                unsafe { *get_unchecked_mut(&mut ar, j) = as_char };
+                j += 1;
+            }
+            i += 1;
         }
-        i += 1;
+        if hexdecimal {
+            unsafe { *get_unchecked_mut(&mut ar, j) = b'h' };
+        }
+        ar
     }
-    if hexdecimal {
-        unsafe { *get_unchecked_mut(&mut ar, j) = b'h' };
-    }
-    ar
 }

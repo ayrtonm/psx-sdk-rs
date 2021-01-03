@@ -1,5 +1,4 @@
 #![allow(non_snake_case)]
-use core::hint::unreachable_unchecked;
 
 use crate::bios;
 use crate::value::{Load, LoadMut};
@@ -82,7 +81,11 @@ pub fn DrawSync(mode: u32, gpu_dma: &dma::gpu::CHCR) -> u16 {
         {
             blocks
         } else {
-            unsafe { unreachable_unchecked() }
+            if cfg!(feature = "forbid_UB") {
+                unreachable!("");
+            } else {
+                unsafe { core::hint::unreachable_unchecked() }
+            }
         }
     }
 }

@@ -1,9 +1,13 @@
 #![no_std]
 #![no_main]
+// This makes sure that const test failures prevent compilation
+#![deny(const_err)]
 #![feature(const_panic)]
+#![feature(const_fn_floating_point_arithmetic)]
 
 use core::mem::size_of;
 
+use psx::approx::f16;
 use psx::bios;
 use psx::compatibility::*;
 use psx::dma;
@@ -19,6 +23,7 @@ use psx::value::Load;
 use psx::{include_u32, unzip};
 
 use const_fn::{cmp_u32, cmp_u8};
+use const_fn::{pi, e};
 
 // This provides a `print` macro for debugging
 #[macro_use]
@@ -32,9 +37,18 @@ type TestResult = bool;
 type Test = fn() -> TestResult;
 
 // These are runtime tests to be evaluated by the emulator.
-const TESTS: [Test; 3] = [test_1, test_2, buffer];
+const TESTS: [Test; 3] = [
+    test_1,
+    test_2,
+    buffer,
+];
 // These are compile-time tests to be evaluated by the compiler.
-const CONST_TESTS: [TestResult; 3] = [mmio_addresses(), format_u32_tests(), unzip_test()];
+const CONST_TESTS: [TestResult; 4] = [
+    mmio_addresses(),
+    format_u32_tests(),
+    unzip_test(),
+    f16_tests()
+];
 
 fn test_1() -> bool {
     bios::gpu_get_status() == gpu::GPUSTAT.load().bits
@@ -46,33 +60,75 @@ fn test_2() -> bool {
     CriticalSection(|| bios::enter_critical_section() == 0)
 }
 
+const fn f16_tests() -> bool {
+    let pos_values = [pi, e, 0.0, 1.0, 7.0];
+    let trunc_pos_values = [3, 2, 0, 1, 7];
+    let neg_values = [-pi, -1.0, -7.0, -8.0];
+    let trunc_neg_values = [-4, -1, -7, -8];
+    const fn within_epsilon(x: f32) -> bool {
+        -f16::SCALE < x && x < f16::SCALE
+    }
+    let mut i = 0;
+    while i < pos_values.len() {
+        let fp = f16::new(pos_values[i]);
+        assert!(within_epsilon(fp.as_float() - pos_values[i]));
+        assert!(!fp.is_negative());
+        assert!(fp.trunc() == trunc_pos_values[i]);
+        assert!(fp.fract() == f16::new(pos_values[i] - trunc_pos_values[i] as f32).fract());
+        i += 1;
+    }
+    let mut i = 0;
+    while i < neg_values.len() {
+        let fp = f16::new(neg_values[i]);
+        assert!(within_epsilon(fp.as_float() - pos_values[i]));
+        assert!(fp.is_negative());
+        assert!(fp.trunc() == trunc_neg_values[i]);
+        assert!(fp.fract() == f16::new(neg_values[i] - (trunc_neg_values[i] as f32) - 1.0).fract());
+        i += 1;
+    }
+    const fn trunc(x: f32) -> f32 {
+        x - f16::precision_loss(x)
+    }
+    // Sanity checks
+    assert!(f16::new(pi).as_float() + f16::new(e).as_float() == trunc(pi) + trunc(e));
+    assert!(f16::new(pi).as_float() - f16::new(e).as_float() == trunc(pi) - trunc(e));
+    assert!(f16::new(pi).as_float() * f16::new(e).as_float() == trunc(pi) * trunc(e));
+
+    // Checks addition
+    assert!(f16::new(pi).add(f16::new(e)).as_float() == trunc(pi) + trunc(e));
+    // Checks subtraction
+    assert!(f16::new(pi).sub(f16::new(e)).as_float() == trunc(pi) - trunc(e));
+    // Checks multiplication
+    //assert!(f16::new(pi).mul(f16::new(e)).as_float() == trunc(pi) * trunc(e));
+    true
+}
+
 const fn unzip_test() -> bool {
     cmp_u32(&unzip!("../font.tim.zip"), &include_u32!("../font.tim"))
 }
 
 const fn format_u32_tests() -> bool {
-    let mut ret = true;
-    let hex = false;
-    let leading = false;
-    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"29\0\0\0\0\0\0\0\0");
-    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295");
-    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"0\0\0\0\0\0\0\0\0\0");
-    let hex = true;
-    let leading = false;
-    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"1Dh\0\0\0\0\0\0\0");
-    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0");
-    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"0h\0\0\0\0\0\0\0\0");
-    let hex = false;
-    let leading = true;
-    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"0000000029");
-    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295");
-    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"0000000000");
-    let hex = true;
-    let leading = true;
-    ret = ret && cmp_u8(&format_u32(29, leading, hex), b"0000001Dh\0");
-    ret = ret && cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0");
-    ret = ret && cmp_u8(&format_u32(0, leading, hex), b"00000000h\0");
-    ret
+    let mut hex = false;
+    let mut leading = false;
+    assert!(cmp_u8(&format_u32(29, leading, hex), b"29\0\0\0\0\0\0\0\0"));
+    assert!(cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295"));
+    assert!(cmp_u8(&format_u32(0, leading, hex), b"0\0\0\0\0\0\0\0\0\0"));
+    hex = true;
+    leading = false;
+    assert!(cmp_u8(&format_u32(29, leading, hex), b"1Dh\0\0\0\0\0\0\0"));
+    assert!(cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0"));
+    assert!(cmp_u8(&format_u32(0, leading, hex), b"0h\0\0\0\0\0\0\0\0"));
+    hex = false;
+    leading = true;
+    assert!(cmp_u8(&format_u32(29, leading, hex), b"0000000029"));
+    assert!(cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295"));
+    assert!(cmp_u8(&format_u32(0, leading, hex), b"0000000000"));
+    hex = true;
+    leading = true;
+    assert!(cmp_u8(&format_u32(29, leading, hex), b"0000001Dh\0"));
+    assert!(cmp_u8(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0"));
+    assert!(cmp_u8(&format_u32(0, leading, hex), b"00000000h\0"));
+    true
 }
 
 fn buffer() -> bool {
@@ -93,19 +149,20 @@ fn buffer() -> bool {
     match buffer.alloc::<X>() {
         Some(x) => {
             // Checks that `words_remaining` works
-            let ret = initial_size == BUF &&
-                buffer.words_remaining() == 0 &&
-                // Checks that `X` is initialized as expected
-                x.0 == [0; 8] &&
-                // Checks that the buffer is full
-                buffer.alloc::<X>().is_none() &&
-                buffer.alloc::<Y>().is_none();
+            assert!(initial_size == BUF);
+            assert!(buffer.words_remaining() == 0);
+            // Checks that `X` is initialized as expected
+            assert!(x.0 == [0; 8]);
+            // Checks that the buffer is full
+            assert!(buffer.alloc::<X>().is_none());
+            assert!(buffer.alloc::<Y>().is_none());
             x.0 = [0, 0xDEAD_BEEF, 0, 0, 0, 0, 0, 0];
             buffer.empty();
             match buffer.alloc::<Y>() {
                 Some(y) => {
                     // Checks that Y was initialized and contains the old data written to X
-                    ret && y.0 == [0xFFFF_FFFF, 0xDEAD_BEEF]
+                    assert!(y.0 == [0xFFFF_FFFF, 0xDEAD_BEEF]);
+                    true
                 },
                 // Checks that we can allocate a `Y` after emptying the buffer
                 None => false,

@@ -38,8 +38,7 @@ impl<const N: usize> Buffer<N> {
     /// is insufficient.
     pub fn alloc<T: InitPrimitive>(&self) -> Option<&mut Packet<T>> {
         self.generic_alloc::<Packet<T>>().map(|p| {
-            let packet_words = size_of::<Packet<T>>() / 4;
-            p.tag = (packet_words << 24) as u32;
+            p.reset();
             p.data.init_primitive();
             p
         })

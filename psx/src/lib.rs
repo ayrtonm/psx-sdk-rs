@@ -25,8 +25,11 @@
 )]
 // Const feature to improve performance at the risk of UB while using const testing.
 #![feature(const_unreachable_unchecked)]
+// Used to approximate sine and cosine.
+#![feature(const_fn_floating_point_arithmetic, const_float_bits_conv)]
 // Could be removed if necessary.
 #![feature(array_map)]
+#![feature(bool_to_option)]
 #![feature(unsafe_cell_get_mut)]
 #![feature(exclusive_range_pattern)]
 
@@ -34,6 +37,9 @@
 mod allocator;
 mod builtins;
 mod panic;
+// const testing module
+#[macro_use]
+pub(crate) mod tests;
 
 // These are the lowest-level public modules.
 /// Wrappers for BIOS functions.
@@ -46,6 +52,8 @@ mod include;
 /// Workarounds for global variables and panic-less functions.
 #[macro_use]
 pub mod workarounds;
+/// Approximations for trigonometry functions.
+pub mod approx;
 
 // These are slightly higher level public modules in that they make use of the
 // `value` module.

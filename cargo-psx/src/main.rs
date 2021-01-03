@@ -60,6 +60,8 @@ fn print_help() {
     println!("  --small              Sets opt-level=s to optimize for size");
     println!("  --no-hints           Opts out of aggressive code inlining using hints");
     println!("  --panic              Enables panic messages");
+    println!("  --no-UB              Disables undefined behavior used to improve performance");
+    //println!("  --test               Used internally for testing");
     println!("");
     println!("Run `cargo build -h` for build options");
 }
@@ -89,19 +91,22 @@ fn main() {
     let small = extract_flag("--small", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
     let no_hints = extract_flag("--no-hints", cargo_args);
+    let no_ub = extract_flag("--no-UB", cargo_args);
+    let testing = extract_flag("--test", cargo_args);
 
     let region = region.unwrap_or("NA".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
     let build_std = if no_alloc { "core" } else { "core,alloc" };
-    if pretty_panic || no_hints {
-        cargo_args.push("--features".to_string());
-        if pretty_panic {
-            cargo_args.push("psx/pretty_panic".to_string());
-        };
-        if no_hints {
-            cargo_args.push("psx/no_inline_hints".to_string());
+    let mut enable_feature = |flag, name| {
+        if flag {
+            cargo_args.push("--features".to_string());
+            cargo_args.push(format!("psx/{}", name));
         };
     };
+    enable_feature(pretty_panic, "pretty_panic");
+    enable_feature(no_hints, "no_inline_hints");
+    enable_feature(no_ub, "forbid_UB");
+    enable_feature(testing, "no_std_test");
 
     let lto_flags = " -C lto=fat -C codegen-units=1 -C embed-bitcode=yes";
     let small_flag = " -C opt-level=s";

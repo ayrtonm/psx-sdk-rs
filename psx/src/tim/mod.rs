@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use core::hint::unreachable_unchecked;
 
 use crate::gpu::{Bpp, Clut, TexPage};
 use bitmap::Bitmap;
@@ -23,7 +22,13 @@ impl<'a> TIM<'a> {
             0 => Bpp::Bit4,
             1 => Bpp::Bit8,
             2 => Bpp::Bit15,
-            _ => unsafe { unreachable_unchecked() },
+            _ => {
+                if cfg!(feature = "forbid_UB") {
+                    unreachable!("");
+                } else {
+                    unsafe { core::hint::unreachable_unchecked() }
+                }
+            },
         };
         let (clut_bitmap, rest) = if (unsafe { src.get_unchecked(1) } & 8) != 0 {
             let (bitmap, rest) = Bitmap::new(unsafe { src.get_unchecked_mut(2..) });

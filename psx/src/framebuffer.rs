@@ -15,7 +15,6 @@ impl Framebuffer {
         buffer_0: T, buffer_1: U, res: V, bg_color: Option<Color>, gpu_dma: &mut dma::gpu::CHCR,
     ) -> Self
     where Vertex: From<T> + From<U> + From<V> {
-        let bg_color = bg_color.map(|c| Color::from(c)).unwrap_or(Color::BLACK);
         let disp_envs = (DispEnv::new(buffer_0, res), DispEnv::new(buffer_1, res));
         let draw_envs = (
             DrawEnv::new(buffer_1, res, bg_color),

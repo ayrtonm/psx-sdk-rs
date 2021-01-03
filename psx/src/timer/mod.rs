@@ -1,5 +1,3 @@
-use core::hint::unreachable_unchecked;
-
 use crate::value;
 use crate::value::{Load, LoadMut};
 
@@ -78,7 +76,13 @@ impl<R: TimerMode> Value<'_, R> {
             1 => SyncMode::Reset,
             2 => SyncMode::Count,
             3 => SyncMode::FreeRun,
-            _ => unsafe { unreachable_unchecked() },
+            _ => {
+                if cfg!(feature = "forbid_UB") {
+                    unreachable!("");
+                } else {
+                    unsafe { core::hint::unreachable_unchecked() }
+                }
+            },
         }
     }
 
