@@ -82,16 +82,16 @@ for more.
 
 To create a new program just use `cargo-init`, replace `src/main.rs` with
 this template and add `psx = { path = "path/to/psx/crate" }` to `Cargo.toml`
-under `[dependencies]`. Note the modified, unmangled main interface.
+under `[dependencies]`. Note the unmangled main interface.
 
 ```rust
 #![no_std]
 #![no_main]
 
-use psx::dma;
+extern crate psx;
 
 #[no_mangle]
-fn main(mut gpu_dma: dma::gpu::CHCR) {
+fn main() {
 }
 ```
 

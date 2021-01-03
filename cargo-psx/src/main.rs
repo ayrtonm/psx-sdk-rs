@@ -55,7 +55,7 @@ fn print_help() {
     println!("  --skip-build         Skips build and only packages an existing ELF into a PSEXE");
     println!("  --skip-pack          Skips packaging and only builds an ELF");
     println!("  --no-pad             Skips padding the PSEXE file size to a multiple of 0x800");
-    println!("  --no-alloc           Avoids building the `alloc` crate");
+    println!("  --use-alloc          Builds the `alloc` crate");
     println!("  --lto                Enables link-time optimization and sets codegen units to 1");
     println!("  --small              Sets opt-level=s to optimize for size");
     println!("  --no-hints           Opts out of aggressive code inlining using hints");
@@ -86,7 +86,7 @@ fn main() {
     // This is enabled later on if we are only running `cargo check`
     let mut skip_pack = extract_flag("--skip-pack", cargo_args);
     let no_pad = extract_flag("--no-pad", cargo_args);
-    let no_alloc = extract_flag("--no-alloc", cargo_args);
+    let use_alloc = extract_flag("--use-alloc", cargo_args);
     let lto = extract_flag("--lto", cargo_args);
     let small = extract_flag("--small", cargo_args);
     let pretty_panic = extract_flag("--panic", cargo_args);
@@ -96,7 +96,7 @@ fn main() {
 
     let region = region.unwrap_or("NA".to_string());
     let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
-    let build_std = if no_alloc { "core" } else { "core,alloc" };
+    let build_std = if use_alloc { "core,alloc" } else { "core" };
     let mut enable_feature = |flag, name| {
         if flag {
             cargo_args.push("--features".to_string());
