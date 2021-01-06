@@ -7,7 +7,8 @@
 
 use core::mem::size_of;
 
-use psx::approx::f16;
+use psx::gte::f16::f16;
+use psx::gte::trig::{cos, sin, fsin, fcos};
 use psx::bios;
 use psx::compatibility::*;
 use psx::dma;
@@ -21,6 +22,7 @@ use psx::printer::format_u32;
 use psx::timer;
 use psx::value::Load;
 use psx::{include_u32, unzip};
+use psx::println;
 
 use const_fn::{cmp_u32, cmp_u8};
 use const_fn::{pi, e};
@@ -37,17 +39,18 @@ type TestResult = bool;
 type Test = fn() -> TestResult;
 
 // These are runtime tests to be evaluated by the emulator.
-const TESTS: [Test; 3] = [
+const TESTS: [Test; 4] = [
     test_1,
     test_2,
     buffer,
+    trig_tests,
 ];
 // These are compile-time tests to be evaluated by the compiler.
 const CONST_TESTS: [TestResult; 4] = [
     mmio_addresses(),
     format_u32_tests(),
     unzip_test(),
-    f16_tests()
+    f16_tests(),
 ];
 
 fn test_1() -> bool {
@@ -60,46 +63,85 @@ fn test_2() -> bool {
     CriticalSection(|| bios::enter_critical_section() == 0)
 }
 
+fn trig_tests() -> bool {
+    assert!(sin(0.0) == 0.0);
+    assert!(sin(90.0) == 1.0);
+    assert!(fsin(0.0) == f16(0.0));
+    println!(b"sin(0) = {} and expected {}\n\
+             sin(pi/6) = {} and expected {}\n\
+             sin(pi/4)    = {} and expected {}\n\
+             sin(pi/3) = {} and expected {}\n\
+             sin(pi/2)   = {} and expected {}",
+             fsin(0.00).to_bits() as u32,
+             f16(0.0).to_bits() as u32,
+             fsin(0.33333333333).to_bits() as u32,
+             f16(0.5).to_bits() as u32,
+             fsin(0.50).to_bits() as u32,
+             f16(0.70710678118654752440).to_bits() as u32,
+             fsin(0.66666666666).to_bits() as u32,
+             f16(0.86602540378443864676).to_bits() as u32,
+             fsin(1.00).to_bits() as u32,
+             f16(1.0).to_bits() as u32);
+    fsin(0.0) == f16(0.0) &&
+    fsin(0.3333333333) == f16(0.5) &&
+    //fsin(0.5) == f16(0.0) && // 1/sqrt(2) as f16
+    //fsin(0.6666666666) == f16(0.0) && // sqrt(3)/2 as f16
+    fsin(1.0) == f16(1.0) &&
+    true
+}
+
 const fn f16_tests() -> bool {
     let pos_values = [pi, e, 0.0, 1.0, 7.0];
     let trunc_pos_values = [3, 2, 0, 1, 7];
     let neg_values = [-pi, -1.0, -7.0, -8.0];
     let trunc_neg_values = [-4, -1, -7, -8];
     const fn within_epsilon(x: f32) -> bool {
-        -f16::SCALE < x && x < f16::SCALE
+        -f16::EPSILON < x && x < f16::EPSILON
     }
     let mut i = 0;
     while i < pos_values.len() {
-        let fp = f16::new(pos_values[i]);
-        assert!(within_epsilon(fp.as_float() - pos_values[i]));
+        let fp = f16(pos_values[i]);
+        assert!(within_epsilon(fp.as_f32() - pos_values[i]));
         assert!(!fp.is_negative());
         assert!(fp.trunc() == trunc_pos_values[i]);
-        assert!(fp.fract() == f16::new(pos_values[i] - trunc_pos_values[i] as f32).fract());
+        assert!(fp.fract() == f16(pos_values[i] - trunc_pos_values[i] as f32).fract());
         i += 1;
     }
     let mut i = 0;
     while i < neg_values.len() {
-        let fp = f16::new(neg_values[i]);
-        assert!(within_epsilon(fp.as_float() - pos_values[i]));
+        let fp = f16(neg_values[i]);
+        assert!(within_epsilon(fp.as_f32() - neg_values[i]));
         assert!(fp.is_negative());
         assert!(fp.trunc() == trunc_neg_values[i]);
-        assert!(fp.fract() == f16::new(neg_values[i] - (trunc_neg_values[i] as f32) - 1.0).fract());
+        assert!(fp.fract() == f16(neg_values[i] - (trunc_neg_values[i] as f32) - 1.0).fract());
         i += 1;
     }
     const fn trunc(x: f32) -> f32 {
         x - f16::precision_loss(x)
     }
     // Sanity checks
-    assert!(f16::new(pi).as_float() + f16::new(e).as_float() == trunc(pi) + trunc(e));
-    assert!(f16::new(pi).as_float() - f16::new(e).as_float() == trunc(pi) - trunc(e));
-    assert!(f16::new(pi).as_float() * f16::new(e).as_float() == trunc(pi) * trunc(e));
+    assert!(f16(pi).as_f32() + f16(e).as_f32() == trunc(pi) + trunc(e));
+    assert!(f16(pi).as_f32() - f16(e).as_f32() == trunc(pi) - trunc(e));
+    // pi * e would overflow the 3 integer bits in f16, so let's test e^2
+    assert!(f16(e).as_f32() * f16(e).as_f32() == trunc(e) * trunc(e));
+    assert!(f16(pi).as_f32() / f16(e).as_f32() == trunc(pi) / trunc(e));
 
     // Checks addition
-    assert!(f16::new(pi).add(f16::new(e)).as_float() == trunc(pi) + trunc(e));
+    let mut true_value = trunc(pi) + trunc(e);
+    let mut approx_value = f16(pi).const_add(f16(e)).as_f32();
+    assert!(approx_value == true_value);
     // Checks subtraction
-    assert!(f16::new(pi).sub(f16::new(e)).as_float() == trunc(pi) - trunc(e));
+    true_value = trunc(pi) - trunc(e);
+    approx_value = f16(pi).const_sub(f16(e)).as_f32();
+    assert!(approx_value == true_value);
     // Checks multiplication
-    //assert!(f16::new(pi).mul(f16::new(e)).as_float() == trunc(pi) * trunc(e));
+    true_value = trunc(e) * trunc(e);
+    approx_value = f16(e).const_mul(f16(e)).as_f32();
+    assert!(within_epsilon(approx_value - true_value));
+    // Checks division
+    true_value = trunc(pi) / trunc(e);
+    approx_value = f16(pi).const_div(f16(e)).as_f32();
+    assert!(within_epsilon(approx_value - true_value));
     true
 }
 

@@ -15,7 +15,7 @@ struct InnerBuffer<const N: usize> {
 
 impl<const N: usize> Buffer<N> {
     /// Constructs a new single-buffered primitive bump allocator.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Buffer(UnsafeCell::new(InnerBuffer {
             data: [0; N],
             next: 0,

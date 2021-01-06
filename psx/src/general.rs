@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::cop0;
 use crate::dma;
 use crate::dma::{Channel, DPCR};
@@ -43,8 +44,8 @@ pub fn enable_display() {
 /// Waits for the next vertical blank.
 #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
 pub fn vsync() -> u16 {
-    ISTAT.load_mut().ack(IRQ::Vblank).store();
-    ISTAT.wait(IRQ::Vblank);
+    //ISTAT.load_mut().ack(IRQ::Vblank).store();
+    //ISTAT.wait(IRQ::Vblank);
     let mut counter = CNT;
     let mut old = counter.load_mut();
     let time = old.value.bits;

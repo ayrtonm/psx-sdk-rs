@@ -22,7 +22,7 @@ impl Default for OT<1> {
 impl OT<1> {
     /// Empties the ordering table by storing the termination code in the entry.
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
-    pub fn empty(&mut self) -> &mut Self {
+    pub const fn empty(&mut self) -> &mut Self {
         self.entries[0] = TERMINATION;
         self
     }
@@ -30,7 +30,7 @@ impl OT<1> {
 
 impl<const N: usize> OT<N> {
     /// Creates an uninitialized ordering table.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         OT { entries: [0; N] }
     }
 

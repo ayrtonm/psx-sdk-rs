@@ -18,6 +18,13 @@ pub type Vertex = GenericVertex<Pixel>;
 /// A pair of unsigned 8-bit coordinates.
 pub type SmallVertex = GenericVertex<u8>;
 
+impl Vertex {
+    /// Creates a new `Vertex` in a const context.
+    pub const fn new(x: Pixel, y: Pixel) -> Self {
+        Self { x, y }
+    }
+}
+
 impl<P: Copy> From<P> for GenericVertex<P> {
     #[cfg_attr(not(feature = "no_inline_hints"), inline(always))]
     fn from(p: P) -> Self {
@@ -97,6 +104,16 @@ impl<const X: usize, const Y: usize> PackedVertex<2, X, Y> {
 }
 
 impl<const X: usize, const Y: usize> PackedVertex<3, X, Y> {
+    /// Creates a new `PackedVertex<3, X, Y>` in a const context.
+    pub const fn new(v: Vertex) -> Self {
+        let mut data = [0; 3];
+        let value = (v.x as u32) | ((v.y as u32) << X);
+        const BYTE_MASK: u32 = 0xFF;
+        data[0] = (value & BYTE_MASK) as u8;
+        data[1] = ((value >> 8) & BYTE_MASK) as u8;
+        data[2] = ((value >> 16) & BYTE_MASK) as u8;
+        PackedVertex { data }
+    }
     /// Converts a `PackedVertex` to a u32. The upper byte is guaranteed to be
     /// zero.
     pub fn as_u32(&self) -> u32 {

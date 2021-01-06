@@ -23,6 +23,35 @@ pub struct DrawEnv {
 }
 
 impl DrawEnv {
+    /// Constructs a new drawing environment in a const context.
+    pub const fn new_const(offset: Vertex, size: Vertex, bg_color: Option<Color>) -> Packet<Self> {
+        // Subtract the 3 words for color command if no bg color was provided
+        let (bg_color, packet_size) = match bg_color {
+            Some(color) => (color, None),
+            None => (Color::BLACK, Some((size_of::<Self>() / 4) as u32 - 3)),
+        };
+        Packet::new(
+            DrawEnv {
+                texpage_cmd: 0xE1,
+                upper_left_cmd: 0xE3,
+                lower_right_cmd: 0xE4,
+                offset_cmd: 0xE5,
+                bg_color_cmd: 0x02,
+
+                // TODO: make this configurable
+                texpage: (1 << 10) | 10,
+                upper_left: PackedVertex::new(offset),
+                lower_right: PackedVertex::new(Vertex::new(offset.x + size.x, offset.y + size.y)),
+                offset: PackedVertex::new(offset),
+                bg_color,
+                bg_offset: offset,
+                bg_size: size,
+
+                _pad: 0,
+            },
+            packet_size,
+        )
+    }
     /// Constructs a new drawing environment.
     pub fn new<T: Copy, U: Copy>(offset: T, size: U, bg_color: Option<Color>) -> Packet<Self>
     where Vertex: From<T> + From<U> {

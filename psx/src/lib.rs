@@ -51,18 +51,20 @@ pub mod value;
 mod include;
 /// Panic-less functions.
 pub mod unchecked;
+/// Macros for common global variables.
+#[macro_use]
+pub mod global;
 /// Workaround for non-const initialized global variables (e.g. a global
 /// `Printer`).
 #[macro_use]
 pub mod lazy_global;
-/// Approximations for trigonometry functions.
-pub mod approx;
 
 // These are slightly higher level public modules in that they make use of the
 // `value` module.
 /// Coprocessor 0 registers and routines.
 pub mod cop0;
-/// Graphics transformation engine (coprocessor 2) routines.
+/// Graphics transformation engine (coprocessor 2) routines and approximations
+/// for trigonometry functions.
 pub mod gte;
 /// Traits for addressing memory-mapped I/O registers.
 pub mod mmio;

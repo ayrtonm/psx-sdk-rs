@@ -10,6 +10,14 @@ pub struct DispEnv {
 }
 
 impl DispEnv {
+    /// Constructs a new display environment in a const contexte.
+    pub const fn new_const(offset: Vertex, size: Vertex) -> Self {
+        DispEnv {
+            offset: PackedVertex::new(offset),
+            horizontal_range: PackedVertex::new(Vertex::new(0x260, 0x260 + (size.x * 8))),
+            vertical_range: PackedVertex::new(Vertex::new(0x88 - 112, 0x88 + 112)),
+        }
+    }
     /// Constructs a new display environment.
     pub fn new<T: Copy, U: Copy>(
         offset: T, size: U, /* , video_mode: Option<VideoMode> */

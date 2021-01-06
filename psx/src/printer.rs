@@ -10,8 +10,8 @@ use crate::graphics::ot::OT;
 use crate::graphics::packet::Packet;
 use crate::graphics::primitive::Sprt8;
 use crate::tim::TIM;
-use crate::value::LoadMut;
 use crate::unchecked::{get_unchecked_mut, UnwrapUnchecked};
+use crate::value::LoadMut;
 
 /// A font stored in the framebuffer
 pub struct Font {
@@ -25,7 +25,6 @@ pub struct Printer<const N: usize> {
     buffer: Buffer<N>,
     ot: OT<1>,
     cursor: Vertex,
-    //font_size: FontSize,
     box_offset: Vertex,
     box_size: Vertex,
     color: Color,
@@ -35,6 +34,28 @@ pub struct Printer<const N: usize> {
 pub const MIN_SIZE: usize = size_of::<Packet<Sprt8>>() / 4;
 
 impl Printer<MIN_SIZE> {
+    // TODO: Merge this with Printer<MIN_SIZE>::new when const traits are available
+    /// Creates a new printer with the minimum buffer size in a const context.
+    pub(crate) const fn new_const(
+        cursor: Vertex, box_offset: Vertex, box_size: Vertex, color: Option<Color>,
+    ) -> Self {
+        // TODO: Replace with const unwrap_or
+        let color = match color {
+            Some(color) => color,
+            None => Color::WHITE,
+        };
+        let mut ot = OT::new();
+        ot.empty();
+        Printer {
+            font: None,
+            buffer: Buffer::new(),
+            ot,
+            cursor,
+            box_offset,
+            box_size,
+            color,
+        }
+    }
     /// Creates a new printer with the minimum buffer size.
     pub fn new<T, U, V>(cursor: T, box_offset: U, box_size: V, color: Option<Color>) -> Self
     where Vertex: From<T> + From<U> + From<V> {
@@ -141,13 +162,15 @@ impl<const N: usize> Printer<N> {
         let mut fmt_arg = false;
         let mut leading_zeros = false;
         let mut hexdecimal = false;
-        let mut args = args.iter();
+        let mut whitespace = false;
+        let mut args_iter = args.iter();
         for &ascii in msg {
             match ascii {
                 b'\n' => self.newline(),
                 b'\0' => break,
                 b'0' if fmt_arg => leading_zeros = true,
                 b'x' if fmt_arg => hexdecimal = true,
+                b' ' if fmt_arg => whitespace = true,
                 b'{' if !fmt_arg => fmt_arg = true,
                 b'{' if fmt_arg => {
                     fmt_arg = false;
@@ -155,13 +178,17 @@ impl<const N: usize> Printer<N> {
                 },
                 b'}' if fmt_arg => {
                     fmt_arg = false;
-                    let arg = unsafe { args.next().unwrap_unchecked() };
+                    let arg = unsafe { args_iter.next().unwrap_unchecked() };
                     let formatted = format_u32(*arg, leading_zeros, hexdecimal);
                     leading_zeros = false;
                     hexdecimal = false;
                     for &c in &formatted {
                         if c != b'\0' {
-                            self.print_char(c, gpu_dma);
+                            if whitespace {
+                                self.print_char(b' ', gpu_dma);
+                            } else {
+                                self.print_char(c, gpu_dma);
+                            }
                         }
                     }
                 },
@@ -197,7 +224,7 @@ const_for_tests! {
             let digit = if hexdecimal {
                 (x >> ((7 - i) * 4)) & 0xF
             } else {
-                let digit = y / 10u32.pow(9 - i);
+                let digit = y / (10u32.pow(9 - i));
                 y -= digit * 10u32.pow(9 - i);
                 digit
             };
