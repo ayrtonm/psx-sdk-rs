@@ -1,18 +1,14 @@
 //! Library for the original Sony PlayStation.
-//!
-//! This crate contains routines for using PSX peripherals, coprocessors and
-//! memory-mapped I/O registers.
 #![no_std]
-#![deny(missing_docs)]
-#![deny(warnings)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(asm, naked_functions)]
+// Pretty much required for this crate.
+#![feature(min_const_generics)]
+/*
 // Required for allocator error handling.
 #![feature(alloc_error_handler)]
 // Required for panic messages
 #![feature(panic_info_message, fmt_as_str)]
-// Pretty much required for this crate.
-#![feature(min_const_generics)]
 // Required for global variable workaround.
 #![feature(once_cell, const_fn_fn_ptr_basics)]
 // Const features used to increase the potential scope of const testing.
@@ -32,83 +28,34 @@
 #![feature(bool_to_option)]
 #![feature(unsafe_cell_get_mut)]
 #![feature(exclusive_range_pattern)]
+*/
 
-// These are internally used modules.
-mod allocator;
-mod builtins;
-mod panic;
-// const testing module
-#[macro_use]
-pub(crate) mod tests;
-
-// These are the lowest-level public modules.
 /// Wrappers for BIOS functions.
 pub mod bios;
-/// Traits for accessing coprocessor and memory-mapped I/O registers.
-pub mod value;
-/// Routines for including data from external files.
-#[macro_use]
-mod include;
-/// Panic-less functions.
-pub mod unchecked;
-/// Macros for common global variables.
-#[macro_use]
-pub mod global;
-/// Workaround for non-const initialized global variables (e.g. a global
-/// `Printer`).
-#[macro_use]
-pub mod lazy_global;
-
-// These are slightly higher level public modules in that they make use of the
-// `value` module.
-/// Coprocessor 0 registers and routines.
-pub mod cop0;
-/// Graphics transformation engine (coprocessor 2) routines and approximations
-/// for trigonometry functions.
-pub mod gte;
-/// Traits for addressing memory-mapped I/O registers.
-pub mod mmio;
-
-// These correspond to the different types of I/O registers and make use of the
-// `mmio` module.
-/// DMA routines.
 pub mod dma;
-/// GPU routines.
-pub mod gpu;
-/// Interrupt routines.
-pub mod interrupt;
-/// Interrupt request masking, acknowledge and wait routines.
-pub mod irq;
-/// Timer routines.
-pub mod timer;
+/// A hardware abstraction layer for memory-mapped I/O registers and
+/// coprocessors.
+pub mod hal;
 
-// This uses the I/O register methods to provide PSY-Q-compatible functions
-// where it makes sense.
-/// Routines from PSY-Q/PSn00bSDK
-pub mod compatibility;
+mod builtins;
+mod panic;
 
-// These modules are roughly at the same level of abstraction as
-// `compatibility`, but take different approaches to appear more
-// high-level/ergonomic.
-
-/// Framebuffer routines.
-pub mod framebuffer;
-/// General routines intended to be alternatives to the PSY-Q routines.
-pub mod general;
-/// Ordering table and primitive buffer routines.
-pub mod graphics;
-/// Printing routines.
-pub mod printer;
-/// Parsing texture data in TIM format.
-pub mod tim;
-/// Method for unzipping files.
-pub mod unzip;
-
-/// Used for testing only.
-pub fn delay(n: u32) {
-    for _ in 0..n {
-        unsafe {
-            core::ptr::read_volatile(0 as *mut u32);
-        }
+fn illegal() -> ! {
+    if cfg!(feature = "forbid_UB") {
+        unreachable!("")
+    } else {
+        unsafe { core::hint::unreachable_unchecked() }
     }
+}
+
+fn main() {
+    let mut gpu_dma = dma::GPU::new();
+    let mut ar = [0; 10];
+    let mut ar2 = [1; 11];
+    ar[0] = 1;
+    gpu_dma.prepare();
+    let transfer = gpu_dma.send(&ar);
+    transfer.wait();
+    let transfer2 = gpu_dma.send(&ar2);
+    ar[1] = 2;
 }
