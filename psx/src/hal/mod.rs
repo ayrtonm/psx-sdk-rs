@@ -1,11 +1,47 @@
+//! Hardware abstraction layer for memory-mapped I/O and coprocessor registers.
+//!
+//! This module provides an API for using memory-mapped I/O and coprocessor
+//! registers directly. Volatile accesses are not elided by the compiler, so to
+//! avoid unnecessary reads/writes readable registers carry a copy of their
+//! current value. For read-write registers this value must be explicitly
+//! written back to the register.
+//!
+//! ```rust
+//! // `Shared` registers can be `mut` to allow updating their stored value.
+//! let mut irq_stat = I_STAT::load();
+//! // waits for the next Vblank interrupt request then updates the stored value.
+//! irq_stat.wait(IRQ::Vblank);
+//! // Acknowledging interrupt requests is not allowed since `irq_stat` is `Shared`.
+//! // Use `load_mut` or `skip_load` to create a `Mutable` `I_STAT`.
+//! // irq_stat.ack(IRQ::CDROM).store();
+//!
+//! // To update a register call `load_mut` to get its initial value.
+//! let mut irq_mask = I_MASK::load_mut();
+//! irq_mask.enable_irq(IRQ::Timer0);
+//! // The value must be stored in the register after being modified.
+//! irq_mask.store();
+//!
+//! // If a write will modify the entire register, use `skip_load` to
+//! // avoid reading the register.
+//! let mut dma_control = DPCR::skip_load();
+//! // `dma_control` has a possibly invalid stored value, but
+//! // `enable_all` modifies all of the register's relevant bits.
+//! dma_control.enable_all();
+//! dma_control.store();
+//! ```
+
 #![allow(non_camel_case_types)]
 use core::marker::PhantomData;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
 use core::ptr::{read_volatile, write_volatile};
 
+/// Direct memory access channel and control registers.
 pub mod dma;
+/// GPU registers.
 pub mod gpu;
+/// Interrupt request registers.
 pub mod irq;
+/// Timer registers.
 pub mod timer;
 
 #[macro_use]
@@ -45,12 +81,15 @@ impl Primitive for u16 {}
 impl Primitive for u32 {}
 
 pub trait Register<T: Primitive>: HasValue<T> + Read<T> {
+    fn bits(&self) -> T {
+        self.get()
+    }
     /// Returns the register's current value and updates the handle's copy of
     /// the value.
-    fn reload(&mut self) -> T {
+    fn reload(&mut self) -> &mut Self {
         let new_value = self.read();
         *self.get_mut() = new_value;
-        new_value
+        self
     }
 
     /// Checks if any of the given `bits` are set in the handle's copy of the

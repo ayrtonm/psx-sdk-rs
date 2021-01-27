@@ -1,4 +1,6 @@
-use super::{command, Color, Vertex};
+use super::command;
+use crate::gpu::{Color, Vertex};
+use crate::graphics::AsSlice;
 use crate::hal::{Write, GP0};
 
 impl GP0 {
@@ -21,5 +23,9 @@ impl GP0 {
 
     pub fn interrupt_request(&mut self) {
         self.write(command(0x1F, None));
+    }
+
+    pub fn draw<P: AsSlice>(&mut self, primitive: &P) -> &mut Self {
+        self.write_slice(primitive.as_slice())
     }
 }

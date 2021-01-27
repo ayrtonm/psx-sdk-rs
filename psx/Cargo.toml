@@ -9,11 +9,7 @@ edition = "2018"
 [dependencies]
 
 [features]
-# Print heap-less panic messages
+# Prints panic messages to the screen instead of TTY
 pretty_panic = []
-# Don't use inlining hints
-inline_hints = []
-# Forbid using undefined behavior to improve performance
+# Replaces internal use of `unreachable_unchecked` with `panic`
 forbid_UB = []
-# Used to compile tests crate (cannot be used with forbid_UB)
-no_std_test = []

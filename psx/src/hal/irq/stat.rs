@@ -1,5 +1,5 @@
-use super::IRQ;
 use crate::hal::{MutRegister, Mutable, Register, State, I_STAT};
+use crate::interrupt::IRQ;
 
 impl<S: State> I_STAT<S> {
     pub fn wait(&mut self, irq: IRQ) {

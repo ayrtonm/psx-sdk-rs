@@ -274,19 +274,6 @@ pub extern "C" fn cd_remove() {
 #[naked]
 #[no_mangle]
 #[inline(never)]
-/// [BIOS Function B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn change_clear_pad(int: u32) {
-    unsafe {
-        asm!(".set noreorder
-              j 0xB0
-              li $9, 0x5B",
-                lateout("$2") _);
-    }
-}
-
-#[naked]
-#[no_mangle]
-#[inline(never)]
 /// [BIOS Function B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub extern "C" fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize) {
     unsafe {
@@ -319,6 +306,19 @@ pub extern "C" fn stop_pad() {
         asm!(".set noreorder
               j 0xB0
               li $9, 0x14",
+                lateout("$2") _);
+    }
+}
+
+#[naked]
+#[no_mangle]
+#[inline(never)]
+/// [BIOS Function B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub extern "C" fn change_clear_pad(int: u32) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xB0
+              li $9, 0x5B",
                 lateout("$2") _);
     }
 }

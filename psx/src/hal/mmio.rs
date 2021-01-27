@@ -13,6 +13,18 @@ macro_rules! read_only {
             const ADDRESS: u32 = $address;
         }
 
+        impl HasValue<$size> for $name {
+            fn get(&self) -> $size {
+                self.0
+            }
+
+            fn get_mut(&mut self) -> &mut $size {
+                &mut self.0
+            }
+        }
+
+        impl Register<$size> for $name {}
+
         impl Read<$size> for $name {
             fn read(&self) -> $size {
                 unsafe { read_volatile(Self::ADDRESS as *const $size) }
@@ -29,11 +41,23 @@ macro_rules! read_only {
 macro_rules! write_only {
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal) => {
         $(#[$($meta)*])* pub struct $name;
+        impl $name {
+            pub fn write_slice(&mut self, values: &[$size]) -> &mut Self {
+                for &v in values {
+                    self.write(v);
+                }
+                self
+            }
+        }
+
+        impl Address for $name {
+            const ADDRESS: u32 = $address;
+        }
 
         impl Write<$size> for $name {
             fn write(&mut self, value: $size) {
                 unsafe {
-                    write_volatile($address as *mut $size, value)
+                    write_volatile(Self::ADDRESS as *mut $size, value)
                 }
             }
         }

@@ -1,17 +1,6 @@
+use crate::interrupt::IRQ;
+
 mod mask;
 mod stat;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum IRQ {
-    Vblank = 0,
-    GPU,
-    CDROM,
-    DMA,
-    Timer0,
-    Timer1,
-    Timer2,
-    ControllerMemoryCard,
-    SIO,
-    SPU,
-    ControllerMisc,
-}
+const ALL_IRQS: u16 = (1 << (1 + IRQ::ControllerMisc as u16)) - 1;

@@ -71,6 +71,7 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     ret.push_str("}\n");
     ret
 }
+
 fn main() {
     let bios_functions = [
         "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
@@ -99,10 +100,10 @@ fn main() {
 
         "A(72h) cd_remove();",
 
-        "B(5Bh) change_clear_pad(int: u32);",
         "B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);",
         "B(13h) start_pad();",
         "B(14h) stop_pad();",
+        "B(5Bh) change_clear_pad(int: u32);",
 
         "C(0Ah) change_clear_rcnt(t: u32, flag: u32);",
 

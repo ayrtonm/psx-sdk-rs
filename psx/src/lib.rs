@@ -1,61 +1,66 @@
-//! Library for the original Sony PlayStation.
+//! This is a crate for developing homebrew for the original Sony PlayStation.
 #![no_std]
+#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(asm, naked_functions)]
-// Pretty much required for this crate.
+// Required for many things in this crate.
 #![feature(min_const_generics)]
-/*
-// Required for allocator error handling.
 #![feature(alloc_error_handler)]
-// Required for panic messages
 #![feature(panic_info_message, fmt_as_str)]
-// Required for global variable workaround.
-#![feature(once_cell, const_fn_fn_ptr_basics)]
 // Const features used to increase the potential scope of const testing.
 #![feature(
     const_ptr_offset,
     const_mut_refs,
+    const_int_pow,
     const_slice_from_raw_parts,
     const_raw_ptr_deref,
-    const_int_pow
+    const_fn_fn_ptr_basics,
+    const_fn
 )]
-// Const feature to improve performance at the risk of UB while using const testing.
-#![feature(const_unreachable_unchecked)]
-// Used to approximate sine and cosine.
-#![feature(const_fn_floating_point_arithmetic, const_float_bits_conv)]
+// Required to use `illegal` in const fn
+#![feature(const_unreachable_unchecked, const_panic)]
+//// Used to approximate sine and cosine.
+//#![feature(const_fn_floating_point_arithmetic, const_float_bits_conv)]
 // Could be removed if necessary.
 #![feature(array_map)]
-#![feature(bool_to_option)]
 #![feature(unsafe_cell_get_mut)]
-#![feature(exclusive_range_pattern)]
-*/
 
-/// Wrappers for BIOS functions.
-pub mod bios;
-pub mod dma;
-/// A hardware abstraction layer for memory-mapped I/O registers and
-/// coprocessors.
-pub mod hal;
+use core::hint::unreachable_unchecked;
+use core::mem::size_of;
 
+#[macro_use]
+mod include;
+
+mod allocator;
 mod builtins;
+#[macro_use]
+mod std;
 mod panic;
+#[macro_use]
+mod test;
 
-fn illegal() -> ! {
+/// Wrappers for calling BIOS functions.
+pub mod bios;
+/// DMA channels and transfers.
+pub mod dma;
+pub mod framebuffer;
+pub mod gpu;
+pub mod graphics;
+pub mod hal;
+pub mod interrupt;
+pub mod printer;
+pub mod tim;
+pub mod timer;
+pub mod unzip;
+
+const fn illegal() -> ! {
     if cfg!(feature = "forbid_UB") {
-        unreachable!("")
+        panic!("")
     } else {
-        unsafe { core::hint::unreachable_unchecked() }
+        unsafe { unreachable_unchecked() }
     }
 }
 
-fn main() {
-    let mut gpu_dma = dma::GPU::new();
-    let mut ar = [0; 10];
-    let mut ar2 = [1; 11];
-    ar[0] = 1;
-    gpu_dma.prepare();
-    let transfer = gpu_dma.send(&ar);
-    transfer.wait();
-    let transfer2 = gpu_dma.send(&ar2);
-    ar[1] = 2;
+const fn num_words<T>() -> usize {
+    size_of::<T>() / 4
 }

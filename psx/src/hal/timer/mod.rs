@@ -3,28 +3,10 @@ use crate::hal::{T0_CNT, T0_MODE, T0_TGT};
 use crate::hal::{T1_CNT, T1_MODE, T1_TGT};
 use crate::hal::{T2_CNT, T2_MODE, T2_TGT};
 use crate::illegal;
+use crate::timer::{Source, SyncMode};
 
 #[macro_use]
 mod timers;
-
-pub enum Source {
-    System = 0,
-    Alternate,
-}
-
-#[allow(non_upper_case_globals)]
-pub const DotClock: Source = Source::Alternate;
-#[allow(non_upper_case_globals)]
-pub const Hblank: Source = Source::Alternate;
-#[allow(non_upper_case_globals)]
-pub const FracSys: Source = Source::Alternate;
-
-pub enum SyncMode {
-    Pause = 0,
-    Reset,
-    Count,
-    FreeRun,
-}
 
 const SYNC_MODE: u16 = 1;
 const TARGET_RESET: u16 = 3;
@@ -38,7 +20,7 @@ const HIT_OVERFLOW: u16 = 12;
 pub trait Counter: Register<u16> {
     /// Waits until the counter stops changing and returns the final value.
     fn wait(&mut self) -> u16 {
-        while self.get() != self.reload() {}
+        while self.get() != self.reload().bits() {}
         self.get()
     }
 }
