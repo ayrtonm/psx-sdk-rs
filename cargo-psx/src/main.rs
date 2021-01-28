@@ -32,7 +32,7 @@ fn print_help() {
     println!("cargo-psx");
     println!("Runs cargo build to produce a PSEXE\n");
     println!("USAGE:");
-    println!("  cargo psx [clean] [build|check|run] [OPTIONS] [cargo-build OPTIONS]\n");
+    println!("  cargo psx [clean] [build|check|run|test] [OPTIONS] [cargo-build OPTIONS]\n");
     println!("OPTIONS:");
     println!("  --help, -h           Prints help information");
     println!("  --debug              Builds in release mode with debug info");
@@ -60,7 +60,8 @@ fn main() {
     let clean = extract_flag("clean", cargo_args);
     let build = extract_flag("build", cargo_args);
     let run = extract_flag("run", cargo_args);
-    let skip_build = clean && !build && !check && !run;
+    let test = extract_flag("test", cargo_args);
+    let skip_build = clean && !build && !check && !run && !test;
 
     let debug = extract_flag("--debug", cargo_args);
     let toolchain_name = extract_key_value("--toolchain", cargo_args);
@@ -110,6 +111,8 @@ fn main() {
         "check"
     } else if run {
         "run"
+    } else if test {
+        "test"
     } else {
         "build"
     };
