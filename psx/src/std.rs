@@ -1,6 +1,9 @@
 use core::ops::{Range, RangeFrom};
 use core::ptr::slice_from_raw_parts;
 
+// cfg(test) is only needed because this is private and only used in tests for
+// now
+#[cfg(test)]
 macro_rules! slice_cmp {
     ($a:expr, $b:expr) => {{
         let n = $a.len();

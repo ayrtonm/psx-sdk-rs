@@ -22,25 +22,11 @@
 // Could be removed if necessary.
 #![feature(array_map)]
 #![feature(unsafe_cell_get_mut)]
-
-//#![feature(custom_test_frameworks)]
-//#![test_runner(crate::test_runner)]
-//#![reexport_test_harness_main = "test_main"]
-//#![no_main]
-//
-//#[no_mangle]
-//pub extern "C" fn main() -> ! {
-//    #[cfg(test)]
-//    test_main();
-//    loop {}
-//}
-//
-//#[cfg(test)]
-//fn test_runner(tests: &[&dyn Fn()]) {
-//    for t in tests {
-//        t();
-//    }
-//}
+// Custom tests for psx crate
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test::runner)]
+#![reexport_test_harness_main = "test_main"]
+#![cfg_attr(test, no_main)]
 
 #[macro_use]
 mod include;
@@ -51,6 +37,7 @@ mod allocator;
 mod builtins;
 mod panic;
 mod runtime;
+mod test;
 
 pub mod bios;
 pub mod dma;

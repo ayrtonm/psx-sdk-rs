@@ -32,43 +32,67 @@ pub const fn format_u32(mut x: u32, leading_zeros: bool, hexdecimal: bool) -> [u
     ar
 }
 
-/*
 #[cfg(test)]
 mod tests {
-    #[test]
-    const fn dec_fmt() {
+    use super::format_u32;
+
+    #[allow(dead_code)]
+    const DEC_FMT: () = {
         let hex = false;
         let leading = false;
-        assert!(slice_cmp!(&format_u32(29, leading, hex), b"29\0\0\0\0\0\0\0\0"));
-        assert!(slice_cmp!(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295"));
-        assert!(slice_cmp!(&format_u32(0, leading, hex), b"0\0\0\0\0\0\0\0\0\0"));
-    }
+        assert!(slice_cmp!(
+            &format_u32(29, leading, hex),
+            b"29\0\0\0\0\0\0\0\0"
+        ));
+        assert!(slice_cmp!(
+            &format_u32(0xFFFF_FFFF, leading, hex),
+            b"4294967295"
+        ));
+        assert!(slice_cmp!(
+            &format_u32(0, leading, hex),
+            b"0\0\0\0\0\0\0\0\0\0"
+        ));
+    };
 
-    #[test]
-    const fn hex_fmt() {
+    #[allow(dead_code)]
+    const HEX_FMT: () = {
         let hex = true;
         let leading = false;
-        assert!(slice_cmp!(&format_u32(29, leading, hex), b"1Dh\0\0\0\0\0\0\0"));
-        assert!(slice_cmp!(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0"));
-        assert!(slice_cmp!(&format_u32(0, leading, hex), b"0h\0\0\0\0\0\0\0\0"));
-    }
+        assert!(slice_cmp!(
+            &format_u32(29, leading, hex),
+            b"1Dh\0\0\0\0\0\0\0"
+        ));
+        assert!(slice_cmp!(
+            &format_u32(0xFFFF_FFFF, leading, hex),
+            b"FFFFFFFFh\0"
+        ));
+        assert!(slice_cmp!(
+            &format_u32(0, leading, hex),
+            b"0h\0\0\0\0\0\0\0\0"
+        ));
+    };
 
-    #[test]
-    const fn dec_zero_fmt() {
+    #[allow(dead_code)]
+    const DEC_ZERO_FMT: () = {
         let hex = false;
         let leading = true;
         assert!(slice_cmp!(&format_u32(29, leading, hex), b"0000000029"));
-        assert!(slice_cmp!(&format_u32(0xFFFF_FFFF, leading, hex), b"4294967295"));
+        assert!(slice_cmp!(
+            &format_u32(0xFFFF_FFFF, leading, hex),
+            b"4294967295"
+        ));
         assert!(slice_cmp!(&format_u32(0, leading, hex), b"0000000000"));
-    }
+    };
 
-    #[test]
-    const fn hex_zero_fmt() {
+    #[allow(dead_code)]
+    const HEX_ZERO_FMT: () = {
         let hex = true;
         let leading = true;
         assert!(slice_cmp!(&format_u32(29, leading, hex), b"0000001Dh\0"));
-        assert!(slice_cmp!(&format_u32(0xFFFF_FFFF, leading, hex), b"FFFFFFFFh\0"));
+        assert!(slice_cmp!(
+            &format_u32(0xFFFF_FFFF, leading, hex),
+            b"FFFFFFFFh\0"
+        ));
         assert!(slice_cmp!(&format_u32(0, leading, hex), b"00000000h\0"));
-    }
+    };
 }
-*/

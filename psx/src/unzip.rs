@@ -50,15 +50,15 @@ const fn internal_unzip<const IN: usize, const OUT: usize>(zip: [u32; IN]) -> [u
     ret
 }
 
-/*
 #[cfg(test)]
 mod tests {
-    #[test]
-    const fn font() -> bool {
+    use super::internal_unzip;
+
+    #[allow(dead_code)]
+    const FONT_TEST: () = {
         const N: usize = unzipped_size!("../font.tim.zip");
         let unzipped = internal_unzip(include_u32!("../font.tim.zip")) as [u32; N];
         let original: [u32; N] = include_u32!("../font.tim");
-        slice_cmp!(original, unzipped)
-    }
+        assert!(slice_cmp!(original, unzipped));
+    };
 }
-*/
