@@ -36,11 +36,13 @@ where
     CHCR: ChannelControl,
     Self: Name,
 {
+    /// Enables the channel and returns its registers.
     pub fn channel() -> Self {
         DPCR::load_mut().enable(Self::NAME).store();
         Self::skip_enable()
     }
 
+    /// Returns the channel's registers without enabling it.
     pub fn skip_enable() -> Self {
         Channel {
             madr: MADR::skip_load(),
@@ -49,6 +51,7 @@ where
         }
     }
 
+    /// Sends `buffer` to the channel.
     pub fn send<'b>(&mut self, buffer: &'b [u32]) {
         self.chcr
             .set_direction(Direction::FromMemory)

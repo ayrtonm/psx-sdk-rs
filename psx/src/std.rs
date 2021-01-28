@@ -1,6 +1,24 @@
 use core::ops::{Range, RangeFrom};
 use core::ptr::slice_from_raw_parts;
 
+macro_rules! slice_cmp {
+    ($a:expr, $b:expr) => {{
+        let n = $a.len();
+        let mut res = true;
+        if n != $b.len() {
+            res = false;
+        }
+        const_for! {
+            i in 0, n => {
+                if $a[i] != $b[i] {
+                    res = false;
+                }
+            }
+        }
+        res
+    }};
+}
+
 macro_rules! const_for {
     {$idx:ident in $start:expr, $end:expr => $body:block} => {
         {

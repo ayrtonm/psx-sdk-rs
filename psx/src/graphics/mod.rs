@@ -1,4 +1,6 @@
-use crate::num_words;
+//! Graphics subsystem routines and primitive data types
+
+use core::mem::size_of;
 use core::slice::from_raw_parts;
 
 mod buffer;
@@ -21,3 +23,7 @@ pub trait AsSlice: Sized {
 }
 
 impl<T: Initialize> AsSlice for T {}
+
+const fn num_words<T>() -> usize {
+    size_of::<T>() / 4
+}

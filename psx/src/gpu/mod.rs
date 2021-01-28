@@ -1,3 +1,5 @@
+//! Basic GPU data types
+
 use crate::hal::GP1;
 
 mod color;

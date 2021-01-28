@@ -1,3 +1,5 @@
+//! DMA channel routines
+
 use crate::hal::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hal::Mutable;
 use crate::hal::{D0_BCR, D0_CHCR, D0_MADR};
@@ -11,15 +13,20 @@ use crate::hal::{D6_BCR, D6_CHCR, D6_MADR};
 mod channel;
 mod gpu;
 
+/// DMA channel registers
 pub struct Channel<MADR: MemoryAddress, BCR: BlockControl, CHCR: ChannelControl> {
     madr: MADR,
     bcr: BCR,
     chcr: CHCR,
 }
 
+/// DMA channel to transfer from RAM to the macroblock decoder
 pub type MDECIn = Channel<D0_MADR<Mutable>, D0_BCR<Mutable>, D0_CHCR<Mutable>>;
+/// DMA channel to transfer from the macroblock decoder to RAM
 pub type MDECOut = Channel<D1_MADR<Mutable>, D1_BCR<Mutable>, D1_CHCR<Mutable>>;
+/// DMA channel for GPU lists and image data
 pub type GPU = Channel<D2_MADR<Mutable>, D2_BCR<Mutable>, D2_CHCR<Mutable>>;
+/// DMA channel to transfer CDROM data to RAM
 pub type CDROM = Channel<D3_MADR<Mutable>, D3_BCR<Mutable>, D3_CHCR<Mutable>>;
 pub type SPU = Channel<D4_MADR<Mutable>, D4_BCR<Mutable>, D4_CHCR<Mutable>>;
 pub type PIO = Channel<D5_MADR<Mutable>, D5_BCR<Mutable>, D5_CHCR<Mutable>>;

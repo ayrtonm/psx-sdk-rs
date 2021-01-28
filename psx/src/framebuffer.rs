@@ -1,6 +1,9 @@
+//! Double-buffered framebuffer routines
+
 use crate::gpu::{Color, Vertex};
 use crate::gpu::{DispEnv, DrawEnv};
 
+/// Configuration for a double-buffered framebuffer.
 pub struct Framebuffer {
     disp_envs: (DispEnv, DispEnv),
     draw_envs: (DrawEnv, DrawEnv),
@@ -8,6 +11,9 @@ pub struct Framebuffer {
 }
 
 impl Framebuffer {
+    /// Creates a framebuffer with buffers with resolution `res` starting at
+    /// `buffer_0` and `buffer_1` and background color `bg_color`. If `bg_color`
+    /// is `None`, buffers are not cleared after each swap.
     pub const fn new(
         buffer_0: (i16, i16), buffer_1: (i16, i16), res: (i16, i16), bg_color: Option<Color>,
     ) -> Self {
@@ -26,6 +32,7 @@ impl Framebuffer {
         }
     }
 
+    /// Swaps the currently displayed buffer.
     pub fn swap(&mut self) {
         self.swapped = !self.swapped;
         let (disp_env, draw_env) = self.envs();

@@ -1,3 +1,6 @@
+//! Text printing and formatting routines
+
+#![allow(dead_code)]
 use crate::gpu::{Clut, Color, TexPage, Vertex, WHITE};
 use crate::graphics::primitive::Sprt8;
 use crate::hal::GP0;

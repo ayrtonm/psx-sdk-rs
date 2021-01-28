@@ -1,3 +1,21 @@
+diff --git a/lld/ELF/ScriptParser.cpp b/lld/ELF/ScriptParser.cpp
+index fea6b7a274e..32406ac89c3 100644
+--- a/lld/ELF/ScriptParser.cpp
++++ b/lld/ELF/ScriptParser.cpp
+@@ -436,10 +436,12 @@ void ScriptParser::readOutputFormat() {
+     config->osabi = ELFOSABI_FREEBSD;
+ 
+   std::tie(config->ekind, config->emachine) = parseBfdName(s);
+-  if (config->emachine == EM_NONE)
++  if (config->emachine == EM_NONE && s != "binary")
+     setError("unknown output format name: " + config->bfdname);
+   if (s == "elf32-ntradlittlemips" || s == "elf32-ntradbigmips")
+     config->mipsN32Abi = true;
++  if (s == "binary")
++    config->oFormatBinary = true;
+ 
+   if (consume(")"))
+     return;
 diff --git a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
 index aa8e298fa75..0ed671bb365 100644
 --- a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
@@ -69,7 +87,7 @@ index aa8e298fa75..0ed671bb365 100644
    // Then run them alternatively while there are changes
    while (forbiddenSlotChanged) {
 diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.cpp b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
-index 0c6080258a3..ca5bd655a35 100644
+index 0c6080258a3..91cfa89b303 100644
 --- a/llvm/lib/Target/Mips/MipsInstrInfo.cpp
 +++ b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
 @@ -568,11 +568,39 @@ bool MipsInstrInfo::SafeInForbiddenSlot(const MachineInstr &MI) const {

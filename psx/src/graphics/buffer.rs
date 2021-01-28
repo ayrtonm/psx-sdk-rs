@@ -1,5 +1,4 @@
-use super::{DoubleRef, Initialize, Packet, Ref};
-use crate::num_words;
+use super::{num_words, DoubleRef, Initialize, Packet, Ref};
 use core::cell::UnsafeCell;
 use core::mem::MaybeUninit;
 

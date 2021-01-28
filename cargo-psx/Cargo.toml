@@ -7,5 +7,4 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-elf2psexe = { path = "elf2psexe" }
 cargo_metadata = "0.12.0"

@@ -1,6 +1,6 @@
 //! This is a crate for developing homebrew for the original Sony PlayStation.
 #![no_std]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(asm, naked_functions)]
 // Required for many things in this crate.
@@ -17,31 +17,42 @@
     const_fn_fn_ptr_basics,
     const_fn
 )]
-// Required to use `illegal` in const fn
+// Required for const `illegal`
 #![feature(const_unreachable_unchecked, const_panic)]
-//// Used to approximate sine and cosine.
-//#![feature(const_fn_floating_point_arithmetic, const_float_bits_conv)]
 // Could be removed if necessary.
 #![feature(array_map)]
 #![feature(unsafe_cell_get_mut)]
 
-use core::hint::unreachable_unchecked;
-use core::mem::size_of;
+//#![feature(custom_test_frameworks)]
+//#![test_runner(crate::test_runner)]
+//#![reexport_test_harness_main = "test_main"]
+//#![no_main]
+//
+//#[no_mangle]
+//pub extern "C" fn main() -> ! {
+//    #[cfg(test)]
+//    test_main();
+//    loop {}
+//}
+//
+//#[cfg(test)]
+//fn test_runner(tests: &[&dyn Fn()]) {
+//    for t in tests {
+//        t();
+//    }
+//}
 
 #[macro_use]
 mod include;
+#[macro_use]
+mod std;
 
 mod allocator;
 mod builtins;
-#[macro_use]
-mod std;
 mod panic;
-#[macro_use]
-mod test;
+mod runtime;
 
-/// Wrappers for calling BIOS functions.
 pub mod bios;
-/// DMA channels and transfers.
 pub mod dma;
 pub mod framebuffer;
 pub mod gpu;
@@ -54,13 +65,11 @@ pub mod timer;
 pub mod unzip;
 
 const fn illegal() -> ! {
+    use core::hint::unreachable_unchecked;
+
     if cfg!(feature = "forbid_UB") {
         panic!("")
     } else {
         unsafe { unreachable_unchecked() }
     }
-}
-
-const fn num_words<T>() -> usize {
-    size_of::<T>() / 4
 }

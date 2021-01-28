@@ -1,3 +1,6 @@
+//! Parser for texture data in TIM format
+
+#![allow(dead_code)]
 use crate::gpu::{Bpp, Clut, TexPage, Vertex};
 use crate::illegal;
 

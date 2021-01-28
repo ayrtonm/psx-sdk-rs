@@ -1,5 +1,4 @@
-use super::TERMINATION;
-use crate::num_words;
+use super::{num_words, TERMINATION};
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 

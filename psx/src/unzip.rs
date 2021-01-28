@@ -1,3 +1,4 @@
+//! Unzipping routine for data compressed using Huffman coding
 use crate::std::{binary_search, slice, slice_from};
 
 pub unsafe fn unzip<const IN: usize, const OUT: usize>(zip: [u32; IN]) -> [u32; OUT] {
@@ -49,7 +50,10 @@ const fn internal_unzip<const IN: usize, const OUT: usize>(zip: [u32; IN]) -> [u
     ret
 }
 
-test! {
+/*
+#[cfg(test)]
+mod tests {
+    #[test]
     const fn font() -> bool {
         const N: usize = unzipped_size!("../font.tim.zip");
         let unzipped = internal_unzip(include_u32!("../font.tim.zip")) as [u32; N];
@@ -57,3 +61,4 @@ test! {
         slice_cmp!(original, unzipped)
     }
 }
+*/

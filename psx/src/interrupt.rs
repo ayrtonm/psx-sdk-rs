@@ -13,7 +13,6 @@ pub enum IRQ {
     ControllerMisc,
 }
 
-pub fn free<F: FnOnce() -> R, R>(f: F) -> R {
+pub fn free<F: FnOnce() -> R, R>(_f: F) -> R {
     todo!("");
-    f()
 }
