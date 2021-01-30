@@ -118,7 +118,7 @@ pub extern "C" fn init_heap(addr: usize, size: usize) {
 #[no_mangle]
 #[inline(never)]
 /// [BIOS Function A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub extern "C" fn printf(s: *const u8, v: u32) {
+pub extern "C" fn printf(s: *const u8, a: u32, b: u32, c: u32, d: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0

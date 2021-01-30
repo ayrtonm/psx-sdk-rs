@@ -1,7 +1,7 @@
 //! Text printing and formatting routines
 
 #![allow(dead_code)]
-use crate::gpu::{Clut, Color, TexPage, Vertex, WHITE};
+use crate::gpu::{draw_sync, Clut, Color, Pixel, TexPage, Vertex, WHITE};
 use crate::graphics::primitive::Sprt8;
 use crate::hal::GP0;
 use crate::tim::TIM;
@@ -26,7 +26,8 @@ const FONT_SIZE: u8 = 8;
 
 impl Printer {
     pub const fn new(
-        cursor: (i16, i16), box_offset: (i16, i16), box_size: (i16, i16), color: Option<Color>,
+        cursor: (Pixel, Pixel), box_offset: (Pixel, Pixel), box_size: (Pixel, Pixel),
+        color: Option<Color>,
     ) -> Self {
         let cursor = Vertex::new(cursor);
         let box_offset = Vertex::new(box_offset);
@@ -63,6 +64,12 @@ impl Printer {
 
     pub fn reset(&mut self) {
         self.cursor = self.box_offset;
+    }
+
+    pub fn println<'m, M, const A: usize>(&mut self, msg: M, args: [u32; A])
+    where M: IntoIterator<Item = &'m u8> {
+        self.print(msg, args);
+        self.newline();
     }
 
     pub fn print<'m, M, const A: usize>(&mut self, msg: M, args: [u32; A])
@@ -111,6 +118,8 @@ impl Printer {
 
     fn print_char(&mut self, ascii: u8) {
         let ascii_per_row = 128 / FONT_SIZE;
+        // Font texture doesn't contain the first 2 rows (32 ascii characters) to save
+        // VRAM
         let ascii = ascii - (2 * ascii_per_row);
         let xoffset = (ascii % ascii_per_row) * FONT_SIZE;
         let yoffset = (ascii / ascii_per_row) * FONT_SIZE;
@@ -121,10 +130,11 @@ impl Printer {
             .set_offset(self.cursor.shift(self.box_offset))
             .set_tex_coord((xoffset, yoffset));
         GP0.draw(&letter);
-        if self.cursor.x + FONT_SIZE as i16 >= self.box_offset.x + self.box_size.x {
+        draw_sync();
+        if self.cursor.x + FONT_SIZE as Pixel >= self.box_offset.x + self.box_size.x {
             self.newline();
         } else {
-            self.cursor = self.cursor.shift((FONT_SIZE as i16, 0).into());
+            self.cursor = self.cursor.shift((FONT_SIZE as Pixel, 0).into());
         }
     }
 }

@@ -85,7 +85,7 @@ fn main() {
         "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
         "A(38h) realloc(old_buf: *const u8, new_size: usize);",
         "A(39h) init_heap(addr: usize, size: usize);",
-        "A(3Fh) printf(s: *const u8, v: u32);",
+        "A(3Fh) printf(s: *const u8, a: u32, b: u32, c: u32, d: u32);",
 
         "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
         "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",

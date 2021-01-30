@@ -11,3 +11,13 @@ const fn command(cmd: Command, other_bits: Option<u32>) -> u32 {
     };
     (cmd as u32) << 24 | other_bits
 }
+
+#[cfg(test)]
+mod tests {
+    #[test_case]
+    fn gpustat() {
+        use crate::bios;
+        use crate::hal::{Register, GPUSTAT};
+        assert!(bios::gpu_get_status() == GPUSTAT::load().bits());
+    }
+}

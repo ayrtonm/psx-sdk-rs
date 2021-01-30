@@ -1,7 +1,7 @@
 use super::command;
 use crate::gpu::{DMAMode, Depth, PackedVertex, Vertex, VideoMode};
 use crate::hal::{Write, GP1};
-use crate::illegal;
+use crate::std::illegal;
 
 impl GP1 {
     pub fn reset_gpu(&mut self) -> &mut Self {

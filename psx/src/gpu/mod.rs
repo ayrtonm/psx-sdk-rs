@@ -1,6 +1,7 @@
 //! Basic GPU data types
 
-use crate::hal::GP1;
+use crate::hal::{MutRegister, Register, GP1, GPUSTAT, I_STAT};
+use crate::interrupt::IRQ;
 
 mod color;
 mod disp_env;
@@ -11,10 +12,33 @@ mod vertex;
 pub use disp_env::DispEnv;
 pub use draw_env::DrawEnv;
 
-pub fn reset_graphics(res: (i16, i16), mode: VideoMode, depth: Depth, interlace: bool) {
-    GP1.display_mode(Vertex::new(res), mode, depth, interlace)
+pub fn reset_graphics<T: Into<Vertex>>(res: T, mode: VideoMode, depth: Depth, interlace: bool) {
+    GP1.reset_gpu()
+        .dma_mode(Some(DMAMode::GP0))
+        .display_mode(res.into(), mode, depth, interlace)
         .enable_display(true);
 }
+
+pub fn draw_sync() {
+    let mut gpu_stat = GPUSTAT::load();
+    if gpu_stat.dma_enabled() {
+        while !(gpu_stat.cmd_ready() && gpu_stat.dma_ready()) {
+            gpu_stat.reload();
+        }
+    } else {
+        gpu_stat.wait_cmd();
+    }
+}
+
+pub fn vsync() {
+    I_STAT::load_mut()
+        .ack(IRQ::Vblank)
+        .store()
+        .wait(IRQ::Vblank);
+}
+
+pub type Pixel = i16;
+pub type Command = u8;
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -27,8 +51,8 @@ pub struct Color {
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Vertex {
-    pub x: i16,
-    pub y: i16,
+    pub x: Pixel,
+    pub y: Pixel,
 }
 
 #[repr(C)]
@@ -75,8 +99,6 @@ pub enum Bpp {
     Bit15,
 }
 
-pub type Command = u8;
-
 pub const BLACK: Color = Color::new(0, 0, 0);
 pub const WHITE: Color = Color::new(0xFF, 0xFF, 0xFF);
 pub const RED: Color = Color::new(0xFF, 0, 0);
@@ -93,3 +115,6 @@ pub const LIME: Color = GREEN.average(YELLOW);
 pub const MINT: Color = GREEN.average(CYAN);
 pub const AQUA: Color = BLUE.average(CYAN);
 pub const INDIGO: Color = BLUE.average(VIOLET);
+
+pub const NTSC: VideoMode = VideoMode::NTSC;
+pub const PAL: VideoMode = VideoMode::PAL;

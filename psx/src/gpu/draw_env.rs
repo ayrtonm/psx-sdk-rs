@@ -23,6 +23,8 @@ pub struct DrawEnv {
     bg_size: Vertex,
 }
 
+impl AsSlice for DrawEnv {}
+
 impl DrawEnv {
     pub const fn new(offset: Vertex, size: Vertex, bg_color: Option<Color>) -> Self {
         let bg_color = match bg_color {
@@ -52,9 +54,11 @@ impl DrawEnv {
         }
     }
 
+    pub fn resolution(&self) -> Vertex {
+        self.bg_size
+    }
+
     pub fn set(&self) {
         GP0.write_slice(self.as_slice());
     }
 }
-
-impl AsSlice for DrawEnv {}

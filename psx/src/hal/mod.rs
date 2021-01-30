@@ -172,9 +172,9 @@ impl State for Mutable {}
 
 read_only! {
   /// Read responses to GP0(C0h) and GP1(10h) commands
-  GPUSTAT<u32>: 0x1F801810,
+  GPUREAD<u32>: 0x1F801810,
   /// Read GPU Status Register
-  GPUREAD<u32>: 0x1F801814
+  GPUSTAT<u32>: 0x1F801814
 }
 
 write_only! {

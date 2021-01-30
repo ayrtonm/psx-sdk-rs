@@ -1,4 +1,4 @@
-use crate::gpu::{PackedVertex, Vertex};
+use crate::gpu::{PackedVertex, Pixel, Vertex};
 
 impl From<Vertex> for u32 {
     fn from(vertex: Vertex) -> u32 {
@@ -6,14 +6,14 @@ impl From<Vertex> for u32 {
     }
 }
 
-impl From<(i16, i16)> for Vertex {
-    fn from((x, y): (i16, i16)) -> Vertex {
+impl From<(Pixel, Pixel)> for Vertex {
+    fn from((x, y): (Pixel, Pixel)) -> Vertex {
         Vertex { x, y }
     }
 }
 
 impl Vertex {
-    pub const fn new((x, y): (i16, i16)) -> Vertex {
+    pub const fn new((x, y): (Pixel, Pixel)) -> Vertex {
         Vertex { x, y }
     }
 

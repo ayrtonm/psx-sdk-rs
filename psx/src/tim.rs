@@ -1,8 +1,8 @@
 //! Parser for texture data in TIM format
 
 #![allow(dead_code)]
-use crate::gpu::{Bpp, Clut, TexPage, Vertex};
-use crate::illegal;
+use crate::gpu::{Bpp, Clut, Pixel, TexPage, Vertex};
+use crate::std::illegal;
 
 pub struct TIM<'a> {
     bpp: Bpp,
@@ -64,6 +64,6 @@ impl<'a> Bitmap<'a> {
     }
 
     fn offset(&self) -> Vertex {
-        (self.0[1] as i16, (self.0[1] >> 16) as i16).into()
+        (self.0[1] as Pixel, (self.0[1] >> 16) as Pixel).into()
     }
 }

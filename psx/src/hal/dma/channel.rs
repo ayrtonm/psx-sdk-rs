@@ -1,6 +1,6 @@
 use crate::dma::{BlockMode, Chop, Direction, Step, TransferMode};
 use crate::hal::{MutRegister, Register};
-use crate::illegal;
+use crate::std::illegal;
 
 const STEP: u32 = 1;
 const CHOP: u32 = 8;

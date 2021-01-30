@@ -22,7 +22,7 @@
 // Could be removed if necessary.
 #![feature(array_map)]
 #![feature(unsafe_cell_get_mut)]
-// Custom tests for psx crate
+// Required to test psx crate
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
 #![reexport_test_harness_main = "test_main"]
@@ -50,13 +50,3 @@ pub mod printer;
 pub mod tim;
 pub mod timer;
 pub mod unzip;
-
-const fn illegal() -> ! {
-    use core::hint::unreachable_unchecked;
-
-    if cfg!(feature = "forbid_UB") {
-        panic!("")
-    } else {
-        unsafe { unreachable_unchecked() }
-    }
-}

@@ -1,4 +1,4 @@
-use crate::gpu::{Clut, Color, TexCoord, TexPage, Vertex};
+use crate::gpu::{Clut, Color, Command, TexCoord, TexPage, Vertex};
 use crate::graphics::{Buffer, DoubleBuffer, DoubleRef, Initialize, Ref};
 use core::mem::MaybeUninit;
 
@@ -9,7 +9,7 @@ mod macros;
 #[repr(C)]
 pub struct PolyF3 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     v1: Vertex,
     v2: Vertex,
@@ -19,7 +19,7 @@ pub struct PolyF3 {
 #[repr(C)]
 pub struct PolyF4 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     v1: Vertex,
     v2: Vertex,
@@ -30,7 +30,7 @@ pub struct PolyF4 {
 #[repr(C)]
 pub struct PolyFT3 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     t0: TexCoord,
     clut: Clut,
@@ -46,7 +46,7 @@ pub struct PolyFT3 {
 #[repr(C)]
 pub struct PolyFT4 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     t0: TexCoord,
     clut: Clut,
@@ -65,7 +65,7 @@ pub struct PolyFT4 {
 #[repr(C)]
 pub struct PolyG3 {
     color0: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     color1: Color,
     _pad0: u8,
@@ -79,7 +79,7 @@ pub struct PolyG3 {
 #[repr(C)]
 pub struct PolyG4 {
     color0: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     color1: Color,
     _pad0: u8,
@@ -96,7 +96,7 @@ pub struct PolyG4 {
 #[repr(C)]
 pub struct PolyGT3 {
     color0: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     t0: TexCoord,
     clut: Clut,
@@ -116,7 +116,7 @@ pub struct PolyGT3 {
 #[repr(C)]
 pub struct PolyGT4 {
     color0: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     t0: TexCoord,
     clut: Clut,
@@ -141,7 +141,7 @@ pub struct PolyGT4 {
 #[repr(C)]
 pub struct LineF2 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     v1: Vertex,
 }
@@ -150,7 +150,7 @@ pub struct LineF2 {
 #[repr(C)]
 pub struct LineF<const N: usize> {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     vertices: [Vertex; N],
     term: u32,
 }
@@ -159,7 +159,7 @@ pub struct LineF<const N: usize> {
 #[repr(C)]
 pub struct LineG2 {
     color0: Color,
-    cmd: u8,
+    cmd: Command,
     v0: Vertex,
     color1: Color,
     _pad: u8,
@@ -185,7 +185,7 @@ pub struct LineG<const N: usize> {
 #[repr(C)]
 pub struct Tile {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
     size: Vertex,
 }
@@ -194,7 +194,7 @@ pub struct Tile {
 #[repr(C)]
 pub struct Tile1 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
 }
 
@@ -202,7 +202,7 @@ pub struct Tile1 {
 #[repr(C)]
 pub struct Tile8 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
 }
 
@@ -210,7 +210,7 @@ pub struct Tile8 {
 #[repr(C)]
 pub struct Tile16 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
 }
 
@@ -218,7 +218,7 @@ pub struct Tile16 {
 #[repr(C)]
 pub struct Sprt {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
     t0: TexCoord,
     clut: Clut,
@@ -229,7 +229,7 @@ pub struct Sprt {
 #[repr(C)]
 pub struct Sprt8 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
     t0: TexCoord,
     clut: Clut,
@@ -239,7 +239,7 @@ pub struct Sprt8 {
 #[repr(C)]
 pub struct Sprt16 {
     color: Color,
-    cmd: u8,
+    cmd: Command,
     offset: Vertex,
     t0: TexCoord,
     clut: Clut,

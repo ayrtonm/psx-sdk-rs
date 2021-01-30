@@ -1,5 +1,18 @@
+use core::hint::unreachable_unchecked;
 use core::ops::{Range, RangeFrom};
 use core::ptr::slice_from_raw_parts;
+
+/// Prints a formatted message with up to four u32 arguments to the TTY console.
+#[macro_export]
+macro_rules! printf {
+    ($msg:expr, $arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr) => {
+        crate::bios::printf($msg.as_ptr(), $arg0, $arg1, $arg2, $arg3);
+    };
+
+    ($msg:expr $(,$args:expr)*) => {
+        printf!($msg $(,$args)*, unsafe { core::mem::MaybeUninit::uninit().assume_init() });
+    };
+}
 
 // cfg(test) is only needed because this is private and only used in tests for
 // now
@@ -56,6 +69,14 @@ macro_rules! const_iter {
             }
         }
     };
+}
+
+pub const fn illegal() -> ! {
+    if cfg!(feature = "forbid_UB") {
+        panic!("")
+    } else {
+        unsafe { unreachable_unchecked() }
+    }
 }
 
 pub const unsafe fn get_unchecked<T>(slice: &[T], idx: usize) -> &T {
