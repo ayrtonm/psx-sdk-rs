@@ -59,9 +59,9 @@ for building the rust compiler and LLVM for more specifics.
 
 ## Installing cargo-psx
 
-`cargo-psx` acts as a wrapper for `cargo-build` and `cargo-check` in addition to
-simias's `elf2psexe` utility. Basically this lets you run `cargo psx` to build
-instead of `cargo build +psx -Z build-std=core,alloc --target=mipsel-sony-psx`.
+`cargo-psx` is an optional wrapper for cargo that sets some commonly required
+flags and arguments. Basically this lets you just run `cargo psx run` instead of
+`cargo run +psx -Z build-std=core,alloc --target mipsel-sony-psx`.
 
 To install, just do:
 
@@ -69,20 +69,30 @@ To install, just do:
 cd cargo-psx
 cargo install --path .
 ```
+
+To uninstall, just do:
+
+```
+cargo uninstall cargo-psx
+```
     
 ## Usage
 
 The `examples` directory has some demos which may or may not be broken at the
-moment due to changes in the `psx` crate. To try one out just run `cargo psx`
-from the demo's directory. This defaults to building an ELF using a toolchain
-named `psx` and repackaging it into a PSEXE with region `NA`. See `cargo psx -h`
-for more.
+moment due to changes in the `psx` crate. To try them out just run `cargo psx
+run` from the demo's directory. The demos are configured to run in
+[mednafen](https://mednafen.github.io/) by default. To use another emulator run
+`cargo psx build` then open the PS-EXE in `/target/mipsel-sony-psx/release/`.
+Some emulators may require appending the ".psexe" file extension to the
+executable. To use `cargo psx run` with other emulators change the
+[runner](https://doc.rust-lang.org/cargo/reference/config.html#target) for the
+`mipsel-sony-psx` target.
 
 ### Program template
 
-To create a new program just use `cargo-init`, replace `src/main.rs` with
-this template and add `psx = { path = "path/to/psx/crate" }` to `Cargo.toml`
-under `[dependencies]`. Note the unmangled main interface.
+To create a new program just use `cargo init` and add `psx = { path =
+"path/to/psx/crate" }` to `Cargo.toml` under `[dependencies]`. Then replace
+`src/main.rs` with the following template
 
 ```rust
 #![no_std]
@@ -93,6 +103,14 @@ extern crate psx;
 #[no_mangle]
 fn main() {
 }
+```
+
+Optionally create a `.cargo` directory and a `config.toml` inside with the
+following
+
+```
+[target.mipsel-sony-psx]
+runner = "mednafen"
 ```
 
 ## Documentation
@@ -107,9 +125,3 @@ cargo doc --target mipsel-unknown-linux-gnu
 Then open `target/mipsel-unknown-linux-gnu/doc/psx/index.html` in a browser.
 Once things become a bit more stable I'll probably document things more
 thoroughly and link a tutorial here.
-
-## Optionally running executables on hardware
-
-You'll also need a way to run custom "PS-EXE" executables on the
-console, I (simias) use an Xplorer-FX flashed with caetla 0.34 and the
-catflap4linux to control it.
