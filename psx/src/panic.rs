@@ -25,11 +25,11 @@ fn panic(info: &PanicInfo) -> ! {
     pr.load_font();
     match info.location() {
         Some(location) => {
-            pr.print(b"Panicked at ", []);
+            pr.print("Panicked at ", []);
             pr.print(location.file().as_bytes(), []);
-            pr.println(b":{}:{}", [location.line(), location.column()]);
+            pr.println(":{}:{}", [location.line(), location.column()]);
         },
-        None => pr.println(b"Panicked at unknown location", []),
+        None => pr.println("Panicked at unknown location", []),
     }
     pr.println(message(info), []);
     fb.swap();
@@ -44,13 +44,13 @@ fn panic(info: &PanicInfo) -> ! {
 fn panic(info: &PanicInfo) -> ! {
     match info.location() {
         Some(location) => {
-            printf!(b"Panicked at \0");
+            printf!("Panicked at \0");
             printf!(location.file().as_bytes());
-            printf!(b":%d:%d\n\0", location.line(), location.column());
+            printf!(":%d:%d\n\0", location.line(), location.column());
         },
-        None => printf!(b"Panicked at unknown location\n\0"),
+        None => printf!("Panicked at unknown location\n\0"),
     }
     printf!(message(info));
-    printf!(b"\n\0");
+    printf!("\n\0");
     loop {}
 }

@@ -67,19 +67,19 @@ impl Printer {
     }
 
     pub fn println<'m, M, const A: usize>(&mut self, msg: M, args: [u32; A])
-    where M: IntoIterator<Item = &'m u8> {
+    where M: AsRef<[u8]> {
         self.print(msg, args);
         self.newline();
     }
 
     pub fn print<'m, M, const A: usize>(&mut self, msg: M, args: [u32; A])
-    where M: IntoIterator<Item = &'m u8> {
+    where M: AsRef<[u8]> {
         let mut fmt_arg = false;
         let mut leading_zeros = false;
         let mut hexdecimal = false;
         let mut whitespace = false;
         let mut args_iter = args.iter();
-        for &ascii in msg {
+        for &ascii in msg.as_ref() {
             match ascii {
                 b'\n' => self.newline(),
                 b'\0' => break,
