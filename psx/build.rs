@@ -32,14 +32,13 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     let returns: bool;
     let mut ret = String::new();
     ret.push_str("\n");
-    ret.push_str("#[naked]\n");
-    ret.push_str("#[no_mangle]\n");
-    ret.push_str("#[inline(never)]\n");
     ret.push_str(&format!(
         "/// [BIOS Function {}({}h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)\n",
         fn_type, fn_num
     ));
-    ret.push_str("pub extern \"C\" fn ");
+    ret.push_str("#[naked]\n");
+    ret.push_str("#[inline(never)]\n");
+    ret.push_str("pub fn ");
     ret.push_str(fn_sig);
     ret.push_str(" {\n");
     match fn_sig.split("->").skip(1).next() {
@@ -85,7 +84,7 @@ fn main() {
         "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
         "A(38h) realloc(old_buf: *const u8, new_size: usize);",
         "A(39h) init_heap(addr: usize, size: usize);",
-        "A(3Fh) printf(s: *const u8, a: u32, b: u32, c: u32, d: u32);",
+        "A(3Fh) printf<S, T, U, V>(s: *const u8, a: S, b: T, c: U, d: V);",
 
         "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
         "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",
@@ -107,6 +106,7 @@ fn main() {
         "B(5Bh) change_clear_pad(int: u32);",
 
         "C(0Ah) change_clear_rcnt(t: u32, flag: u32);",
+        "C(13h) flush_std_in_out_put();",
 
         "SYS(01h) enter_critical_section() -> u8;",
         "SYS(02h) exit_critical_section();",
@@ -121,8 +121,19 @@ fn main() {
     let src = doc + &header + &src;
     fs::write(src_file, src).expect("Unable to write to src/bios.rs");
 
+    // Set PSEXE header's region in the linker script template
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let linker_script = include_str!("psexe.ld");
+    let template = include_str!("psexe.ld").to_string();
+    let region_str = match env::var_os("PSX_REGION").as_ref().map(|s| s.to_str()).flatten() {
+        Some("EU") => "Sony Computer Entertainment Inc. for Europe area",
+        Some("JP") => "Sony Computer Entertainment Inc. for Japan area",
+        Some("NA") | _ => "Sony Computer Entertainment Inc. for North America area",
+    };
+    let region_bytes = region_str.as_bytes()
+        .iter()
+        .map(|b| format!("BYTE({}); ", b))
+        .collect::<String>();
+    let linker_script = template.replace("$REGION", &region_bytes);
     fs::write(out.join("psexe.ld"), linker_script).unwrap();
     println!("cargo:rustc-link-search={}", out.display());
 }

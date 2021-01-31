@@ -2,15 +2,15 @@ use core::hint::unreachable_unchecked;
 use core::ops::{Range, RangeFrom};
 use core::ptr::slice_from_raw_parts;
 
-/// Prints a formatted message with up to four u32 arguments to the TTY console.
+/// Prints a formatted message with up to four arguments to the TTY console.
 #[macro_export]
 macro_rules! printf {
     ($msg:expr, $arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr) => {
-        crate::bios::printf($msg.as_ptr(), $arg0, $arg1, $arg2, $arg3);
+        $crate::bios::printf($msg.as_ptr(), $arg0, $arg1, $arg2, $arg3);
     };
 
     ($msg:expr $(,$args:expr)*) => {
-        printf!($msg $(,$args)*, unsafe { core::mem::MaybeUninit::uninit().assume_init() });
+        printf!($msg $(,$args)*, unsafe { core::mem::MaybeUninit::<u32>::uninit().assume_init() });
     };
 }
 
