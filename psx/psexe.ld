@@ -41,16 +41,18 @@ SECTIONS {
         LONG(STACK_INIT);
         /* Initial SP/R29 & FP/R30 offset */
         LONG(0);
-        $REGION
         /* 038h-04Bh Reserved for A(43h) Function (should be zerofilled in exefile) */
+        LONG(0); LONG(0);
+        LONG(0); LONG(0);
+        LONG(0);
         /* 04Ch-xxxh ASCII marker */
                     /* "Sony Computer Entertainment Inc. for Japan area" */
                     /* "Sony Computer Entertainment Inc. for Europe area" */
                     /* "Sony Computer Entertainment Inc. for North America area" */
                     /* (or often zerofilled in some homebrew files) */
                     /* (the BIOS doesn't verify this string, and boots fine without it) */
+        $REGION
         /* xxxh-7FFh Zerofilled */
-        /* . = . + 1992; */
         . = ALIGN(2048);
     } > HEADER
 
