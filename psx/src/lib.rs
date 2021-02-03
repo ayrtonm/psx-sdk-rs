@@ -32,20 +32,24 @@ macro_rules! as_array {
 }
 
 #[cfg(any(feature = "NA_region", test))]
+#[no_mangle]
 #[doc(hidden)]
 #[link_section = ".region"]
 pub static _REGION: [u8; 55] = as_array!("Sony Computer Entertainment Inc. for North America area");
 
 #[cfg(feature = "EU_region")]
+#[no_mangle]
 #[doc(hidden)]
 #[link_section = ".region"]
 pub static _REGION: [u8; 48] = as_array!("Sony Computer Entertainment Inc. for Europe area");
 
 #[cfg(feature = "J_region")]
+#[no_mangle]
 #[doc(hidden)]
 #[link_section = ".region"]
 pub static _REGION: [u8; 47] = as_array!("Sony Computer Entertainment Inc. for Japan area");
 
+#[no_mangle]
 #[doc(hidden)]
 #[link_section = ".psx_exe"]
 pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
