@@ -1,6 +1,6 @@
 #![cfg(test)]
-use core::any::type_name;
 use crate::std::cstr;
+use core::any::type_name;
 
 pub trait Test {
     fn run(&self);

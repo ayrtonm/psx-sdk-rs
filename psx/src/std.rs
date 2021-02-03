@@ -1,19 +1,6 @@
 use core::ops::{Range, RangeFrom};
 use core::ptr::{slice_from_raw_parts, write_volatile};
 
-/// Prints a formatted message with up to eight arguments to the TTY console.
-#[macro_export]
-macro_rules! printf {
-    ($msg:expr, $arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr,
-        $arg4:expr, $arg5:expr, $arg6:expr, $arg7:expr) => {
-        $crate::bios::printf($msg.as_ptr(), $arg0, $arg1, $arg2, $arg3, $arg4, $arg5, $arg6, $arg7);
-    };
-
-    ($msg:expr $(,$args:expr)*) => {
-        printf!($msg $(,$args)*, unsafe { core::mem::MaybeUninit::<u32>::uninit().assume_init() });
-    };
-}
-
 // cfg(test) is only needed because this is private and only used in tests for
 // now
 #[cfg(test)]
@@ -81,7 +68,8 @@ macro_rules! illegal {
     };
 }
 
-// Turns a str or byte slice into a null-terminated C str by changing the last u8 to zero
+// Turns a str or byte slice into a null-terminated C str by changing the last
+// u8 to zero
 pub fn cstr<T: AsRef<[u8]> + ?Sized>(s: &T) -> &T {
     let slice = s.as_ref();
     unsafe {

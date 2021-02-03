@@ -2,7 +2,8 @@
 #![no_std]
 //#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
-#![feature(asm, naked_functions)]
+#![feature(global_asm)]
+#![feature(c_variadic)]
 #![feature(alloc_error_handler)]
 #![feature(panic_info_message, fmt_as_str)]
 // Const features used to increase the potential scope of const testing.
@@ -24,20 +25,13 @@
 #![reexport_test_harness_main = "test_main"]
 #![cfg_attr(test, no_main)]
 
-#[macro_use]
-mod include;
-#[macro_use]
-mod std;
-
 macro_rules! as_array {
     ($msg:literal) => {
-        unsafe {
-            *($msg.as_ptr() as *const _)
-        }
+        unsafe { *($msg.as_ptr() as *const _) }
     };
 }
 
-#[cfg(feature = "NA_region")]
+#[cfg(any(feature = "NA_region", test))]
 #[doc(hidden)]
 #[link_section = ".region"]
 pub static _REGION: [u8; 55] = as_array!("Sony Computer Entertainment Inc. for North America area");
@@ -56,13 +50,19 @@ pub static _REGION: [u8; 47] = as_array!("Sony Computer Entertainment Inc. for J
 #[link_section = ".psx_exe"]
 pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
 
+#[macro_use]
+mod include;
+#[macro_use]
+mod std;
+#[macro_use]
+pub mod bios;
+
 mod allocator;
 mod builtins;
 mod panic;
 mod runtime;
 mod test;
 
-pub mod bios;
 pub mod dma;
 pub mod framebuffer;
 pub mod gpu;
