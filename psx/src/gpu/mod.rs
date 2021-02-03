@@ -39,6 +39,7 @@ pub fn vsync() {
 
 pub type Pixel = i16;
 pub type Command = u8;
+pub type Coordinate = (Pixel, Pixel);
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq)]

@@ -22,7 +22,7 @@ ENTRY(_start)
 SECTIONS {
     .psx_exe_header : {
         /* ASCII ID "PS-X EXE" */
-        BYTE(80); BYTE(83); BYTE(45); BYTE(88); BYTE(32); BYTE(69); BYTE(88); BYTE(69);
+        KEEP(*(.psx_exe));
         /* Zerofilled */
         LONG(0); LONG(0);
         /* Initial PC */
@@ -46,12 +46,7 @@ SECTIONS {
         LONG(0); LONG(0);
         LONG(0);
         /* 04Ch-xxxh ASCII marker */
-                    /* "Sony Computer Entertainment Inc. for Japan area" */
-                    /* "Sony Computer Entertainment Inc. for Europe area" */
-                    /* "Sony Computer Entertainment Inc. for North America area" */
-                    /* (or often zerofilled in some homebrew files) */
-                    /* (the BIOS doesn't verify this string, and boots fine without it) */
-        $REGION
+        KEEP(*(.region));
         /* xxxh-7FFh Zerofilled */
         . = ALIGN(2048);
     } > HEADER

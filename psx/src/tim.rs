@@ -2,7 +2,6 @@
 
 #![allow(dead_code)]
 use crate::gpu::{Bpp, Clut, Pixel, TexPage, Vertex};
-use crate::std::illegal;
 
 pub struct TIM<'a> {
     bpp: Bpp,
@@ -16,7 +15,11 @@ impl<'a> TIM<'a> {
             0 => Bpp::Bit4,
             1 => Bpp::Bit8,
             2 => Bpp::Bit15,
-            _ => illegal(),
+            3 => illegal!("TIM contained an invalid bpp\0"),
+            _ => {
+                // This is OK since `& 0b11` in the matched expr restricts its value to [0, 3]
+                unsafe { core::hint::unreachable_unchecked() }
+            },
         };
         let (clut_bmp, other) = if (src[1] & 8) != 0 {
             let (bmp, other) = Bitmap::new(&mut src[2..]);

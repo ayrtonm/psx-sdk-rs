@@ -1,7 +1,6 @@
 use super::command;
 use crate::gpu::{DMAMode, Depth, PackedVertex, Vertex, VideoMode};
 use crate::hal::{Write, GP1};
-use crate::std::illegal;
 
 impl GP1 {
     pub fn reset_gpu(&mut self) -> &mut Self {
@@ -53,12 +52,12 @@ impl GP1 {
             512 => 2,
             640 => 3,
             368 => 1 << 6,
-            _ => illegal(),
+            _ => illegal!("Invalid horizontal resolution\0"),
         };
         let vres = match res.y {
             240 => 0,
             480 => 1,
-            _ => illegal(),
+            _ => illegal!("Invalid vertical resolution\0"),
         };
         let settings =
             hres | vres << 2 | (mode as u32) << 3 | (depth as u32) << 4 | (interlace as u32) << 5;

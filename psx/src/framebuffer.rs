@@ -1,6 +1,6 @@
 //! Double-buffered framebuffer routines
 
-use crate::gpu::{reset_graphics, Color, Depth, DispEnv, DrawEnv, Pixel, Vertex, VideoMode};
+use crate::gpu::{reset_graphics, Color, Coordinate, Depth, DispEnv, DrawEnv, Vertex, VideoMode};
 
 /// Configuration for a double-buffered framebuffer.
 pub struct Framebuffer {
@@ -13,9 +13,8 @@ impl Framebuffer {
     /// Creates a framebuffer with buffers with resolution `res` starting at
     /// `buffer_0` and `buffer_1` and background color `bg_color`. If `bg_color`
     /// is `None`, buffers are not cleared after each swap.
-    pub const fn new(
-        buffer_0: (Pixel, Pixel), buffer_1: (Pixel, Pixel), res: (Pixel, Pixel),
-        bg_color: Option<Color>,
+    pub const fn uninit(
+        buffer_0: Coordinate, buffer_1: Coordinate, res: Coordinate, bg_color: Option<Color>,
     ) -> Self {
         let buffer_0 = Vertex::new(buffer_0);
         let buffer_1 = Vertex::new(buffer_1);
@@ -32,11 +31,11 @@ impl Framebuffer {
         }
     }
 
-    pub fn initialized(
-        buffer_0: (Pixel, Pixel), buffer_1: (Pixel, Pixel), res: (Pixel, Pixel),
-        bg_color: Option<Color>, mode: VideoMode, depth: Depth, interlace: bool,
+    pub fn new(
+        buffer_0: Coordinate, buffer_1: Coordinate, res: Coordinate, bg_color: Option<Color>,
+        mode: VideoMode, depth: Depth, interlace: bool,
     ) -> Self {
-        let mut fb = Framebuffer::new(buffer_0, buffer_1, res, bg_color);
+        let mut fb = Framebuffer::uninit(buffer_0, buffer_1, res, bg_color);
         fb.init(mode, depth, interlace);
         fb
     }

@@ -3,15 +3,12 @@
 //#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(asm, naked_functions)]
-// Required for many things in this crate.
-#![feature(min_const_generics)]
 #![feature(alloc_error_handler)]
 #![feature(panic_info_message, fmt_as_str)]
 // Const features used to increase the potential scope of const testing.
 #![feature(
     const_ptr_offset,
     const_mut_refs,
-    const_int_pow,
     const_slice_from_raw_parts,
     const_raw_ptr_deref,
     const_fn_fn_ptr_basics,
@@ -21,7 +18,6 @@
 #![feature(const_unreachable_unchecked, const_panic)]
 // Could be removed if necessary.
 #![feature(array_map)]
-#![feature(unsafe_cell_get_mut)]
 // Required to test psx crate
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
@@ -32,6 +28,33 @@
 mod include;
 #[macro_use]
 mod std;
+
+macro_rules! as_array {
+    ($msg:literal) => {
+        unsafe {
+            *($msg.as_ptr() as *const _)
+        }
+    };
+}
+
+#[cfg(feature = "NA_region")]
+#[doc(hidden)]
+#[link_section = ".region"]
+pub static _REGION: [u8; 55] = as_array!("Sony Computer Entertainment Inc. for North America area");
+
+#[cfg(feature = "EU_region")]
+#[doc(hidden)]
+#[link_section = ".region"]
+pub static _REGION: [u8; 48] = as_array!("Sony Computer Entertainment Inc. for Europe area");
+
+#[cfg(feature = "J_region")]
+#[doc(hidden)]
+#[link_section = ".region"]
+pub static _REGION: [u8; 47] = as_array!("Sony Computer Entertainment Inc. for Japan area");
+
+#[doc(hidden)]
+#[link_section = ".psx_exe"]
+pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
 
 mod allocator;
 mod builtins;

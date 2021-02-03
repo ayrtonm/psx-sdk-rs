@@ -41,6 +41,24 @@ impl<T> DerefMut for Packet<T> {
     }
 }
 
+// TODO: Review this as it may be a bad idea
+use super::Primitive;
+impl<T: Primitive> Primitive for Packet<T> {
+    fn primitive(&self) -> &[u32] {
+        self.deref().primitive()
+    }
+}
+impl<'a, T: Primitive> Primitive for Ref<'a, T> {
+    fn primitive(&self) -> &[u32] {
+        self.deref().primitive()
+    }
+}
+impl<'a, T: Primitive> Primitive for DoubleRef<'a, T> {
+    fn primitive(&self) -> &[u32] {
+        self.deref().primitive()
+    }
+}
+
 pub struct Ref<'a, T>(&'a mut Packet<T>);
 
 impl<'a, T> Ref<'a, T> {

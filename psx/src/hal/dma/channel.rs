@@ -1,6 +1,5 @@
 use crate::dma::{BlockMode, Chop, Direction, Step, TransferMode};
 use crate::hal::{MutRegister, Register};
-use crate::std::illegal;
 
 const STEP: u32 = 1;
 const CHOP: u32 = 8;
@@ -46,7 +45,7 @@ pub trait BlockControl: MutRegister<u32> + SharedBlockControl {
                 let words = match words {
                     0..=0xFFFF => words as u32,
                     0x1_0000 => 0,
-                    _ => illegal(),
+                    _ => illegal!("TODO\0"),
                 };
                 *self.get_mut() = words;
             },

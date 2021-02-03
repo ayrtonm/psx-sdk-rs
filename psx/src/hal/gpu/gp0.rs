@@ -1,6 +1,6 @@
 use super::command;
 use crate::gpu::{Color, Vertex};
-use crate::graphics::AsSlice;
+use crate::graphics::Primitive;
 use crate::hal::{Write, GP0};
 
 impl GP0 {
@@ -25,7 +25,7 @@ impl GP0 {
         self.write(command(0x1F, None));
     }
 
-    pub fn draw<P: AsSlice>(&mut self, primitive: &P) -> &mut Self {
-        self.write_slice(primitive.as_slice())
+    pub fn draw<P: Primitive>(&mut self, prim: &P) -> &mut Self {
+        self.write_slice(prim.primitive())
     }
 }

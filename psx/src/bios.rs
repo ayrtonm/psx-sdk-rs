@@ -4,27 +4,55 @@
 
 /// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn file_open(filename: *const u8, accessmode: u32) -> u8 {
+#[inline(always)]
+pub extern fn file_open(filename: *const u8, accessmode: u32) -> u8 {
     let ret: u8;
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x00",
+              li $9, 0x00
+              jal $ra",
                 lateout("$2") ret);
     }
     ret
 }
 
+/// [BIOS Function A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+#[naked]
+#[inline(always)]
+pub extern fn exit(exitcode: i32) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x06
+              jal $ra",
+                lateout("$2") _);
+    }
+}
+
+/// [BIOS Function A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+#[naked]
+#[inline(always)]
+pub extern fn save_state(buf: *mut u8) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x13
+              jal $ra",
+                lateout("$2") _);
+    }
+}
+
 /// [BIOS Function A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn rand() -> i16 {
+#[inline(always)]
+pub extern fn rand() -> i16 {
     let ret: i16;
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x2F",
+              li $9, 0x2F
+              jal $ra",
                 lateout("$2") ret);
     }
     ret
@@ -32,25 +60,27 @@ pub fn rand() -> i16 {
 
 /// [BIOS Function A(30h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn srand(seed: u32) {
+#[inline(always)]
+pub extern fn srand(seed: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x30",
+              li $9, 0x30
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(33h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn malloc(size: usize) -> *mut u8 {
+#[inline(always)]
+pub extern fn malloc(size: usize) -> *mut u8 {
     let ret: *mut u8;
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x33",
+              li $9, 0x33
+              jal $ra",
                 lateout("$2") ret);
     }
     ret
@@ -58,25 +88,27 @@ pub fn malloc(size: usize) -> *mut u8 {
 
 /// [BIOS Function A(34h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn free(buf: *mut u8) {
+#[inline(always)]
+pub extern fn free(buf: *mut u8) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x34",
+              li $9, 0x34
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(37h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn calloc(sizex: usize, sizey: usize) -> *const u8 {
+#[inline(always)]
+pub extern fn calloc(sizex: usize, sizey: usize) -> *const u8 {
     let ret: *const u8;
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x37",
+              li $9, 0x37
+              jal $ra",
                 lateout("$2") ret);
     }
     ret
@@ -84,145 +116,170 @@ pub fn calloc(sizex: usize, sizey: usize) -> *const u8 {
 
 /// [BIOS Function A(38h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn realloc(old_buf: *const u8, new_size: usize) {
+#[inline(always)]
+pub extern fn realloc(old_buf: *const u8, new_size: usize) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x38",
+              li $9, 0x38
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(39h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn init_heap(addr: usize, size: usize) {
+#[inline(always)]
+pub extern fn init_heap(addr: usize, size: usize) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x39",
+              li $9, 0x39
+              jal $ra",
+                lateout("$2") _);
+    }
+}
+
+/// [BIOS Function A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+#[naked]
+#[inline(always)]
+pub extern fn system_error_exit(exitcode: i32) {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0x3A
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn printf<S, T, U, V>(s: *const u8, a: S, b: T, c: U, d: V) {
+#[inline(always)]
+pub extern fn printf<S, T, U, V, W, X, Y, Z>(msg: *const u8, arg0: S, arg1: T, arg2: U, arg3: V, arg4: W, arg5: X, arg6: Y, arg7: Z) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x3F",
+              li $9, 0x3F
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn load_exe_header(filename: *const u8, headerbuf: *mut u8) {
+#[inline(always)]
+pub extern fn load_exe_header(filename: *const u8, headerbuf: *mut u8) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x41",
+              li $9, 0x41
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn load_exe_file(filename: *const u8, headerbuf: *mut u8) {
+#[inline(always)]
+pub extern fn load_exe_file(filename: *const u8, headerbuf: *mut u8) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x42",
+              li $9, 0x42
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32) {
+#[inline(always)]
+pub extern fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x43",
+              li $9, 0x43
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn flush_cache() {
+#[inline(always)]
+pub extern fn flush_cache() {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x44",
+              li $9, 0x44
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(47h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
+#[inline(always)]
+pub extern fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x47",
+              li $9, 0x47
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(48h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn gpu_gp1_command_word(cmd: u32) {
+#[inline(always)]
+pub extern fn gpu_gp1_command_word(cmd: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x48",
+              li $9, 0x48
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(49h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn gpu_command_word(cmd: u32) {
+#[inline(always)]
+pub extern fn gpu_command_word(cmd: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x49",
+              li $9, 0x49
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn gpu_command_word_params(src: *const u32, num: usize) {
+#[inline(always)]
+pub extern fn gpu_command_word_params(src: *const u32, num: usize) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x4A",
+              li $9, 0x4A
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(4Dh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn gpu_get_status() -> u32 {
+#[inline(always)]
+pub extern fn gpu_get_status() -> u32 {
     let ret: u32;
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x4D",
+              li $9, 0x4D
+              jal $ra",
                 lateout("$2") ret);
     }
     ret
@@ -230,109 +287,131 @@ pub fn gpu_get_status() -> u32 {
 
 /// [BIOS Function A(51h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32) {
+#[inline(always)]
+pub extern fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x51",
+              li $9, 0x51
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function A(72h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn cd_remove() {
+#[inline(always)]
+pub extern fn cd_remove() {
     unsafe {
         asm!(".set noreorder
               j 0xA0
-              li $9, 0x72",
+              li $9, 0x72
+              jal $ra",
+                lateout("$2") _);
+    }
+}
+
+/// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+#[naked]
+#[inline(always)]
+pub extern fn warm_boot() {
+    unsafe {
+        asm!(".set noreorder
+              j 0xA0
+              li $9, 0xA0
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize) {
+#[inline(always)]
+pub extern fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize) {
     unsafe {
         asm!(".set noreorder
               j 0xB0
-              li $9, 0x12",
+              li $9, 0x12
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn start_pad() {
+#[inline(always)]
+pub extern fn start_pad() {
     unsafe {
         asm!(".set noreorder
               j 0xB0
-              li $9, 0x13",
+              li $9, 0x13
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn stop_pad() {
+#[inline(always)]
+pub extern fn stop_pad() {
     unsafe {
         asm!(".set noreorder
               j 0xB0
-              li $9, 0x14",
+              li $9, 0x14
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn change_clear_pad(int: u32) {
+#[inline(always)]
+pub extern fn change_clear_pad(int: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xB0
-              li $9, 0x5B",
+              li $9, 0x5B
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn change_clear_rcnt(t: u32, flag: u32) {
+#[inline(always)]
+pub extern fn change_clear_rcnt(t: u32, flag: u32) {
     unsafe {
         asm!(".set noreorder
               j 0xC0
-              li $9, 0x0A",
+              li $9, 0x0A
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function C(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn flush_std_in_out_put() {
+#[inline(always)]
+pub extern fn flush_std_in_out_put() {
     unsafe {
         asm!(".set noreorder
               j 0xC0
-              li $9, 0x13",
+              li $9, 0x13
+              jal $ra",
                 lateout("$2") _);
     }
 }
 
 /// [BIOS Function SYS(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn enter_critical_section() -> u8 {
+#[inline(always)]
+pub extern fn enter_critical_section() -> u8 {
     let ret: u8;
     unsafe {
         asm!(".set noreorder
               li $4, 0x01
-              syscall 0x0",
+              syscall 0x0
+              jal $ra",
                 lateout("$2") ret);
     }
     ret
@@ -340,12 +419,13 @@ pub fn enter_critical_section() -> u8 {
 
 /// [BIOS Function SYS(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[naked]
-#[inline(never)]
-pub fn exit_critical_section() {
+#[inline(always)]
+pub extern fn exit_critical_section() {
     unsafe {
         asm!(".set noreorder
               li $4, 0x02
-              syscall 0x0",
+              syscall 0x0
+              jal $ra",
                 lateout("$2") _);
     }
 }

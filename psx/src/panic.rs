@@ -20,7 +20,7 @@ fn panic(info: &PanicInfo) -> ! {
     let buf0 = zero;
     let buf1 = (0, 240);
 
-    let mut fb = Framebuffer::initialized(buf0, buf1, res, None, NTSC, Depth::High, false);
+    let mut fb = Framebuffer::new(buf0, buf1, res, None, NTSC, Depth::High, false);
     let mut pr = Printer::new(zero, zero, res, None);
     pr.load_font();
     match info.location() {
@@ -36,21 +36,20 @@ fn panic(info: &PanicInfo) -> ! {
     loop {}
 }
 
-// This usually prints some trash in addition to panic info
-// There's no easy fix for this w/o heap allocation which may make it less
-// flexible
 #[panic_handler]
 #[cfg(not(feature = "pretty_panic"))]
 fn panic(info: &PanicInfo) -> ! {
+    use crate::std::cstr;
+
     match info.location() {
         Some(location) => {
             printf!("Panicked at \0");
-            printf!(location.file().as_bytes());
+            printf!(cstr(location.file().as_bytes()));
             printf!(":%d:%d\n\0", location.line(), location.column());
         },
         None => printf!("Panicked at unknown location\n\0"),
     }
-    printf!(message(info));
+    printf!(cstr(message(info)));
     printf!("\n\0");
     loop {}
 }

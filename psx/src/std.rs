@@ -1,12 +1,12 @@
-use core::hint::unreachable_unchecked;
 use core::ops::{Range, RangeFrom};
-use core::ptr::slice_from_raw_parts;
+use core::ptr::{slice_from_raw_parts, write_volatile};
 
-/// Prints a formatted message with up to four arguments to the TTY console.
+/// Prints a formatted message with up to eight arguments to the TTY console.
 #[macro_export]
 macro_rules! printf {
-    ($msg:expr, $arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr) => {
-        $crate::bios::printf($msg.as_ptr(), $arg0, $arg1, $arg2, $arg3);
+    ($msg:expr, $arg0:expr, $arg1:expr, $arg2:expr, $arg3:expr,
+        $arg4:expr, $arg5:expr, $arg6:expr, $arg7:expr) => {
+        $crate::bios::printf($msg.as_ptr(), $arg0, $arg1, $arg2, $arg3, $arg4, $arg5, $arg6, $arg7);
     };
 
     ($msg:expr $(,$args:expr)*) => {
@@ -71,12 +71,23 @@ macro_rules! const_iter {
     };
 }
 
-pub const fn illegal() -> ! {
-    if cfg!(feature = "forbid_UB") {
-        panic!("")
-    } else {
-        unsafe { unreachable_unchecked() }
+macro_rules! illegal {
+    ($msg:literal) => {
+        if cfg!(feature = "forbid_UB") {
+            panic!($msg)
+        } else {
+            unsafe { core::hint::unreachable_unchecked() }
+        }
+    };
+}
+
+// Turns a str or byte slice into a null-terminated C str by changing the last u8 to zero
+pub fn cstr<T: AsRef<[u8]> + ?Sized>(s: &T) -> &T {
+    let slice = s.as_ref();
+    unsafe {
+        write_volatile(slice.as_ptr().add(slice.len() - 1) as *mut u8, 0);
     }
+    s
 }
 
 pub const unsafe fn get_unchecked<T>(slice: &[T], idx: usize) -> &T {

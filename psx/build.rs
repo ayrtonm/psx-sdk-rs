@@ -37,8 +37,8 @@ fn mk_bios_fn(fn_desc: &str) -> String {
         fn_type, fn_num
     ));
     ret.push_str("#[naked]\n");
-    ret.push_str("#[inline(never)]\n");
-    ret.push_str("pub fn ");
+    ret.push_str("#[inline(always)]\n");
+    ret.push_str("pub extern fn ");
     ret.push_str(fn_sig);
     ret.push_str(" {\n");
     match fn_sig.split("->").skip(1).next() {
@@ -57,7 +57,9 @@ fn mk_bios_fn(fn_desc: &str) -> String {
     ret.push_str("\n");
     ret.push_str("              ");
     ret.push_str(stmts[1]);
-    ret.push_str("\",\n");
+    ret.push_str("\n");
+    ret.push_str("              ");
+    ret.push_str("jal $ra\",\n");
     ret.push_str("                lateout(\"$2\") ");
     if returns {
         ret.push_str("ret);\n");
@@ -75,6 +77,9 @@ fn mk_bios_fn(fn_desc: &str) -> String {
 fn main() {
     let bios_functions = [
         "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
+        "A(06h) exit(exitcode: i32);",
+        "A(13h) save_state(buf: *mut u8);",
+        //"A(14h) restore_state(buf: *mut u8, param:);",
 
         "A(2Fh) rand() -> i16;",
 
@@ -84,7 +89,8 @@ fn main() {
         "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
         "A(38h) realloc(old_buf: *const u8, new_size: usize);",
         "A(39h) init_heap(addr: usize, size: usize);",
-        "A(3Fh) printf<S, T, U, V>(s: *const u8, a: S, b: T, c: U, d: V);",
+        "A(3Ah) system_error_exit(exitcode: i32);",
+        "A(3Fh) printf<S, T, U, V, W, X, Y, Z>(msg: *const u8, arg0: S, arg1: T, arg2: U, arg3: V, arg4: W, arg5: X, arg6: Y, arg7: Z);",
 
         "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
         "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",
@@ -99,6 +105,7 @@ fn main() {
         "A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);",
 
         "A(72h) cd_remove();",
+        "A(A0h) warm_boot();",
 
         "B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);",
         "B(13h) start_pad();",
@@ -121,19 +128,8 @@ fn main() {
     let src = doc + &header + &src;
     fs::write(src_file, src).expect("Unable to write to src/bios.rs");
 
-    // Set PSEXE header's region in the linker script template
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let template = include_str!("psexe.ld").to_string();
-    let region_str = match env::var_os("PSX_REGION").as_ref().map(|s| s.to_str()).flatten() {
-        Some("EU") => "Sony Computer Entertainment Inc. for Europe area",
-        Some("JP") => "Sony Computer Entertainment Inc. for Japan area",
-        Some("NA") | _ => "Sony Computer Entertainment Inc. for North America area",
-    };
-    let region_bytes = region_str.as_bytes()
-        .iter()
-        .map(|b| format!("BYTE({}); ", b))
-        .collect::<String>();
-    let linker_script = template.replace("$REGION", &region_bytes);
+    let linker_script = include_str!("psexe.ld").to_string();
     fs::write(out.join("psexe.ld"), linker_script).unwrap();
     println!("cargo:rustc-link-search={}", out.display());
 }

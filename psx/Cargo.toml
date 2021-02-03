@@ -14,3 +14,6 @@ links = "psx"
 pretty_panic = []
 # Replaces internal use of `unreachable_unchecked` with `panic`
 forbid_UB = []
+NA_region = []
+EU_region = []
+J_region = []
