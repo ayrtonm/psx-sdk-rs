@@ -52,6 +52,14 @@ extern "C" {
     pub fn cd_remove();
     /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn warm_boot();
+    /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn get_timer(t: u32);
+    /// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn enable_timer_irq(t: u32);
+    /// [BIOS Function B(05h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn disable_timer_irq(t: u32);
+    /// [BIOS Function B(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn restart_timer(t: u32);
     /// [BIOS Function B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);
     /// [BIOS Function B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -61,11 +69,11 @@ extern "C" {
     /// [BIOS Function B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_pad(int: u32);
     /// [BIOS Function C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn change_clear_rcnt(t: u32, flag: u32);
+    pub fn change_clear_rcnt(t: u32, flag: bool) -> bool;
     /// [BIOS Function C(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn flush_std_in_out_put();
     /// [BIOS Function SYS(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn enter_critical_section() -> u8;
+    pub fn enter_critical_section() -> bool;
     /// [BIOS Function SYS(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit_critical_section();
 }

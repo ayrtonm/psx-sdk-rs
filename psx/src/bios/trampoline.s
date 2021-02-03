@@ -121,6 +121,26 @@ warm_boot:
     j 0xA0
     li $9, 0xA0
 
+.globl get_timer
+get_timer:
+    j 0xB0
+    li $9, 0x03
+
+.globl enable_timer_irq
+enable_timer_irq:
+    j 0xB0
+    li $9, 0x04
+
+.globl disable_timer_irq
+disable_timer_irq:
+    j 0xB0
+    li $9, 0x05
+
+.globl restart_timer
+restart_timer:
+    j 0xB0
+    li $9, 0x06
+
 .globl init_pad
 init_pad:
     j 0xB0

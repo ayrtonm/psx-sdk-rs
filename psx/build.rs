@@ -99,15 +99,20 @@ fn main() {
         "A(72h) cd_remove();",
         "A(A0h) warm_boot();",
 
+        //"B(02h) init_timer(t: u32, reload: u32, flags: );",
+        "B(03h) get_timer(t: u32);",
+        "B(04h) enable_timer_irq(t: u32);",
+        "B(05h) disable_timer_irq(t: u32);",
+        "B(06h) restart_timer(t: u32);",
         "B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);",
         "B(13h) start_pad();",
         "B(14h) stop_pad();",
         "B(5Bh) change_clear_pad(int: u32);",
 
-        "C(0Ah) change_clear_rcnt(t: u32, flag: u32);",
+        "C(0Ah) change_clear_rcnt(t: u32, flag: bool) -> bool;",
         "C(13h) flush_std_in_out_put();",
 
-        "SYS(01h) enter_critical_section() -> u8;",
+        "SYS(01h) enter_critical_section() -> bool;",
         "SYS(02h) exit_critical_section();",
     ].map(|desc| parse_fn_desc(desc));
 

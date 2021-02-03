@@ -1,6 +1,23 @@
 use crate::hal::GPUSTAT;
+use crate::timer;
 
 pub mod kernel;
+
+#[repr(u32)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum RootCounter {
+    Timer(timer::Name),
+    Vblank,
+}
+
+impl RootCounter {
+    fn as_u32(&self) -> u32 {
+        match self {
+            RootCounter::Timer(name) => *name as u32,
+            RootCounter::Vblank => 3,
+        }
+    }
+}
 
 /// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn file_open(filename: *const u8, accessmode: u32) -> u8 {
@@ -13,8 +30,8 @@ pub fn exit(exitcode: i32) {
 }
 
 /// [BIOS Function A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn save_state(buf: *mut u8) {
-    unsafe { kernel::save_state(buf) }
+pub fn save_state(buf: &mut [u8]) {
+    unsafe { kernel::save_state(buf.as_mut_ptr()) }
 }
 
 /// [BIOS Function A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -48,8 +65,8 @@ pub fn realloc(old_buf: *const u8, new_size: usize) {
 }
 
 /// [BIOS Function A(39h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn init_heap(addr: usize, size: usize) {
-    unsafe { kernel::init_heap(addr, size) }
+pub fn init_heap(heap: &mut [u32]) {
+    unsafe { kernel::init_heap(heap.as_ptr() as usize, heap.len()) }
 }
 
 /// [BIOS Function A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -68,13 +85,13 @@ macro_rules! printf {
 }
 
 /// [BIOS Function A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn load_exe_header(filename: *const u8, headerbuf: *mut u8) {
-    unsafe { kernel::load_exe_header(filename, headerbuf) }
+pub fn load_exe_header(filename: *const u8, headerbuf: &mut [u8]) {
+    unsafe { kernel::load_exe_header(filename, headerbuf.as_mut_ptr()) }
 }
 
 /// [BIOS Function A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn load_exe_file(filename: *const u8, headerbuf: *mut u8) {
-    unsafe { kernel::load_exe_file(filename, headerbuf) }
+pub fn load_exe_file(filename: *const u8, headerbuf: &mut [u8]) {
+    unsafe { kernel::load_exe_file(filename, headerbuf.as_mut_ptr()) }
 }
 
 /// [BIOS Function A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -127,6 +144,24 @@ pub fn warm_boot() {
     unsafe { kernel::warm_boot() }
 }
 
+/// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn get_timer(rcnt: timer::Name) {
+    unsafe { kernel::get_timer(rcnt as u32) }
+}
+
+/// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn enable_timer_irq(rcnt: RootCounter) {
+    unsafe { kernel::enable_timer_irq(rcnt.as_u32()) }
+}
+/// [BIOS Function B(05h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn disable_timer_irq(rcnt: RootCounter) {
+    unsafe { kernel::disable_timer_irq(rcnt.as_u32()) }
+}
+/// [BIOS Function B(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn restart_timer(rcnt: timer::Name) {
+    unsafe { kernel::restart_timer(rcnt as u32) }
+}
+
 /// [BIOS Function B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn init_pad(buf1: &mut [u8], buf2: &mut [u8]) {
     unsafe { kernel::init_pad(buf1.as_mut_ptr(), buf1.len(), buf2.as_mut_ptr(), buf2.len()) }
@@ -148,8 +183,8 @@ pub fn change_clear_pad(int: u32) {
 }
 
 /// [BIOS Function C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn change_clear_rcnt(t: u32, flag: u32) {
-    unsafe { kernel::change_clear_rcnt(t, flag) }
+pub fn change_clear_rcnt(rcnt: RootCounter, flag: bool) -> bool {
+    unsafe { kernel::change_clear_rcnt(rcnt.as_u32(), flag) }
 }
 
 /// [BIOS Function C(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -158,7 +193,7 @@ pub fn flush_std_in_out_put() {
 }
 
 /// [BIOS Function SYS(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn enter_critical_section() -> u8 {
+pub fn enter_critical_section() -> bool {
     unsafe { kernel::enter_critical_section() }
 }
 
