@@ -1,11 +1,17 @@
 macro_rules! read_only {
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal) => {
-        $(#[$($meta)*])* pub struct $name($size);
+        $(#[$($meta)*])*
+        #[derive(PartialEq, Eq)]
+        pub struct $name($size);
 
         impl $name {
             pub fn load() -> Self {
                 let unread = $name(0);
                 $name(unread.read())
+            }
+
+            pub unsafe fn from_bits(bits: u32) -> Self {
+                $name(bits)
             }
         }
 
@@ -71,7 +77,9 @@ macro_rules! write_only {
 
 macro_rules! read_write {
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal) => {
-        $(#[$($meta)*])* pub struct $name<S: State>($size, PhantomData::<S>);
+        $(#[$($meta)*])*
+        #[derive(PartialEq, Eq)]
+        pub struct $name<S: State>($size, PhantomData::<S>);
 
         impl $name<Shared> {
             /// Reads the register and creates a read-only handle with a copy of the register's

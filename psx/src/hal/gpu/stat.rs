@@ -52,7 +52,7 @@ mod tests {
     #[test_case]
     fn bios_fn() {
         use crate::bios;
-        use crate::hal::{Register, GPUSTAT};
-        assert!(bios::gpu_get_status() == GPUSTAT::load().bits());
+        use crate::hal::GPUSTAT;
+        assert!(bios::gpu_get_status() == GPUSTAT::load());
     }
 }
