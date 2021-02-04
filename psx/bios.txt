@@ -1,3 +1,4 @@
+// These are taken from the nocash specs with type ascriptions added in
 A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;
 //A(01h) fileseek(fd,offset,seektype);
 //A(02h) fileread(fd,dst,length);
@@ -77,13 +78,9 @@ A(4Ah) gpu_command_word_params(src: *const u32, num: usize);
 //A(4Ch) gpu_abort_dma();
 A(4Dh) gpu_get_status() -> u32;
 //A(4Eh) gpu_sync();
-//A(4Fh) systemerror;
-//A(50h) systemerror;
 A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);
-//A(52h) systemerror ----OR---- GetSysSp() ?;
-//A(53h) systemerror           ;PS2: set_ioabort_handler(src);
 A(54h) cd_init();
-//A(55h) or A(70h) _bu_init();
+//A(55h) _bu_init();
 A(56h) cd_remove();
 //A(5Bh) dev_tty_init()                                      ;PS2: SystemError;
 //A(5Ch) dev_tty_open(fcb,and unused:path\name,accessmode) ;PS2: SystemError;
@@ -106,7 +103,6 @@ A(56h) cd_remove();
 //A(6Dh) dev_card_format(fcb);
 //A(6Eh) dev_card_rename(fcb1,path\name1,fcb2,path\name2);
 //A(6Fh) ?   ;card ;[r4+18h]=00000000h  ;card_clear_error(fcb) or so;
-//A(70h) or A(55h) _bu_init();
 //A(78h) cdasyncseekl(src);
 A(7Ch) cd_async_get_status(dst: *mut u32);
 //A(7Eh) cdasyncreadsector(count,dst,mode);
@@ -121,12 +117,10 @@ A(96h) add_cdrom_device();
 //A(97h) addmemcarddevice()     ;DTL-H: SystemError;
 //A(98h) addduartttydevice()    ;DTL-H: AddAdconsTtyDevice ;PS2: SystemError;
 //A(99h) adddummyttydevice();
-//A(9Ah) systemerror            ;DTL-H: AddMessageWindowDevice;
-//A(9Bh) systemerror            ;DTL-H: AddCdromSimDevice;
 //A(9Ch) setconf(num_EvCB,num_TCB,stacktop);
 //A(9Dh) getconf(num_EvCB_dst,num_TCB_dst,stacktop_dst);
 //A(9Eh) setcdromirqautoabort(type,flag);
-//A(9Fh) setmemsize(megabytes);
+A(9Fh) set_memsize(megabytes: u8);
 A(A0h) warm_boot() -> !;
 //A(A1h) systemerrorbootordiskfailure(type,errorcode);
 //A(A2h) enqueuecdintr()  ;with prio=0 (fixed);
@@ -144,7 +138,7 @@ A(A6h) cd_get_status(dst: *mut u32);
 //A(AEh) bu_callback_err_prev_write();
 //A(AFh) card_write_test(port)  ;CEX-1000: jump_to_00000000h;
 //A(B2h) ioabort_raw(param)     ;CEX-1000: jump_to_00000000h;
-//A(B4h) getsysteminfo(index)   ;CEX-1000: jump_to_00000000h;
+A(B4h) get_system_info(index: u8) -> u32;
 
 //B(00h) alloc_kernel_memory(size)
 //B(01h) free_kernel_memory(buf)
@@ -191,7 +185,6 @@ B(14h) stop_pad();
 //B(4Fh) read_card_sector(port,sector,dst)
 //B(50h) allow_new_card()
 //B(51h) Krom2RawAdd(shiftjis_code)
-//B(52h) SystemError  ;PS2: return 0
 //B(53h) Krom2Offset(shiftjis_code)
 //B(54h) GetLastError()
 //B(55h) GetLastFileError(fd)
@@ -214,7 +207,6 @@ B(5Bh) change_clear_pad(int: u32);
 //C(08h) SysInitMemory(addr,size)
 //C(09h) SysInitKernelVariables()
 C(0Ah) change_clear_rcnt(t: u32, flag: bool) -> bool;
-//C(0Bh) SystemError  ;PS2: return 0
 //C(0Ch) InitDefInt(priority) ;used with prio=3
 //C(0Dh) SetIrqAutoAck(irq,flag)
 //C(12h) InstallDevices(ttyflag)

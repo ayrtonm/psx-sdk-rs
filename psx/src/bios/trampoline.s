@@ -136,6 +136,11 @@ add_cdrom_device:
     j 0xA0
     li $9, 0x96
 
+.globl set_memsize
+set_memsize:
+    j 0xA0
+    li $9, 0x9F
+
 .globl warm_boot
 warm_boot:
     j 0xA0
@@ -150,6 +155,11 @@ cd_get_lbn:
 cd_get_status:
     j 0xA0
     li $9, 0xA6
+
+.globl get_system_info
+get_system_info:
+    j 0xA0
+    li $9, 0xB4
 
 .globl get_timer
 get_timer:

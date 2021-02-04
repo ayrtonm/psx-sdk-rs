@@ -58,12 +58,16 @@ extern "C" {
     pub fn cd_async_get_status(dst: *mut u32);
     /// [BIOS Function A(96h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn add_cdrom_device();
+    /// [BIOS Function A(9Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn set_memsize(megabytes: u8);
     /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn warm_boot() -> !;
     /// [BIOS Function A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_get_lbn(filename: *const u8) -> i32;
     /// [BIOS Function A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_get_status(dst: *mut u32);
+    /// [BIOS Function A(B4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn get_system_info(index: u8) -> u32;
     /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_timer(t: u32);
     /// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

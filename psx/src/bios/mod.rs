@@ -4,6 +4,20 @@ use core::slice::from_raw_parts_mut;
 
 pub mod kernel;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum InfoReq {
+    Date = 0,
+    Version = 2,
+    RAM = 5,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum InfoResp {
+    Date(u32),
+    Version(*const u8),
+    RAM(u32),
+}
+
 #[repr(u32)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RootCounter {
@@ -11,10 +25,10 @@ pub enum RootCounter {
     Vblank,
 }
 
-impl RootCounter {
-    fn as_u32(&self) -> u32 {
-        match self {
-            RootCounter::Timer(name) => *name as u32,
+impl From<RootCounter> for u32 {
+    fn from(rcnt: RootCounter) -> u32 {
+        match rcnt {
+            RootCounter::Timer(name) => name as u32,
             RootCounter::Vblank => 3,
         }
     }
@@ -150,6 +164,11 @@ pub fn cd_remove() {
 //    res
 //}
 
+/// [BIOS Function A(9Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn set_memsize(megabytes: u8) {
+    unsafe { kernel::set_memsize(megabytes) }
+}
+
 /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn warm_boot() -> ! {
     unsafe { kernel::warm_boot() }
@@ -172,6 +191,16 @@ pub fn cd_get_lbn(filename: *const u8) -> Option<u32> {
 //    res
 //}
 
+/// [BIOS Function A(B4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn get_system_info(info: InfoReq) -> InfoResp {
+    let res = unsafe { kernel::get_system_info(info as u8) };
+    match info {
+        InfoReq::Date => InfoResp::Date(res),
+        InfoReq::Version => InfoResp::Version(res as *const u32 as *const u8),
+        InfoReq::RAM => InfoResp::RAM(res),
+    }
+}
+
 /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn get_timer(rcnt: timer::Name) {
     unsafe { kernel::get_timer(rcnt as u32) }
@@ -179,11 +208,11 @@ pub fn get_timer(rcnt: timer::Name) {
 
 /// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn enable_timer_irq(rcnt: RootCounter) {
-    unsafe { kernel::enable_timer_irq(rcnt.as_u32()) }
+    unsafe { kernel::enable_timer_irq(rcnt.into()) }
 }
 /// [BIOS Function B(05h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn disable_timer_irq(rcnt: RootCounter) {
-    unsafe { kernel::disable_timer_irq(rcnt.as_u32()) }
+    unsafe { kernel::disable_timer_irq(rcnt.into()) }
 }
 /// [BIOS Function B(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn restart_timer(rcnt: timer::Name) {
@@ -212,7 +241,7 @@ pub fn change_clear_pad(int: u32) {
 
 /// [BIOS Function C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn change_clear_rcnt(rcnt: RootCounter, flag: bool) -> bool {
-    unsafe { kernel::change_clear_rcnt(rcnt.as_u32(), flag) }
+    unsafe { kernel::change_clear_rcnt(rcnt.into(), flag) }
 }
 
 /// [BIOS Function C(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
