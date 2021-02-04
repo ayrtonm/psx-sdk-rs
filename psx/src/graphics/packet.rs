@@ -3,6 +3,7 @@ use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct Packet<T> {
     tag: u32,
     data: T,

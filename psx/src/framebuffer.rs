@@ -2,6 +2,7 @@
 
 use crate::dma;
 use crate::gpu::{reset_graphics, Color, Coordinate, Depth, DispEnv, DrawEnv, Vertex, VideoMode};
+use crate::gpu::{GREEN, INDIGO};
 
 /// Configuration for a double-buffered framebuffer.
 pub struct Framebuffer {
@@ -22,8 +23,8 @@ impl Framebuffer {
         let res = Vertex::new(res);
         let disp_envs = (DispEnv::new(buffer_0, res), DispEnv::new(buffer_1, res));
         let draw_envs = (
-            DrawEnv::new(buffer_1, res, bg_color),
-            DrawEnv::new(buffer_0, res, bg_color),
+            DrawEnv::new(buffer_1, res, Some(GREEN)),  //bg_color),
+            DrawEnv::new(buffer_0, res, Some(INDIGO)), //bg_color),
         );
         Framebuffer {
             disp_envs,

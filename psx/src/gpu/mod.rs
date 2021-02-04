@@ -42,7 +42,7 @@ pub type Command = u8;
 pub type Coordinate = (Pixel, Pixel);
 
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Color {
     pub red: u8,
     pub green: u8,
@@ -50,14 +50,14 @@ pub struct Color {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Vertex {
     pub x: Pixel,
     pub y: Pixel,
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct PackedVertex<const N: usize, const X: usize, const Y: usize> {
     data: [u8; N],
 }

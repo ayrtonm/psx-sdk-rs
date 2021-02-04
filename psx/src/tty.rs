@@ -6,17 +6,17 @@ pub struct TTY;
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
-        <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($arg)*))
+        <$crate::tty::TTY as core::fmt::Write>::write_fmt(&mut $crate::tty::TTY, format_args!($($arg)*)).ok();
     };
 }
 
 #[macro_export]
 macro_rules! println {
     () => {
-        printf!("\n\0")
+        printf!("\n\0");
     };
     ($($arg:tt)*) => {
-        <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args_nl!($($arg)*))
+        <$crate::tty::TTY as core::fmt::Write>::write_fmt(&mut $crate::tty::TTY, format_args_nl!($($arg)*)).ok();
     };
 }
 

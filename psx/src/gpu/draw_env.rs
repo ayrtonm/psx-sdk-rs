@@ -3,9 +3,11 @@ use crate::graphics::{AsSlice, Packet};
 use crate::hal::GP0;
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct DrawEnv(Packet<InnerDrawEnv>);
 
 #[repr(C)]
+#[derive(Debug)]
 struct InnerDrawEnv {
     texpage: u16,
     _pad: u8,

@@ -32,7 +32,7 @@ fn panic(info: &PanicInfo) -> ! {
         None => pr.println("Panicked at unknown location", []),
     }
     pr.println(message(info), []);
-    fb.swap();
+    fb.swap(None);
     loop {}
 }
 
