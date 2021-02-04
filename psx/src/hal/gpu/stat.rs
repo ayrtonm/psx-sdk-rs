@@ -50,7 +50,7 @@ impl GPUSTAT {
 #[cfg(test)]
 mod tests {
     #[test_case]
-    fn bios_fn() {
+    fn bios_fn_() {
         use crate::bios;
         use crate::hal::GPUSTAT;
         assert!(bios::gpu_get_status() == GPUSTAT::load());

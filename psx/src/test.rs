@@ -26,6 +26,6 @@ pub fn runner(tests: &[&dyn Test]) {
 }
 
 #[test_case]
-fn pass() {
+fn pass_() {
     assert!(true);
 }

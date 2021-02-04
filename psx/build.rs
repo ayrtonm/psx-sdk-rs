@@ -69,7 +69,7 @@ fn mk_bios_trampoline(func: &FnDesc) -> String {
 fn main() {
     let bios_functions = [
         "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
-        "A(06h) exit(exitcode: i32);",
+        "A(06h) exit(exitcode: i32) -> !;",
         "A(13h) save_state(buf: *mut u8);",
         //"A(14h) restore_state(buf: *mut u8, param:);",
 
@@ -81,7 +81,7 @@ fn main() {
         "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
         "A(38h) realloc(old_buf: *const u8, new_size: usize);",
         "A(39h) init_heap(addr: usize, size: usize);",
-        "A(3Ah) system_error_exit(exitcode: i32);",
+        "A(3Ah) system_error_exit(exitcode: i32) -> !;",
         "A(3Fh) printf(msg: *const u8, ...);",
 
         "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
@@ -97,7 +97,7 @@ fn main() {
         "A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);",
 
         "A(72h) cd_remove();",
-        "A(A0h) warm_boot();",
+        "A(A0h) warm_boot() -> !;",
 
         //"B(02h) init_timer(t: u32, reload: u32, flags: );",
         "B(03h) get_timer(t: u32);",

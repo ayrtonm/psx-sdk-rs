@@ -7,7 +7,7 @@ extern "C" {
     /// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_open(filename: *const u8, accessmode: u32) -> u8;
     /// [BIOS Function A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn exit(exitcode: i32);
+    pub fn exit(exitcode: i32) -> !;
     /// [BIOS Function A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn save_state(buf: *mut u8);
     /// [BIOS Function A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -25,7 +25,7 @@ extern "C" {
     /// [BIOS Function A(39h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_heap(addr: usize, size: usize);
     /// [BIOS Function A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn system_error_exit(exitcode: i32);
+    pub fn system_error_exit(exitcode: i32) -> !;
     /// [BIOS Function A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn printf(msg: *const u8, ...);
     /// [BIOS Function A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -51,7 +51,7 @@ extern "C" {
     /// [BIOS Function A(72h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_remove();
     /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn warm_boot();
+    pub fn warm_boot() -> !;
     /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_timer(t: u32);
     /// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

@@ -1,5 +1,6 @@
 use crate::hal::GPUSTAT;
 use crate::timer;
+use core::slice::from_raw_parts_mut;
 
 pub mod kernel;
 
@@ -25,7 +26,7 @@ pub fn file_open(filename: *const u8, accessmode: u32) -> u8 {
 }
 
 /// [BIOS Function A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn exit(exitcode: i32) {
+pub fn exit(exitcode: i32) -> ! {
     unsafe { kernel::exit(exitcode) }
 }
 
@@ -45,13 +46,16 @@ pub fn srand(seed: u32) {
 }
 
 /// [BIOS Function A(33h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn malloc(size: usize) -> *mut u8 {
-    unsafe { kernel::malloc(size) }
+pub fn malloc<'a>(size: usize) -> &'a mut [u8] {
+    unsafe {
+        let ptr = kernel::malloc(size);
+        from_raw_parts_mut(ptr, size)
+    }
 }
 
 /// [BIOS Function A(34h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn free(buf: *mut u8) {
-    unsafe { kernel::free(buf) }
+pub fn free(buf: &mut [u8]) {
+    unsafe { kernel::free(buf.as_mut_ptr()) }
 }
 
 /// [BIOS Function A(37h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -70,7 +74,7 @@ pub fn init_heap(heap: &mut [u32]) {
 }
 
 /// [BIOS Function A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn system_error_exit(exitcode: i32) {
+pub fn system_error_exit(exitcode: i32) -> ! {
     unsafe { kernel::system_error_exit(exitcode) }
 }
 
@@ -140,7 +144,7 @@ pub fn cd_remove() {
 }
 
 /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn warm_boot() {
+pub fn warm_boot() -> ! {
     unsafe { kernel::warm_boot() }
 }
 
