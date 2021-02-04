@@ -1,5 +1,6 @@
 //! Double-buffered framebuffer routines
 
+use crate::dma;
 use crate::gpu::{reset_graphics, Color, Coordinate, Depth, DispEnv, DrawEnv, Vertex, VideoMode};
 
 /// Configuration for a double-buffered framebuffer.
@@ -42,16 +43,19 @@ impl Framebuffer {
 
     pub fn init(&mut self, mode: VideoMode, depth: Depth, interlace: bool) -> &mut Self {
         reset_graphics(self.draw_envs.0.resolution(), mode, depth, interlace);
-        self.swap();
+        self.swap(None);
         self
     }
 
     /// Swaps the currently displayed buffer.
-    pub fn swap(&mut self) {
+    pub fn swap(&mut self, gpu_dma: Option<&mut dma::GPU>) {
         self.swapped = !self.swapped;
         let (disp_env, draw_env) = self.envs();
         disp_env.set();
-        draw_env.set();
+        match gpu_dma {
+            Some(gpu_dma) => gpu_dma.send_list(draw_env),
+            None => draw_env.set(),
+        }
     }
 
     fn envs(&self) -> (&DispEnv, &DrawEnv) {

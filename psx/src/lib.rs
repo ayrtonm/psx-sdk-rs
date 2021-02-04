@@ -76,4 +76,5 @@ pub mod interrupt;
 pub mod printer;
 pub mod tim;
 pub mod timer;
+pub mod tty;
 pub mod unzip;

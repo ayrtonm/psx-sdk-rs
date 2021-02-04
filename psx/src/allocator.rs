@@ -26,7 +26,7 @@ fn on_oom(_layout: Layout) -> ! {
 #[cfg(test)]
 mod tests {
     #[test_case]
-    fn malloc_() {
+    fn malloc() {
         use crate::bios;
         let mut mem = [0; 256];
         bios::init_heap(&mut mem);

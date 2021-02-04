@@ -5,7 +5,7 @@ global_asm!(include_str!("trampoline.s"));
 
 extern "C" {
     /// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_open(filename: *const u8, accessmode: u32) -> u8;
+    pub fn file_open(filename: *const u8, accessmode: u32) -> i32;
     /// [BIOS Function A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit(exitcode: i32) -> !;
     /// [BIOS Function A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

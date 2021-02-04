@@ -1,5 +1,5 @@
 use core::ops::{Range, RangeFrom};
-use core::ptr::{slice_from_raw_parts, write_volatile};
+use core::ptr::slice_from_raw_parts;
 
 // cfg(test) is only needed because this is private and only used in tests for
 // now
@@ -68,14 +68,19 @@ macro_rules! illegal {
     };
 }
 
-// Turns a str or byte slice into a null-terminated C str by changing the last
-// u8 to zero
-pub fn cstr<T: AsRef<[u8]> + ?Sized>(s: &T) -> &T {
-    let slice = s.as_ref();
-    unsafe {
-        write_volatile(slice.as_ptr().add(slice.len() - 1) as *mut u8, 0);
+pub trait AsCStr: AsRef<[u8]> {
+    fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R;
+}
+
+impl<T: AsRef<[u8]>> AsCStr for T {
+    fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R {
+        let slice = self.as_ref();
+        const MAX_LEN: usize = 128;
+        let mut null_terminated = [0; MAX_LEN];
+        null_terminated[0..slice.len()].copy_from_slice(slice);
+        let cstr = &null_terminated[0..slice.len() + 1];
+        f(cstr)
     }
-    s
 }
 
 pub const unsafe fn get_unchecked<T>(slice: &[T], idx: usize) -> &T {

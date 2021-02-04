@@ -39,17 +39,17 @@ fn panic(info: &PanicInfo) -> ! {
 #[panic_handler]
 #[cfg(not(feature = "pretty_panic"))]
 fn panic(info: &PanicInfo) -> ! {
-    use crate::std::cstr;
+    use crate::std::AsCStr;
 
     match info.location() {
         Some(location) => {
             printf!("Panicked at \0");
-            printf!(cstr(location.file().as_bytes()));
+            location.file().as_cstr(|s| printf!(s));
             printf!(":%d:%d\n\0", location.line(), location.column());
         },
         None => printf!("Panicked at unknown location\n\0"),
     }
-    printf!(cstr(message(info)));
+    message(info).as_cstr(|s| printf!(s));
     printf!("\n\0");
     loop {}
 }

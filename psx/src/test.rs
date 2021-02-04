@@ -1,5 +1,5 @@
 #![cfg(test)]
-use crate::std::cstr;
+use crate::std::AsCStr;
 use core::any::type_name;
 
 pub trait Test {
@@ -8,7 +8,7 @@ pub trait Test {
 
 impl<T: Fn()> Test for T {
     fn run(&self) {
-        printf!("test %s ... \0", cstr(type_name::<Self>()));
+        type_name::<Self>().as_cstr(|s| printf!("test %s ... \0", s));
         self();
         printf!("ok\n\0");
     }
@@ -26,6 +26,6 @@ pub fn runner(tests: &[&dyn Test]) {
 }
 
 #[test_case]
-fn pass_() {
+fn pass() {
     assert!(true);
 }

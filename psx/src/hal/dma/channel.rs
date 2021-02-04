@@ -16,8 +16,8 @@ pub trait SharedMemoryAddress: Register<u32> {
 }
 
 pub trait MemoryAddress: MutRegister<u32> + SharedMemoryAddress {
-    fn set_address(&mut self, ptr: &u32) -> &mut Self {
-        self.set(ptr as *const u32 as u32)
+    fn set_address(&mut self, ptr: *const u32) -> &mut Self {
+        self.set(ptr as u32)
     }
 }
 

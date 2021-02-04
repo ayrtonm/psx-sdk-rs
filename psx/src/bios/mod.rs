@@ -1,3 +1,4 @@
+use crate::dma;
 use crate::hal::GPUSTAT;
 use crate::timer;
 use core::slice::from_raw_parts_mut;
@@ -35,8 +36,13 @@ impl From<RootCounter> for u32 {
 }
 
 /// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn file_open(filename: *const u8, accessmode: u32) -> u8 {
-    unsafe { kernel::file_open(filename, accessmode) }
+pub fn file_open(filename: *const u8, accessmode: u32) -> Option<u32> {
+    let res = unsafe { kernel::file_open(filename, accessmode) };
+    if res == -1 {
+        None
+    } else {
+        Some(res as u32)
+    }
 }
 
 /// [BIOS Function A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -123,7 +129,9 @@ pub fn flush_cache() {
 }
 
 /// [BIOS Function A(47h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32) {
+pub fn gpu_send_dma(
+    _gpu_dma: &mut dma::GPU, xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32,
+) {
     unsafe { kernel::gpu_send_dma(xdst, ydst, xsiz, ysize, src) }
 }
 

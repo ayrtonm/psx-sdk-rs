@@ -1,5 +1,5 @@
 // These are taken from the nocash specs with type ascriptions added in
-A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;
+A(00h) file_open(filename: *const u8, accessmode: u32) -> i32;
 //A(01h) fileseek(fd,offset,seektype);
 //A(02h) fileread(fd,dst,length);
 //A(03h) filewrite(fd,src,length);
@@ -10,7 +10,6 @@ A(06h) exit(exitcode: i32) -> !;
 //A(08h) filegetc(fd);
 //A(09h) fileputc(char,fd);
 //A(0Ah) todigit(char);
-//A(0Bh) atof(src)     ;Does NOT work - uses (ABSENT) cop1 !!!;
 //A(0Ch) strtoul(src,src_end,base);
 //A(0Dh) strtol(src,src_end,base);
 //A(0Eh) abs(val);
@@ -49,7 +48,6 @@ A(14h) restore_state(buf: *mut u8, param: u32);
 A(2Fh) rand() -> i16;
 A(30h) srand(seed: u32);
 //A(31h) qsort(base,nel,width,callback);
-//A(32h) strtod(src,src_end) ;Does NOT work - uses (ABSENT) cop1 !!!;
 A(33h) malloc(size: usize) -> *mut u8;
 A(34h) free(buf: *mut u8);
 //A(35h) lsearch(key,base,nel,width,callback);
