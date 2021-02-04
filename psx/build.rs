@@ -13,29 +13,27 @@ struct FnDesc<'a> {
 }
 
 fn parse_fn_desc(fn_desc: &str) -> FnDesc {
-    let is_syscall = fn_desc.chars().nth(0) == Some('S');
     let mut type_end = 1;
     let mut num_start = 2;
     let mut num_end = 4;
     let mut sig_start = 7;
-    let mut arg = 9;
-    if is_syscall {
+    let is_syscall = fn_desc.chars().nth(0) == Some('S');
+    let arg = if is_syscall {
         type_end += 2;
         num_start += 2;
         num_end += 2;
         sig_start += 2;
-        arg = 4;
+        4
+    } else {
+        9
     };
-    let ty = &fn_desc[0..type_end];
-    let num = &fn_desc[num_start..num_end];
     let sig = &fn_desc[sig_start..];
-    let name = sig.split('(').next().unwrap();
     FnDesc {
         sig,
-        name,
-        ty,
+        name: sig.split('(').next().unwrap(),
+        ty: &fn_desc[0..type_end],
         arg,
-        num,
+        num: &fn_desc[num_start..num_end],
         is_syscall,
     }
 }
@@ -67,54 +65,12 @@ fn mk_bios_trampoline(func: &FnDesc) -> String {
 }
 
 fn main() {
-    let bios_functions = [
-        "A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;",
-        "A(06h) exit(exitcode: i32) -> !;",
-        "A(13h) save_state(buf: *mut u8);",
-        //"A(14h) restore_state(buf: *mut u8, param:);",
-
-        "A(2Fh) rand() -> i16;",
-
-        "A(30h) srand(seed: u32);",
-        "A(33h) malloc(size: usize) -> *mut u8;",
-        "A(34h) free(buf: *mut u8);",
-        "A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;",
-        "A(38h) realloc(old_buf: *const u8, new_size: usize);",
-        "A(39h) init_heap(addr: usize, size: usize);",
-        "A(3Ah) system_error_exit(exitcode: i32) -> !;",
-        "A(3Fh) printf(msg: *const u8, ...);",
-
-        "A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);",
-        "A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);",
-        "A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);",
-        "A(44h) flush_cache();",
-        "A(47h) gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32);",
-        "A(48h) gpu_gp1_command_word(cmd: u32);",
-        "A(49h) gpu_command_word(cmd: u32);",
-        "A(4Ah) gpu_command_word_params(src: *const u32, num: usize);",
-        "A(4Dh) gpu_get_status() -> u32;",
-
-        "A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);",
-
-        "A(72h) cd_remove();",
-        "A(A0h) warm_boot() -> !;",
-
-        //"B(02h) init_timer(t: u32, reload: u32, flags: );",
-        "B(03h) get_timer(t: u32);",
-        "B(04h) enable_timer_irq(t: u32);",
-        "B(05h) disable_timer_irq(t: u32);",
-        "B(06h) restart_timer(t: u32);",
-        "B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);",
-        "B(13h) start_pad();",
-        "B(14h) stop_pad();",
-        "B(5Bh) change_clear_pad(int: u32);",
-
-        "C(0Ah) change_clear_rcnt(t: u32, flag: bool) -> bool;",
-        "C(13h) flush_std_in_out_put();",
-
-        "SYS(01h) enter_critical_section() -> bool;",
-        "SYS(02h) exit_critical_section();",
-    ].map(|desc| parse_fn_desc(desc));
+    let bios_functions: Vec<FnDesc> = include_str!("bios.txt")
+        .lines()
+        .filter(|line| !line.is_empty())
+        .filter(|line| !line.starts_with("//"))
+        .map(|desc| parse_fn_desc(desc))
+        .collect();
 
     // Generate the bios function trampolines
     let asm_file = "src/bios/trampoline.s";

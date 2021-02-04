@@ -1,0 +1,235 @@
+A(00h) file_open(filename: *const u8, accessmode: u32) -> u8;
+//A(01h) fileseek(fd,offset,seektype);
+//A(02h) fileread(fd,dst,length);
+//A(03h) filewrite(fd,src,length);
+//A(04h) fileclose(fd);
+//A(05h) fileioctl(fd,cmd,arg);
+A(06h) exit(exitcode: i32) -> !;
+//A(07h) filegetdeviceflag(fd);
+//A(08h) filegetc(fd);
+//A(09h) fileputc(char,fd);
+//A(0Ah) todigit(char);
+//A(0Bh) atof(src)     ;Does NOT work - uses (ABSENT) cop1 !!!;
+//A(0Ch) strtoul(src,src_end,base);
+//A(0Dh) strtol(src,src_end,base);
+//A(0Eh) abs(val);
+//A(0Fh) labs(val);
+//A(10h) atoi(src);
+//A(11h) atol(src);
+//A(12h) atob(src,num_dst);
+A(13h) save_state(buf: *mut u8);
+A(14h) restore_state(buf: *mut u8, param: u32);
+//A(15h) strcat(dst,src);
+//A(16h) strncat(dst,src,maxlen);
+//A(17h) strcmp(str1,str2);
+//A(18h) strncmp(str1,str2,maxlen);
+//A(19h) strcpy(dst,src);
+//A(1Ah) strncpy(dst,src,maxlen);
+//A(1Bh) strlen(src);
+//A(1Ch) index(src,char);
+//A(1Dh) rindex(src,char);
+//A(1Eh) strchr(src,char)  ;exactly the same as index;
+//A(1Fh) strrchr(src,char) ;exactly the same as rindex;
+//A(20h) strpbrk(src,list);
+//A(21h) strspn(src,list);
+//A(22h) strcspn(src,list);
+//A(23h) strtok(src,list)  ;use strtok(0,list) in further calls;
+//A(24h) strstr(str,substr) - buggy;
+//A(25h) toupper(char);
+//A(26h) tolower(char);
+//A(27h) bcopy(src,dst,len);
+//A(28h) bzero(dst,len);
+//A(29h) bcmp(ptr1,ptr2,len)      ;Bugged;
+//A(2Ah) memcpy(dst,src,len);
+//A(2Bh) memset(dst,fillbyte,len);
+//A(2Ch) memmove(dst,src,len)     ;Bugged;
+//A(2Dh) memcmp(src1,src2,len)    ;Bugged;
+//A(2Eh) memchr(src,scanbyte,len);
+A(2Fh) rand() -> i16;
+A(30h) srand(seed: u32);
+//A(31h) qsort(base,nel,width,callback);
+//A(32h) strtod(src,src_end) ;Does NOT work - uses (ABSENT) cop1 !!!;
+A(33h) malloc(size: usize) -> *mut u8;
+A(34h) free(buf: *mut u8);
+//A(35h) lsearch(key,base,nel,width,callback);
+//A(36h) bsearch(key,base,nel,width,callback);
+A(37h) calloc(sizex: usize, sizey: usize) -> *const u8;
+A(38h) realloc(old_buf: *const u8, new_size: usize);
+A(39h) init_heap(addr: usize, size: usize);
+A(3Ah) system_error_exit(exitcode: i32) -> !;
+//A(3Bh) std_in_getchar();
+//A(3Ch) std_out_putchar(char);
+//A(3Dh) std_in_gets(dst);
+//A(3Eh) std_out_puts(src);
+A(3Fh) printf(msg: *const u8, ...);
+//A(40h) systemerrorunresolvedexception();
+A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);
+A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);
+A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);
+A(44h) flush_cache();
+//A(45h) init_a0_b0_c0_vectors;
+//A(46h) gpu_dw(Xdst,Ydst,Xsiz,Ysiz,src);
+A(47h) gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32);
+A(48h) gpu_gp1_command_word(cmd: u32);
+A(49h) gpu_command_word(cmd: u32);
+A(4Ah) gpu_command_word_params(src: *const u32, num: usize);
+//A(4Bh) send_gpu_linked_list(src);
+//A(4Ch) gpu_abort_dma();
+A(4Dh) gpu_get_status() -> u32;
+//A(4Eh) gpu_sync();
+//A(4Fh) systemerror;
+//A(50h) systemerror;
+A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);
+//A(52h) systemerror ----OR---- GetSysSp() ?;
+//A(53h) systemerror           ;PS2: set_ioabort_handler(src);
+A(54h) cd_init();
+//A(55h) or A(70h) _bu_init();
+A(56h) cd_remove();
+//A(5Bh) dev_tty_init()                                      ;PS2: SystemError;
+//A(5Ch) dev_tty_open(fcb,and unused:path\name,accessmode) ;PS2: SystemError;
+//A(5Dh) dev_tty_in_out(fcb,cmd)                             ;PS2: SystemError;
+//A(5Eh) dev_tty_ioctl(fcb,cmd,arg)                          ;PS2: SystemError;
+//A(5Fh) dev_cd_open(fcb,path\name,accessmode);
+//A(60h) dev_cd_read(fcb,dst,len);
+//A(61h) dev_cd_close(fcb);
+//A(62h) dev_cd_firstfile(fcb,path\name,direntry);
+//A(63h) dev_cd_nextfile(fcb,direntry);
+//A(64h) dev_cd_chdir(fcb,path);
+//A(65h) dev_card_open(fcb,path\name,accessmode);
+//A(66h) dev_card_read(fcb,dst,len);
+//A(67h) dev_card_write(fcb,src,len);
+//A(68h) dev_card_close(fcb);
+//A(69h) dev_card_firstfile(fcb,path\name,direntry);
+//A(6Ah) dev_card_nextfile(fcb,direntry);
+//A(6Bh) dev_card_erase(fcb,path\name);
+//A(6Ch) dev_card_undelete(fcb,path\name);
+//A(6Dh) dev_card_format(fcb);
+//A(6Eh) dev_card_rename(fcb1,path\name1,fcb2,path\name2);
+//A(6Fh) ?   ;card ;[r4+18h]=00000000h  ;card_clear_error(fcb) or so;
+//A(70h) or A(55h) _bu_init();
+//A(78h) cdasyncseekl(src);
+A(7Ch) cd_async_get_status(dst: *mut u32);
+//A(7Eh) cdasyncreadsector(count,dst,mode);
+//A(81h) cdasyncsetmode(mode);
+//A(90h) cdromioirqfunc1();
+//A(91h) cdromdmairqfunc1();
+//A(92h) cdromioirqfunc2();
+//A(93h) cdromdmairqfunc2();
+//A(94h) cdromgetint5errcode(dst1,dst2);
+//A(95h) cdinitsubfunc();
+A(96h) add_cdrom_device();
+//A(97h) addmemcarddevice()     ;DTL-H: SystemError;
+//A(98h) addduartttydevice()    ;DTL-H: AddAdconsTtyDevice ;PS2: SystemError;
+//A(99h) adddummyttydevice();
+//A(9Ah) systemerror            ;DTL-H: AddMessageWindowDevice;
+//A(9Bh) systemerror            ;DTL-H: AddCdromSimDevice;
+//A(9Ch) setconf(num_EvCB,num_TCB,stacktop);
+//A(9Dh) getconf(num_EvCB_dst,num_TCB_dst,stacktop_dst);
+//A(9Eh) setcdromirqautoabort(type,flag);
+//A(9Fh) setmemsize(megabytes);
+A(A0h) warm_boot() -> !;
+//A(A1h) systemerrorbootordiskfailure(type,errorcode);
+//A(A2h) enqueuecdintr()  ;with prio=0 (fixed);
+//A(A3h) dequeuecdintr()  ;does NOT work due to SysDeqIntRP bug;
+A(A4h) cd_get_lbn(filename: *const u8) -> i32;
+//A(A5h) cdreadsector(count,sector,buffer);
+A(A6h) cd_get_status(dst: *mut u32);
+//A(A7h) bu_callback_okay();
+//A(A8h) bu_callback_err_write();
+//A(A9h) bu_callback_err_busy();
+//A(AAh) bu_callback_err_eject();
+//A(ABh) _card_info(port);
+//A(ACh) _card_async_load_directory(port);
+//A(ADh) set_card_auto_format(flag);
+//A(AEh) bu_callback_err_prev_write();
+//A(AFh) card_write_test(port)  ;CEX-1000: jump_to_00000000h;
+//A(B2h) ioabort_raw(param)     ;CEX-1000: jump_to_00000000h;
+//A(B4h) getsysteminfo(index)   ;CEX-1000: jump_to_00000000h;
+
+//B(00h) alloc_kernel_memory(size)
+//B(01h) free_kernel_memory(buf)
+//B(02h) init_timer(t: u32, reload: u32, flags: );
+B(03h) get_timer(t: u32);
+B(04h) enable_timer_irq(t: u32);
+B(05h) disable_timer_irq(t: u32);
+B(06h) restart_timer(t: u32);
+//B(07h) DeliverEvent(class, spec)
+//B(08h) OpenEvent(class,spec,mode,func)
+//B(09h) CloseEvent(event)
+//B(0Ah) WaitEvent(event)
+//B(0Bh) TestEvent(event)
+//B(0Ch) EnableEvent(event)
+//B(0Dh) DisableEvent(event)
+//B(0Eh) OpenThread(reg_PC,reg_SP_FP,reg_GP)
+//B(0Fh) CloseThread(handle)
+//B(10h) ChangeThread(handle)
+//B(11h) jump_to_00000000h
+B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);
+B(13h) start_pad();
+B(14h) stop_pad();
+//B(15h) OutdatedPadInitAndStart(type,button_dest,unused,unused)
+//B(16h) OutdatedPadGetButtons()
+//B(17h) ReturnFromException()
+//B(18h) SetDefaultExitFromException()
+//B(19h) SetCustomExitFromException(addr)
+//B(20h) UnDeliverEvent(class,spec)
+//B(40h) chdir(name)
+//B(41h) FormatDevice(devicename)
+//B(42h) firstfile(filename,direntry)
+//B(43h) nextfile(direntry)
+//B(44h) FileRename(old_filename,new_filename)
+//B(45h) FileDelete(filename)
+//B(46h) FileUndelete(filename)
+//B(47h) AddDevice(device_info)  ;subfunction for AddXxxDevice functions
+//B(48h) RemoveDevice(device_name_lowercase)
+//B(49h) PrintInstalledDevices()
+//B(4Ah) InitCard(pad_enable)  ;uses/destroys k0/k1 !!!
+//B(4Bh) StartCard()
+//B(4Ch) StopCard()
+//B(4Dh) _card_info_subfunc(port)  ;subfunction for "_card_info"
+//B(4Eh) write_card_sector(port,sector,src)
+//B(4Fh) read_card_sector(port,sector,dst)
+//B(50h) allow_new_card()
+//B(51h) Krom2RawAdd(shiftjis_code)
+//B(52h) SystemError  ;PS2: return 0
+//B(53h) Krom2Offset(shiftjis_code)
+//B(54h) GetLastError()
+//B(55h) GetLastFileError(fd)
+//B(56h) GetC0Table
+//B(57h) GetB0Table
+//B(58h) get_bu_callback_port()
+//B(59h) testdevice(devicename)
+B(5Bh) change_clear_pad(int: u32);
+//B(5Ch) get_card_status(slot)
+//B(5Dh) wait_card_status(slot)
+
+//C(00h) EnqueueTimerAndVblankIrqs(priority) ;used with prio=1
+//C(01h) EnqueueSyscallHandler(priority)     ;used with prio=0
+//C(02h) SysEnqIntRP(priority,struc)  ;bugged, use with care
+//C(03h) SysDeqIntRP(priority,struc)  ;bugged, use with care
+//C(04h) get_free_EvCB_slot()
+//C(05h) get_free_TCB_slot()
+//C(06h) ExceptionHandler()
+//C(07h) InstallExceptionHandlers()  ;destroys/uses k0/k1
+//C(08h) SysInitMemory(addr,size)
+//C(09h) SysInitKernelVariables()
+C(0Ah) change_clear_rcnt(t: u32, flag: bool) -> bool;
+//C(0Bh) SystemError  ;PS2: return 0
+//C(0Ch) InitDefInt(priority) ;used with prio=3
+//C(0Dh) SetIrqAutoAck(irq,flag)
+//C(12h) InstallDevices(ttyflag)
+C(13h) flush_std_in_out_put();
+//C(15h) tty_cdevinput(circ,char)
+//C(16h) tty_cdevscan()
+//C(17h) tty_circgetc(circ)    ;uses r5 as garbage txt for ioabort
+//C(18h) tty_circputc(char,circ)
+//C(19h) ioabort(txt1,txt2)
+//C(1Ah) set_card_find_mode(mode)  ;0=normal, 1=find deleted files
+//C(1Bh) KernelRedirect(ttyflag)   ;PS2: ttyflag=1 causes SystemError
+//C(1Ch) AdjustA0Table()
+//C(1Dh) get_card_find_mode()
+
+SYS(01h) enter_critical_section() -> bool;
+SYS(02h) exit_critical_section();
+//SYS(03h) ChangeThreadSubFunction(addr) ;syscall with r4=03h, r5=addr
+//SYS(04h..FFFFFFFFh) calls DeliverEvent(F0000010h,4000h)

@@ -16,6 +16,11 @@ save_state:
     j 0xA0
     li $9, 0x13
 
+.globl restore_state
+restore_state:
+    j 0xA0
+    li $9, 0x14
+
 .globl rand
 rand:
     j 0xA0
@@ -111,15 +116,40 @@ load_and_execute:
     j 0xA0
     li $9, 0x51
 
+.globl cd_init
+cd_init:
+    j 0xA0
+    li $9, 0x54
+
 .globl cd_remove
 cd_remove:
     j 0xA0
-    li $9, 0x72
+    li $9, 0x56
+
+.globl cd_async_get_status
+cd_async_get_status:
+    j 0xA0
+    li $9, 0x7C
+
+.globl add_cdrom_device
+add_cdrom_device:
+    j 0xA0
+    li $9, 0x96
 
 .globl warm_boot
 warm_boot:
     j 0xA0
     li $9, 0xA0
+
+.globl cd_get_lbn
+cd_get_lbn:
+    j 0xA0
+    li $9, 0xA4
+
+.globl cd_get_status
+cd_get_status:
+    j 0xA0
+    li $9, 0xA6
 
 .globl get_timer
 get_timer:

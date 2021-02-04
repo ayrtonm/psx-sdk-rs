@@ -10,6 +10,8 @@ extern "C" {
     pub fn exit(exitcode: i32) -> !;
     /// [BIOS Function A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn save_state(buf: *mut u8);
+    /// [BIOS Function A(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn restore_state(buf: *mut u8, param: u32);
     /// [BIOS Function A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn rand() -> i16;
     /// [BIOS Function A(30h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -48,10 +50,20 @@ extern "C" {
     pub fn gpu_get_status() -> u32;
     /// [BIOS Function A(51h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);
-    /// [BIOS Function A(72h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// [BIOS Function A(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn cd_init();
+    /// [BIOS Function A(56h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_remove();
+    /// [BIOS Function A(7Ch)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn cd_async_get_status(dst: *mut u32);
+    /// [BIOS Function A(96h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn add_cdrom_device();
     /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn warm_boot() -> !;
+    /// [BIOS Function A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn cd_get_lbn(filename: *const u8) -> i32;
+    /// [BIOS Function A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn cd_get_status(dst: *mut u32);
     /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_timer(t: u32);
     /// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

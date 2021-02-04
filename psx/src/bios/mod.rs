@@ -124,8 +124,8 @@ pub fn gpu_command_word(cmd: u32) {
 }
 
 /// [BIOS Function A(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-pub fn gpu_command_word_params(src: *const u32, num: usize) {
-    unsafe { kernel::gpu_command_word_params(src, num) }
+pub fn gpu_command_word_params(data: &[u32]) {
+    unsafe { kernel::gpu_command_word_params(data.as_ptr(), data.len()) }
 }
 
 /// [BIOS Function A(4Dh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -143,10 +143,34 @@ pub fn cd_remove() {
     unsafe { kernel::cd_remove() }
 }
 
+///// [BIOS Function A(7Ch)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+//pub fn cd_async_get_status() -> u32 {
+//    let mut res = 0;
+//    unsafe { kernel::cd_async_get_status(&mut res) };
+//    res
+//}
+
 /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn warm_boot() -> ! {
     unsafe { kernel::warm_boot() }
 }
+
+/// [BIOS Function A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+pub fn cd_get_lbn(filename: *const u8) -> Option<u32> {
+    let res = unsafe { kernel::cd_get_lbn(filename) };
+    if res == -1 {
+        None
+    } else {
+        Some(res as u32)
+    }
+}
+
+///// [BIOS Function A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+//pub fn cd_get_status() -> u32 {
+//    let mut res = 0;
+//    unsafe { kernel::cd_get_status(&mut res) };
+//    res
+//}
 
 /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 pub fn get_timer(rcnt: timer::Name) {
