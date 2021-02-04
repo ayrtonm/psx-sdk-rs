@@ -76,7 +76,7 @@ impl<T: AsRef<[u8]>> AsCStr for T {
     fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R {
         let slice = self.as_ref();
         if slice.len() == 0 {
-            return f(&[0]);
+            return f(&[0])
         };
         if slice[slice.len() - 1] != 0 {
             const MAX_LEN: usize = 64;

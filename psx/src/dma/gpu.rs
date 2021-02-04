@@ -1,4 +1,4 @@
-use super::{Direction, TransferMode, GPU, Step};
+use super::{Direction, Step, TransferMode, GPU};
 use crate::gpu::DMAMode;
 use crate::hal::dma::{ChannelControl, MemoryAddress, SharedChannelControl};
 use crate::hal::{MutRegister, GP1};
@@ -13,9 +13,7 @@ impl GPU {
         // details.
         let list = unsafe { core::ptr::read_volatile(list) };
         let ptr = &list as *const L as *const u32;
-        self.madr
-            .set_address(ptr)
-            .store();
+        self.madr.set_address(ptr).store();
         self.bcr.clear_all().store();
         self.chcr
             .set_step(Step::Forward)

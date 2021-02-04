@@ -35,6 +35,6 @@ impl<T: Initialize> Primitive for T {
     }
 }
 
-const fn num_words<T>() -> usize {
+pub const fn num_words<T>() -> usize {
     size_of::<T>() / 4
 }

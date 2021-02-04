@@ -1,5 +1,5 @@
 use crate::gpu::{Color, Command, PackedVertex, Vertex, BLACK};
-use crate::graphics::{AsSlice, Packet};
+use crate::graphics::{num_words, AsSlice, Packet};
 use crate::hal::GP0;
 
 #[repr(C)]
@@ -32,9 +32,9 @@ impl AsSlice for InnerDrawEnv {}
 
 impl DrawEnv {
     pub const fn new(offset: Vertex, size: Vertex, bg_color: Option<Color>) -> Self {
-        let bg_color = match bg_color {
-            Some(color) => color,
-            None => BLACK,
+        let (bg_color, packet_size) = match bg_color {
+            Some(color) => (color, None),
+            None => (BLACK, Some(num_words::<InnerDrawEnv>() as u8 - 3)),
         };
         let draw_env = InnerDrawEnv {
             texpage_cmd: 0xE1,
@@ -57,7 +57,7 @@ impl DrawEnv {
 
             _pad: 0,
         };
-        DrawEnv(Packet::new(draw_env, None))
+        DrawEnv(Packet::new(draw_env, packet_size))
     }
 
     pub fn resolution(&self) -> Vertex {
