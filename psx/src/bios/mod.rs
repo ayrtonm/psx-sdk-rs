@@ -4,10 +4,10 @@
 //! Most of these wrappers call their corresponding functions from the
 //! [`kernel`] module. Exceptions are noted below.
 
-use core::mem::transmute;
-use core::slice::from_raw_parts;
 use crate::hal::GPUSTAT;
 use crate::timer;
+use core::mem::transmute;
+use core::slice::from_raw_parts;
 
 pub mod kernel;
 mod tests;
@@ -222,12 +222,14 @@ pub fn warm_boot() -> ! {
 //    res
 //}
 
-/// Gets the BIOS's date in BCD by calling [`kernel::get_system_info`] with `0x00`.
+/// Gets the BIOS's date in BCD by calling [`kernel::get_system_info`] with
+/// `0x00`.
 pub fn system_date() -> u32 {
     unsafe { kernel::get_system_info(0) }
 }
 
-/// Gets the BIOS's version string by calling [`kernel::get_system_info`] with `0x02`.
+/// Gets the BIOS's version string by calling [`kernel::get_system_info`] with
+/// `0x02`.
 pub fn system_version() -> &'static str {
     unsafe {
         let res = kernel::get_system_info(2);
@@ -267,7 +269,8 @@ pub fn system_ram() -> u32 {
 
 ///// Calls [B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 //pub fn init_pad(buf1: &mut [u8], buf2: &mut [u8]) {
-//    unsafe { kernel::init_pad(buf1.as_mut_ptr(), buf1.len(), buf2.as_mut_ptr(), buf2.len()) }
+//    unsafe { kernel::init_pad(buf1.as_mut_ptr(), buf1.len(),
+// buf2.as_mut_ptr(), buf2.len()) }
 //}
 //
 ///// Calls [B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -296,7 +299,8 @@ pub fn system_ram() -> u32 {
 //}
 
 // TODO: Test this with cop0 registers
-/// Disables interrupts in coprocessor 0. Returns `false` if called from a critical section.
+/// Disables interrupts in coprocessor 0. Returns `false` if called from a
+/// critical section.
 pub fn enter_critical_section() -> bool {
     unsafe { kernel::enter_critical_section() }
 }
@@ -305,4 +309,12 @@ pub fn enter_critical_section() -> bool {
 /// Enables interrupts in coprocessor 0.
 pub fn exit_critical_section() {
     unsafe { kernel::exit_critical_section() }
+}
+
+/// Executes the given closure in a critical section.
+pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
+    enter_critical_section();
+    let res = f();
+    exit_critical_section();
+    res
 }

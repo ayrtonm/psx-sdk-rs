@@ -34,9 +34,7 @@ fn srand() {
     assert!(bios::rand() == expected_value);
 }
 
-// TODO: Make this test less unstable
-//#[test_case]
-#[allow(dead_code)]
+#[test_case]
 fn gp1_command() {
     GP1.reset_gpu().enable_display(true);
     let old_status = GPUSTAT::load().bits();
@@ -105,4 +103,15 @@ fn enter_critical_section() {
     let reentry = bios::enter_critical_section();
     assert!(first_entry);
     assert!(!reentry);
+}
+
+#[test_case]
+fn critical_section() {
+    // Ensure we're outside a critical section
+    bios::exit_critical_section();
+    let res = bios::critical_section(|| {
+        assert!(!bios::enter_critical_section());
+        0xdeadbeefu32
+    });
+    assert!(res == 0xdeadbeef);
 }

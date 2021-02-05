@@ -1,4 +1,5 @@
 #![cfg(test)]
+use crate::bios;
 use crate::std::AsCStr;
 use core::any::type_name;
 
@@ -16,9 +17,11 @@ impl<T: Fn()> Test for T {
 
 pub fn runner(tests: &[&dyn Test]) {
     printf!("running %d tests\n\0", tests.len());
-    for test in tests {
-        test.run();
-    }
+    bios::critical_section(|| {
+        for test in tests {
+            test.run();
+        }
+    });
     // Failing tests panic and unwinding will add unnecessary bloat to the binary
     // so the following line is only displayed if all tests pass
     printf!("\ntest result: ok. %d passed; 0 failed\n\n\0", tests.len());
