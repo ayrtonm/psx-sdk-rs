@@ -13,4 +13,8 @@ impl I_STAT<Mutable> {
     pub fn ack(&mut self, irq: IRQ) -> &mut Self {
         self.clear(1 << (irq as u32))
     }
+
+    pub fn ack_all(&mut self) -> &mut Self {
+        self.clear_all()
+    }
 }

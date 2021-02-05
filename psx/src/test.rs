@@ -1,5 +1,6 @@
 #![cfg(test)]
 use crate::bios;
+use crate::hal::{MutRegister, GP1, I_MASK, I_STAT};
 use crate::std::AsCStr;
 use core::any::type_name;
 
@@ -17,11 +18,14 @@ impl<T: Fn()> Test for T {
 
 pub fn runner(tests: &[&dyn Test]) {
     printf!("running %d tests\n\0", tests.len());
-    bios::critical_section(|| {
-        for test in tests {
+    for test in tests {
+        bios::critical_section(|| {
+            I_MASK::load_mut().disable_all().store();
+            I_STAT::load_mut().ack_all().store();
+            GP1.reset_gpu();
             test.run();
-        }
-    });
+        });
+    }
     // Failing tests panic and unwinding will add unnecessary bloat to the binary
     // so the following line is only displayed if all tests pass
     printf!("\ntest result: ok. %d passed; 0 failed\n\n\0", tests.len());

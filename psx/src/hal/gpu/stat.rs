@@ -8,6 +8,7 @@ const IRQ: u32 = 24;
 const CMD_READY: u32 = 26;
 const DMA_READY: u32 = 28;
 const DMA_DIRECTION: u32 = 29;
+const LINE_PARITY: u32 = 31;
 
 impl GPUSTAT {
     pub fn video_mode(&self) -> VideoMode {
@@ -42,6 +43,10 @@ impl GPUSTAT {
         self.any(0b11 << DMA_DIRECTION)
     }
 
+    pub fn odd_line(&self) -> bool {
+        self.contains(1 << LINE_PARITY)
+    }
+
     pub fn wait_cmd(&mut self) -> &mut Self {
         while !self.cmd_ready() {
             self.reload();
@@ -54,5 +59,9 @@ impl GPUSTAT {
             self.reload();
         }
         self
+    }
+
+    pub fn bits_no_interlace(&self) -> u32 {
+        self.bits() & !(1 << LINE_PARITY)
     }
 }

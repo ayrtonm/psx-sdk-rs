@@ -36,10 +36,10 @@ fn srand() {
 
 #[test_case]
 fn gp1_command() {
-    GP1.reset_gpu().enable_display(true);
-    let old_status = GPUSTAT::load().bits();
+    GP1.enable_display(true);
+    let old_status = GPUSTAT::load().bits_no_interlace();
     bios::gp1_command(0);
-    let new_status = GPUSTAT::load().bits();
+    let new_status = GPUSTAT::load().bits_no_interlace();
     assert!(old_status == 0x1400_2000);
     assert!(new_status == 0x1480_2000);
 }
