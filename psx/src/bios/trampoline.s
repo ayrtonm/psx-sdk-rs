@@ -91,18 +91,18 @@ gpu_send_dma:
     j 0xA0
     li $9, 0x47
 
-.globl gpu_gp1_command_word
-gpu_gp1_command_word:
+.globl gp1_command
+gp1_command:
     j 0xA0
     li $9, 0x48
 
-.globl gpu_command_word
-gpu_command_word:
+.globl gp0_command
+gp0_command:
     j 0xA0
     li $9, 0x49
 
-.globl gpu_command_word_params
-gpu_command_word_params:
+.globl gp0_command_params
+gp0_command_params:
     j 0xA0
     li $9, 0x4A
 
@@ -110,6 +110,11 @@ gpu_command_word_params:
 gpu_get_status:
     j 0xA0
     li $9, 0x4D
+
+.globl gpu_sync
+gpu_sync:
+    j 0xA0
+    li $9, 0x4E
 
 .globl load_and_execute
 load_and_execute:
@@ -215,8 +220,12 @@ flush_std_in_out_put:
 enter_critical_section:
     li $4, 0x01
     syscall 0x0
+    jr $ra
+    nop
 
 .globl exit_critical_section
 exit_critical_section:
     li $4, 0x02
     syscall 0x0
+    jr $ra
+    nop

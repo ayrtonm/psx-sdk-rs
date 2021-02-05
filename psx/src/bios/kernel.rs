@@ -4,92 +4,94 @@
 global_asm!(include_str!("trampoline.s"));
 
 extern "C" {
-    /// [BIOS Function A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_open(filename: *const u8, accessmode: u32) -> i32;
-    /// [BIOS Function A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit(exitcode: i32) -> !;
-    /// [BIOS Function A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn save_state(buf: *mut u8);
-    /// [BIOS Function A(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn restore_state(buf: *mut u8, param: u32);
-    /// [BIOS Function A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn rand() -> i16;
-    /// [BIOS Function A(30h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn rand() -> u16;
+    /// Calls BIOS function [A(30h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn srand(seed: u32);
-    /// [BIOS Function A(33h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(33h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn malloc(size: usize) -> *mut u8;
-    /// [BIOS Function A(34h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(34h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn free(buf: *mut u8);
-    /// [BIOS Function A(37h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(37h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn calloc(sizex: usize, sizey: usize) -> *const u8;
-    /// [BIOS Function A(38h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(38h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn realloc(old_buf: *const u8, new_size: usize);
-    /// [BIOS Function A(39h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(39h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_heap(addr: usize, size: usize);
-    /// [BIOS Function A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn system_error_exit(exitcode: i32) -> !;
-    /// [BIOS Function A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn printf(msg: *const u8, ...);
-    /// [BIOS Function A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn load_exe_header(filename: *const u8, headerbuf: *mut u8);
-    /// [BIOS Function A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn load_exe_file(filename: *const u8, headerbuf: *mut u8);
-    /// [BIOS Function A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32);
-    /// [BIOS Function A(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn flush_cache();
-    /// [BIOS Function A(47h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(47h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn gpu_send_dma(xdst: u16, ydst: u16, xsiz: u16, ysize: u16, src: u32);
-    /// [BIOS Function A(48h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn gpu_gp1_command_word(cmd: u32);
-    /// [BIOS Function A(49h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn gpu_command_word(cmd: u32);
-    /// [BIOS Function A(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn gpu_command_word_params(src: *const u32, num: usize);
-    /// [BIOS Function A(4Dh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(48h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn gp1_command(cmd: u32);
+    /// Calls BIOS function [A(49h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn gp0_command(cmd: u32);
+    /// Calls BIOS function [A(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn gp0_command_params(src: *const u32, num: usize);
+    /// Calls BIOS function [A(4Dh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn gpu_get_status() -> u32;
-    /// [BIOS Function A(51h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(4Eh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn gpu_sync() -> i32;
+    /// Calls BIOS function [A(51h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);
-    /// [BIOS Function A(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_init();
-    /// [BIOS Function A(56h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(56h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_remove();
-    /// [BIOS Function A(7Ch)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(7Ch)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_async_get_status(dst: *mut u32);
-    /// [BIOS Function A(96h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(96h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn add_cdrom_device();
-    /// [BIOS Function A(9Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(9Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn set_memsize(megabytes: u8);
-    /// [BIOS Function A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn warm_boot() -> !;
-    /// [BIOS Function A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_get_lbn(filename: *const u8) -> i32;
-    /// [BIOS Function A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_get_status(dst: *mut u32);
-    /// [BIOS Function A(B4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [A(B4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_system_info(index: u8) -> u32;
-    /// [BIOS Function B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_timer(t: u32);
-    /// [BIOS Function B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn enable_timer_irq(t: u32);
-    /// [BIOS Function B(05h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(05h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn disable_timer_irq(t: u32);
-    /// [BIOS Function B(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn restart_timer(t: u32);
-    /// [BIOS Function B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);
-    /// [BIOS Function B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn start_pad();
-    /// [BIOS Function B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn stop_pad();
-    /// [BIOS Function B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_pad(int: u32);
-    /// [BIOS Function C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_rcnt(t: u32, flag: bool) -> bool;
-    /// [BIOS Function C(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [C(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn flush_std_in_out_put();
-    /// [BIOS Function SYS(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [SYS(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn enter_critical_section() -> bool;
-    /// [BIOS Function SYS(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    /// Calls BIOS function [SYS(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit_critical_section();
 }

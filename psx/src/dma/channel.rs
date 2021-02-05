@@ -36,6 +36,10 @@ where
     CHCR: ChannelControl,
     Self: Name,
 {
+    pub fn enabled() -> bool {
+        DPCR::load().enabled(Self::NAME)
+    }
+
     /// Enables the channel and returns its registers.
     pub fn channel() -> Self {
         DPCR::load_mut().enable(Self::NAME).store();

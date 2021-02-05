@@ -3,6 +3,16 @@ use core::fmt;
 
 pub struct TTY;
 
+/// Calls [A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+#[macro_export]
+macro_rules! printf {
+    ($msg:expr $(,$args:expr)*) => {
+        unsafe {
+            $crate::bios::kernel::printf($msg.as_ptr() $(,$args)*)
+        }
+    };
+}
+
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {

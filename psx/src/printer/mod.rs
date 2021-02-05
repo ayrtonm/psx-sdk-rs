@@ -24,6 +24,13 @@ struct Font {
 
 const FONT_SIZE: u8 = 8;
 
+impl core::fmt::Write for Printer {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.print(s, []);
+        Ok(())
+    }
+}
+
 impl Printer {
     pub const fn new(
         cursor: (Pixel, Pixel), box_offset: (Pixel, Pixel), box_size: (Pixel, Pixel),

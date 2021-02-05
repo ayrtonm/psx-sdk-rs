@@ -46,13 +46,3 @@ impl GPUSTAT {
         self
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test_case]
-    fn bios_fn() {
-        use crate::bios;
-        use crate::hal::GPUSTAT;
-        assert!(bios::gpu_get_status() == GPUSTAT::load());
-    }
-}

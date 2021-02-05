@@ -19,8 +19,6 @@
 #![feature(const_unreachable_unchecked, const_panic)]
 // Could be removed if necessary.
 #![feature(array_map)]
-// Used for debugging
-#![feature(format_args_nl)]
 // Required to test psx crate
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
@@ -61,9 +59,10 @@ mod include;
 #[macro_use]
 mod std;
 #[macro_use]
-pub mod bios;
-#[macro_use]
+#[doc(hidden)]
 pub mod tty;
+#[macro_use]
+pub mod bios;
 
 mod allocator;
 mod builtins;
@@ -80,4 +79,5 @@ pub mod interrupt;
 pub mod printer;
 pub mod tim;
 pub mod timer;
+#[doc(hidden)]
 pub mod unzip;

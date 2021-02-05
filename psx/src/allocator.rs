@@ -22,24 +22,3 @@ pub static HEAP: BiosAllocator = BiosAllocator;
 fn on_oom(_layout: Layout) -> ! {
     panic!("Ran out of memory")
 }
-
-#[cfg(test)]
-mod tests {
-    #[test_case]
-    fn malloc() {
-        use crate::bios;
-        let mut mem = [0; 256];
-        bios::init_heap(&mut mem);
-        let alloc = bios::malloc(16);
-        alloc[0] = 0xff;
-        assert!(alloc.len() == 16);
-        assert!(alloc[0] == 0xff);
-        for i in 1..16 {
-            assert!(alloc[i] == 0);
-        }
-        bios::free(alloc);
-        unsafe {
-            bios::kernel::init_heap(0, 0);
-        }
-    }
-}

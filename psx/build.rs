@@ -41,14 +41,16 @@ fn parse_fn_desc(fn_desc: &str) -> FnDesc {
 const INDENT: &'static str = "    ";
 
 fn decl_bios_fn(func: &FnDesc) -> String {
-    format!("{}/// [BIOS Function {}({}h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)\n\
+    format!("{}/// Calls BIOS function [{}({}h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)\n\
              {0}pub fn {3}\n", INDENT, func.ty, func.num, func.sig)
 }
 
 fn mk_bios_trampoline(func: &FnDesc) -> String {
     let li_stmt = &format!("li ${}, 0x{}", func.arg, func.num);
     let j_stmt = &if func.is_syscall {
-        "syscall 0x0".to_string()
+        format!("syscall 0x0\n\
+                 {}jr $ra\n\
+                 {0}nop", INDENT)
     } else {
         format!("j 0x{}0", func.ty)
     };
