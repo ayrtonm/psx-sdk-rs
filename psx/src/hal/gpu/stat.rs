@@ -3,6 +3,8 @@ use crate::hal::{Register, GPUSTAT};
 
 const VIDEO_MODE: u32 = 20;
 const INTERLACE: u32 = 22;
+const DISPLAY_ENABLE: u32 = 23;
+const IRQ: u32 = 24;
 const CMD_READY: u32 = 26;
 const DMA_READY: u32 = 28;
 const DMA_DIRECTION: u32 = 29;
@@ -18,6 +20,14 @@ impl GPUSTAT {
 
     pub fn interlaced(&self) -> bool {
         self.contains(1 << INTERLACE)
+    }
+
+    pub fn display_enabled(&self) -> bool {
+        !self.contains(1 << DISPLAY_ENABLE)
+    }
+
+    pub fn irq_pending(&self) -> bool {
+        self.contains(1 << IRQ)
     }
 
     pub fn cmd_ready(&self) -> bool {
