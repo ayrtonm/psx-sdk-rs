@@ -9,7 +9,7 @@ fn save_state() {
     // Stores registers in first 12 spots
     bios::save_state(&mut buf);
     assert!(buf[0] != 0); // contains $ra
-    assert!(buf[4] != 0); // contains $sp
+    assert!(buf[1] != 0); // contains $sp
                           // Remaining registers may or may not be zero
     assert!(buf[12] == 0); // Extra space in buffer should remain zeroed
     assert!(buf[13] == 0);
@@ -40,8 +40,8 @@ fn gp1_command() {
     let old_status = GPUSTAT::load().bits();
     bios::gp1_command(0);
     let new_status = GPUSTAT::load().bits();
-    assert!(old_status == 0x14002000);
-    assert!(new_status == 0x14802000);
+    assert!(old_status == 0x1400_2000);
+    assert!(new_status == 0x1480_2000);
 }
 
 #[test_case]
@@ -82,7 +82,7 @@ fn gpu_sync() {
 #[test_case]
 fn system_date() {
     // This is for SCPH-5500
-    assert!(bios::system_date() == 0x19951204);
+    assert!(bios::system_date() == 0x1995_1204);
 }
 
 #[test_case]
@@ -111,7 +111,7 @@ fn critical_section() {
     bios::exit_critical_section();
     let res = bios::critical_section(|| {
         assert!(!bios::enter_critical_section());
-        0xdeadbeefu32
+        0xDEAD_BEEFu32
     });
-    assert!(res == 0xdeadbeef);
+    assert!(res == 0xDEAD_BEEF);
 }

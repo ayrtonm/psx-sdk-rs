@@ -25,7 +25,6 @@ pub fn runner(tests: &[&dyn Test]) {
     // Failing tests panic and unwinding will add unnecessary bloat to the binary
     // so the following line is only displayed if all tests pass
     printf!("\ntest result: ok. %d passed; 0 failed\n\n\0", tests.len());
-    loop {}
 }
 
 #[test_case]
