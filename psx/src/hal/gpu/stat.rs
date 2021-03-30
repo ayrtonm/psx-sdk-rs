@@ -1,5 +1,7 @@
 use crate::gpu::VideoMode;
 use crate::hal::{Register, GPUSTAT};
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 
 const VIDEO_MODE: u32 = 20;
 const INTERLACE: u32 = 22;
@@ -47,6 +49,10 @@ impl GPUSTAT {
         self.contains(1 << LINE_PARITY)
     }
 
+    pub fn even_line(&self) -> bool {
+        !self.odd_line()
+    }
+
     pub fn wait_cmd(&mut self) -> &mut Self {
         while !self.cmd_ready() {
             self.reload();
@@ -63,5 +69,22 @@ impl GPUSTAT {
 
     pub fn bits_no_interlace(&self) -> u32 {
         self.bits() & !(1 << LINE_PARITY)
+    }
+}
+
+impl Debug for GPUSTAT {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("GPUSTAT")
+            .field("bits", &self.bits())
+            .field("video_mode", &self.video_mode())
+            .field("interlaced", &self.interlaced())
+            .field("display_enabled", &self.display_enabled())
+            .field("irq_pending", &self.irq_pending())
+            .field("cmd_ready", &self.cmd_ready())
+            .field("dma_ready", &self.dma_ready())
+            .field("dma_enabled", &self.dma_enabled())
+            .field("odd_line", &self.odd_line())
+            .field("even_line", &self.even_line())
+            .finish()
     }
 }

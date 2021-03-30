@@ -79,7 +79,7 @@ pub enum DMAMode {
     GPUREAD,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum VideoMode {
     NTSC = 0,
     PAL,
