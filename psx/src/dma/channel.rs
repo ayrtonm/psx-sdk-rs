@@ -46,6 +46,12 @@ where
         Self::skip_enable()
     }
 
+    pub fn reload(&mut self) {
+        self.madr.reload();
+        self.bcr.reload();
+        self.chcr.reload();
+    }
+
     /// Returns the channel's registers without enabling it.
     pub fn skip_enable() -> Self {
         Channel {

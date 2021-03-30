@@ -127,6 +127,13 @@ pub trait MutRegister<T: Primitive>: Sized + Register<T> + Write<T> {
         self
     }
 
+    // TODO: bikeshed this fn name and `Self::set`. What `Self::set` actually does
+    // may be unclear TODO: actually review all HAL traits
+    fn assign(&mut self, bits: T) -> &mut Self {
+        *self.get_mut() = bits;
+        self
+    }
+
     /// Sets the given `bits` in the handle's copy of the register.
     fn set(&mut self, bits: T) -> &mut Self {
         *self.get_mut() |= bits;
