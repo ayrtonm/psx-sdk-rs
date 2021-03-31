@@ -5,13 +5,13 @@ pub enum Name {
     Fractional,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Source {
     System = 0,
     Alternate,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SyncMode {
     Pause = 0,
     Reset,

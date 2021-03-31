@@ -3,6 +3,8 @@ use crate::hal::{T0_CNT, T0_MODE, T0_TGT};
 use crate::hal::{T1_CNT, T1_MODE, T1_TGT};
 use crate::hal::{T2_CNT, T2_MODE, T2_TGT};
 use crate::timer::{Source, SyncMode};
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 
 #[macro_use]
 mod timers;
