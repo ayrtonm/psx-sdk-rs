@@ -43,7 +43,7 @@ pub enum ChannelName {
     OTC,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BlockMode {
     Single(u32),
     Multi { words: u16, blocks: u16 },
@@ -62,25 +62,25 @@ impl From<u32> for BlockMode {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Direction {
     ToMemory = 0,
     FromMemory,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Step {
     Forward = 0,
     Backward,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Chop {
     pub dma_win: u32,
     pub cpu_win: u32,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TransferMode {
     Immediate = 0,
     Request,

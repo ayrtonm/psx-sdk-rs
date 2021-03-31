@@ -6,6 +6,8 @@ use crate::hal::{D3_BCR, D3_CHCR, D3_MADR};
 use crate::hal::{D4_BCR, D4_CHCR, D4_MADR};
 use crate::hal::{D5_BCR, D5_CHCR, D5_MADR};
 use crate::hal::{D6_BCR, D6_CHCR, D6_MADR};
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 
 mod channel;
 mod control;
@@ -30,6 +32,18 @@ macro_rules! channel {
         impl<S: State> SharedChannelControl for $chcr<S> {}
 
         impl ChannelControl for $chcr<Mutable> {}
+
+        impl<S: State> Debug for $chcr<S> {
+            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+                f.debug_struct(stringify!($chcr))
+                    .field("mode", &self.get_mode())
+                    .field("busy", &self.busy())
+                    .field("direction", &self.get_direction())
+                    .field("step", &self.get_step())
+                    .field("chop", &self.get_chop())
+                    .finish()
+            }
+        }
     };
 
     ([$madr:ident, $bcr:ident, $chcr:ident], $($others:tt)*) => {
