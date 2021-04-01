@@ -2,6 +2,8 @@ use core::panic::PanicInfo;
 
 fn message<'a>(info: &'a PanicInfo) -> &'a [u8] {
     let default_msg = b"Panic message contained formatted arguments\0";
+    // TODO: Use core::fmt::Write
+    //println!("{}", info.message().unwrap());
     info.message()
         .map(|msg| msg.as_str().map(|msg| msg.as_bytes()))
         .flatten()

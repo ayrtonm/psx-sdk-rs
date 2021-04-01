@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::bios;
-use crate::hal::{MutRegister, GP1, I_MASK, I_STAT};
+use crate::hal::{MutRegister, Mutable, GP1, I_MASK, I_STAT};
 use crate::std::AsCStr;
 use core::any::type_name;
 
@@ -20,8 +20,8 @@ pub fn runner(tests: &[&dyn Test]) {
     printf!("running %d tests\n\0", tests.len());
     for test in tests {
         bios::critical_section(|| {
-            I_MASK::load_mut().disable_all().store();
-            I_STAT::load_mut().ack_all().store();
+            I_MASK::<Mutable>::load().disable_all().store();
+            I_STAT::<Mutable>::load().ack_all().store();
             GP1.reset_gpu();
             test.run();
         });

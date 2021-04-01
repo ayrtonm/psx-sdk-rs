@@ -1,4 +1,4 @@
-use crate::gpu::Color;
+use super::Color;
 
 impl From<Color> for u32 {
     fn from(color: Color) -> u32 {

@@ -1,4 +1,4 @@
-use crate::gpu::VideoMode;
+use super::ty::VideoMode;
 use crate::hal::{Register, GPUSTAT};
 use core::fmt;
 use core::fmt::{Debug, Formatter};

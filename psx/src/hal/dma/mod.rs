@@ -11,6 +11,7 @@ use core::fmt::{Debug, Formatter};
 
 mod channel;
 mod control;
+pub(crate) mod ty;
 
 pub use channel::BlockControl;
 pub use channel::ChannelControl;

@@ -1,4 +1,4 @@
-use crate::gpu::{PackedVertex, Pixel, Vertex};
+use super::{PackedVertex, Pixel, Vertex};
 
 impl From<Vertex> for u32 {
     fn from(vertex: Vertex) -> u32 {

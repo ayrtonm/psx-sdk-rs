@@ -1,6 +1,6 @@
+use super::ty::IRQ;
 use super::ALL_IRQS;
 use crate::hal::{MutRegister, Mutable, Register, State, I_MASK};
-use crate::interrupt::IRQ;
 
 impl<S: State> I_MASK<S> {
     pub fn irq_enabled(&self, irq: IRQ) -> bool {

@@ -1,7 +1,7 @@
 use super::{Channel, ChannelName, Direction};
 use super::{MDECIn, MDECOut, Step, TransferMode, CDROM, GPU, OTC, PIO, SPU};
 use crate::hal::dma::{BlockControl, ChannelControl, MemoryAddress};
-use crate::hal::{MutRegister, DPCR};
+use crate::hal::{MutRegister, Mutable, Register, Shared, DPCR};
 
 pub trait Name {
     const NAME: ChannelName;
@@ -37,12 +37,12 @@ where
     Self: Name,
 {
     pub fn enabled() -> bool {
-        DPCR::load().enabled(Self::NAME)
+        DPCR::<Shared>::load().enabled(Self::NAME)
     }
 
     /// Enables the channel and returns its registers.
     pub fn channel() -> Self {
-        DPCR::load_mut().enable(Self::NAME).store();
+        DPCR::<Mutable>::load().enable(Self::NAME).store();
         Self::skip_enable()
     }
 
@@ -57,7 +57,7 @@ where
         Channel {
             madr: MADR::skip_load(),
             bcr: BCR::skip_load(),
-            chcr: CHCR::load_mut(),
+            chcr: CHCR::load(),
         }
     }
 

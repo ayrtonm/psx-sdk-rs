@@ -1,5 +1,5 @@
 use super::command;
-use crate::gpu::{DMAMode, Depth, PackedVertex, Vertex, VideoMode};
+use super::ty::{DMAMode, Depth, PackedVertex, Vertex, VideoMode};
 use crate::hal::{Write, GP1};
 
 impl GP1 {

@@ -1,7 +1,10 @@
 //! This is a crate for developing homebrew for the original Sony PlayStation.
 #![no_std]
+// TODO: These are temporary to help refactor libpsx. Remove them eventually
+#![allow(dead_code, unused_macros)]
 //#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
+#![feature(llvm_asm)]
 #![feature(global_asm)]
 #![feature(c_variadic)]
 #![feature(alloc_error_handler)]
@@ -18,7 +21,7 @@
 // Required for const `illegal`
 #![feature(const_unreachable_unchecked, const_panic)]
 // Could be removed if necessary.
-#![feature(array_map)]
+#![feature(array_map, variant_count)]
 // Required to test psx crate
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
@@ -58,6 +61,16 @@ pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
 mod include;
 #[macro_use]
 mod std;
+#[doc(hidden)]
+pub mod unzip;
+
+pub mod hal;
+
+pub mod dma;
+pub mod gpu;
+pub mod interrupt;
+pub mod timer;
+
 #[macro_use]
 #[doc(hidden)]
 pub mod tty;
@@ -70,14 +83,8 @@ mod panic;
 mod runtime;
 mod test;
 
-pub mod dma;
-pub mod framebuffer;
-pub mod gpu;
 pub mod graphics;
-pub mod hal;
-pub mod interrupt;
-pub mod printer;
 pub mod tim;
-pub mod timer;
-#[doc(hidden)]
-pub mod unzip;
+
+pub mod framebuffer;
+pub mod printer;

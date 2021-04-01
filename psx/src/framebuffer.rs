@@ -1,7 +1,8 @@
 //! Double-buffered framebuffer routines
 
 use crate::dma;
-use crate::gpu::{reset_graphics, Color, Coordinate, Depth, DispEnv, DrawEnv, Vertex, VideoMode};
+use crate::gpu::{reset_graphics, Color, Coordinate, Depth, Vertex, VideoMode};
+use crate::graphics::{DispEnv, DrawEnv};
 
 /// Configuration for a double-buffered framebuffer.
 pub struct Framebuffer {

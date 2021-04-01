@@ -1,16 +1,11 @@
 //! Basic GPU data types
 
-use crate::hal::{MutRegister, Register, GP1, GPUSTAT, I_STAT};
+use crate::hal::{MutRegister, Mutable, Register, GP1, GPUSTAT, I_STAT};
 use crate::interrupt::IRQ;
 
-mod color;
-mod disp_env;
-mod draw_env;
-mod texture;
-mod vertex;
-
-pub use disp_env::DispEnv;
-pub use draw_env::DrawEnv;
+pub use crate::hal::gpu::ty::{Bpp, Clut, Color, Command, Coordinate, DMAMode, Depth, PackedVertex,
+                              Pixel, TexCoord, TexPage, Vertex, VideoMode};
+pub use crate::hal::gpu::Primitive;
 
 pub fn reset_graphics<T: Into<Vertex>>(res: T, mode: VideoMode, depth: Depth, interlace: bool) {
     GP1.reset_gpu()
@@ -31,73 +26,10 @@ pub fn draw_sync() {
 }
 
 pub fn vsync() {
-    I_STAT::load_mut()
+    I_STAT::<Mutable>::load()
         .ack(IRQ::Vblank)
         .store()
         .wait(IRQ::Vblank);
-}
-
-pub type Pixel = i16;
-pub type Command = u8;
-pub type Coordinate = (Pixel, Pixel);
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Color {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Vertex {
-    pub x: Pixel,
-    pub y: Pixel,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct PackedVertex<const N: usize, const X: usize, const Y: usize> {
-    data: [u8; N],
-}
-
-pub type Clut = PackedVertex<2, 6, 9>;
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct TexCoord {
-    pub x: u8,
-    pub y: u8,
-}
-
-pub type TexPage = PackedVertex<2, 4, 1>;
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum DMAMode {
-    GP0 = 2,
-    GPUREAD,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum VideoMode {
-    NTSC = 0,
-    PAL,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Depth {
-    /// 15-bit high-color mode
-    High = 0,
-    /// 24-bit true-color mode
-    True,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Bpp {
-    Bit4,
-    Bit8,
-    Bit15,
 }
 
 pub const BLACK: Color = Color::new(0, 0, 0);

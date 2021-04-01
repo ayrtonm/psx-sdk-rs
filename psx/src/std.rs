@@ -68,6 +68,12 @@ macro_rules! illegal {
     };
 }
 
+pub fn fence() {
+    unsafe {
+        llvm_asm!("":::"memory":"volatile");
+    }
+}
+
 pub trait AsCStr: AsRef<[u8]> {
     fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R;
 }

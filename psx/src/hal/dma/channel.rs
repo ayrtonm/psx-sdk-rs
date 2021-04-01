@@ -1,4 +1,4 @@
-use crate::dma::{BlockMode, Chop, Direction, Step, TransferMode};
+use super::ty::{BlockMode, Chop, Direction, Step, TransferMode};
 use crate::hal::{MutRegister, Register};
 
 const STEP: u32 = 1;

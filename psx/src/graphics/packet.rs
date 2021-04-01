@@ -43,7 +43,7 @@ impl<T> DerefMut for Packet<T> {
 }
 
 // TODO: Review this as it may be a bad idea
-use super::Primitive;
+use crate::gpu::Primitive;
 impl<T: Primitive> Primitive for Packet<T> {
     fn primitive(&self) -> &[u32] {
         self.deref().primitive()

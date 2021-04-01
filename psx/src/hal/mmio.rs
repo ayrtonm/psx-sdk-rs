@@ -5,11 +5,6 @@ macro_rules! read_only {
         pub struct $name($size);
 
         impl $name {
-            pub fn load() -> Self {
-                let unread = $name(0);
-                $name(unread.read())
-            }
-
             pub unsafe fn from_bits(bits: u32) -> Self {
                 $name(bits)
             }
@@ -29,7 +24,12 @@ macro_rules! read_only {
             }
         }
 
-        impl Register<$size> for $name {}
+        impl Register<$size> for $name {
+            fn load() -> Self {
+                let unread = $name(0);
+                $name(unread.read())
+            }
+        }
 
         impl Read<$size> for $name {
             fn read(&self) -> $size {
@@ -81,15 +81,6 @@ macro_rules! read_write {
         #[derive(PartialEq, Eq)]
         pub struct $name<S: State>($size, PhantomData::<S>);
 
-        impl $name<Shared> {
-            /// Reads the register and creates a read-only handle with a copy of the register's
-            /// current value.
-            pub fn load() -> Self {
-                let unread = Self(0, PhantomData);
-                $name(unread.read(), PhantomData)
-            }
-        }
-
         impl<S: State> HasValue<$size> for $name<S> {
             fn get(&self) -> $size {
                 self.0
@@ -100,19 +91,19 @@ macro_rules! read_write {
             }
         }
 
-        impl<S: State> Register<$size> for $name<S> {}
+        impl<S: State> Register<$size> for $name<S> {
+            /// Reads the register and creates a read-only handle with a copy of the register's
+            /// current value.
+            fn load() -> Self {
+                let unread = Self(0, PhantomData);
+                $name(unread.read(), PhantomData)
+            }
+        }
 
         impl MutRegister<$size> for $name<Mutable> {
             /// Creates a read-write handle without reading the register's current value.
             fn skip_load() -> Self {
                 $name(0, PhantomData)
-            }
-
-            /// Reads the register and creates a read-write handle with a copy of the register's
-            /// current value.
-            fn load_mut() -> Self {
-                let unread = $name::<Shared>(0, PhantomData);
-                $name(unread.read(), PhantomData)
             }
         }
 

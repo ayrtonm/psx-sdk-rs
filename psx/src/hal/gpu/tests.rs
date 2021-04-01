@@ -1,5 +1,5 @@
 #![cfg(test)]
-use crate::gpu::DMAMode;
+use super::ty::DMAMode;
 use crate::hal::{Register, GP0, GP1, GPUSTAT};
 
 #[test_case]

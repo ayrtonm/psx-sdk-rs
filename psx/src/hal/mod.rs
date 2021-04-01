@@ -81,6 +81,10 @@ impl Primitive for u16 {}
 impl Primitive for u32 {}
 
 pub trait Register<T: Primitive>: HasValue<T> + Read<T> {
+    /// Reads the register and creates a handle with a copy of the register's
+    /// current value.
+    fn load() -> Self;
+
     fn bits(&self) -> T {
         self.get()
     }
@@ -115,10 +119,6 @@ pub trait MutRegister<T: Primitive>: Sized + Register<T> + Write<T> {
     /// Creates a read-write handle without reading the register's current
     /// value.
     fn skip_load() -> Self;
-
-    /// Reads the register and creates a read-write handle with a copy of the
-    /// register's current value.
-    fn load_mut() -> Self;
 
     /// Writes the handle's copy of the register's value to the register and
     /// destroys the handle.

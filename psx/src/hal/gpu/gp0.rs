@@ -1,6 +1,5 @@
-use super::command;
-use crate::gpu::{Color, Vertex};
-use crate::graphics::Primitive;
+use super::ty::{Color, Vertex};
+use super::{command, Primitive};
 use crate::hal::{Write, GP0};
 
 impl GP0 {

@@ -1,4 +1,4 @@
-use crate::gpu::{Clut, TexCoord};
+use super::{Clut, TexCoord};
 
 impl From<Option<Clut>> for Clut {
     fn from(clut: Option<Clut>) -> Self {

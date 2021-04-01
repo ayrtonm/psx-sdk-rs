@@ -1,4 +1,4 @@
-use crate::dma::ChannelName;
+use super::ty::ChannelName;
 use crate::hal::{MutRegister, Mutable, Register, State, DPCR};
 
 impl<S: State> DPCR<S> {
