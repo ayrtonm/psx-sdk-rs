@@ -15,3 +15,4 @@ psxdev/*
 examples/filesizes
 */*/*/target
 psx/*.zip
+compress/*.tim
