@@ -76,9 +76,6 @@ pub mod interrupt;
 pub mod timer;
 
 #[macro_use]
-#[doc(hidden)]
-pub mod tty;
-#[macro_use]
 pub mod bios;
 
 mod allocator;

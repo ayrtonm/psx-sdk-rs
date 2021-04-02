@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::bios;
-use crate::hal::{MutRegister, Mutable, GP1, I_MASK, I_STAT};
+use crate::hal::{MutRegister, Mutable, Register, GP1, I_MASK, I_STAT};
 use crate::std::AsCStr;
 use core::any::type_name;
 

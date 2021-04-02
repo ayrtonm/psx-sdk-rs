@@ -11,6 +11,8 @@ use core::slice::from_raw_parts;
 
 pub mod kernel;
 mod tests;
+#[macro_use]
+mod tty;
 
 #[repr(u32)]
 #[derive(Clone, Copy, PartialEq, Eq)]
