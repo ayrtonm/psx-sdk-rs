@@ -10,26 +10,26 @@ use crate::hal::{D4_BCR, D4_CHCR, D4_MADR};
 use crate::hal::{D5_BCR, D5_CHCR, D5_MADR};
 use crate::hal::{D6_BCR, D6_CHCR, D6_MADR};
 
-pub use crate::hal::dma::ty::{BlockMode, ChannelName, Chop, Direction, Step, TransferMode};
+pub use crate::hal::dma::ty::{BlockMode, Chop, Direction, Name, Step, TransferMode};
 
 mod channel;
 mod gpu;
 
 /// DMA channel registers
-pub struct Channel<MADR: MemoryAddress, BCR: BlockControl, CHCR: ChannelControl> {
+pub struct Channel<MADR: MemoryAddress, BCR: BlockControl, CHCR: ChannelControl, const NAME: Name> {
     madr: MADR,
     bcr: BCR,
     chcr: CHCR,
 }
 
 /// DMA channel to transfer from RAM to the macroblock decoder
-pub type MDECIn = Channel<D0_MADR<Mutable>, D0_BCR<Mutable>, D0_CHCR<Mutable>>;
+pub type MDECIn = Channel<D0_MADR<Mutable>, D0_BCR<Mutable>, D0_CHCR<Mutable>, { Name::MDECIn }>;
 /// DMA channel to transfer from the macroblock decoder to RAM
-pub type MDECOut = Channel<D1_MADR<Mutable>, D1_BCR<Mutable>, D1_CHCR<Mutable>>;
+pub type MDECOut = Channel<D1_MADR<Mutable>, D1_BCR<Mutable>, D1_CHCR<Mutable>, { Name::MDECOut }>;
 /// DMA channel for GPU lists and image data
-pub type GPU = Channel<D2_MADR<Mutable>, D2_BCR<Mutable>, D2_CHCR<Mutable>>;
+pub type GPU = Channel<D2_MADR<Mutable>, D2_BCR<Mutable>, D2_CHCR<Mutable>, { Name::GPU }>;
 /// DMA channel to transfer CDROM data to RAM
-pub type CDROM = Channel<D3_MADR<Mutable>, D3_BCR<Mutable>, D3_CHCR<Mutable>>;
-pub type SPU = Channel<D4_MADR<Mutable>, D4_BCR<Mutable>, D4_CHCR<Mutable>>;
-pub type PIO = Channel<D5_MADR<Mutable>, D5_BCR<Mutable>, D5_CHCR<Mutable>>;
-pub type OTC = Channel<D6_MADR<Mutable>, D6_BCR<Mutable>, D6_CHCR<Mutable>>;
+pub type CDROM = Channel<D3_MADR<Mutable>, D3_BCR<Mutable>, D3_CHCR<Mutable>, { Name::CDROM }>;
+pub type SPU = Channel<D4_MADR<Mutable>, D4_BCR<Mutable>, D4_CHCR<Mutable>, { Name::SPU }>;
+pub type PIO = Channel<D5_MADR<Mutable>, D5_BCR<Mutable>, D5_CHCR<Mutable>, { Name::PIO }>;
+pub type OTC = Channel<D6_MADR<Mutable>, D6_BCR<Mutable>, D6_CHCR<Mutable>, { Name::OTC }>;

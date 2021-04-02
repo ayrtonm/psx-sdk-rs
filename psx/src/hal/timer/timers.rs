@@ -1,16 +1,16 @@
 macro_rules! timer {
     ([$cnt:ident, $mode:ident, $tgt:ident]) => {
-        impl<S: State> Counter for $cnt<S> {}
+        impl<S: State> SharedCurrent for $cnt<S> {}
 
-        impl MutCounter for $cnt<Mutable> {}
+        impl Current for $cnt<Mutable> {}
 
-        impl<S: State> Target for $tgt<S> {}
+        impl<S: State> SharedTarget for $tgt<S> {}
 
-        impl MutTarget for $tgt<Mutable> {}
+        impl Target for $tgt<Mutable> {}
 
-        impl<S: State> Mode for $mode<S> {}
+        impl<S: State> SharedMode for $mode<S> {}
 
-        impl MutMode for $mode<Mutable> {}
+        impl Mode for $mode<Mutable> {}
 
         impl<S: State> Debug for $mode<S> {
             fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

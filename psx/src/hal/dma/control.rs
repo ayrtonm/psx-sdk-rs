@@ -1,18 +1,18 @@
-use super::ty::ChannelName;
+use super::ty::Name;
 use crate::hal::{MutRegister, Mutable, Register, State, DPCR};
 
 impl<S: State> DPCR<S> {
-    pub fn enabled(&self, ch: ChannelName) -> bool {
+    pub fn enabled(&self, ch: Name) -> bool {
         self.contains(enable_bit(ch))
     }
 }
 
 impl DPCR<Mutable> {
-    pub fn enable(&mut self, ch: ChannelName) -> &mut Self {
+    pub fn enable(&mut self, ch: Name) -> &mut Self {
         self.set(enable_bit(ch))
     }
 
-    pub fn disable(&mut self, ch: ChannelName) -> &mut Self {
+    pub fn disable(&mut self, ch: Name) -> &mut Self {
         self.clear(enable_bit(ch))
     }
 
@@ -25,17 +25,17 @@ impl DPCR<Mutable> {
     }
 }
 
-const fn enable_bit(ch: ChannelName) -> u32 {
+const fn enable_bit(ch: Name) -> u32 {
     let bit = (ch as u32 * 4) + 3;
     1 << bit
 }
 
 const ENABLE_BITS: u32 = {
-    enable_bit(ChannelName::MDECIn) |
-        enable_bit(ChannelName::MDECOut) |
-        enable_bit(ChannelName::GPU) |
-        enable_bit(ChannelName::CDROM) |
-        enable_bit(ChannelName::SPU) |
-        enable_bit(ChannelName::PIO) |
-        enable_bit(ChannelName::OTC)
+    enable_bit(Name::MDECIn) |
+        enable_bit(Name::MDECOut) |
+        enable_bit(Name::GPU) |
+        enable_bit(Name::CDROM) |
+        enable_bit(Name::SPU) |
+        enable_bit(Name::PIO) |
+        enable_bit(Name::OTC)
 };

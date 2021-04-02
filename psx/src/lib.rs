@@ -1,7 +1,11 @@
 //! This is a crate for developing homebrew for the original Sony PlayStation.
 #![no_std]
-// TODO: These are temporary to help refactor libpsx. Remove them eventually
-#![allow(dead_code, unused_macros)]
+// Only allowed for const generics
+#![allow(incomplete_features)]
+// TODO: Reconsider whether to enable this incomplete feature after wrapping up this refactor.
+// Ideally I'll only be using the basics of `const_generics`, but it might make debugging more
+// tricky if it breaks anything else.
+#![feature(const_generics)]
 //#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(llvm_asm)]

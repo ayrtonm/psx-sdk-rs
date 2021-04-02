@@ -19,7 +19,7 @@ const SOURCE: u16 = 8;
 const HIT_TARGET: u16 = 11;
 const HIT_OVERFLOW: u16 = 12;
 
-pub trait Counter: Register<u16> {
+pub trait SharedCurrent: Register<u16> {
     /// Waits until the counter stops changing and returns the final value.
     fn wait(&mut self) -> u16 {
         while self.get() != self.reload().bits() {}
@@ -27,9 +27,9 @@ pub trait Counter: Register<u16> {
     }
 }
 
-pub trait MutCounter: MutRegister<u16> {}
+pub trait Current: MutRegister<u16> {}
 
-pub trait Mode: Register<u16> {
+pub trait SharedMode: Register<u16> {
     fn sync_enabled(&self) -> bool {
         self.contains(1)
     }
@@ -86,7 +86,7 @@ pub trait Mode: Register<u16> {
     }
 }
 
-pub trait MutMode: MutRegister<u16> {
+pub trait Mode: MutRegister<u16> {
     fn sync_enable(&mut self, enabled: bool) -> &mut Self {
         self.clear(1).set(enabled as u16)
     }
@@ -125,8 +125,8 @@ pub trait MutMode: MutRegister<u16> {
     }
 }
 
-pub trait Target: Register<u16> {}
-pub trait MutTarget: MutRegister<u16> {}
+pub trait SharedTarget: Register<u16> {}
+pub trait Target: MutRegister<u16> {}
 
 timer! {
     [T0_CNT, T0_MODE, T0_TGT],
