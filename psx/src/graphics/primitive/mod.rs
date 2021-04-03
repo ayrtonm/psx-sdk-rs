@@ -167,8 +167,7 @@ pub struct LineG2 {
 }
 
 #[repr(C)]
-#[allow(missing_docs)]
-pub struct ColoredVertex {
+struct ColoredVertex {
     c: Color,
     _pad: u8,
     v: Vertex,
