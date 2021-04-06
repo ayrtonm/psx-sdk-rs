@@ -5,7 +5,7 @@
 #![feature(global_asm)]
 #![feature(c_variadic)]
 #![feature(alloc_error_handler)]
-#![feature(panic_info_message, fmt_as_str)]
+#![feature(panic_info_message)]
 // Const features used to increase the potential scope of const testing.
 #![feature(
     const_ptr_offset,
