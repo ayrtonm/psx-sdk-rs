@@ -15,20 +15,16 @@ for building the rust compiler and LLVM for more specifics.
     cd rust
     ```
 
-2. Configure the build script to use `rust-lld` and (optionally) incremental compilation:
+2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:
 
     ```
     cp config.toml.example config.toml
     sed -i 's/#lld = false/lld = true/' config.toml
-    sed -i 's/#incremental = false/incremental = true/' config.toml
+    sed -i 's/#targets.*$/targets = "Mips;X86"/' config.toml
+    sed -i 's/#experimental-targets.*$/experimental-targets = ""/' config.toml
     ```
 
-    Note that enabling incremental compilation here only affects the build of
-    the compiler itself, not any code generated for the PlayStation. This can
-    speed up compilation of the compiler after an initial build, but comes at
-    the cost of increased memory usage and storage requirements.
-
-3. Patch the rust compiler:
+3. Patch the rust compiler. Since the patch has a moving target this might require a bit of manual intervention:
 
     ```
     git apply ../rustc_psx.patch

@@ -1,8 +1,8 @@
 diff --git a/lld/ELF/ScriptParser.cpp b/lld/ELF/ScriptParser.cpp
-index fea6b7a274e..32406ac89c3 100644
+index b81812d11821..15b847061040 100644
 --- a/lld/ELF/ScriptParser.cpp
 +++ b/lld/ELF/ScriptParser.cpp
-@@ -436,10 +436,12 @@ void ScriptParser::readOutputFormat() {
+@@ -441,10 +441,12 @@ void ScriptParser::readOutputFormat() {
      config->osabi = ELFOSABI_FREEBSD;
  
    std::tie(config->ekind, config->emachine) = parseBfdName(s);
@@ -13,11 +13,11 @@ index fea6b7a274e..32406ac89c3 100644
      config->mipsN32Abi = true;
 +  if (s == "binary")
 +    config->oFormatBinary = true;
+   if (config->emachine == EM_MSP430)
+     config->osabi = ELFOSABI_STANDALONE;
  
-   if (consume(")"))
-     return;
 diff --git a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
-index aa8e298fa75..0ed671bb365 100644
+index aa8e298fa759..0ed671bb3657 100644
 --- a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
 +++ b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
 @@ -160,6 +160,7 @@ private:
@@ -87,7 +87,7 @@ index aa8e298fa75..0ed671bb365 100644
    // Then run them alternatively while there are changes
    while (forbiddenSlotChanged) {
 diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.cpp b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
-index 0c6080258a3..91cfa89b303 100644
+index 94828a976695..9f254e5a6a9f 100644
 --- a/llvm/lib/Target/Mips/MipsInstrInfo.cpp
 +++ b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
 @@ -568,11 +568,39 @@ bool MipsInstrInfo::SafeInForbiddenSlot(const MachineInstr &MI) const {
@@ -131,7 +131,7 @@ index 0c6080258a3..91cfa89b303 100644
  unsigned MipsInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
    switch (MI.getOpcode()) {
 diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.h b/llvm/lib/Target/Mips/MipsInstrInfo.h
-index c96ed202df3..8b665e867f5 100644
+index c96ed202df30..8b665e867f5a 100644
 --- a/llvm/lib/Target/Mips/MipsInstrInfo.h
 +++ b/llvm/lib/Target/Mips/MipsInstrInfo.h
 @@ -92,9 +92,15 @@ public:
@@ -151,7 +151,7 @@ index c96ed202df3..8b665e867f5 100644
    void insertNoop(MachineBasicBlock &MBB,
                    MachineBasicBlock::iterator MI) const override;
 diff --git a/llvm/lib/Target/Mips/MipsSubtarget.cpp b/llvm/lib/Target/Mips/MipsSubtarget.cpp
-index ef4191cec3d..915634fec85 100644
+index 8bb9d75e9173..782b3f98057d 100644
 --- a/llvm/lib/Target/Mips/MipsSubtarget.cpp
 +++ b/llvm/lib/Target/Mips/MipsSubtarget.cpp
 @@ -64,6 +64,7 @@ bool MipsSubtarget::MSAWarningPrinted = false;
@@ -181,7 +181,7 @@ index ef4191cec3d..915634fec85 100644
      report_fatal_error("Code generation for MIPS-V is not implemented", false);
  
 diff --git a/llvm/lib/Target/Mips/MipsSubtarget.h b/llvm/lib/Target/Mips/MipsSubtarget.h
-index 26ee961fc95..4c29cef0b9a 100644
+index 2b4c2b19a95d..1d630a382f35 100644
 --- a/llvm/lib/Target/Mips/MipsSubtarget.h
 +++ b/llvm/lib/Target/Mips/MipsSubtarget.h
 @@ -59,6 +59,9 @@ class MipsSubtarget : public MipsGenSubtargetInfo {

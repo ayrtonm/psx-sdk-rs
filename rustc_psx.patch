@@ -1,9 +1,9 @@
 diff --git a/compiler/rustc_target/src/spec/mipsel_sony_psx.rs b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
 new file mode 100644
-index 00000000000..58c0321448a
+index 00000000000..6a278563b5b
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,51 @@
 +use crate::spec::{
 +    LinkArgs, LinkerFlavor, LldFlavor, PanicStrategy, RelocModel, Target, TargetOptions,
 +};
@@ -56,15 +56,14 @@ index 00000000000..58c0321448a
 +    }
 +}
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index 1d3e61c4992..6c3a5ac0cef 100644
+index 57b0a36e009..74561b86675 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -653,6 +653,7 @@ supported_targets! {
+@@ -891,6 +891,7 @@ fn $module() {
      ("powerpc64-wrs-vxworks", powerpc64_wrs_vxworks),
  
      ("mipsel-sony-psp", mipsel_sony_psp),
 +    ("mipsel-sony-psx", mipsel_sony_psx),
      ("mipsel-unknown-none", mipsel_unknown_none),
      ("thumbv4t-none-eabi", thumbv4t_none_eabi),
- }
-
+ 
