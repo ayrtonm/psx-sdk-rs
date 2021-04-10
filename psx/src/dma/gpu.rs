@@ -1,7 +1,7 @@
 use super::{Direction, Step, TransferMode, GPU};
-use crate::gpu::{draw_sync, DMAMode};
+use crate::gpu::DMAMode;
 use crate::hal::dma::{ChannelControl, MemoryAddress, SharedChannelControl};
-use crate::hal::{MutRegister, GP1, GPUSTAT};
+use crate::hal::{MutRegister, GP1};
 
 impl GPU {
     // This works even if `list` is stack allocated because it's blocking.
