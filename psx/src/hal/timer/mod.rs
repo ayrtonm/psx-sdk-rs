@@ -31,7 +31,7 @@ pub trait Current: MutRegister<u16> {}
 
 pub trait SharedMode: Register<u16> {
     fn sync_enabled(&self) -> bool {
-        self.contains(1)
+        self.all_set(1)
     }
 
     fn get_sync_mode(&self) -> SyncMode {
@@ -48,7 +48,7 @@ pub trait SharedMode: Register<u16> {
     }
 
     fn get_source(&self) -> Source {
-        if self.contains(1 << SOURCE) {
+        if self.all_set(1 << SOURCE) {
             Source::Alternate
         } else {
             Source::System
@@ -57,32 +57,32 @@ pub trait SharedMode: Register<u16> {
 
     /// Checks if hitting the target resets the counter.
     fn target_resets(&self) -> bool {
-        self.contains(1 << TARGET_RESET)
+        self.all_set(1 << TARGET_RESET)
     }
 
     /// Checks if hitting the target triggers an IRQ.
     fn target_irqs(&self) -> bool {
-        self.contains(1 << TARGET_IRQ)
+        self.all_set(1 << TARGET_IRQ)
     }
 
     /// Checks if overflow triggers an IRQ.
     fn overflow_irqs(&self) -> bool {
-        self.contains(1 << OVERFLOW_IRQ)
+        self.all_set(1 << OVERFLOW_IRQ)
     }
 
     /// Checks if the counter reached the target.
     fn reached_target(&self) -> bool {
-        self.contains(1 << HIT_TARGET)
+        self.all_set(1 << HIT_TARGET)
     }
 
     /// Checks if the counter overflowed.
     fn overflowed(&self) -> bool {
-        self.contains(1 << HIT_OVERFLOW)
+        self.all_set(1 << HIT_OVERFLOW)
     }
 
     /// Checks if the IRQ is pulsed.
     fn pulsed_irq(&self) -> bool {
-        self.contains(1 << PULSE_MODE)
+        self.all_set(1 << PULSE_MODE)
     }
 }
 

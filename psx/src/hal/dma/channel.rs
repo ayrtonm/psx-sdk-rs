@@ -75,11 +75,11 @@ pub trait SharedChannelControl: Register<u32> {
     }
 
     fn busy(&self) -> bool {
-        self.contains(1 << BUSY)
+        self.all_set(1 << BUSY)
     }
 
     fn get_direction(&self) -> Direction {
-        if self.contains(1) {
+        if self.all_set(1) {
             Direction::FromMemory
         } else {
             Direction::ToMemory
@@ -87,7 +87,7 @@ pub trait SharedChannelControl: Register<u32> {
     }
 
     fn get_step(&self) -> Step {
-        if self.contains(1 << STEP) {
+        if self.all_set(1 << STEP) {
             Step::Backward
         } else {
             Step::Forward
@@ -95,7 +95,7 @@ pub trait SharedChannelControl: Register<u32> {
     }
 
     fn get_chop(&self) -> Option<Chop> {
-        if self.contains(1 << CHOP) {
+        if self.all_set(1 << CHOP) {
             Some(Chop {
                 cpu_win: (self.get() >> CPU_WIN) & 0b111,
                 dma_win: (self.get() >> DMA_WIN) & 0b111,

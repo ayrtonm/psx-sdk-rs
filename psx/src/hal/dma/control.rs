@@ -3,7 +3,7 @@ use crate::hal::{MutRegister, Mutable, Register, State, DPCR};
 
 impl<S: State> DPCR<S> {
     pub fn enabled(&self, ch: Name) -> bool {
-        self.contains(enable_bit(ch))
+        self.all_set(enable_bit(ch))
     }
 }
 

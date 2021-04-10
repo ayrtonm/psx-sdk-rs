@@ -14,7 +14,7 @@ const LINE_PARITY: u32 = 31;
 
 impl GPUSTAT {
     pub fn video_mode(&self) -> VideoMode {
-        if self.contains(1 << VIDEO_MODE) {
+        if self.all_set(1 << VIDEO_MODE) {
             VideoMode::PAL
         } else {
             VideoMode::NTSC
@@ -22,31 +22,31 @@ impl GPUSTAT {
     }
 
     pub fn interlaced(&self) -> bool {
-        self.contains(1 << INTERLACE)
+        self.all_set(1 << INTERLACE)
     }
 
     pub fn display_enabled(&self) -> bool {
-        !self.contains(1 << DISPLAY_ENABLE)
+        !self.all_set(1 << DISPLAY_ENABLE)
     }
 
     pub fn irq_pending(&self) -> bool {
-        self.contains(1 << IRQ)
+        self.all_set(1 << IRQ)
     }
 
     pub fn cmd_ready(&self) -> bool {
-        self.contains(1 << CMD_READY)
+        self.all_set(1 << CMD_READY)
     }
 
     pub fn dma_ready(&self) -> bool {
-        self.contains(1 << DMA_READY)
+        self.all_set(1 << DMA_READY)
     }
 
     pub fn dma_enabled(&self) -> bool {
-        self.any(0b11 << DMA_DIRECTION)
+        self.any_set(0b11 << DMA_DIRECTION)
     }
 
     pub fn odd_line(&self) -> bool {
-        self.contains(1 << LINE_PARITY)
+        self.all_set(1 << LINE_PARITY)
     }
 
     pub fn even_line(&self) -> bool {

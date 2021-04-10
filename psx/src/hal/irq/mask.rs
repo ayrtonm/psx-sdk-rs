@@ -4,11 +4,11 @@ use crate::hal::{MutRegister, Mutable, Register, State, I_MASK};
 
 impl<S: State> I_MASK<S> {
     pub fn irq_enabled(&self, irq: IRQ) -> bool {
-        self.contains(1 << (irq as u32))
+        self.all_set(1 << (irq as u32))
     }
 
     pub fn irq_disabled(&self, irq: IRQ) -> bool {
-        self.cleared(1 << (irq as u32))
+        self.all_cleared(1 << (irq as u32))
     }
 }
 

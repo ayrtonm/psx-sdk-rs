@@ -3,7 +3,7 @@ use crate::hal::{MutRegister, Mutable, Register, State, I_STAT};
 
 impl<S: State> I_STAT<S> {
     pub fn wait(&mut self, irq: IRQ) {
-        while self.cleared(1 << (irq as u32)) {
+        while self.all_cleared(1 << (irq as u32)) {
             self.reload();
         }
     }

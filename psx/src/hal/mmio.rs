@@ -14,7 +14,7 @@ macro_rules! read_only {
             const ADDRESS: u32 = $address;
         }
 
-        impl HasValue<$size> for $name {
+        impl private::HasValue<$size> for $name {
             fn get(&self) -> $size {
                 self.0
             }
@@ -81,7 +81,7 @@ macro_rules! read_write {
         #[derive(PartialEq, Eq)]
         pub struct $name<S: State>($size, PhantomData::<S>);
 
-        impl<S: State> HasValue<$size> for $name<S> {
+        impl<S: State> private::HasValue<$size> for $name<S> {
             fn get(&self) -> $size {
                 self.0
             }
