@@ -16,7 +16,10 @@ macro_rules! printf {
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
-        <$crate::tty::TTY as core::fmt::Write>::write_fmt(&mut $crate::tty::TTY, format_args!($($arg)*)).ok();
+        {
+            use $crate::bios::tty::TTY;
+            <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($arg)*)).ok();
+        }
     };
 }
 
@@ -27,8 +30,11 @@ macro_rules! println {
         $crate::printf!("\n\0");
     };
     ($($arg:tt)*) => {
-        <$crate::tty::TTY as core::fmt::Write>::write_fmt(&mut $crate::tty::TTY, format_args!($($arg)*)).ok();
-        $crate::printf!("\n\0");
+        {
+            use $crate::bios::tty::TTY;
+            <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($arg)*)).ok();
+            $crate::printf!("\n\0");
+        }
     };
 }
 
