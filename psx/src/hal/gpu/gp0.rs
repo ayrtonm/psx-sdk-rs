@@ -25,6 +25,7 @@ impl GP0 {
     }
 
     pub fn draw<P: Primitive>(&mut self, prim: &P) -> &mut Self {
-        self.write_slice(prim.primitive())
+        self.write_slice(prim.primitive());
+        self
     }
 }

@@ -9,19 +9,19 @@ impl<S: State> DPCR<S> {
 
 impl DPCR<Mutable> {
     pub fn enable(&mut self, ch: Name) -> &mut Self {
-        self.set(enable_bit(ch))
+        self.set_bits(enable_bit(ch))
     }
 
     pub fn disable(&mut self, ch: Name) -> &mut Self {
-        self.clear(enable_bit(ch))
+        self.clear_bits(enable_bit(ch))
     }
 
     pub fn enable_all(&mut self) -> &mut Self {
-        self.set(ENABLE_BITS)
+        self.set_bits(ENABLE_BITS)
     }
 
     pub fn disable_all(&mut self) -> &mut Self {
-        self.clear(ENABLE_BITS)
+        self.clear_bits(ENABLE_BITS)
     }
 }
 

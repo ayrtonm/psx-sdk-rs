@@ -5,7 +5,8 @@ macro_rules! read_only {
         pub struct $name($size);
 
         impl $name {
-            pub unsafe fn from_bits(bits: u32) -> Self {
+            /// Creates a read-only handle with its stored value initialized to `bits`.
+            pub unsafe fn from_bits(bits: $size) -> Self {
                 $name(bits)
             }
         }
@@ -47,15 +48,6 @@ macro_rules! read_only {
 macro_rules! write_only {
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal) => {
         $(#[$($meta)*])* pub struct $name;
-        impl $name {
-            pub fn write_slice(&mut self, values: &[$size]) -> &mut Self {
-                for &v in values {
-                    self.write(v);
-                }
-                self
-            }
-        }
-
         impl Address for $name {
             const ADDRESS: u32 = $address;
         }
@@ -92,8 +84,6 @@ macro_rules! read_write {
         }
 
         impl<S: State> Register<$size> for $name<S> {
-            /// Reads the register and creates a read-only handle with a copy of the register's
-            /// current value.
             fn load() -> Self {
                 let unread = Self(0, PhantomData);
                 $name(unread.read(), PhantomData)
@@ -101,7 +91,6 @@ macro_rules! read_write {
         }
 
         impl MutRegister<$size> for $name<Mutable> {
-            /// Creates a read-write handle without reading the register's current value.
             fn skip_load() -> Self {
                 $name(0, PhantomData)
             }
@@ -118,7 +107,6 @@ macro_rules! read_write {
         }
 
         impl Write<$size> for $name<Mutable> {
-            /// Writes to the register.
             fn write(&mut self, value: $size) {
                 unsafe {
                     write_volatile($address as *mut $size, value)

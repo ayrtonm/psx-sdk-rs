@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 use crate::gpu::{draw_sync, Clut, Color, Pixel, TexPage, Vertex, WHITE};
 use crate::graphics::primitive::Sprt8;
-use crate::hal::GP0;
+use crate::hal::{Write, GP0};
 use crate::tim::TIM;
 use fmt::format_u32;
 

@@ -88,40 +88,41 @@ pub trait SharedMode: Register<u16> {
 
 pub trait Mode: MutRegister<u16> {
     fn sync_enable(&mut self, enabled: bool) -> &mut Self {
-        self.clear(1).set(enabled as u16)
+        self.clear_bits(1).set_bits(enabled as u16)
     }
 
     fn set_sync_mode(&mut self, mode: SyncMode) -> &mut Self {
-        self.clear(0b11 << SYNC_MODE)
-            .set((mode as u16) << SYNC_MODE)
+        self.clear_bits(0b11 << SYNC_MODE)
+            .set_bits((mode as u16) << SYNC_MODE)
     }
 
     fn set_source(&mut self, src: Source) -> &mut Self {
-        self.clear(1 << SOURCE).set((src as u16) << SOURCE)
+        self.clear_bits(1 << SOURCE)
+            .set_bits((src as u16) << SOURCE)
     }
 
     /// Sets whether the counter will reset when it hits the target.
     fn reset_target(&mut self, enable: bool) -> &mut Self {
-        self.clear(1 << TARGET_RESET)
-            .set((enable as u16) << TARGET_RESET)
+        self.clear_bits(1 << TARGET_RESET)
+            .set_bits((enable as u16) << TARGET_RESET)
     }
 
     /// Sets whether the counter will trigger an IRQ when it hits the target.
     fn irq_target(&mut self, enable: bool) -> &mut Self {
-        self.clear(1 << TARGET_IRQ)
-            .set((enable as u16) << TARGET_IRQ)
+        self.clear_bits(1 << TARGET_IRQ)
+            .set_bits((enable as u16) << TARGET_IRQ)
     }
 
     /// Sets whether the counter will trigger an IRQ when it overflows.
     fn irq_overflow(&mut self, enable: bool) -> &mut Self {
-        self.clear(1 << OVERFLOW_IRQ)
-            .set((enable as u16) << OVERFLOW_IRQ)
+        self.clear_bits(1 << OVERFLOW_IRQ)
+            .set_bits((enable as u16) << OVERFLOW_IRQ)
     }
 
     /// Sets whether the IRQ is pulsed.
     fn pulse_irq(&mut self, enable: bool) -> &mut Self {
-        self.clear(1 << PULSE_MODE)
-            .set((enable as u16) << PULSE_MODE)
+        self.clear_bits(1 << PULSE_MODE)
+            .set_bits((enable as u16) << PULSE_MODE)
     }
 }
 

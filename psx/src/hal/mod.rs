@@ -48,10 +48,11 @@ pub mod timer;
 #[macro_use]
 mod mmio;
 
-/// The 32-bit [memory address](http://problemkaputt.de/psx-spx.htm#iomap)
-/// corresponding to a memory-mapped I/O register. The address has no alignment
-/// constraint.
+/// The address corresponding to a
+/// [memory-mapped I/O register](http://problemkaputt.de/psx-spx.htm#iomap).
 pub trait Address {
+    /// The 32-bit address corresponding to the register. Note there is no
+    /// alignment constraint.
     const ADDRESS: u32;
 }
 
@@ -63,10 +64,18 @@ pub trait Read<T> {
 }
 
 /// Volatile memory-mapped I/O or coprocessor register writes.
-pub trait Write<T> {
-    /// Writes `value` to the register. Note that the write will not be elided
-    /// by the compiler.
+///
+/// Note that the write(s) will not be elided by the compiler.
+pub trait Write<T: Copy> {
+    /// Writes `value` to the register.
     fn write(&mut self, value: T);
+
+    /// Writes the slice of `values` to the register.
+    fn write_slice(&mut self, values: &[T]) {
+        for &v in values {
+            self.write(v);
+        }
+    }
 }
 
 // Seal the `Register` and `MutRegister` traits.
@@ -95,8 +104,9 @@ mod private {
     impl Primitive for u32 {}
 }
 
-/// Basic operations for all register handles. All methods may be elided by
-/// the compiler unless stated otherwise.
+/// Basic operations for all register handles.
+///
+/// All methods may be elided by the compiler unless stated otherwise.
 pub trait Register<T: private::Primitive>: private::HasValue<T> + Read<T> {
     /// Reads the register and creates a handle with a copy of the register's
     /// current value. Note that the read will not be elided by the compiler.
@@ -134,9 +144,10 @@ pub trait Register<T: private::Primitive>: private::HasValue<T> + Read<T> {
     }
 }
 
-/// Basic operations for `Mutable` register handles. All methods may be elided by
-/// the compiler unless stated otherwise. Most methods also return `&mut Self`
-/// for convenience.
+/// Basic operations for [`Mutable`] register handles.
+///
+/// All methods may be elided by the compiler unless stated otherwise. Most
+/// methods also return `&mut Self` for convenience.
 pub trait MutRegister<T: private::Primitive>: Sized + Register<T> + Write<T> {
     /// Creates a handle without reading the register's current value.
     fn skip_load() -> Self;
@@ -191,12 +202,16 @@ pub trait MutRegister<T: private::Primitive>: Sized + Register<T> + Write<T> {
     }
 }
 
-pub trait State {}
+/// A marker trait for a register handle which may be shared between threads.
 pub struct Shared {}
+/// A marker trait for a mutable register handle.
 pub struct Mutable {}
+#[doc(hidden)]
+pub trait State {}
 impl State for Shared {}
 impl State for Mutable {}
 
+// Comments and address taken more or less verbatim from nocash specs
 read_only! {
   /// Read responses to GP0(C0h) and GP1(10h) commands
   GPUREAD<u32>: 0x1F801810,

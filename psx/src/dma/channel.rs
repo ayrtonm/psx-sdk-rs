@@ -44,7 +44,7 @@ where
             .set_direction(Direction::FromMemory)
             .set_step(Step::Forward)
             .set_mode(TransferMode::Immediate);
-        self.madr.set(buffer.as_ptr() as u32).store();
+        self.madr.set_bits(buffer.as_ptr() as u32).store();
         self.bcr.set_block(buffer.len()).store();
         self.chcr.start().store().wait();
     }

@@ -1,6 +1,6 @@
 use crate::gpu::{Color, Command, PackedVertex, Vertex, BLACK};
 use crate::graphics::{num_words, AsSlice, Packet};
-use crate::hal::GP0;
+use crate::hal::{Write, GP0};
 
 #[repr(C)]
 #[derive(Debug)]

@@ -108,35 +108,35 @@ pub trait SharedChannelControl: Register<u32> {
 
 pub trait ChannelControl: MutRegister<u32> + SharedChannelControl {
     fn set_direction(&mut self, direction: Direction) -> &mut Self {
-        self.clear(1).set(direction as u32)
+        self.clear_bits(1).set_bits(direction as u32)
     }
 
     fn set_step(&mut self, step: Step) -> &mut Self {
-        self.clear(1 << STEP).set((step as u32) << STEP)
+        self.clear_bits(1 << STEP).set_bits((step as u32) << STEP)
     }
 
     fn set_chop(&mut self, chop: Option<Chop>) -> &mut Self {
         match chop {
             Some(chop) => self
-                .clear(chop.cpu_win << CPU_WIN | chop.dma_win << DMA_WIN)
-                .set(1 << CHOP | chop.cpu_win << CPU_WIN | chop.dma_win << DMA_WIN),
-            None => self.clear(1 << CHOP),
+                .clear_bits(chop.cpu_win << CPU_WIN | chop.dma_win << DMA_WIN)
+                .set_bits(1 << CHOP | chop.cpu_win << CPU_WIN | chop.dma_win << DMA_WIN),
+            None => self.clear_bits(1 << CHOP),
         }
     }
 
     fn set_mode(&mut self, mode: TransferMode) -> &mut Self {
-        self.clear(0b11 << TRANSFER_MODE)
-            .set((mode as u32) << TRANSFER_MODE)
+        self.clear_bits(0b11 << TRANSFER_MODE)
+            .set_bits((mode as u32) << TRANSFER_MODE)
     }
 
     fn start(&mut self) -> &mut Self {
         if let Some(TransferMode::Immediate) = self.get_mode() {
-            self.set(1 << TRIGGER);
+            self.set_bits(1 << TRIGGER);
         }
-        self.set(1 << BUSY)
+        self.set_bits(1 << BUSY)
     }
 
     fn stop(&mut self) -> &mut Self {
-        self.clear(1 << BUSY)
+        self.clear_bits(1 << BUSY)
     }
 }
