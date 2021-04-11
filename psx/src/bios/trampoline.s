@@ -186,6 +186,21 @@ restart_timer:
     j 0xB0
     li $9, 0x06
 
+.globl open_thread
+open_thread:
+    j 0xB0
+    li $9, 0x0E
+
+.globl close_thread
+close_thread:
+    j 0xB0
+    li $9, 0x0F
+
+.globl change_thread
+change_thread:
+    j 0xB0
+    li $9, 0x10
+
 .globl init_pad
 init_pad:
     j 0xB0

@@ -152,9 +152,9 @@ B(06h) restart_timer(t: u32);
 //B(0Bh) TestEvent(event)
 //B(0Ch) EnableEvent(event)
 //B(0Dh) DisableEvent(event)
-//B(0Eh) OpenThread(reg_PC,reg_SP_FP,reg_GP)
-//B(0Fh) CloseThread(handle)
-//B(10h) ChangeThread(handle)
+B(0Eh) open_thread(pc: u32, sp: u32, gp: u32) -> u32;
+B(0Fh) close_thread(handle: u32);
+B(10h) change_thread(handle: u32);
 //B(11h) jump_to_00000000h
 B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);
 B(13h) start_pad();

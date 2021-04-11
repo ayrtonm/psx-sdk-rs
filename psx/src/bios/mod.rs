@@ -14,6 +14,9 @@ mod tests;
 #[macro_use]
 #[doc(hidden)]
 pub mod tty;
+mod thread;
+
+pub use thread::Thread;
 
 #[repr(u32)]
 #[derive(Clone, Copy, PartialEq, Eq)]

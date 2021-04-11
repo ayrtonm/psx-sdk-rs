@@ -78,6 +78,12 @@ extern "C" {
     pub fn disable_timer_irq(t: u32);
     /// Calls BIOS function [B(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn restart_timer(t: u32);
+    /// Calls BIOS function [B(0Eh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn open_thread(pc: u32, sp: u32, gp: u32) -> u32;
+    /// Calls BIOS function [B(0Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn close_thread(handle: u32);
+    /// Calls BIOS function [B(10h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn change_thread(handle: u32);
     /// Calls BIOS function [B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);
     /// Calls BIOS function [B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
