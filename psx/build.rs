@@ -93,7 +93,7 @@ fn main() {
                  global_asm!(include_str!(\"trampoline.s\"));\n\n\
                  extern \"C\" {{\n\
                  {}\
-                 }}", src))
+                 }}\n", src))
         .expect(&format!("Unable to write to {}", src_file));
 
     // Put the linker script to somewhere accessible
