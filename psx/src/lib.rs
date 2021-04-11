@@ -8,7 +8,7 @@
 #![feature(const_generics)]
 //#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
-#![feature(llvm_asm)]
+#![feature(asm)]
 #![feature(global_asm)]
 #![feature(c_variadic)]
 #![feature(alloc_error_handler)]
