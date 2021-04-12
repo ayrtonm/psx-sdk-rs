@@ -25,7 +25,7 @@ impl Thread {
     /// BIOS cannot find a free thread control block.
     pub fn open<R>(func: fn() -> R, sp: u32, gp: Option<GlobalPointer>) -> Option<Self> {
         let gp = gp.unwrap_or(GlobalPointer::load());
-        let handle = unsafe { kernel::open_thread(pc as u32, sp, gp.bits()) };
+        let handle = unsafe { kernel::open_thread(func as u32, sp, gp.bits()) };
         match handle {
             0xFF00_0000..=0xFF00_0003 => Some(Self::new(handle)),
             _ => None,
@@ -75,5 +75,26 @@ mod tests {
         }
         assert!(t3.is_none());
         assert!(t4.is_none());
+    }
+
+    #[test_case]
+    fn change_thread() {
+        static mut X: u32 = 0;
+        let t = Thread::open(
+            || {
+                unsafe {
+                    X += 1;
+                }
+                Thread::INIT.change();
+            },
+            // Set `sp` to the end of the scratchpad/D-cache to avoid overlap between stacks
+            0x9F80_0000 + 1024,
+            None,
+        )
+        .expect("Unable to open thread");
+        assert!(unsafe { X == 0 });
+        t.change();
+        assert!(unsafe { X == 1 });
+        t.close();
     }
 }
