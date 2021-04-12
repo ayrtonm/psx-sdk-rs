@@ -59,5 +59,5 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
     - [ ] Randomize test order. Something simple like (an + b) mod N where N is the number of tests, n is in [0, N), gcd(a, N) = 1 and b is a random value from the BIOS. Could use memcard file to store last b and make runs actually differ.
 
 ## cargo-psx
-    - [ ] Add regions back in
-    - [ ] Figure out a good way to add debug info. Something like a debug flag that makes both an ELF with source info and an executable PSEXE. Ideally they'd have the same .text/.data/.bss sections at the same addresses. I'd like to avoid calling `cargo build` twice so something like creating two executables with different linker scripts would be ideal.
+- [ ] Add regions back in
+- [ ] Figure out a good way to add debug info. Something like a debug flag that makes both an ELF with source info and an executable PSEXE. Ideally they'd have the same .text/.data/.bss sections at the same addresses. I'd like to avoid calling `cargo build` twice so something like creating two executables with different linker scripts would be ideal.
