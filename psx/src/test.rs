@@ -30,8 +30,3 @@ pub fn runner(tests: &[&dyn Test]) {
     // so the following line is only displayed if all tests pass
     printf!("\ntest result: ok. %d passed; 0 failed\n\n\0", tests.len());
 }
-
-#[test_case]
-fn pass() {
-    assert!(true);
-}

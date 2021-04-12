@@ -48,6 +48,12 @@ impl Thread {
             kernel::change_thread(self.handle);
         }
     }
+
+    pub fn spawn<R>(func: fn() -> R, sp: u32, gp: Option<GlobalPointer>) -> Option<Self> {
+        let t = Thread::open(func, sp, gp);
+        t.as_ref().map(|t| t.change());
+        t
+    }
 }
 
 #[cfg(test)]
