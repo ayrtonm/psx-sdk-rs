@@ -6,6 +6,26 @@ file_open:
     j 0xA0
     li $9, 0x00
 
+.globl file_seek
+file_seek:
+    j 0xA0
+    li $9, 0x01
+
+.globl file_read
+file_read:
+    j 0xA0
+    li $9, 0x02
+
+.globl file_write
+file_write:
+    j 0xA0
+    li $9, 0x03
+
+.globl file_close
+file_close:
+    j 0xA0
+    li $9, 0x04
+
 .globl exit
 exit:
     j 0xA0
@@ -215,6 +235,21 @@ start_pad:
 stop_pad:
     j 0xB0
     li $9, 0x14
+
+.globl init_card
+init_card:
+    j 0xB0
+    li $9, 0x4A
+
+.globl start_card
+start_card:
+    j 0xB0
+    li $9, 0x4B
+
+.globl stop_card
+stop_card:
+    j 0xB0
+    li $9, 0x4C
 
 .globl change_clear_pad
 change_clear_pad:

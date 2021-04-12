@@ -5,7 +5,15 @@ global_asm!(include_str!("trampoline.s"));
 
 extern "C" {
     /// Calls BIOS function [A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_open(filename: *const u8, accessmode: u32) -> i32;
+    pub fn file_open(filename: *const u8, accessmode: u32) -> i8;
+    /// Calls BIOS function [A(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_seek(fd: i8, offset: u32, seektype: u8);
+    /// Calls BIOS function [A(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_read(fd: i8, dst: *mut u8, length: usize) -> i32;
+    /// Calls BIOS function [A(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_write(fd: i8, src: *const u8, length: usize) -> i32;
+    /// Calls BIOS function [A(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_close(fd: i8);
     /// Calls BIOS function [A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit(exitcode: i32) -> !;
     /// Calls BIOS function [A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -90,6 +98,12 @@ extern "C" {
     pub fn start_pad();
     /// Calls BIOS function [B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn stop_pad();
+    /// Calls BIOS function [B(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn init_card(pad_enable: bool);
+    /// Calls BIOS function [B(4Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn start_card();
+    /// Calls BIOS function [B(4Ch)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn stop_card();
     /// Calls BIOS function [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_pad(int: u32);
     /// Calls BIOS function [C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

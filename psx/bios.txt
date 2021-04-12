@@ -1,9 +1,9 @@
 // These are taken from the nocash specs with type ascriptions added in
-A(00h) file_open(filename: *const u8, accessmode: u32) -> i32;
-//A(01h) fileseek(fd,offset,seektype);
-//A(02h) fileread(fd,dst,length);
-//A(03h) filewrite(fd,src,length);
-//A(04h) fileclose(fd);
+A(00h) file_open(filename: *const u8, accessmode: u32) -> i8;
+A(01h) file_seek(fd: i8, offset: u32, seektype: u8);
+A(02h) file_read(fd: i8, dst: *mut u8, length: usize) -> i32;
+A(03h) file_write(fd: i8, src: *const u8, length: usize) -> i32;
+A(04h) file_close(fd: i8);
 //A(05h) fileioctl(fd,cmd,arg);
 A(06h) exit(exitcode: i32) -> !;
 //A(07h) filegetdeviceflag(fd);
@@ -175,9 +175,9 @@ B(14h) stop_pad();
 //B(47h) AddDevice(device_info)  ;subfunction for AddXxxDevice functions
 //B(48h) RemoveDevice(device_name_lowercase)
 //B(49h) PrintInstalledDevices()
-//B(4Ah) InitCard(pad_enable)  ;uses/destroys k0/k1 !!!
-//B(4Bh) StartCard()
-//B(4Ch) StopCard()
+B(4Ah) init_card(pad_enable: bool);
+B(4Bh) start_card();
+B(4Ch) stop_card();
 //B(4Dh) _card_info_subfunc(port)  ;subfunction for "_card_info"
 //B(4Eh) write_card_sector(port,sector,src)
 //B(4Fh) read_card_sector(port,sector,dst)
