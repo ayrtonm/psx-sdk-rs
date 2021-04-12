@@ -29,7 +29,9 @@ impl OpenOptions {
         self
     }
 
-    pub fn open<'f, E: FileError<'f>>(&self, pathname: &str) -> Result<File, E> {
+    // The lifetime on `E` doesn't actually matter since it's never a deferred file
+    // error, but rust doesn't allow anonymous lifetimes there
+    pub fn open<'a, E: FileError<'a>>(&self, pathname: &str) -> Result<File, E> {
         let flags = self.into();
         let fd = unsafe { kernel::file_open(pathname.as_ptr(), flags) };
         match fd {
@@ -87,7 +89,7 @@ impl From<u32> for Error {
 
 pub enum DeferredError<'f> {
     #[doc(hidden)]
-    FileError(fn(&'f File) -> Error, &'f File),
+    FdError(fn(&'f File) -> Error, &'f File),
     #[doc(hidden)]
     Error(fn() -> Error),
 }
@@ -132,7 +134,7 @@ impl FileError<'_> for Error {
 
 impl<'f> FileError<'f> for DeferredError<'f> {
     fn get_file_error(file: &'f File) -> Self {
-        DeferredError::FileError(
+        DeferredError::FdError(
             |file| {
                 let err = unsafe { kernel::get_last_file_error(file.fd) };
                 err.into()
@@ -150,7 +152,7 @@ impl<'f> FileError<'f> for DeferredError<'f> {
 
     fn error(&self) -> Error {
         match self {
-            DeferredError::FileError(func, arg) => func(arg),
+            DeferredError::FdError(func, arg) => func(arg),
             DeferredError::Error(func) => func(),
         }
     }
@@ -170,7 +172,7 @@ pub struct File {
     fd: Fd,
 }
 
-impl File {
+impl<'f> File {
     /// Memory card pathnames should be something like `"bu00:\\$NAME\0"` where
     /// `$NAME` is the actual filename.
     pub fn open(pathname: &str) -> Result<File, DeferredError> {
@@ -181,44 +183,54 @@ impl File {
         OpenOptions::new().create(true).open(pathname)
     }
 
-    // TODO: does the BIOS return a value here?
-    pub fn seek(&mut self, pos: SeekFrom) {
+    pub fn seek<E: FileError<'f>>(&'f mut self, pos: SeekFrom) -> Result<i32, E> {
         let (offset, seek_ty) = match pos {
             SeekFrom::Start(offset) => (offset, 0),
             SeekFrom::Current(offset) => (offset, 1),
         };
-        unsafe { kernel::file_seek(self.fd, offset, seek_ty) }
-    }
-
-    pub fn read(&self, dst: &mut [u8]) -> Option<usize> {
-        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr(), dst.len()) };
+        // TODO: file_seek currently returns a i32 since that's a reasonable default,
+        // but I should check what the result actually represents
+        let res = unsafe { kernel::file_seek(self.fd, offset, seek_ty) };
         match res {
-            -1 => None,
-            _ => Some(res as u32 as usize),
+            -1 => Err(E::get_file_error(self)),
+            _ => Ok(res),
         }
     }
 
-    pub fn write(&mut self, src: &[u8]) -> Option<usize> {
+    pub fn read<E: FileError<'f>>(&'f self, dst: &mut [u8]) -> Result<usize, E> {
+        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr(), dst.len()) };
+        match res {
+            -1 => Err(E::get_file_error(self)),
+            _ => Ok(res as u32 as usize),
+        }
+    }
+
+    pub fn write<E: FileError<'f>>(&'f mut self, src: &[u8]) -> Result<usize, E> {
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr(), src.len()) };
         match res {
-            -1 => None,
-            _ => Some(res as u32 as usize),
+            -1 => Err(E::get_file_error(self)),
+            _ => Ok(res as u32 as usize),
         }
     }
 
     // The BIOS getc can't disambiguate between 0xFF and an error
-    pub fn getc(&self) -> Option<u8> {
+    pub fn getc<E: FileError<'f>>(&'f self) -> Result<u8, E> {
         let mut ret = [0; 1];
         self.read(&mut ret).map(|_| ret[0])
     }
 
     // Could use the BIOS putc here
-    pub fn putc(&mut self, ch: u8) -> Option<usize> {
+    pub fn putc<E: FileError<'f>>(&'f mut self, ch: u8) -> Result<usize, E> {
         self.write(&[ch])
     }
 
-    pub fn close(self) {
-        let _res = unsafe { kernel::file_close(self.fd) };
+    pub fn close<'a, E: FileError<'a>>(self) -> Result<Fd, E> {
+        let res = unsafe { kernel::file_close(self.fd) };
+        match res {
+            // Does get_file_error make sense here?
+            -1 => Err(E::get_error()),
+            _ => Ok(res),
+        }
     }
 }
 

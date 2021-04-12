@@ -7,13 +7,13 @@ extern "C" {
     /// Calls BIOS function [A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_open(filename: *const u8, accessmode: u32) -> i8;
     /// Calls BIOS function [A(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_seek(fd: i8, offset: u32, seektype: u8);
+    pub fn file_seek(fd: i8, offset: u32, seektype: u8) -> i32;
     /// Calls BIOS function [A(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_read(fd: i8, dst: *mut u8, length: usize) -> i32;
     /// Calls BIOS function [A(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_write(fd: i8, src: *const u8, length: usize) -> i32;
     /// Calls BIOS function [A(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_close(fd: i8);
+    pub fn file_close(fd: i8) -> i8;
     /// Calls BIOS function [A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit(exitcode: i32) -> !;
     /// Calls BIOS function [A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

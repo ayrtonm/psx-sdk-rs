@@ -1,9 +1,9 @@
 // These are taken from the nocash specs with type ascriptions added in
 A(00h) file_open(filename: *const u8, accessmode: u32) -> i8;
-A(01h) file_seek(fd: i8, offset: u32, seektype: u8);
+A(01h) file_seek(fd: i8, offset: u32, seektype: u8) -> i32;
 A(02h) file_read(fd: i8, dst: *mut u8, length: usize) -> i32;
 A(03h) file_write(fd: i8, src: *const u8, length: usize) -> i32;
-A(04h) file_close(fd: i8);
+A(04h) file_close(fd: i8) -> i8;
 //A(05h) fileioctl(fd,cmd,arg);
 A(06h) exit(exitcode: i32) -> !;
 //A(07h) filegetdeviceflag(fd);
