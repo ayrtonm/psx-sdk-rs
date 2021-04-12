@@ -1,0 +1,63 @@
+# Todo
+
+This is a preliminary todo list for libpsx and cargo-psx in no particular order
+
+## libpsx
+- [ ] BIOS
+    - [ ] Filesystem
+        - [ ] Add memcard tests
+        - [ ] Add documentation
+        - [ ] Figure out `kernel::file_seek` returns
+        - [ ] Add `illegal!` to unreachable cases in error checking (typically negative numbers other than -1) to potentially enable further optimizations
+        - [ ] Use `psx::std::AsCstr` to remove need to nul-terminate names
+    - [ ] Threads
+        - [ ] test `Thread::spawn`
+        - [ ] Add `illegal!` to unreachable cases in `Thread::open` to potentially enable further optimizations
+    - [ ] Events
+        - [ ] Check if implementing a wrapper for this feature is worth it or if it's too buggy
+    - [ ] Make wrappers for the following. Implementing these with I/O registers may require precision with timing, so making ergonomic wrappers for the BIOS versions is probably a good first step to separate the API design from the feature implementation.
+        - [ ] Memory card
+        - [ ] Controllers
+        - [ ] CDROM
+- [ ] COP0
+    - [ ] impl `MutRegister` for cop0r12-r14, maybe debug regs too
+- [ ] GPU
+    - [ ] finish testing/documenting `hal::gpu`
+    - [ ] Finish the `TexPage` newtype by adding all bitfields. A good first step might be to add the missing bitfield used in `graphics::DrawEnv`. `Printer/TIM`'s usage of `TexPage` might also point out some useful missing bitfields.
+- [ ] GTE (COP2)
+    - [ ] impl `MutRegister` for cop2 regs
+- [ ] MDEC
+    - [ ] impl MDEC0/MDEC1 in hal module. Should this be `MutRegister` or like GPU registers?
+- [ ] SPU
+    - [ ] impl `MutRegister` for SPU registers
+- [ ] Interrupts
+    - [ ] finish `interrupt::free`. This should mask cop0r12 to disable interrupts. Another option is I_MASK, but that only affects hw IRQs. Is there any point to implementing both versions?
+- [ ] Exceptions
+    - [ ] impl `MutRegister` for the general exception vector, maybe debug vector too
+    - [ ] Create method on exception vector to install handlers
+- [ ] DMA
+    - [ ] Decide how on `Channel::send` functions. Should this just block, call a closure then block or return `Transfer` struct? `Transfer` doesn't really provide much benefit since it only affects DMA w/ chopping and would require either a `'static` bound on the buffer or a heap allocated buffer to be safe.
+- [ ] Timers
+    - [ ] Design a high-level API
+- [ ] Graphics
+    - [ ] Find a good way to draw and display the two primitives in a `packet::DoubleRef`
+    - [ ] Remove `impl Deref for Packet<T>`. This is a (convenient) anti-pattern since T has nothing to do with `Packet`. Without it `Packet` handling will be more explicit so its method s should have very clear names.
+    - [ ] Remove `impl psx::gpu::Primitive for T` where T is `Ref`, `DoubleRef` and maybe `Packet`. `Primitive` currently denotes GPU-safe types so `Packet<T>` seems like it shouldn't impl it, but it could still be used to denote DMA-GPU-safe types (i.e. `Packet<T> where T: Primitive`). This idea needs to be hashed out a bit with some implementations of DMA `send`.
+    - [ ] Find a good way to implement ordering tables. The main issue was that inserting into an OT either gave it exclusive access to the primitive (preventing further changes) or temporarily gave it shared access (allowing the primitive to be dropped while remaining in the OT).
+    - [ ] Double check that all uses of unsafe in this module are ok.
+- [ ] Allocator
+    - [ ] Add a reasonable allocator. The BIOS malloc doesn't seem to return NULL on OOM so that's probably not a good idea. Other options are use an alternate implementation of malloc or disassemble the BIOS malloc to see what's going on.
+- [ ] CDROM
+- [ ] Controllers
+- [ ] Memory cards
+- [ ] Panic
+    - [ ] Get formatted messages. I'd like to do this without the heap if possible, but one option might be to designate a panic-heap area through cargo-psx to maintain flexibility
+- [ ] Misc
+    - [ ] Document print macros. print/println use rust formatting, printf uses C formatting
+    - [ ] make `psx::std::AsCStr` generic over the the length of the CStr buffer. This would allow me to use a large array for potentially verbose messages and shorter arrays where appropriate (e.g. filenames)
+    - [ ] Figure out the multi-psexe story.
+    - [ ] Randomize test order. Something simple like (an + b) mod N where N is the number of tests, n is in [0, N), gcd(a, N) = 1 and b is a random value from the BIOS. Could use memcard file to store last b and make runs actually differ.
+
+## cargo-psx
+    - [ ] Add regions back in
+    - [ ] Figure out a good way to add debug info. Something like a debug flag that makes both an ELF with source info and an executable PSEXE. Ideally they'd have the same .text/.data/.bss sections at the same addresses. I'd like to avoid calling `cargo build` twice so something like creating two executables with different linker scripts would be ideal.
