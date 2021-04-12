@@ -27,8 +27,8 @@ impl Thread {
         let gp = gp.unwrap_or(GlobalPointer::load());
         let handle = unsafe { kernel::open_thread(func as u32, sp, gp.bits()) };
         match handle {
-            0xFF00_0000..=0xFF00_0003 => Some(Self::new(handle)),
-            _ => None,
+            0xFFFF_FFFF => None,
+            _ => Some(Self::new(handle)),
         }
     }
 
@@ -57,6 +57,8 @@ mod tests {
     #[test_case]
     fn open_and_close() {
         let new_thread = || Thread::open(|| (), 0, None);
+        // Default max number of TCBs is 4
+        // Since we don't provide a SYSTEM.CNF here, we can only create 3 new threads
         let t0 = new_thread();
         let t1 = new_thread();
         let t2 = new_thread();
