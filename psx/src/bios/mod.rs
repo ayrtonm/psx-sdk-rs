@@ -14,10 +14,9 @@ mod tests;
 #[macro_use]
 #[doc(hidden)]
 pub mod tty;
-mod fs;
+pub mod fs;
 mod thread;
 
-pub use fs::File;
 pub use thread::Thread;
 
 #[repr(u32)]

@@ -184,8 +184,8 @@ B(4Ch) stop_card();
 //B(50h) allow_new_card()
 //B(51h) Krom2RawAdd(shiftjis_code)
 //B(53h) Krom2Offset(shiftjis_code)
-//B(54h) GetLastError()
-//B(55h) GetLastFileError(fd)
+B(54h) get_last_error() -> u32;
+B(55h) get_last_file_error(fd: i8) -> u32;
 //B(56h) GetC0Table
 //B(57h) GetB0Table
 //B(58h) get_bu_callback_port()

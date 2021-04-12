@@ -251,6 +251,16 @@ stop_card:
     j 0xB0
     li $9, 0x4C
 
+.globl get_last_error
+get_last_error:
+    j 0xB0
+    li $9, 0x54
+
+.globl get_last_file_error
+get_last_file_error:
+    j 0xB0
+    li $9, 0x55
+
 .globl change_clear_pad
 change_clear_pad:
     j 0xB0

@@ -104,6 +104,10 @@ extern "C" {
     pub fn start_card();
     /// Calls BIOS function [B(4Ch)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn stop_card();
+    /// Calls BIOS function [B(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn get_last_error() -> u32;
+    /// Calls BIOS function [B(55h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn get_last_file_error(fd: i8) -> u32;
     /// Calls BIOS function [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_pad(int: u32);
     /// Calls BIOS function [C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
