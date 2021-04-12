@@ -1,9 +1,9 @@
 diff --git a/compiler/rustc_target/src/spec/mipsel_sony_psx.rs b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
 new file mode 100644
-index 00000000000..6a278563b5b
+index 00000000000..c31c8aae51d
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,52 @@
 +use crate::spec::{
 +    LinkArgs, LinkerFlavor, LldFlavor, PanicStrategy, RelocModel, Target, TargetOptions,
 +};
@@ -34,6 +34,7 @@ index 00000000000..6a278563b5b
 +            eliminate_frame_pointer: false,
 +            dynamic_linking: false,
 +            function_sections: true,
++            exe_suffix: ".exe".to_string(),
 +
 +            // PSX doesn't natively support floats.
 +            features: "+soft-float".to_string(),
