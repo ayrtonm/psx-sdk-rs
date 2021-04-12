@@ -1,4 +1,6 @@
 use super::kernel;
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 
 #[derive(Default)]
 pub struct OpenOptions {
@@ -27,11 +29,13 @@ impl OpenOptions {
         self
     }
 
-    pub fn open<E: FileError>(&self, pathname: &str) -> Result<File, E> {
+    pub fn open<'f, E: FileError<'f>>(&self, pathname: &str) -> Result<File, E> {
         let flags = self.into();
         let fd = unsafe { kernel::file_open(pathname.as_ptr(), flags) };
         match fd {
-            -1 => Err(E::get_fd_error(fd)),
+            // This uses the generic error function since an error would not have a valid file
+            // descriptor
+            -1 => Err(E::get_error()),
             _ => Ok(File { fd }),
         }
     }
@@ -81,32 +85,38 @@ impl From<u32> for Error {
     }
 }
 
-pub enum DeferredError {
+pub enum DeferredError<'f> {
     #[doc(hidden)]
-    FdError(fn(Fd) -> Error, Fd),
+    FileError(fn(&'f File) -> Error, &'f File),
     #[doc(hidden)]
     Error(fn() -> Error),
 }
 
-pub trait FileError {
+impl<'f> Debug for DeferredError<'f> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.error().fmt(f)
+    }
+}
+
+pub trait FileError<'f> {
     #[doc(hidden)]
-    fn get_fd_error(fd: Fd) -> Self;
+    fn get_file_error(file: &'f File) -> Self;
     #[doc(hidden)]
     fn get_error() -> Self;
     fn error(&self) -> Error;
 }
 
-impl FileError for () {
-    fn get_fd_error(_fd: Fd) -> Self {}
+impl FileError<'_> for () {
+    fn get_file_error(_file: &File) -> Self {}
     fn get_error() -> Self {}
     fn error(&self) -> Error {
         Error::UnknownError
     }
 }
 
-impl FileError for Error {
-    fn get_fd_error(fd: Fd) -> Self {
-        let err = unsafe { kernel::get_last_file_error(fd) };
+impl FileError<'_> for Error {
+    fn get_file_error(file: &File) -> Self {
+        let err = unsafe { kernel::get_last_file_error(file.fd) };
         err.into()
     }
 
@@ -120,14 +130,14 @@ impl FileError for Error {
     }
 }
 
-impl FileError for DeferredError {
-    fn get_fd_error(fd: Fd) -> Self {
-        DeferredError::FdError(
-            |fd| {
-                let err = unsafe { kernel::get_last_file_error(fd) };
+impl<'f> FileError<'f> for DeferredError<'f> {
+    fn get_file_error(file: &'f File) -> Self {
+        DeferredError::FileError(
+            |file| {
+                let err = unsafe { kernel::get_last_file_error(file.fd) };
                 err.into()
             },
-            fd,
+            file,
         )
     }
 
@@ -140,7 +150,7 @@ impl FileError for DeferredError {
 
     fn error(&self) -> Error {
         match self {
-            DeferredError::FdError(func, arg) => func(*arg),
+            DeferredError::FileError(func, arg) => func(arg),
             DeferredError::Error(func) => func(),
         }
     }
@@ -163,11 +173,11 @@ pub struct File {
 impl File {
     /// Memory card pathnames should be something like `"bu00:\\$NAME\0"` where
     /// `$NAME` is the actual filename.
-    pub fn open(pathname: &str) -> Result<File, ()> {
+    pub fn open(pathname: &str) -> Result<File, DeferredError> {
         OpenOptions::new().create(false).open(pathname)
     }
 
-    pub fn create(pathname: &str) -> Result<File, ()> {
+    pub fn create(pathname: &str) -> Result<File, DeferredError> {
         OpenOptions::new().create(true).open(pathname)
     }
 
