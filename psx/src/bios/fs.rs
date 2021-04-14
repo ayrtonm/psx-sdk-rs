@@ -1,4 +1,5 @@
 use super::kernel;
+use crate::std::AsCStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
 
@@ -33,7 +34,12 @@ impl OpenOptions {
     // error, but rust doesn't allow anonymous lifetimes there
     pub fn open<'a, E: FileError<'a>>(&self, pathname: &str) -> Result<File, E> {
         let flags = self.into();
-        let fd = unsafe { kernel::file_open(pathname.as_ptr(), flags) };
+        // Memcard directory frame limits filename to 20 chars, device name can
+        // be up to 7 chars and 1 null-terminator gives 28 chars for `MAX_FILENAME`
+        const MAX_FILENAME: usize = 28;
+        let fd = pathname.as_cstr::<_, _, MAX_FILENAME>(|pathname| unsafe {
+            kernel::file_open(pathname.as_ptr(), flags)
+        });
         match fd {
             // This uses the generic error function since an error would not have a valid file
             // descriptor
@@ -173,7 +179,7 @@ pub struct File {
 }
 
 impl<'f> File {
-    /// Memory card pathnames should be something like `"bu00:\\$NAME\0"` where
+    /// Memory card pathnames should be something like `"bu00:\\$NAME"` where
     /// `$NAME` is the actual filename.
     pub fn open(pathname: &str) -> Result<File, DeferredError> {
         OpenOptions::new().create(false).open(pathname)

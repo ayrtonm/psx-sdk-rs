@@ -55,7 +55,7 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
 - [ ] Misc
     - [ ] Document print macros. print/println use rust formatting, printf uses C formatting
     - [x] make `psx::std::AsCStr` generic over the the length of the CStr buffer. This would allow me to use a large array for potentially verbose messages and shorter arrays where appropriate (e.g. filenames)
-        - [ ] Use as_cstr in `bios::fs::File`
+        - [x] Use as_cstr in `bios::fs::File`
         - [ ] Make `bios::tty::MAX_LEN` private
             - [ ] Remove as_cstr from panic
     - [ ] Figure out the multi-psexe story.
