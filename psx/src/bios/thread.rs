@@ -27,8 +27,9 @@ impl Thread {
         let gp = gp.unwrap_or(GlobalPointer::load());
         let handle = unsafe { kernel::open_thread(func as u32, sp, gp.bits()) };
         match handle {
+            0xFF00_0000..=0xFFFF_FFFE => Some(Self::new(handle)),
             0xFFFF_FFFF => None,
-            _ => Some(Self::new(handle)),
+            _ => illegal!("Received unknown error code from BIOS in `kernel::open_thread`"),
         }
     }
 

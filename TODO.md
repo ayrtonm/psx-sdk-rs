@@ -12,7 +12,7 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
         - [x] Use `psx::std::AsCstr` to remove need to null-terminate names
     - [ ] Threads
         - [ ] test `Thread::spawn`
-        - [ ] Add `illegal!` to unreachable cases in `Thread::open` to potentially enable further optimizations
+        - [x] Add `illegal!` to unreachable cases in `Thread::open` to potentially enable further optimizations
     - [ ] Events
         - [ ] Check if implementing a wrapper for this feature is worth it or if it's too buggy
     - [ ] Make wrappers for the following. Implementing these with I/O registers may require precision with timing, so making ergonomic wrappers for the BIOS versions is probably a good first step to separate the API design from the feature implementation.
