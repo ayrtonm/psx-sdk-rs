@@ -2,6 +2,13 @@ use crate::hal::private;
 use crate::hal::{MutRegister, Mutable, Read, Register, State, Write};
 use core::marker::PhantomData;
 
+mod status;
+
+pub enum Mode {
+    Kernel = 0,
+    User = 1,
+}
+
 read_only! {
     /// cop0r14     - EPC - Return Address from Trap
     EPC<u32>
@@ -12,24 +19,6 @@ read_write! {
     Status<u32>,
     /// cop0r13     - CAUSE - Describes the most recently recognised exception
     Cause<u32>
-}
-
-impl<S: State> Read<u32> for Status<S> {
-    fn read(&self) -> u32 {
-        let status;
-        unsafe {
-            asm!("mfc0 $2, $12", out("$2") status);
-        }
-        status
-    }
-}
-
-impl Write<u32> for Status<Mutable> {
-    fn write(&mut self, status: u32) {
-        unsafe {
-            asm!("mtc0 $2, $12", in("$2") status);
-        }
-    }
 }
 
 impl<S: State> Read<u32> for Cause<S> {

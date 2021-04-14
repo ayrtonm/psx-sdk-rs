@@ -34,7 +34,7 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
 - [ ] SPU
     - [ ] impl `MutRegister` for SPU registers
 - [ ] Interrupts
-    - [ ] finish `interrupt::free`. This should mask cop0r12 to disable interrupts. Another option is I_MASK, but that only affects hw IRQs. Is there any point to implementing both versions?
+    - [ ] finish `interrupt::free`. This should mask cop0r12 to disable interrupts
 - [ ] Exceptions
     - [ ] impl `MutRegister` for the general exception vector, maybe debug vector too
     - [ ] Create method on exception vector to install handlers

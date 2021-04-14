@@ -67,7 +67,7 @@ impl GPUSTAT {
         self
     }
 
-    pub fn bits_no_interlace(&self) -> u32 {
+    pub fn bits_no_parity(&self) -> u32 {
         self.bits() & !(1 << LINE_PARITY)
     }
 }

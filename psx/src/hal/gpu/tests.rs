@@ -5,7 +5,7 @@ use crate::hal::{Register, GP0, GP1, GPUSTAT};
 #[test_case]
 fn reset_gpu() {
     GP1.reset_gpu();
-    let stat = GPUSTAT::load().bits_no_interlace();
+    let stat = GPUSTAT::load().bits_no_parity();
     assert!(stat == 0x1480_2000);
 }
 
