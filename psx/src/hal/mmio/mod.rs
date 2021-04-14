@@ -1,5 +1,5 @@
-use super::private;
-use super::{Address, MutRegister, Mutable, Read, Register, State, Write};
+use crate::hal::private;
+use crate::hal::{Address, MutRegister, Mutable, Read, Register, State, Write};
 use core::marker::PhantomData;
 use core::ptr::{read_volatile, write_volatile};
 

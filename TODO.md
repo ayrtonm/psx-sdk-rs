@@ -20,7 +20,8 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
         - [ ] Controllers
         - [ ] CDROM
 - [ ] COP0
-    - [ ] impl `MutRegister` for cop0r12-r14, maybe debug regs too
+    - [x] impl `MutRegister` for cop0r12-r14
+    - [ ] impl debug regs?
 - [ ] GPU
     - [ ] finish testing/documenting `hal::gpu`
     - [ ] Finish the `TexPage` newtype by adding all bitfields. A good first step might be to add the missing bitfield used in `graphics::DrawEnv`. `Printer/TIM`'s usage of `TexPage` might also point out some useful missing bitfields.
