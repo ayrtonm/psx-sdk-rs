@@ -7,9 +7,9 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
     - [ ] Filesystem
         - [ ] Add memcard tests
         - [ ] Add documentation
-        - [ ] Figure out `kernel::file_seek` returns
-        - [ ] Add `illegal!` to unreachable cases in error checking (typically negative numbers other than -1) to potentially enable further optimizations
-        - [ ] Use `psx::std::AsCstr` to remove need to nul-terminate names
+        - [ ] Figure out what `kernel::file_seek` returns
+        - [x] Add `illegal!` to unreachable cases in error checking (typically negative numbers other than -1) to potentially enable further optimizations
+        - [x] Use `psx::std::AsCstr` to remove need to null-terminate names
     - [ ] Threads
         - [ ] test `Thread::spawn`
         - [ ] Add `illegal!` to unreachable cases in `Thread::open` to potentially enable further optimizations

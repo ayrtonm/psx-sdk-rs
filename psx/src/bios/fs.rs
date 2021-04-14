@@ -43,6 +43,9 @@ impl OpenOptions {
         match fd {
             // This uses the generic error function since an error would not have a valid file
             // descriptor
+            i8::MIN..=-2 => {
+                illegal!("Received unknown error code from BIOS in `kernel::file_open`")
+            },
             -1 => Err(E::get_error()),
             _ => Ok(File { fd }),
         }
@@ -198,6 +201,9 @@ impl<'f> File {
         // but I should check what the result actually represents
         let res = unsafe { kernel::file_seek(self.fd, offset, seek_ty) };
         match res {
+            i32::MIN..=-2 => {
+                illegal!("Received unknown error code from BIOS in `kernel::file_seek`")
+            },
             -1 => Err(E::get_file_error(self)),
             _ => Ok(res),
         }
@@ -206,6 +212,9 @@ impl<'f> File {
     pub fn read<E: FileError<'f>>(&'f self, dst: &mut [u8]) -> Result<usize, E> {
         let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr(), dst.len()) };
         match res {
+            i32::MIN..=-2 => {
+                illegal!("Received unknown error code from BIOS in `kernel::file_read`")
+            },
             -1 => Err(E::get_file_error(self)),
             _ => Ok(res as u32 as usize),
         }
@@ -214,6 +223,9 @@ impl<'f> File {
     pub fn write<E: FileError<'f>>(&'f mut self, src: &[u8]) -> Result<usize, E> {
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr(), src.len()) };
         match res {
+            i32::MIN..=-2 => {
+                illegal!("Received unknown error code from BIOS in `kernel::file_write`")
+            },
             -1 => Err(E::get_file_error(self)),
             _ => Ok(res as u32 as usize),
         }
@@ -233,6 +245,9 @@ impl<'f> File {
     pub fn close<'a, E: FileError<'a>>(self) -> Result<Fd, E> {
         let res = unsafe { kernel::file_close(self.fd) };
         match res {
+            i8::MIN..=-2 => {
+                illegal!("Received unknown error code from BIOS in `kernel::file_close`")
+            },
             // Does get_file_error make sense here?
             -1 => Err(E::get_error()),
             _ => Ok(res),
