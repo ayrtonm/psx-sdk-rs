@@ -2,6 +2,7 @@ use crate::std::AsCStr;
 use core::fmt;
 
 pub struct TTY;
+pub(crate) const MAX_LEN: usize = 64;
 
 /// Calls [A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 #[macro_export]
@@ -40,7 +41,7 @@ macro_rules! println {
 
 impl fmt::Write for TTY {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        s.as_cstr(|s| printf!(s));
+        s.as_cstr::<_, _, MAX_LEN>(|s| printf!(s));
         Ok(())
     }
 }

@@ -1,7 +1,6 @@
 #![cfg(test)]
 use crate::bios;
 use crate::hal::{MutRegister, Mutable, Register, GP1, I_MASK, I_STAT};
-use crate::std::AsCStr;
 use core::any::type_name;
 
 pub trait Test {
@@ -10,14 +9,14 @@ pub trait Test {
 
 impl<T: Fn()> Test for T {
     fn run(&self) {
-        type_name::<Self>().as_cstr(|s| printf!("test %s ... \0", s));
+        print!("test {} ... ", type_name::<Self>());
         self();
-        printf!("ok\n\0");
+        println!("ok");
     }
 }
 
 pub fn runner(tests: &[&dyn Test]) {
-    printf!("running %d tests\n\0", tests.len());
+    println!("running {} tests", tests.len());
     for test in tests {
         bios::critical_section(|| {
             I_MASK::<Mutable>::load().disable_all().store();
@@ -28,5 +27,5 @@ pub fn runner(tests: &[&dyn Test]) {
     }
     // Failing tests panic and unwinding will add unnecessary bloat to the binary
     // so the following line is only displayed if all tests pass
-    printf!("\ntest result: ok. %d passed; 0 failed\n\n\0", tests.len());
+    println!("\ntest result: ok. {} passed; 0 failed\n", tests.len());
 }

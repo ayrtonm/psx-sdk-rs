@@ -69,20 +69,20 @@ macro_rules! illegal {
 }
 
 pub trait AsCStr: AsRef<[u8]> {
-    fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R;
+    fn as_cstr<F: FnOnce(&[u8]) -> R, R, const N: usize>(&self, f: F) -> R;
 }
 
 impl<T: AsRef<[u8]>> AsCStr for T {
-    fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R {
+    fn as_cstr<F: FnOnce(&[u8]) -> R, R, const N: usize>(&self, f: F) -> R {
         let slice = self.as_ref();
         if slice.len() == 0 {
             return f(&[0])
         };
         if slice[slice.len() - 1] != 0 {
-            const MAX_LEN: usize = 64;
-            let mut null_terminated = [0; MAX_LEN];
-            if slice.len() >= MAX_LEN - 1 {
-                panic!("Increase `MAX_LEN` in `psx::std::AsCstr::as_cstr`");
+            //const MAX_LEN: usize = 64;
+            let mut null_terminated = [0; N];
+            if slice.len() >= N - 1 {
+                panic!("Increase `N` in `psx::std::AsCstr::as_cstr`");
             };
             null_terminated[0..slice.len()].copy_from_slice(slice);
             let cstr = &null_terminated[0..slice.len() + 1];

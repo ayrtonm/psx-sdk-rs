@@ -1,3 +1,4 @@
+use crate::bios::tty::MAX_LEN;
 use core::panic::PanicInfo;
 
 fn message<'a>(info: &'a PanicInfo) -> &'a [u8] {
@@ -46,12 +47,12 @@ fn panic(info: &PanicInfo) -> ! {
     match info.location() {
         Some(location) => {
             printf!("Panicked at \0");
-            location.file().as_cstr(|s| printf!(s));
+            location.file().as_cstr::<_, _, MAX_LEN>(|s| printf!(s));
             printf!(":%d:%d\n\0", location.line(), location.column());
         },
         None => printf!("Panicked at unknown location\n\0"),
     }
-    message(info).as_cstr(|s| printf!(s));
+    message(info).as_cstr::<_, _, MAX_LEN>(|s| printf!(s));
     printf!("\n\0");
     loop {}
 }

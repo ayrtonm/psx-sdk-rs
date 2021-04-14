@@ -54,7 +54,10 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
     - [ ] Get formatted messages. I'd like to do this without the heap if possible, but one option might be to designate a panic-heap area through cargo-psx to maintain flexibility
 - [ ] Misc
     - [ ] Document print macros. print/println use rust formatting, printf uses C formatting
-    - [ ] make `psx::std::AsCStr` generic over the the length of the CStr buffer. This would allow me to use a large array for potentially verbose messages and shorter arrays where appropriate (e.g. filenames)
+    - [x] make `psx::std::AsCStr` generic over the the length of the CStr buffer. This would allow me to use a large array for potentially verbose messages and shorter arrays where appropriate (e.g. filenames)
+        - [ ] Use as_cstr in `bios::fs::File`
+        - [ ] Make `bios::tty::MAX_LEN` private
+            - [ ] Remove as_cstr from panic
     - [ ] Figure out the multi-psexe story.
     - [ ] Randomize test order. Something simple like (an + b) mod N where N is the number of tests, n is in [0, N), gcd(a, N) = 1 and b is a random value from the BIOS. Could use memcard file to store last b and make runs actually differ.
 
