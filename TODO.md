@@ -27,6 +27,8 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
     - [ ] Finish the `TexPage` newtype by adding all bitfields. A good first step might be to add the missing bitfield used in `graphics::DrawEnv`. `Printer/TIM`'s usage of `TexPage` might also point out some useful missing bitfields.
 - [ ] GTE (COP2)
     - [ ] impl `MutRegister` for cop2 regs
+        - [x] Count leading zeros registers (cop2r30-31)
+        - [ ] the other 62 register
 - [ ] MDEC
     - [ ] impl MDEC0/MDEC1 in hal module. Should this be `MutRegister` or like GPU registers?
 - [ ] SPU

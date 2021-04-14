@@ -54,6 +54,7 @@ pub use mmio::{T2_CNT, T2_MODE, T2_TGT};
 
 pub mod cop0;
 pub mod cpu;
+pub mod gte;
 
 /// Direct memory access channel and control registers.
 pub mod dma;

@@ -3,11 +3,14 @@ use crate::hal::{MutRegister, Mutable, Read, Register, State, Write};
 use core::marker::PhantomData;
 
 read_only! {
+    /// cop0r14     - EPC - Return Address from Trap
     EPC<u32>
 }
 
 read_write! {
+    /// cop0r12     - SR - System status register
     Status<u32>,
+    /// cop0r13     - CAUSE - Describes the most recently recognised exception
     Cause<u32>
 }
 
