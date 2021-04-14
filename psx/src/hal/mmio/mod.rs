@@ -7,7 +7,7 @@ use core::ptr::{read_volatile, write_volatile};
 mod macros;
 
 // Comments and address taken more or less verbatim from nocash specs
-read_only! {
+read_only_mmio! {
   /// Read responses to GP0(C0h) and GP1(10h) commands
   GPUREAD<u32>: 0x1F801810,
   /// Read GPU Status Register
@@ -21,7 +21,7 @@ write_only! {
   GP1<u32>: 0x1F801814
 }
 
-read_write! {
+read_write_mmio! {
   /// Interrupt status register
   I_STAT<u16>: 0x1F801070,
   /// Interrupt mask register

@@ -1,35 +1,8 @@
-macro_rules! read_only {
+macro_rules! read_only_mmio {
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal) => {
-        $(#[$($meta)*])*
-        #[derive(PartialEq, Eq)]
-        pub struct $name($size);
-
-        impl $name {
-            /// Creates a read-only handle with its stored value initialized to `bits`.
-            pub unsafe fn from_bits(bits: $size) -> Self {
-                $name(bits)
-            }
-        }
-
+        read_only!($(#[$($meta)*])* $name<$size>);
         impl Address for $name {
             const ADDRESS: u32 = $address;
-        }
-
-        impl private::HasValue<$size> for $name {
-            fn get(&self) -> $size {
-                self.0
-            }
-
-            fn get_mut(&mut self) -> &mut $size {
-                &mut self.0
-            }
-        }
-
-        impl Register<$size> for $name {
-            fn load() -> Self {
-                let unread = $name(0);
-                $name(unread.read())
-            }
         }
 
         impl Read<$size> for $name {
@@ -40,8 +13,8 @@ macro_rules! read_only {
     };
 
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal, $($others:tt)*) => {
-        read_only!($(#[$($meta)*])* $name<$size>: $address);
-        read_only!($($others)*);
+        read_only_mmio!($(#[$($meta)*])* $name<$size>: $address);
+        read_only_mmio!($($others)*);
     };
 }
 
@@ -67,34 +40,9 @@ macro_rules! write_only {
     };
 }
 
-macro_rules! read_write {
+macro_rules! read_write_mmio {
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal) => {
-        $(#[$($meta)*])*
-        #[derive(PartialEq, Eq)]
-        pub struct $name<S: State>($size, PhantomData::<S>);
-
-        impl<S: State> private::HasValue<$size> for $name<S> {
-            fn get(&self) -> $size {
-                self.0
-            }
-
-            fn get_mut(&mut self) -> &mut $size {
-                &mut self.0
-            }
-        }
-
-        impl<S: State> Register<$size> for $name<S> {
-            fn load() -> Self {
-                let unread = Self(0, PhantomData);
-                $name(unread.read(), PhantomData)
-            }
-        }
-
-        impl MutRegister<$size> for $name<Mutable> {
-            fn skip_load() -> Self {
-                $name(0, PhantomData)
-            }
-        }
+        read_write!($(#[$($meta)*])* $name<$size>);
 
         impl<S: State> Address for $name<S> {
             const ADDRESS: u32 = $address;
@@ -116,7 +64,7 @@ macro_rules! read_write {
     };
 
     ($(#[$($meta:meta)*])* $name:ident <$size:ty> : $address:literal, $($others:tt)*) => {
-        read_write!($(#[$($meta)*])* $name<$size>: $address);
-        read_write!($($others)*);
+        read_write_mmio!($(#[$($meta)*])* $name<$size>: $address);
+        read_write_mmio!($($others)*);
     };
 }

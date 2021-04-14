@@ -33,6 +33,10 @@
 //! ```
 
 #![allow(non_camel_case_types)]
+
+#[macro_use]
+mod macros;
+
 mod mmio;
 pub use mmio::{D0_BCR, D0_CHCR, D0_MADR};
 pub use mmio::{D1_BCR, D1_CHCR, D1_MADR};
@@ -48,8 +52,7 @@ pub use mmio::{T0_CNT, T0_MODE, T0_TGT};
 pub use mmio::{T1_CNT, T1_MODE, T1_TGT};
 pub use mmio::{T2_CNT, T2_MODE, T2_TGT};
 
-mod global_pointer;
-pub use global_pointer::GlobalPointer;
+pub mod cpu;
 
 /// Direct memory access channel and control registers.
 pub mod dma;
@@ -214,11 +217,11 @@ pub trait MutRegister<T: private::Primitive>: Sized + Register<T> + Write<T> {
     }
 }
 
-/// A marker trait for a register handle which may be shared between threads.
+/// A marker type for a register handle which may be shared between threads.
 pub struct Shared {}
-/// A marker trait for a mutable register handle.
+/// A marker type for a mutable register handle.
 pub struct Mutable {}
-#[doc(hidden)]
+/// A marker trait denoting the mutability of a register handle.
 pub trait State {}
 impl State for Shared {}
 impl State for Mutable {}

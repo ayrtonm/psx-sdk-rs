@@ -1,5 +1,5 @@
 use super::kernel;
-use crate::hal::GlobalPointer;
+use crate::hal::cpu::GlobalPointer;
 use crate::hal::Register;
 
 type Handle = u32;
