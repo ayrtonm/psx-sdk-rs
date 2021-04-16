@@ -52,6 +52,9 @@ pub use mmio::{T0_CNT, T0_MODE, T0_TGT};
 pub use mmio::{T1_CNT, T1_MODE, T1_TGT};
 pub use mmio::{T2_CNT, T2_MODE, T2_TGT};
 
+#[macro_use]
+mod asm;
+
 pub mod cop0;
 pub mod cpu;
 pub mod gte;

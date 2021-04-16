@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use super::{Mode, Status};
-use crate::hal::{MutRegister, Mutable, Read, Register, State, Write};
+use crate::hal::{MutRegister, Mutable, Register, State};
 
 const IEC: u32 = 0;
 const KUC: u32 = 1;
@@ -16,24 +16,6 @@ const IM_HW: u32 = 10;
 const ISC: u32 = 16;
 const CU0: u32 = 28;
 const CU2: u32 = 30;
-
-impl<S: State> Read<u32> for Status<S> {
-    fn read(&self) -> u32 {
-        let status;
-        unsafe {
-            asm!("mfc0 $2, $12", out("$2") status);
-        }
-        status
-    }
-}
-
-impl Write<u32> for Status<Mutable> {
-    fn write(&mut self, status: u32) {
-        unsafe {
-            asm!("mtc0 $2, $12", in("$2") status);
-        }
-    }
-}
 
 impl<S: State> Status<S> {
     pub fn interrupts_enabled(&self) -> bool {
