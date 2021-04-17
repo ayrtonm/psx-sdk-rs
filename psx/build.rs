@@ -60,7 +60,8 @@ fn mk_bios_trampoline(func: &FnDesc) -> String {
         [j_stmt, li_stmt]
     };
     format!("\n\
-             .globl {}\n\
+             .section .text.bios.{}\n\
+             .globl {0}\n\
              {0}:\n\
                  {}{}\n\
                  {1}{3}\n", func.name, INDENT, stmts[0], stmts[1])
