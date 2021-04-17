@@ -12,6 +12,7 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
         - [x] Use `psx::std::AsCstr` to remove need to null-terminate names
     - [ ] Threads
         - [ ] test `Thread::spawn`
+        - [ ] Add a `'static` bound on the function pointers in `spawn` and `open`
         - [x] Add `illegal!` to unreachable cases in `Thread::open` to potentially enable further optimizations
     - [ ] Events
         - [ ] Check if implementing a wrapper for this feature is worth it or if it's too buggy
@@ -28,7 +29,9 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
 - [ ] GTE (COP2)
     - [ ] impl `MutRegister` for cop2 regs
         - [x] Count leading zeros registers (cop2r30-31)
-        - [ ] the other 62 register
+        - [x] V[XY,Z][0-2] (cop2r0-5)
+            - [ ] Check that VZ[0-2] work like the others even though it's implemented as a 16-bit register.
+        - [ ] the other 56 register
 - [ ] MDEC
     - [ ] impl MDEC0/MDEC1 in hal module. Should this be `MutRegister` or like GPU registers?
 - [ ] SPU
