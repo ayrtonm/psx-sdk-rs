@@ -3,12 +3,18 @@ use crate::hal::{MutRegister, Mutable, Read, Register, State, Write};
 use core::marker::PhantomData;
 
 read_write_cop! {
-    /// cop2r30 - LZCS - Count Leading Bits Source data
+    VXY0<u32>; COP: 2; R: 0,
+    VZ0<u16>;  COP: 2; R: 1,
+    VXY1<u32>; COP: 2; R: 2,
+    VZ1<u16>;  COP: 2; R: 3,
+    VXY2<u32>; COP: 2; R: 4,
+    VZ2<u16>;  COP: 2; R: 5,
+    /// cop2r30 - Leading zeros/ones count source
     LZCS<u32>; COP: 2; R: 30
 }
 
 read_only_cop! {
-    /// cop2r31 - LZCR - Count Leading Bits Result
+    /// cop2r31 - Leading zeros/ones count result
     LZCR<u32>; COP: 2; R: 31
 }
 

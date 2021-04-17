@@ -220,7 +220,8 @@ impl<'f> File {
         }
     }
 
-    pub fn write<E: FileError<'f>>(&'f mut self, src: &[u8]) -> Result<usize, E> {
+    pub fn write<E: FileError<'f>, B: AsRef<[u8]>>(&'f mut self, src: B) -> Result<usize, E> {
+        let src = src.as_ref();
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr(), src.len()) };
         match res {
             i32::MIN..=-2 => {
