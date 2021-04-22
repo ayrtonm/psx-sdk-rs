@@ -3,7 +3,10 @@
 //! This module contains basic methods to manipulate the contents of the
 //! filesystem using BIOS functions. This module follows the general design of
 //! `std::fs` in the standard library with PlayStation-specific deviations where
-//! necessary. Only memory card files are currently supported.
+//! necessary. The BIOS internally uses C-style null-terminated strings for path
+//! names, but all methods in this module support string slices. Omitting
+//! null-terminators incurs the runtime cost of copying the path into a
+//! temporary buffer however. Only memory card files are currently supported.
 
 #![deny(missing_docs)]
 
@@ -11,6 +14,10 @@ use super::kernel;
 use crate::std::AsCStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
+
+// Memcard directory frame limits filename to 20 chars, device name can
+// be up to 7 chars and 1 null-terminator gives 28 chars for `MAX_FILENAME`
+const MAX_FILENAME: usize = 28;
 
 /// Options and flags which can be used to configure how a file is opened.
 ///
@@ -88,11 +95,8 @@ impl OpenOptions {
     /// * `()`: Skips calling into the BIOS, ignoring any possible error(s).
     // The lifetime on `E` doesn't actually matter since it's never a deferred file
     // error, but rust doesn't allow anonymous lifetimes there
-    pub fn open<'a, E: FileError<'a>>(&self, path: &str) -> Result<File, E> {
+    pub fn open<'a, 'f, E: FileError<'a>>(&self, path: &'f str) -> Result<File<'f>, E> {
         let flags = self.into();
-        // Memcard directory frame limits filename to 20 chars, device name can
-        // be up to 7 chars and 1 null-terminator gives 28 chars for `MAX_FILENAME`
-        const MAX_FILENAME: usize = 28;
 
         let fd = path.as_cstr::<_, _, MAX_FILENAME>(|path| unsafe {
             kernel::file_open(path.as_ptr(), flags)
@@ -118,7 +122,10 @@ impl OpenOptions {
                     Err(E::new_error())
                 }
             },
-            _ => Ok(File { fd }),
+            _ => {
+                let fd = fd as Fd;
+                Ok(File { fd, path })
+            },
         }
     }
 }
@@ -188,7 +195,7 @@ impl From<u32> for ErrorKind {
 /// descriptor if any.
 pub enum DeferredError<'f> {
     #[doc(hidden)]
-    FdErrorKind(fn(&'f File) -> ErrorKind, &'f File),
+    FdErrorKind(fn(&'f File<'f>) -> ErrorKind, &'f File<'f>),
     #[doc(hidden)]
     ErrorKind(fn() -> ErrorKind),
 }
@@ -272,18 +279,19 @@ pub enum SeekFrom {
     Current(u32),
 }
 
-type Fd = i8;
+type Fd = u8;
 
 /// A reference to an open [BIOS file](http://problemkaputt.de/psx-spx.htm#biosfilefunctions).
 ///
 /// Files are automatically closed when they go out of scope. Errors detected on
 /// closing are ignored by the implementation of `Drop`.
 #[derive(Debug)]
-pub struct File {
+pub struct File<'f> {
     fd: Fd,
+    path: &'f str,
 }
 
-impl<'f> File {
+impl<'f> File<'f> {
     /// Attempts to open a file.
     ///
     /// Memory card paths should be formatted as `"bu00:\\FILE_NAME"` where
@@ -357,9 +365,9 @@ impl<'f> File {
 
     /// Reads a byte from the file.
     ///
-    /// This function internally uses [`File::read`] since the BIOS `getc`
-    /// [can't disambiguate between an error code](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
-    /// and a return value of `0xFF`.
+    /// This function internally uses [`File::read`] since the
+    /// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
+    /// can't disambiguate between an error code and a return value of `0xFF`.
     pub fn getc<E: FileError<'f>>(&'f self) -> Result<u8, E> {
         let ret = [0; 128];
         self.read(&mut [ret]).map(|_| ret[0])
@@ -379,14 +387,42 @@ impl<'f> File {
             i8::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_close`")
             },
-            // Does new_file_error make sense here?
             -1 => Err(E::new_error()),
-            _ => Ok(res),
+            _ => Ok(res as Fd),
+        }
+    }
+
+    /// Renames a file.
+    pub fn rename<E: FileError<'f>>(&'f mut self, new_name: &'f str) -> Result<(), E> {
+        let res = self.path.as_cstr::<_, _, MAX_FILENAME>(|old| {
+            new_name.as_cstr::<_, _, MAX_FILENAME>(|new| unsafe {
+                kernel::file_rename(old.as_ptr(), new.as_ptr())
+            })
+        });
+        match res {
+            1 => {
+                self.path = new_name;
+                Ok(())
+            },
+            0 => Err(E::new_error()),
+            _ => illegal!("Received unknown error code from BIOS in `kernel::file_rename`"),
+        }
+    }
+
+    /// Deletes the file.
+    pub fn delete<'a, E: FileError<'a>>(self) -> Result<(), E> {
+        let res = self
+            .path
+            .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_delete(path.as_ptr()) });
+        match res {
+            1 => Ok(()),
+            0 => Err(E::new_error()),
+            _ => illegal!("Received unknown error code from BIOS in `kernel::file_delete`"),
         }
     }
 }
 
-impl Drop for File {
+impl Drop for File<'_> {
     fn drop(&mut self) {
         let _res = unsafe { kernel::file_close(self.fd) };
     }

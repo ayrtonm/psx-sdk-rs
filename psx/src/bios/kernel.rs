@@ -7,13 +7,13 @@ extern "C" {
     /// Calls BIOS function [A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_open(filename: *const u8, accessmode: u32) -> i8;
     /// Calls BIOS function [A(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_seek(fd: i8, offset: u32, seektype: u8) -> i32;
+    pub fn file_seek(fd: u8, offset: u32, seektype: u8) -> i32;
     /// Calls BIOS function [A(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_read(fd: i8, dst: *mut u8, length: usize) -> i32;
+    pub fn file_read(fd: u8, dst: *mut u8, length: usize) -> i32;
     /// Calls BIOS function [A(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_write(fd: i8, src: *const u8, length: usize) -> i32;
+    pub fn file_write(fd: u8, src: *const u8, length: usize) -> i32;
     /// Calls BIOS function [A(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_close(fd: i8) -> i8;
+    pub fn file_close(fd: u8) -> i8;
     /// Calls BIOS function [A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit(exitcode: i32) -> !;
     /// Calls BIOS function [A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -98,6 +98,10 @@ extern "C" {
     pub fn start_pad();
     /// Calls BIOS function [B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn stop_pad();
+    /// Calls BIOS function [B(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_rename(old_filename: *const u8, new_filename: *const u8) -> u8;
+    /// Calls BIOS function [B(45h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_delete(filename: *const u8) -> u8;
     /// Calls BIOS function [B(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_card(pad_enable: bool);
     /// Calls BIOS function [B(4Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -107,7 +111,7 @@ extern "C" {
     /// Calls BIOS function [B(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_last_error() -> u32;
     /// Calls BIOS function [B(55h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn get_last_file_error(fd: i8) -> u32;
+    pub fn get_last_file_error(fd: u8) -> u32;
     /// Calls BIOS function [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_pad(int: u32);
     /// Calls BIOS function [C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

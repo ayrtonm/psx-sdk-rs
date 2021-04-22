@@ -1,9 +1,20 @@
-// These are taken from the nocash specs with type ascriptions added in
+// These are mostly taken from the nocash specs with type ascriptions added in
+
+// Returns a file descriptor or -1 for error
 A(00h) file_open(filename: *const u8, accessmode: u32) -> i8;
-A(01h) file_seek(fd: i8, offset: u32, seektype: u8) -> i32;
-A(02h) file_read(fd: i8, dst: *mut u8, length: usize) -> i32;
-A(03h) file_write(fd: i8, src: *const u8, length: usize) -> i32;
-A(04h) file_close(fd: i8) -> i8;
+
+// Takes a file descriptor, returns an offset or -1 for error
+A(01h) file_seek(fd: u8, offset: u32, seektype: u8) -> i32;
+
+// Returns number of bytes read or -1 for error
+A(02h) file_read(fd: u8, dst: *mut u8, length: usize) -> i32;
+
+// Returns number of bytes written or -1 for error
+A(03h) file_write(fd: u8, src: *const u8, length: usize) -> i32;
+
+// Returns the closed file descriptor or -1 for error
+A(04h) file_close(fd: u8) -> i8;
+
 //A(05h) fileioctl(fd,cmd,arg);
 A(06h) exit(exitcode: i32) -> !;
 //A(07h) filegetdeviceflag(fd);
@@ -169,8 +180,13 @@ B(14h) stop_pad();
 //B(41h) FormatDevice(devicename)
 //B(42h) firstfile(filename,direntry)
 //B(43h) nextfile(direntry)
-//B(44h) FileRename(old_filename,new_filename)
-//B(45h) FileDelete(filename)
+
+// Takes two paths, returns 1 for ok or 0 for error
+B(44h) file_rename(old_filename: *const u8, new_filename: *const u8) -> u8;
+
+// Takes a path, returns 1 for ok or 0 for error
+B(45h) file_delete(filename: *const u8) -> u8;
+
 //B(46h) FileUndelete(filename)
 //B(47h) AddDevice(device_info)  ;subfunction for AddXxxDevice functions
 //B(48h) RemoveDevice(device_name_lowercase)
@@ -184,8 +200,13 @@ B(4Ch) stop_card();
 //B(50h) allow_new_card()
 //B(51h) Krom2RawAdd(shiftjis_code)
 //B(53h) Krom2Offset(shiftjis_code)
+
+// Returns the last file function error
 B(54h) get_last_error() -> u32;
-B(55h) get_last_file_error(fd: i8) -> u32;
+
+// Takes a file descriptor, returns the last error for given file descriptor
+B(55h) get_last_file_error(fd: u8) -> u32;
+
 //B(56h) GetC0Table
 //B(57h) GetB0Table
 //B(58h) get_bu_callback_port()

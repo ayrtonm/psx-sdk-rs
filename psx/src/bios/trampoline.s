@@ -283,6 +283,18 @@ stop_pad:
     j 0xB0
     li $9, 0x14
 
+.section .text.bios.file_rename
+.globl file_rename
+file_rename:
+    j 0xB0
+    li $9, 0x44
+
+.section .text.bios.file_delete
+.globl file_delete
+file_delete:
+    j 0xB0
+    li $9, 0x45
+
 .section .text.bios.init_card
 .globl init_card
 init_card:
