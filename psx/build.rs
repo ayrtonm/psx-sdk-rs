@@ -99,7 +99,7 @@ fn main() {
 
     // Put the linker script to somewhere accessible
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
-    let linker_script = include_str!("psexe.ld").to_string();
-    fs::write(out.join("psexe.ld"), linker_script).unwrap();
+    fs::write(out.join("psexe.ld"), include_str!("psexe.ld").to_string()).unwrap();
+    fs::write(out.join("ELF.ld"), include_str!("ELF.ld").to_string()).unwrap();
     println!("cargo:rustc-link-search={}", out.display());
 }
