@@ -5,9 +5,12 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
 ## libpsx
 - [ ] BIOS
     - [ ] Filesystem
+        - [ ] Decide how to handle read/write block sizes. const_evaluatable_checked seems too unstable rn so maybe &[[u8; 128]] is the best way for now?
         - [ ] Add memcard tests
-        - [ ] Add documentation
-        - [ ] Figure out what `kernel::file_seek` returns
+        - [ ] CD files
+        - [x] Add documentation
+            - [ ] add examples
+        - [x] Figure out what `kernel::file_seek` returns
         - [x] Add `illegal!` to unreachable cases in error checking (typically negative numbers other than -1) to potentially enable further optimizations
         - [x] Use `psx::std::AsCstr` to remove need to null-terminate names
     - [ ] Threads
