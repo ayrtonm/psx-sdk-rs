@@ -321,7 +321,7 @@ impl<'f> File<'f> {
     /// If the seek operation is successful, this method returns the new
     /// position from the start of the file. That position can be used later
     /// with [`SeekFrom::Start`].
-    pub fn seek<E: FileError<'f>>(&'f mut self, pos: SeekFrom) -> Result<usize, E> {
+    pub fn seek<'a, E: FileError<'a>>(&'a self, pos: SeekFrom) -> Result<usize, E> {
         let (offset, seek_ty) = match pos {
             SeekFrom::Start(offset) => (offset, 0),
             SeekFrom::Current(offset) => (offset, 1),
@@ -340,7 +340,7 @@ impl<'f> File<'f> {
     /// many bytes were read.
     ///
     /// Memory card files can only be read in increments of 128 bytes.
-    pub fn read<E: FileError<'f>>(&'f self, dst: &mut [[u8; 128]]) -> Result<usize, E> {
+    pub fn read<'a, E: FileError<'a>>(&'a self, dst: &mut [[u8; 128]]) -> Result<usize, E> {
         let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * 128) };
         match res {
             i32::MIN..=-2 => {
@@ -355,7 +355,7 @@ impl<'f> File<'f> {
     /// many bytes were written.
     ///
     /// Memory card files can only be written to in increments of 128 bytes.
-    pub fn write<E: FileError<'f>>(&'f mut self, src: &[[u8; 128]]) -> Result<usize, E> {
+    pub fn write<'a, E: FileError<'a>>(&'a mut self, src: &[[u8; 128]]) -> Result<usize, E> {
         let src = src.as_ref();
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr().cast(), src.len() * 128) };
         match res {
@@ -372,13 +372,13 @@ impl<'f> File<'f> {
     /// This function internally uses [`File::read`] since the
     /// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
     /// can't disambiguate between an error code and a return value of `0xFF`.
-    pub fn getc<E: FileError<'f>>(&'f self) -> Result<u8, E> {
+    pub fn getc<'a, E: FileError<'a>>(&'a self) -> Result<u8, E> {
         let ret = [0; 128];
         self.read(&mut [ret]).map(|_| ret[0])
     }
 
     /// Writes a byte to the file.
-    pub fn putc<E: FileError<'f>>(&'f mut self, ch: u8) -> Result<usize, E> {
+    pub fn putc<'a, E: FileError<'a>>(&'a mut self, ch: u8) -> Result<usize, E> {
         let mut temp = [0; 128];
         temp[0] = ch;
         self.write(&[temp])
@@ -397,7 +397,7 @@ impl<'f> File<'f> {
     }
 
     /// Renames a file.
-    pub fn rename<E: FileError<'f>>(&'f mut self, new_name: &'f str) -> Result<(), E> {
+    pub fn rename<'a, E: FileError<'a>>(&'a mut self, new_name: &'f str) -> Result<(), E> {
         let res = self.path.as_cstr::<_, _, MAX_FILENAME>(|old| {
             new_name.as_cstr::<_, _, MAX_FILENAME>(|new| unsafe {
                 kernel::file_rename(old.as_ptr(), new.as_ptr())
@@ -434,7 +434,7 @@ impl Drop for File<'_> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ErrorKind, File, FileError, OpenOptions};
+    use super::{ErrorKind, File, FileError, OpenOptions, SeekFrom};
 
     // TODO: Remove this eventually. This is a temporary solution while I work on
     // wrappers for these kernel functions.
@@ -469,11 +469,22 @@ mod tests {
             let file = File::create(path, None);
             assert!(file.is_ok());
 
-            let file = file.unwrap();
+            let mut file = file.unwrap();
 
             // Trying to recreate an existing file should not work
             let retry = OpenOptions::new().create_new(1).open::<ErrorKind>(path);
             assert!(retry.contains_err(&ErrorKind::FileAlreadyExists));
+
+            let res = file.seek::<()>(SeekFrom::Start(1024));
+            assert!(res == Ok(1024));
+            res.unwrap();
+
+            let mut write_buf = [0; 128];
+            for i in 0..128 {
+                write_buf[i] = i as u8;
+            }
+            let res = file.write::<()>(&[write_buf]).ok();
+            assert!(res == Some(128));
 
             // Restore the memory card to its initial state
             assert!(file.delete::<()>().is_ok());
