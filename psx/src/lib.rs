@@ -2,10 +2,8 @@
 #![no_std]
 // Only allowed for const generics
 #![allow(incomplete_features)]
-// TODO: Reconsider whether to enable this incomplete feature after wrapping up this refactor.
-// Ideally I'll only be using the basics of `const_generics`, but it might make debugging more
-// tricky if it breaks anything else.
 #![feature(const_generics)]
+// TODO: Uncomment this eventually...
 //#![warn(missing_docs)]
 // Required for BIOS function wrappers and coprocessors.
 #![feature(asm)]
@@ -32,6 +30,9 @@
 #![reexport_test_harness_main = "test_main"]
 #![cfg_attr(test, no_main)]
 
+// Define string-literals to embed in PSEXE header
+// Using the same identifier for all regions conveniently makes the crate
+// features mutually exclusive
 macro_rules! as_array {
     ($msg:literal) => {
         unsafe { *($msg.as_ptr() as *const _) }
