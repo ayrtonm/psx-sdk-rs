@@ -321,7 +321,8 @@ impl<'f> File<'f> {
     /// If the seek operation is successful, this method returns the new
     /// position from the start of the file. That position can be used later
     /// with [`SeekFrom::Start`].
-    pub fn seek<'a, E: FileError<'a>>(&'a self, pos: SeekFrom) -> Result<usize, E> {
+    pub fn seek<'a, E>(&'a self, pos: SeekFrom) -> Result<usize, E>
+    where E: FileError<'a> {
         let (offset, seek_ty) = match pos {
             SeekFrom::Start(offset) => (offset, 0),
             SeekFrom::Current(offset) => (offset, 1),
@@ -340,7 +341,8 @@ impl<'f> File<'f> {
     /// many bytes were read.
     ///
     /// Memory card files can only be read in increments of 128 bytes.
-    pub fn read<'a, E: FileError<'a>>(&'a self, dst: &mut [[u8; 128]]) -> Result<usize, E> {
+    pub fn read<'a, E>(&'a self, dst: &mut [[u8; 128]]) -> Result<usize, E>
+    where E: FileError<'a> {
         let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * 128) };
         match res {
             i32::MIN..=-2 => {
@@ -355,7 +357,8 @@ impl<'f> File<'f> {
     /// many bytes were written.
     ///
     /// Memory card files can only be written to in increments of 128 bytes.
-    pub fn write<'a, E: FileError<'a>>(&'a mut self, src: &[[u8; 128]]) -> Result<usize, E> {
+    pub fn write<'a, E>(&'a mut self, src: &[[u8; 128]]) -> Result<usize, E>
+    where E: FileError<'a> {
         let src = src.as_ref();
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr().cast(), src.len() * 128) };
         match res {
@@ -372,20 +375,23 @@ impl<'f> File<'f> {
     /// This function internally uses [`File::read`] since the
     /// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
     /// can't disambiguate between an error code and a return value of `0xFF`.
-    pub fn getc<'a, E: FileError<'a>>(&'a self) -> Result<u8, E> {
+    pub fn getc<'a, E>(&'a self) -> Result<u8, E>
+    where E: FileError<'a> {
         let ret = [0; 128];
         self.read(&mut [ret]).map(|_| ret[0])
     }
 
     /// Writes a byte to the file.
-    pub fn putc<'a, E: FileError<'a>>(&'a mut self, ch: u8) -> Result<usize, E> {
+    pub fn putc<'a, E>(&'a mut self, ch: u8) -> Result<usize, E>
+    where E: FileError<'a> {
         let mut temp = [0; 128];
         temp[0] = ch;
         self.write(&[temp])
     }
 
     /// Manually closes the file, returning a possible BIOS error code.
-    pub fn close<'a, E: FileError<'a>>(self) -> Result<Fd, E> {
+    pub fn close<'a, E>(self) -> Result<Fd, E>
+    where E: FileError<'a> {
         let res = unsafe { kernel::file_close(self.fd) };
         match res {
             i8::MIN..=-2 => {
@@ -397,7 +403,8 @@ impl<'f> File<'f> {
     }
 
     /// Renames a file.
-    pub fn rename<'a, E: FileError<'a>>(&'a mut self, new_name: &'f str) -> Result<(), E> {
+    pub fn rename<'a, E>(&'a mut self, new_name: &'f str) -> Result<(), E>
+    where E: FileError<'a> {
         let res = self.path.as_cstr::<_, _, MAX_FILENAME>(|old| {
             new_name.as_cstr::<_, _, MAX_FILENAME>(|new| unsafe {
                 kernel::file_rename(old.as_ptr(), new.as_ptr())
@@ -414,7 +421,8 @@ impl<'f> File<'f> {
     }
 
     /// Deletes the file.
-    pub fn delete<'a, E: FileError<'a>>(self) -> Result<(), E> {
+    pub fn delete<'a, E>(self) -> Result<(), E>
+    where E: FileError<'a> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_delete(path.as_ptr()) });
