@@ -23,7 +23,7 @@
 // Required for const `illegal`
 #![feature(const_unreachable_unchecked, const_panic)]
 // Could be removed if necessary.
-#![feature(array_map, variant_count)]
+#![feature(array_map, variant_count, result_contains_err)]
 // Required to test psx crate
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]

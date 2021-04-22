@@ -63,10 +63,11 @@ impl OpenOptions {
     /// Sets the option to create a new file, or open it if it already exists.
     ///
     /// If a new file is created, it will contain the specified number of memory
-    /// card `blocks`. Note that if a new file is not created, this option will
-    /// immediately call into the BIOS to ensure the failure occurred because
-    /// the file already exists. The final [`Result`][core::result::Result] then
-    /// contains the specified implementor of [`FileError`].
+    /// card 8 kB `blocks`. Note that if a new file is not created, this option
+    /// will immediately call into the BIOS to ensure the failure occurred
+    /// because the file already exists. The final
+    /// [`Result`][core::result::Result] then contains the specified
+    /// implementor of [`FileError`].
     pub fn create(&mut self, blocks: u16) -> &mut Self {
         self.open_existing = true;
         self.create_new(blocks)
@@ -140,7 +141,7 @@ impl From<&OpenOptions> for u32 {
 }
 
 /// A list specifying I/O error codes returned by the BIOS.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ErrorKind {
     /// Ok (though many successful functions leave old error codes unchanged)
     NoError,
@@ -303,13 +304,16 @@ impl<'f> File<'f> {
         OpenOptions::new().open(path)
     }
 
-    /// Attempts to create a file.
+    /// Attempts to create a file with the specified `size` in bytes.
     ///
-    /// This function will open the file if it already exists.
+    /// This function will open the file if it already exists. The specified
+    /// size is rounded down to a multiple of 8 kB or set to 8 kB if
+    /// unspecified.
     ///
     /// See the [`OpenOptions::open`] function for more details.
-    pub fn create(path: &str) -> Result<File, DeferredError> {
-        OpenOptions::new().create_new(1).open(path)
+    pub fn create(path: &str, size: Option<u16>) -> Result<File, DeferredError> {
+        let size = size.unwrap_or(8 * 1024) >> 13;
+        OpenOptions::new().create_new(size).open(path)
     }
 
     /// Seeks to an offset, in bytes, in a file.
@@ -425,5 +429,54 @@ impl<'f> File<'f> {
 impl Drop for File<'_> {
     fn drop(&mut self) {
         let _res = unsafe { kernel::file_close(self.fd) };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ErrorKind, File, FileError, OpenOptions};
+
+    // TODO: Remove this eventually. This is a temporary solution while I work on
+    // wrappers for these kernel functions.
+    fn with_card<F: FnOnce() -> R, R>(f: F) -> R {
+        use crate::bios::kernel;
+        unsafe {
+            kernel::init_card(true);
+            kernel::start_card();
+        }
+        let res = f();
+        unsafe {
+            kernel::stop_card();
+        }
+        res
+    }
+
+    #[test_case]
+    fn open() {
+        with_card(|| {
+            let file = File::open("bu00:\\DoesNotExist");
+            let res = file.map_err(|deferred| deferred.error());
+            assert!(res.contains_err(&ErrorKind::FileNotFound));
+        })
+    }
+
+    #[test_case]
+    fn create() {
+        with_card(|| {
+            let path = "bu00:\\NewFile";
+
+            // Creating a new file should work
+            let file = File::create(path, None);
+            assert!(file.is_ok());
+
+            let file = file.unwrap();
+
+            // Trying to recreate an existing file should not work
+            let retry = OpenOptions::new().create_new(1).open::<ErrorKind>(path);
+            assert!(retry.contains_err(&ErrorKind::FileAlreadyExists));
+
+            // Restore the memory card to its initial state
+            assert!(file.delete::<()>().is_ok());
+        })
     }
 }

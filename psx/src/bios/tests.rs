@@ -65,8 +65,8 @@ fn gp0_command_params() {
 
 #[test_case]
 fn gpu_get_status() {
-    let reg_status = GPUSTAT::load();
-    let bios_status = bios::gpu_get_status();
+    let reg_status = GPUSTAT::load().bits_no_parity();
+    let bios_status = bios::gpu_get_status().bits_no_parity();
     assert!(reg_status == bios_status);
 }
 
