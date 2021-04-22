@@ -47,6 +47,3 @@ fn_args_layout = "Compressed"
 #removed_nested_parens = true
 #space_before_fn_sig_paren = false
 #space_around_attr_eq = true
-
-# build.rs has some long strings that get formatted regardless of what `format_strings` equals
-ignore = [ "build.rs" ]

@@ -66,6 +66,7 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
             - [ ] Remove as_cstr from panic
     - [ ] Figure out the multi-psexe story.
     - [ ] Randomize test order. Something simple like (an + b) mod N where N is the number of tests, n is in [0, N), gcd(a, N) = 1 and b is a random value from the BIOS. Could use memcard file to store last b and make runs actually differ.
+    - [ ] Remove incorrect uses of `illegal!` is psx crate. It should only be used in unreachable cases like invalid return values in BIOS code. Its use in TIM parser is debatable and its use in `hal::gpu` should be removed
 
 ## cargo-psx
 - [ ] Add regions back in
