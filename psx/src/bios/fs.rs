@@ -277,7 +277,7 @@ pub enum SeekFrom {
     Start(u32),
     /// Sets the offset to the current position plus the specified number of
     /// bytes.
-    Current(u32),
+    Current(i32),
 }
 
 type Fd = u8;
@@ -325,7 +325,7 @@ impl<'f> File<'f> {
     where E: FileError<'a> {
         let (offset, seek_ty) = match pos {
             SeekFrom::Start(offset) => (offset, 0),
-            SeekFrom::Current(offset) => (offset, 1),
+            SeekFrom::Current(offset) => (offset as u32, 1),
         };
         let res = unsafe { kernel::file_seek(self.fd, offset, seek_ty) };
         match res {
@@ -460,41 +460,89 @@ mod tests {
     }
 
     #[test_case]
-    fn open() {
+    fn open_create_close() {
         with_card(|| {
-            let file = File::open("bu00:\\DoesNotExist");
+            let path = "bu00:\\DoesNotExist";
+            // Opening a non-existent file should not work
+            let file = File::open(path);
             let res = file.map_err(|deferred| deferred.error());
             assert!(res.contains_err(&ErrorKind::FileNotFound));
-        })
-    }
-
-    #[test_case]
-    fn create() {
-        with_card(|| {
-            let path = "bu00:\\NewFile";
 
             // Creating a new file should work
-            let file = File::create(path, None);
-            assert!(file.is_ok());
+            let res = File::create(path, None);
+            assert!(res.is_ok());
 
-            let mut file = file.unwrap();
+            let file = res.unwrap();
 
             // Trying to recreate an existing file should not work
             let retry = OpenOptions::new().create_new(1).open::<ErrorKind>(path);
             assert!(retry.contains_err(&ErrorKind::FileAlreadyExists));
 
-            let res = file.seek::<()>(SeekFrom::Start(1024));
-            assert!(res == Ok(1024));
-            res.unwrap();
+            // Closing a file manually should work
+            assert!(file.close::<()>().is_ok());
 
-            let mut write_buf = [0; 128];
-            for i in 0..128 {
-                write_buf[i] = i as u8;
-            }
-            let res = file.write::<()>(&[write_buf]).ok();
-            assert!(res == Some(128));
+            // Opening an existing file should work
+            let res = File::open(path);
+            assert!(res.is_ok());
+            let file = res.unwrap();
 
             // Restore the memory card to its initial state
+            assert!(file.delete::<()>().is_ok());
+        })
+    }
+
+    #[test_case]
+    fn seek_read_write() {
+        with_card(|| {
+            let path = "bu00:\\NewFile";
+
+            let mut file = File::create(path, None).unwrap();
+
+            // Seeking 1 kB from the start should work
+            let res = file.seek::<()>(SeekFrom::Start(1024));
+            assert!(res == Ok(1024));
+
+            // Come up with 2 sectors worth of test data to write
+            let mut write_buf = [[0; 128]; 2];
+            for i in 0..256 {
+                write_buf[i / 128][i % 128] = i as u8;
+            }
+            // Shadow the buffer identifier since it doesn't need to be mutable
+            let write_buf = write_buf;
+
+            // Writing 2 sectors should work
+            let res = file.write::<()>(&write_buf);
+            assert!(res == Ok(256));
+
+            // Seek from the current position to get to the initial writing location
+            let res = file.seek::<()>(SeekFrom::Current(-256));
+            // Seek returns offset from the start of the file
+            assert!(res == Ok(1024));
+
+            // Read two sectors of data
+            let mut read_buf = [[0u8; 128]; 2];
+            // Read sectors in reverse order to change things up
+            let res = file.read::<()>(&mut read_buf[1..]);
+            assert!(res == Ok(128));
+            // Read the second sector into the first buffer index
+            let res = file.read::<()>(&mut read_buf[..1]);
+            assert!(res == Ok(128));
+
+            // Read and written buffers should match with indices flipped
+            assert!(read_buf[0] == write_buf[1]);
+            assert!(read_buf[1] == write_buf[0]);
+
+            // Restore the memory card to its initial state
+            assert!(file.delete::<()>().is_ok());
+        })
+    }
+
+    #[test_case]
+    fn rename() {
+        with_card(|| {
+            let mut file = File::create("bu10:\\NewFile", None).unwrap();
+            let renamed_file = file.rename::<()>("bu10:\\Renamed");
+            assert!(renamed_file.is_ok());
             assert!(file.delete::<()>().is_ok());
         })
     }
