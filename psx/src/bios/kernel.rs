@@ -19,7 +19,7 @@ extern "C" {
     /// Calls BIOS function [A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn save_state(buf: *mut u8);
     /// Calls BIOS function [A(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn restore_state(buf: *mut u8, param: u32);
+    pub fn restore_state(buf: *const u8, ret_val: u32);
     /// Calls BIOS function [A(2Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn rand() -> u16;
     /// Calls BIOS function [A(30h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

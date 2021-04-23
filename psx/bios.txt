@@ -18,8 +18,13 @@ A(04h) file_close(fd: u8) -> i8;
 //A(05h) fileioctl(fd,cmd,arg);
 A(06h) exit(exitcode: i32) -> !;
 //A(07h) filegetdeviceflag(fd);
-//A(08h) filegetc(fd);
-//A(09h) fileputc(char,fd);
+
+// This function can't disambiguate between return value of 0xFF and an error
+//A(08h) file_getc(fd);
+
+// The BIOS implements this with file_write
+//A(09h) file_putc(char,fd);
+
 //A(0Ah) todigit(char);
 //A(0Ch) strtoul(src,src_end,base);
 //A(0Dh) strtol(src,src_end,base);
@@ -28,8 +33,13 @@ A(06h) exit(exitcode: i32) -> !;
 //A(10h) atoi(src);
 //A(11h) atol(src);
 //A(12h) atob(src,num_dst);
+
+// Takes a mutable buffer to store register values
 A(13h) save_state(buf: *mut u8);
-A(14h) restore_state(buf: *mut u8, param: u32);
+
+// Takes a buffer to read register values from and a value to return
+A(14h) restore_state(buf: *const u8, ret_val: u32);
+
 //A(15h) strcat(dst,src);
 //A(16h) strncat(dst,src,maxlen);
 //A(17h) strcmp(str1,str2);

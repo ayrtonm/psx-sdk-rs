@@ -44,10 +44,19 @@ pub fn exit(exitcode: i32) -> ! {
 /// Stores a subset of the CPU state.
 ///
 /// Stores 12 CPU registers in the first 48 bytes of `buffer`. This can then be
-/// used with [`io_abort`], [`restore_state`] or
-/// [`set_custom_exit_from_exception`].
-pub fn save_state(buffer: &mut [u32]) {
+/// used with `io_abort`, [`restore_state`] or
+/// `set_custom_exit_from_exception`.
+pub fn save_state(buffer: &mut [u32; 12]) {
     unsafe { kernel::save_state(buffer.as_mut_ptr() as *mut u8) }
+}
+
+// TODO: test this
+/// Restores a subset of the CPU to a previous state.
+///
+/// Restores 12 CPU register from the first 48 bytes of `buffer`. The `ret_val`
+/// parameter is passed as the return value to the code in the new state.
+pub fn restore_state(buffer: &[u32; 12], ret_val: u32) {
+    unsafe { kernel::restore_state(buffer.as_ptr() as *const u8, ret_val) }
 }
 
 /// Returns a random 15 bit number with the seeded generator.

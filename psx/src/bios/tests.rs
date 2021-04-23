@@ -5,16 +5,12 @@ use crate::hal::{Register, GP1, GPUSTAT};
 
 #[test_case]
 fn save_state() {
-    let mut buf = [0u32; 16];
+    let mut buf = [0u32; 12];
     // Stores registers in first 12 spots
     bios::save_state(&mut buf);
     assert!(buf[0] != 0); // contains $ra
     assert!(buf[1] != 0); // contains $sp
                           // Remaining registers may or may not be zero
-    assert!(buf[12] == 0); // Extra space in buffer should remain zeroed
-    assert!(buf[13] == 0);
-    assert!(buf[14] == 0);
-    assert!(buf[15] == 0);
 }
 
 #[test_case]
