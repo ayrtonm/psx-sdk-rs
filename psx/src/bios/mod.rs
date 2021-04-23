@@ -15,10 +15,9 @@ mod tests;
 #[doc(hidden)]
 pub mod tty;
 pub mod fs;
-mod gamepads;
+pub mod pad;
 mod thread;
 
-pub use gamepads::GamePads;
 pub use thread::Thread;
 
 #[repr(u32)]
