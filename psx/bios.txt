@@ -167,9 +167,12 @@ B(0Eh) open_thread(pc: u32, sp: u32, gp: u32) -> u32;
 B(0Fh) close_thread(handle: u32);
 B(10h) change_thread(handle: u32);
 //B(11h) jump_to_00000000h
+
+// Takes two pointers to mutable buffers and the buffer sizes
 B(12h) init_pad(buf1: *mut u8, siz1: usize, buf2: *mut u8, siz2: usize);
 B(13h) start_pad();
 B(14h) stop_pad();
+
 //B(15h) OutdatedPadInitAndStart(type,button_dest,unused,unused)
 //B(16h) OutdatedPadGetButtons()
 //B(17h) ReturnFromException()

@@ -15,8 +15,10 @@ mod tests;
 #[doc(hidden)]
 pub mod tty;
 pub mod fs;
+mod gamepads;
 mod thread;
 
+pub use gamepads::GamePads;
 pub use thread::Thread;
 
 #[repr(u32)]
@@ -34,17 +36,6 @@ impl From<RootCounter> for u32 {
         }
     }
 }
-
-//// TODO: Test and document
-///// Calls [A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-//pub fn file_open(filename: *const u8, accessmode: u32) -> Option<u32> {
-//    let res = unsafe { kernel::file_open(filename, accessmode) };
-//    if res == -1 {
-//        None
-//    } else {
-//        Some(res as u32)
-//    }
-//}
 
 /// Terminates the program and returns control to the BIOS.
 pub fn exit(exitcode: i32) -> ! {
@@ -274,22 +265,6 @@ pub fn system_ram() -> u32 {
 //    unsafe { kernel::restart_timer(rcnt as u32) }
 //}
 
-///// Calls [B(12h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-//pub fn init_pad(buf1: &mut [u8], buf2: &mut [u8]) {
-//    unsafe { kernel::init_pad(buf1.as_mut_ptr(), buf1.len(),
-// buf2.as_mut_ptr(), buf2.len()) }
-//}
-//
-///// Calls [B(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-//pub fn start_pad() {
-//    unsafe { kernel::start_pad() }
-//}
-//
-///// Calls [B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-//pub fn stop_pad() {
-//    unsafe { kernel::stop_pad() }
-//}
-//
 ///// Calls [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
 //pub fn change_clear_pad(int: u32) {
 //    unsafe { kernel::change_clear_pad(int) }

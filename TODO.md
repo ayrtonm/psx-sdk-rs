@@ -8,7 +8,8 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
         - [ ] Modify `build.rs` to add comments preceding fn signatures in `bios.txt` to `kernel.rs` as doc comment
     - [ ] Filesystem
         - [ ] Decide how to handle read/write block sizes. const_evaluatable_checked seems too unstable rn so maybe &[[u8; 128]] is the best way for now?
-        - [ ] Add memcard tests
+        - [ ] Add `ManuallyDrop` to File::close to prevent calling `kernel::file_close` twice
+        - [x] Add memcard tests
         - [ ] CD files
         - [x] Add documentation
             - [ ] add examples
@@ -74,5 +75,6 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
     - [ ] Remove incorrect uses of `illegal!` is psx crate. It should only be used in unreachable cases like invalid return values in BIOS code. Its use in TIM parser is debatable and its use in `hal::gpu` should be removed
 
 ## cargo-psx
-- [ ] Add regions back in
+- [x] Add regions back in
 - [ ] Figure out a good way to add debug info. Something like a debug flag that makes both an ELF with source info and an executable PSEXE. Ideally they'd have the same .text/.data/.bss sections at the same addresses. I'd like to avoid calling `cargo build` twice so something like creating two executables with different linker scripts would be ideal.
+    - [ ] Figure out how to compile once, link twice with cargo
