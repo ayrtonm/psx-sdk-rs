@@ -22,7 +22,7 @@
 )]
 // Required for const `illegal`
 #![feature(const_unreachable_unchecked, const_panic)]
-// Required for pinning
+// Required for pinning bios::pad::Controller and possibly more
 #![feature(negative_impls)]
 // Could be removed if necessary.
 #![feature(array_map, variant_count, result_contains_err)]

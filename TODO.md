@@ -16,16 +16,17 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
         - [x] Figure out what `kernel::file_seek` returns
         - [x] Add `illegal!` to unreachable cases in error checking (typically negative numbers other than -1) to potentially enable further optimizations
         - [x] Use `psx::std::AsCstr` to remove need to null-terminate names
+        - [ ] Figure out how to merge memcard and CDROM files in `bios::fs::File`
+    - [ ] Controllers
+        - [ ] handle analog inputs
+        - [ ] debug commit `2e5c99a31f816d34ee86ff45f10e4f274d5a0bc3` to make sure that bug when looping with calls to vsync is actually due to the buffers moving
     - [ ] Threads
         - [ ] test `Thread::spawn`
         - [ ] Add a `'static` bound on the function pointers in `spawn` and `open`
         - [x] Add `illegal!` to unreachable cases in `Thread::open` to potentially enable further optimizations
     - [ ] Events
         - [ ] Check if implementing a wrapper for this feature is worth it or if it's too buggy
-    - [ ] Make wrappers for the following. Implementing these with I/O registers may require precision with timing, so making ergonomic wrappers for the BIOS versions is probably a good first step to separate the API design from the feature implementation.
-        - [ ] Memory card
-        - [ ] Controllers
-        - [ ] CDROM
+    - [ ] CDROM wrapper. The I/O register impl may require precise timing, so making ergonomic wrappers for the BIOS functions is a good first step to separate the API design from the feature impl.
 - [ ] COP0
     - [x] impl `MutRegister` for cop0r12-r14
     - [ ] impl debug regs?

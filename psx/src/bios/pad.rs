@@ -73,11 +73,6 @@ impl<'a, 'b> Controller<'a, 'b> {
         !self.pressed(player, button)
     }
 
-    pub fn stop(self) {
-        // impl Drop takes care of calling `stop_pad`
-        //(self.buf0, self.buf1)
-    }
-
     fn get_buffer<'c>(self: &'c Pin<&mut Self>, player: Player) -> &'c Buffer {
         match player {
             Player::P1 => self.buf0,
