@@ -7,8 +7,8 @@ This is a preliminary todo list for libpsx and cargo-psx in no particular order
     - [ ] Kernel
         - [ ] Modify `build.rs` to add comments preceding fn signatures in `bios.txt` to `kernel.rs` as doc comment
     - [ ] Filesystem
-        - [ ] Decide how to handle read/write block sizes. const_evaluatable_checked seems too unstable rn so maybe &[[u8; 128]] is the best way for now?
-        - [ ] Add `ManuallyDrop` to File::close to prevent calling `kernel::file_close` twice
+        - [x] Decide how to handle read/write block sizes. const_evaluatable_checked seems too unstable rn so maybe &[[u8; 128]] is the best way for now?
+        - [x] Add `core::mem::forget` to File::close to prevent calling `kernel::file_close` twice
         - [x] Add memcard tests
         - [ ] CD files
         - [x] Add documentation

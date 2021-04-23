@@ -102,6 +102,8 @@ extern "C" {
     pub fn file_rename(old_filename: *const u8, new_filename: *const u8) -> u8;
     /// Calls BIOS function [B(45h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn file_delete(filename: *const u8) -> u8;
+    /// Calls BIOS function [B(46h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn file_undelete(filename: *const u8) -> u8;
     /// Calls BIOS function [B(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn init_card(pad_enable: bool);
     /// Calls BIOS function [B(4Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)

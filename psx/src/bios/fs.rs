@@ -14,6 +14,7 @@ use super::kernel;
 use crate::std::AsCStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
+use core::mem::forget;
 
 // Memcard directory frame limits filename to 20 chars, device name can
 // be up to 7 chars and 1 null-terminator gives 28 chars for `MAX_FILENAME`
@@ -393,6 +394,7 @@ impl<'f> File<'f> {
     pub fn close<'a, E>(self) -> Result<Fd, E>
     where E: FileError<'a> {
         let res = unsafe { kernel::file_close(self.fd) };
+        forget(self);
         match res {
             i8::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_close`")
@@ -421,7 +423,10 @@ impl<'f> File<'f> {
     }
 
     /// Deletes the file.
-    pub fn delete<'a, E>(self) -> Result<(), E>
+    ///
+    /// The deleted file references must still be closed either by going out of
+    /// scope or with [`File::close`].
+    pub fn delete<'a, E>(&mut self) -> Result<(), E>
     where E: FileError<'a> {
         let res = self
             .path
@@ -430,6 +435,19 @@ impl<'f> File<'f> {
             1 => Ok(()),
             0 => Err(E::new_error()),
             _ => illegal!("Received unknown error code from BIOS in `kernel::file_delete`"),
+        }
+    }
+
+    /// Recovers a deleted file.
+    pub fn recover<'a, E>(&mut self) -> Result<(), E>
+    where E: FileError<'a> {
+        let res = self
+            .path
+            .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_undelete(path.as_ptr()) });
+        match res {
+            1 => Ok(()),
+            0 => Err(E::new_error()),
+            _ => illegal!("Received unknown error code from BIOS in `kernel::file_undelete`"),
         }
     }
 }
@@ -484,7 +502,7 @@ mod tests {
             // Opening an existing file should work
             let res = File::open(path);
             assert!(res.is_ok());
-            let file = res.unwrap();
+            let mut file = res.unwrap();
 
             // Restore the memory card to its initial state
             assert!(file.delete::<()>().is_ok());
@@ -540,9 +558,22 @@ mod tests {
     #[test_case]
     fn rename() {
         with_card(|| {
+            // Use memory card 2 to switch things up
             let mut file = File::create("bu10:\\NewFile", None).unwrap();
+            // Renaming a file works
             let renamed_file = file.rename::<()>("bu10:\\Renamed");
             assert!(renamed_file.is_ok());
+
+            // Recovering an existing file doesn't work
+            let res = file.recover::<ErrorKind>();
+            assert!(res.contains_err(&ErrorKind::FileAlreadyExists));
+
+            // Deleting a file works
+            assert!(file.delete::<()>().is_ok());
+            // Recovering a deleted file works
+            assert!(file.recover::<()>().is_ok());
+
+            // Restore the memory card to its initial state
             assert!(file.delete::<()>().is_ok());
         })
     }

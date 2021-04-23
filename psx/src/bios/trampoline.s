@@ -295,6 +295,12 @@ file_delete:
     j 0xB0
     li $9, 0x45
 
+.section .text.bios.file_undelete
+.globl file_undelete
+file_undelete:
+    j 0xB0
+    li $9, 0x46
+
 .section .text.bios.init_card
 .globl init_card
 init_card:

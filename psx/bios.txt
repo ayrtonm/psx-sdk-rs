@@ -190,7 +190,9 @@ B(44h) file_rename(old_filename: *const u8, new_filename: *const u8) -> u8;
 // Takes a path, returns 1 for ok or 0 for error
 B(45h) file_delete(filename: *const u8) -> u8;
 
-//B(46h) FileUndelete(filename)
+// Takes a path, returns 1 for ok or 0 for error
+B(46h) file_undelete(filename: *const u8) -> u8;
+
 //B(47h) AddDevice(device_info)  ;subfunction for AddXxxDevice functions
 //B(48h) RemoveDevice(device_name_lowercase)
 //B(49h) PrintInstalledDevices()
