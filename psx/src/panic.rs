@@ -47,12 +47,12 @@ fn panic(info: &PanicInfo) -> ! {
     match info.location() {
         Some(location) => {
             printf!("Panicked at \0");
-            location.file().as_cstr::<_, _, MAX_LEN>(|s| printf!(s));
+            location.file().as_cstr::<_, _, MAX_LEN>(|s| printf!("%s\0", s));
             printf!(":%d:%d\n\0", location.line(), location.column());
         },
         None => printf!("Panicked at unknown location\n\0"),
     }
-    message(info).as_cstr::<_, _, MAX_LEN>(|s| printf!(s));
+    message(info).as_cstr::<_, _, MAX_LEN>(|s| printf!("%s\0", s));
     printf!("\n\0");
     loop {}
 }

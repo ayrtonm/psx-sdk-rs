@@ -41,7 +41,7 @@ macro_rules! println {
 
 impl fmt::Write for TTY {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        s.as_cstr::<_, _, MAX_LEN>(|s| printf!(s));
+        s.as_cstr::<_, _, MAX_LEN>(|s| printf!("%s\0", s));
         Ok(())
     }
 }
