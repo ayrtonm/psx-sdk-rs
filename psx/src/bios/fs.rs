@@ -71,25 +71,6 @@ impl<T: FileTy> OpenOptions<T> {
         Default::default()
     }
 
-    /// Sets the option for asynchronous mode.
-    ///
-    /// This option, when true, will indicate that the BIOS should not wait for
-    /// completion to return.
-    pub fn async_mode(&mut self, mode: bool) -> &mut Self {
-        self.async_mode = mode;
-        self
-    }
-
-    /// Sets the option to create a new file, failing if it already exists.
-    ///
-    /// If created successfully, the new file will contain the specified number
-    /// of memory card 8 kB `blocks`.
-    pub fn create(&mut self, blocks: u16) -> &mut Self {
-        self.blocks = blocks;
-        self.create = true;
-        self
-    }
-
     /// Opens the file at `path` with the options specified by `self`.
     ///
     /// Errors returned by this function defer further BIOS function calls until
@@ -111,6 +92,27 @@ impl<T: FileTy> OpenOptions<T> {
                 _file_ty: T::default(),
             }),
         }
+    }
+}
+
+impl OpenOptions<MemCard> {
+    /// Sets the option for asynchronous mode.
+    ///
+    /// This option, when true, will indicate that the BIOS should not wait for
+    /// completion to return.
+    pub fn async_mode(&mut self, mode: bool) -> &mut Self {
+        self.async_mode = mode;
+        self
+    }
+
+    /// Sets the option to create a new file, failing if it already exists.
+    ///
+    /// If created successfully, the new file will contain the specified number
+    /// of memory card 8 kB `blocks`.
+    pub fn create(&mut self, blocks: u16) -> &mut Self {
+        self.blocks = blocks;
+        self.create = true;
+        self
     }
 }
 
@@ -261,18 +263,6 @@ impl<'f, T: FileTy> File<'f, T> {
         OpenOptions::new().open(path)
     }
 
-    /// Attempts to create a file with the specified `size` in bytes.
-    ///
-    /// This function will open the file if it already exists. The specified
-    /// size is rounded down to a multiple of 8 kB or set to 8 kB if
-    /// unspecified.
-    ///
-    /// See the [`OpenOptions::open`] function for more details.
-    pub fn create(path: &str, size: Option<u16>) -> Result<File<T>, Error<T>> {
-        let size = size.unwrap_or(8 * 1024) >> 13;
-        OpenOptions::new().create(size).open(path)
-    }
-
     /// Seeks to an offset, in bytes, in a file.
     ///
     /// If the seek operation is successful, this method returns the new
@@ -298,26 +288,12 @@ impl<'f, T: FileTy> File<'f, T> {
     ///
     /// Memory card files can only be read in increments of 128 bytes.
     pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error<T>> {
-        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * 128) };
+        let res = unsafe {
+            kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * T::SECTOR_SIZE)
+        };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_read`")
-            },
-            -1 => Err(Error::last_file_error(self)),
-            _ => Ok(res as usize),
-        }
-    }
-
-    /// Writes some bytes to the file from the specified `src`, returning how
-    /// many bytes were written.
-    ///
-    /// Memory card files can only be written to in increments of 128 bytes.
-    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error<T>> {
-        let src = src.as_ref();
-        let res = unsafe { kernel::file_write(self.fd, src.as_ptr().cast(), src.len() * 128) };
-        match res {
-            i32::MIN..=-2 => {
-                illegal!("Received unknown error code from BIOS in `kernel::file_write`")
             },
             -1 => Err(Error::last_file_error(self)),
             _ => Ok(res as usize),
@@ -334,13 +310,6 @@ impl<'f, T: FileTy> File<'f, T> {
         self.read(&mut ret).map(|_| ret[0])
     }
 
-    /// Writes a byte to the file.
-    pub fn putc(&mut self, ch: u8) -> Result<usize, Error<T>> {
-        let mut temp = [0; 128];
-        temp[0] = ch;
-        self.write(&temp)
-    }
-
     /// Manually closes the file, returning a possible BIOS error code.
     pub fn close<'a>(self) -> Result<Fd, Error<'a, T>> {
         let res = unsafe { kernel::file_close(self.fd) };
@@ -353,9 +322,52 @@ impl<'f, T: FileTy> File<'f, T> {
             _ => Ok(res as Fd),
         }
     }
+}
+
+impl<'f> File<'f, MemCard> {
+    /// Attempts to create a file with the specified `size` in bytes.
+    ///
+    /// This function will open the file if it already exists. The specified
+    /// size is rounded down to a multiple of 8 kB or set to 8 kB if
+    /// unspecified.
+    ///
+    /// See the [`OpenOptions::open`] function for more details.
+    pub fn create(path: &str, size: Option<u16>) -> Result<File<MemCard>, Error<MemCard>> {
+        let size = size.unwrap_or(8 * 1024) >> 13;
+        OpenOptions::new().create(size).open(path)
+    }
+
+    /// Writes some bytes to the file from the specified `src`, returning how
+    /// many bytes were written.
+    ///
+    /// Memory card files can only be written to in increments of 128 bytes.
+    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error<MemCard>> {
+        let src = src.as_ref();
+        let res = unsafe {
+            kernel::file_write(
+                self.fd,
+                src.as_ptr().cast(),
+                src.len() * MemCard::SECTOR_SIZE,
+            )
+        };
+        match res {
+            i32::MIN..=-2 => {
+                illegal!("Received unknown error code from BIOS in `kernel::file_write`")
+            },
+            -1 => Err(Error::last_file_error(self)),
+            _ => Ok(res as usize),
+        }
+    }
+
+    /// Writes a byte to the file.
+    pub fn putc(&mut self, ch: u8) -> Result<usize, Error<MemCard>> {
+        let mut temp = [0; 128];
+        temp[0] = ch;
+        self.write(&temp)
+    }
 
     /// Renames a file.
-    pub fn rename(&mut self, new_name: &'f str) -> Result<(), Error<T>> {
+    pub fn rename(&mut self, new_name: &'f str) -> Result<(), Error<MemCard>> {
         let res = self.path.as_cstr::<_, _, MAX_FILENAME>(|old| {
             new_name.as_cstr::<_, _, MAX_FILENAME>(|new| unsafe {
                 kernel::file_rename(old.as_ptr(), new.as_ptr())
@@ -375,7 +387,7 @@ impl<'f, T: FileTy> File<'f, T> {
     ///
     /// The deleted file references must still be closed either by going out of
     /// scope or with [`File::close`].
-    pub fn delete(&mut self) -> Result<(), Error<T>> {
+    pub fn delete(&mut self) -> Result<(), Error<MemCard>> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_delete(path.as_ptr()) });
@@ -387,7 +399,7 @@ impl<'f, T: FileTy> File<'f, T> {
     }
 
     /// Recovers a deleted file.
-    pub fn recover(&mut self) -> Result<(), Error<T>> {
+    pub fn recover(&mut self) -> Result<(), Error<MemCard>> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_undelete(path.as_ptr()) });
