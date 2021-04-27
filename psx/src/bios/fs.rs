@@ -16,6 +16,26 @@ use core::fmt;
 use core::fmt::{Debug, Formatter};
 use core::mem::forget;
 
+/// A marker trait for the various BIOS file types.
+pub trait FileTy {
+    /// The sector size associated with I/O operations for a given file type.
+    const SECTOR_SIZE: usize;
+}
+
+/// Represents memory card files managed by the BIOS.
+pub struct MemCard;
+
+impl FileTy for MemCard {
+    const SECTOR_SIZE: usize = 128;
+}
+
+/// Represents CD-ROM files managed by the BIOS.
+pub struct CDROM;
+
+impl FileTy for CDROM {
+    const SECTOR_SIZE: usize = 2048;
+}
+
 // Memcard directory frame limits filename to 20 chars, device name can
 // be up to 7 chars and 1 null-terminator gives 28 chars for `MAX_FILENAME`
 const MAX_FILENAME: usize = 28;
