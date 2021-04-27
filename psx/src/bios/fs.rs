@@ -38,10 +38,6 @@ pub struct OpenOptions {
     create: bool,
     async_mode: bool,
     blocks: u16,
-
-    // This field only affect the behavior of the high-level methods
-    // If creating a new file fails because it already exists, open the existing file
-    open_existing: bool,
 }
 
 impl OpenOptions {
@@ -61,43 +57,21 @@ impl OpenOptions {
         self
     }
 
-    /// Sets the option to create a new file, or open it if it already exists.
-    ///
-    /// If a new file is created, it will contain the specified number of memory
-    /// card 8 kB `blocks`. Note that if a new file is not created, this option
-    /// will immediately call into the BIOS to ensure the failure occurred
-    /// because the file already exists. The final
-    /// [`Result`][core::result::Result] then contains the specified
-    /// implementor of [`FileError`].
-    pub fn create(&mut self, blocks: u16) -> &mut Self {
-        self.open_existing = true;
-        self.create_new(blocks)
-    }
-
     /// Sets the option to create a new file, failing if it already exists.
     ///
-    /// The new file, if created, will contain the specified number of memory
-    /// card `blocks`.
-    pub fn create_new(&mut self, blocks: u16) -> &mut Self {
-        self.create = true;
+    /// If created successfully, the new file will contain the specified number
+    /// of memory card 8 kB `blocks`.
+    pub fn create(&mut self, blocks: u16) -> &mut Self {
         self.blocks = blocks;
+        self.create = true;
         self
     }
 
-    /// Opens a file at `path` with the options specified by `self`.
+    /// Opens the file at `path` with the options specified by `self`.
     ///
-    /// # Errors
-    ///
-    /// If the function fails the resulting `Err` will contain a type
-    /// implementing [`FileError`]. Implementors of this trait include:
-    /// * [`ErrorKind`]: The error code returned by calling into the BIOS
-    ///   immediately after failing.
-    /// * [`DeferredError`]: Allows calling into the BIOS to check the error at
-    ///   a later point.
-    /// * `()`: Skips calling into the BIOS, ignoring any possible error(s).
-    // The lifetime on `E` doesn't actually matter since it's never a deferred file
-    // error, but rust doesn't allow anonymous lifetimes there
-    pub fn open<'a, 'f, E: FileError<'a>>(&self, path: &'f str) -> Result<File<'f>, E> {
+    /// Errors returned by this function defer further BIOS function calls until
+    /// they are evaluated with [`Error::kind`].
+    pub fn open<'f>(&self, path: &'f str) -> Result<File<'f>, Error<'f>> {
         let flags = self.into();
 
         let fd = path.as_cstr::<_, _, MAX_FILENAME>(|path| unsafe {
@@ -107,27 +81,8 @@ impl OpenOptions {
             i8::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_open`")
             },
-            -1 => {
-                // If we couldn't create a new file, open the existing file
-                if self.open_existing {
-                    // Make sure that we failed to create a new file because it already exists
-                    if let ErrorKind::FileAlreadyExists = ErrorKind::new_error() {
-                        let mut opt = self.clone();
-                        opt.create = false;
-                        opt.open_existing = false;
-                        opt.open(path)
-                    } else {
-                        // If we failed to create a new file for another reason, just give up
-                        Err(E::new_error())
-                    }
-                } else {
-                    Err(E::new_error())
-                }
-            },
-            _ => {
-                let fd = fd as Fd;
-                Ok(File { fd, path })
-            },
+            -1 => Err(Error::last_error()),
+            _ => Ok(File { fd: fd as Fd, path }),
         }
     }
 }
@@ -189,64 +144,34 @@ impl From<u32> for ErrorKind {
     }
 }
 
-/// Implements [`FileError`] to allow calling into the BIOS at any point to
-/// check the last error.
+/// The error type for I/O operations in the BIOS filesystem.
 ///
-/// Uses the [`FileError::error`] method to get the error code from the BIOS.
-/// The associated lifetime `'f` corresponds to the corresponding file
-/// descriptor if any.
-pub enum DeferredError<'f> {
+/// The lifetime `'f` corresponds to the file descriptor associated  with the
+/// error, if any.
+pub enum Error<'f> {
     #[doc(hidden)]
-    FdErrorKind(fn(&'f File<'f>) -> ErrorKind, &'f File<'f>),
+    FdCall(fn(&'f File<'f>) -> ErrorKind, &'f File<'f>),
     #[doc(hidden)]
-    ErrorKind(fn() -> ErrorKind),
+    Call(fn() -> ErrorKind),
+    #[doc(hidden)]
+    Kind(ErrorKind),
 }
 
-impl<'f> Debug for DeferredError<'f> {
+impl<'f> Debug for Error<'f> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.error().fmt(f)
+        self.kind().fmt(f)
     }
 }
 
-/// Allows different ways of handling filesystem errors from the BIOS.
-pub trait FileError<'f> {
-    #[doc(hidden)]
-    fn new_file_error(file: &'f File) -> Self;
-    #[doc(hidden)]
-    fn new_error() -> Self;
-
-    /// Returns a concrete [`ErrorKind`] code. Not guaranteed to call into the
-    /// BIOS.
-    fn error(&self) -> ErrorKind;
-}
-
-impl FileError<'_> for () {
-    fn new_file_error(_file: &File) -> Self {}
-    fn new_error() -> Self {}
-    fn error(&self) -> ErrorKind {
-        ErrorKind::UnknownError
+impl<'f> From<ErrorKind> for Error<'f> {
+    fn from(kind: ErrorKind) -> Self {
+        Error::Kind(kind)
     }
 }
 
-impl FileError<'_> for ErrorKind {
-    fn new_file_error(file: &File) -> Self {
-        let err = unsafe { kernel::get_last_file_error(file.fd) };
-        err.into()
-    }
-
-    fn new_error() -> Self {
-        let err = unsafe { kernel::get_last_error() };
-        err.into()
-    }
-
-    fn error(&self) -> ErrorKind {
-        *self
-    }
-}
-
-impl<'f> FileError<'f> for DeferredError<'f> {
-    fn new_file_error(file: &'f File) -> Self {
-        DeferredError::FdErrorKind(
+impl<'f> Error<'f> {
+    fn last_file_error(file: &'f File) -> Self {
+        Error::FdCall(
             |file| {
                 let err = unsafe { kernel::get_last_file_error(file.fd) };
                 err.into()
@@ -255,17 +180,19 @@ impl<'f> FileError<'f> for DeferredError<'f> {
         )
     }
 
-    fn new_error() -> Self {
-        DeferredError::ErrorKind(|| {
+    fn last_error() -> Self {
+        Error::Call(|| {
             let err = unsafe { kernel::get_last_error() };
             err.into()
         })
     }
 
-    fn error(&self) -> ErrorKind {
+    /// Returns a concrete [`ErrorKind`] code. May call into the BIOS.
+    pub fn kind(&self) -> ErrorKind {
         match self {
-            DeferredError::FdErrorKind(func, arg) => func(arg),
-            DeferredError::ErrorKind(func) => func(),
+            Error::FdCall(func, arg) => func(arg),
+            Error::Call(func) => func(),
+            Error::Kind(kind) => *kind,
         }
     }
 }
@@ -301,7 +228,7 @@ impl<'f> File<'f> {
     /// is the [file name](http://problemkaputt.de/psx-spx.htm#memorycarddataformat).
     ///
     /// See the [`OpenOptions::open`] function for more details.
-    pub fn open(path: &str) -> Result<File, DeferredError> {
+    pub fn open(path: &str) -> Result<File, Error> {
         OpenOptions::new().open(path)
     }
 
@@ -312,9 +239,9 @@ impl<'f> File<'f> {
     /// unspecified.
     ///
     /// See the [`OpenOptions::open`] function for more details.
-    pub fn create(path: &str, size: Option<u16>) -> Result<File, DeferredError> {
+    pub fn create(path: &str, size: Option<u16>) -> Result<File, Error> {
         let size = size.unwrap_or(8 * 1024) >> 13;
-        OpenOptions::new().create_new(size).open(path)
+        OpenOptions::new().create(size).open(path)
     }
 
     /// Seeks to an offset, in bytes, in a file.
@@ -322,8 +249,7 @@ impl<'f> File<'f> {
     /// If the seek operation is successful, this method returns the new
     /// position from the start of the file. That position can be used later
     /// with [`SeekFrom::Start`].
-    pub fn seek<'a, E>(&'a self, pos: SeekFrom) -> Result<usize, E>
-    where E: FileError<'a> {
+    pub fn seek(&self, pos: SeekFrom) -> Result<usize, Error> {
         let (offset, seek_ty) = match pos {
             SeekFrom::Start(offset) => (offset, 0),
             SeekFrom::Current(offset) => (offset as u32, 1),
@@ -333,7 +259,7 @@ impl<'f> File<'f> {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_seek`")
             },
-            -1 => Err(E::new_file_error(self)),
+            -1 => Err(Error::last_file_error(self)),
             _ => Ok(res as usize),
         }
     }
@@ -342,14 +268,13 @@ impl<'f> File<'f> {
     /// many bytes were read.
     ///
     /// Memory card files can only be read in increments of 128 bytes.
-    pub fn read<'a, E>(&'a self, dst: &mut [[u8; 128]]) -> Result<usize, E>
-    where E: FileError<'a> {
+    pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error> {
         let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * 128) };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_read`")
             },
-            -1 => Err(E::new_file_error(self)),
+            -1 => Err(Error::last_file_error(self)),
             _ => Ok(res as usize),
         }
     }
@@ -358,15 +283,14 @@ impl<'f> File<'f> {
     /// many bytes were written.
     ///
     /// Memory card files can only be written to in increments of 128 bytes.
-    pub fn write<'a, E>(&'a mut self, src: &[[u8; 128]]) -> Result<usize, E>
-    where E: FileError<'a> {
+    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error> {
         let src = src.as_ref();
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr().cast(), src.len() * 128) };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_write`")
             },
-            -1 => Err(E::new_file_error(self)),
+            -1 => Err(Error::last_file_error(self)),
             _ => Ok(res as usize),
         }
     }
@@ -376,37 +300,33 @@ impl<'f> File<'f> {
     /// This function internally uses [`File::read`] since the
     /// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
     /// can't disambiguate between an error code and a return value of `0xFF`.
-    pub fn getc<'a, E>(&'a self) -> Result<u8, E>
-    where E: FileError<'a> {
-        let ret = [0; 128];
-        self.read(&mut [ret]).map(|_| ret[0])
+    pub fn getc(&self) -> Result<u8, Error> {
+        let mut ret = [0; 128];
+        self.read(&mut ret).map(|_| ret[0])
     }
 
     /// Writes a byte to the file.
-    pub fn putc<'a, E>(&'a mut self, ch: u8) -> Result<usize, E>
-    where E: FileError<'a> {
+    pub fn putc(&mut self, ch: u8) -> Result<usize, Error> {
         let mut temp = [0; 128];
         temp[0] = ch;
-        self.write(&[temp])
+        self.write(&temp)
     }
 
     /// Manually closes the file, returning a possible BIOS error code.
-    pub fn close<'a, E>(self) -> Result<Fd, E>
-    where E: FileError<'a> {
+    pub fn close<'a>(self) -> Result<Fd, Error<'a>> {
         let res = unsafe { kernel::file_close(self.fd) };
         forget(self);
         match res {
             i8::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_close`")
             },
-            -1 => Err(E::new_error()),
+            -1 => Err(Error::last_error()),
             _ => Ok(res as Fd),
         }
     }
 
     /// Renames a file.
-    pub fn rename<'a, E>(&'a mut self, new_name: &'f str) -> Result<(), E>
-    where E: FileError<'a> {
+    pub fn rename(&mut self, new_name: &'f str) -> Result<(), Error> {
         let res = self.path.as_cstr::<_, _, MAX_FILENAME>(|old| {
             new_name.as_cstr::<_, _, MAX_FILENAME>(|new| unsafe {
                 kernel::file_rename(old.as_ptr(), new.as_ptr())
@@ -417,7 +337,7 @@ impl<'f> File<'f> {
                 self.path = new_name;
                 Ok(())
             },
-            0 => Err(E::new_error()),
+            0 => Err(Error::last_error()),
             _ => illegal!("Received unknown error code from BIOS in `kernel::file_rename`"),
         }
     }
@@ -426,27 +346,25 @@ impl<'f> File<'f> {
     ///
     /// The deleted file references must still be closed either by going out of
     /// scope or with [`File::close`].
-    pub fn delete<'a, E>(&mut self) -> Result<(), E>
-    where E: FileError<'a> {
+    pub fn delete(&mut self) -> Result<(), Error> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_delete(path.as_ptr()) });
         match res {
             1 => Ok(()),
-            0 => Err(E::new_error()),
+            0 => Err(Error::last_error()),
             _ => illegal!("Received unknown error code from BIOS in `kernel::file_delete`"),
         }
     }
 
     /// Recovers a deleted file.
-    pub fn recover<'a, E>(&mut self) -> Result<(), E>
-    where E: FileError<'a> {
+    pub fn recover(&mut self) -> Result<(), Error> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_undelete(path.as_ptr()) });
         match res {
             1 => Ok(()),
-            0 => Err(E::new_error()),
+            0 => Err(Error::last_error()),
             _ => illegal!("Received unknown error code from BIOS in `kernel::file_undelete`"),
         }
     }
