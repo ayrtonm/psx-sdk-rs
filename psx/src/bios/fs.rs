@@ -17,19 +17,21 @@ use core::fmt::{Debug, Formatter};
 use core::mem::forget;
 
 /// A marker trait for the various BIOS file types.
-pub trait FileTy {
+pub trait FileTy: Default {
     /// The sector size associated with I/O operations for a given file type.
     const SECTOR_SIZE: usize;
 }
 
-/// Represents memory card files managed by the BIOS.
+/// A marker type for memory card files managed by the BIOS.
+#[derive(Default)]
 pub struct MemCard;
 
 impl FileTy for MemCard {
     const SECTOR_SIZE: usize = 128;
 }
 
-/// Represents CD-ROM files managed by the BIOS.
+/// A marker type for CD-ROM files managed by the BIOS.
+#[derive(Default)]
 pub struct CDROM;
 
 impl FileTy for CDROM {
@@ -53,14 +55,15 @@ const MAX_FILENAME: usize = 28;
 /// open. This will give you a [`Result`][core::result::Result] with a [`File`]
 /// inside that you can further operate on.
 #[derive(Default, Clone)]
-pub struct OpenOptions {
+pub struct OpenOptions<T: FileTy> {
     // These fields correspond to the accessmode bits
     create: bool,
     async_mode: bool,
     blocks: u16,
+    _file_ty: T,
 }
 
-impl OpenOptions {
+impl<T: FileTy> OpenOptions<T> {
     /// Creates a blank new set of options ready for configuration.
     ///
     /// All options are initially set to `false`.
@@ -91,7 +94,7 @@ impl OpenOptions {
     ///
     /// Errors returned by this function defer further BIOS function calls until
     /// they are evaluated with [`Error::kind`].
-    pub fn open<'f>(&self, path: &'f str) -> Result<File<'f>, Error<'f>> {
+    pub fn open<'f>(&self, path: &'f str) -> Result<File<'f, T>, Error<'f, T>> {
         let flags = self.into();
 
         let fd = path.as_cstr::<_, _, MAX_FILENAME>(|path| unsafe {
@@ -102,13 +105,17 @@ impl OpenOptions {
                 illegal!("Received unknown error code from BIOS in `kernel::file_open`")
             },
             -1 => Err(Error::last_error()),
-            _ => Ok(File { fd: fd as Fd, path }),
+            _ => Ok(File {
+                fd: fd as Fd,
+                path,
+                _file_ty: T::default(),
+            }),
         }
     }
 }
 
-impl From<&OpenOptions> for u32 {
-    fn from(opt: &OpenOptions) -> u32 {
+impl<T: FileTy> From<&OpenOptions<T>> for u32 {
+    fn from(opt: &OpenOptions<T>) -> u32 {
         // Bits 0-1 (read/write) aren't used by the BIOS, but at least 1 should be set
         1 | ((opt.create as u32) << 9) |
             ((opt.async_mode as u32) << 15) |
@@ -168,35 +175,36 @@ impl From<u32> for ErrorKind {
 ///
 /// The lifetime `'f` corresponds to the file descriptor associated  with the
 /// error, if any.
-pub enum Error<'f> {
+pub enum Error<'f, T: FileTy> {
     #[doc(hidden)]
-    FdCall(fn(&'f File<'f>) -> ErrorKind, &'f File<'f>),
+    FdCall(fn(&'f File<'f, T>) -> ErrorKind, &'f File<'f, T>, T),
     #[doc(hidden)]
     Call(fn() -> ErrorKind),
     #[doc(hidden)]
     Kind(ErrorKind),
 }
 
-impl<'f> Debug for Error<'f> {
+impl<'f, T: FileTy> Debug for Error<'f, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.kind().fmt(f)
     }
 }
 
-impl<'f> From<ErrorKind> for Error<'f> {
+impl<'f, T: FileTy> From<ErrorKind> for Error<'f, T> {
     fn from(kind: ErrorKind) -> Self {
         Error::Kind(kind)
     }
 }
 
-impl<'f> Error<'f> {
-    fn last_file_error(file: &'f File) -> Self {
+impl<'f, T: FileTy> Error<'f, T> {
+    fn last_file_error(file: &'f File<T>) -> Self {
         Error::FdCall(
             |file| {
                 let err = unsafe { kernel::get_last_file_error(file.fd) };
                 err.into()
             },
             file,
+            T::default(),
         )
     }
 
@@ -210,7 +218,7 @@ impl<'f> Error<'f> {
     /// Returns a concrete [`ErrorKind`] code. May call into the BIOS.
     pub fn kind(&self) -> ErrorKind {
         match self {
-            Error::FdCall(func, arg) => func(arg),
+            Error::FdCall(func, arg, _) => func(arg),
             Error::Call(func) => func(),
             Error::Kind(kind) => *kind,
         }
@@ -230,17 +238,18 @@ pub enum SeekFrom {
 
 type Fd = u8;
 
-/// A reference to an open [BIOS file](http://problemkaputt.de/psx-spx.htm#biosfilefunctions).
+/// A reference to an open memory card or CD-ROM [BIOS file](http://problemkaputt.de/psx-spx.htm#biosfilefunctions).
 ///
 /// Files are automatically closed when they go out of scope. Errors detected on
 /// closing are ignored by the implementation of `Drop`.
 #[derive(Debug)]
-pub struct File<'f> {
+pub struct File<'f, T: FileTy> {
     fd: Fd,
     path: &'f str,
+    _file_ty: T,
 }
 
-impl<'f> File<'f> {
+impl<'f, T: FileTy> File<'f, T> {
     /// Attempts to open a file.
     ///
     /// Memory card paths should be formatted as `"bu00:\\FILE_NAME"` where
@@ -248,7 +257,7 @@ impl<'f> File<'f> {
     /// is the [file name](http://problemkaputt.de/psx-spx.htm#memorycarddataformat).
     ///
     /// See the [`OpenOptions::open`] function for more details.
-    pub fn open(path: &str) -> Result<File, Error> {
+    pub fn open(path: &str) -> Result<File<T>, Error<T>> {
         OpenOptions::new().open(path)
     }
 
@@ -259,7 +268,7 @@ impl<'f> File<'f> {
     /// unspecified.
     ///
     /// See the [`OpenOptions::open`] function for more details.
-    pub fn create(path: &str, size: Option<u16>) -> Result<File, Error> {
+    pub fn create(path: &str, size: Option<u16>) -> Result<File<T>, Error<T>> {
         let size = size.unwrap_or(8 * 1024) >> 13;
         OpenOptions::new().create(size).open(path)
     }
@@ -269,7 +278,7 @@ impl<'f> File<'f> {
     /// If the seek operation is successful, this method returns the new
     /// position from the start of the file. That position can be used later
     /// with [`SeekFrom::Start`].
-    pub fn seek(&self, pos: SeekFrom) -> Result<usize, Error> {
+    pub fn seek(&self, pos: SeekFrom) -> Result<usize, Error<T>> {
         let (offset, seek_ty) = match pos {
             SeekFrom::Start(offset) => (offset, 0),
             SeekFrom::Current(offset) => (offset as u32, 1),
@@ -288,7 +297,7 @@ impl<'f> File<'f> {
     /// many bytes were read.
     ///
     /// Memory card files can only be read in increments of 128 bytes.
-    pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error> {
+    pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error<T>> {
         let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * 128) };
         match res {
             i32::MIN..=-2 => {
@@ -303,7 +312,7 @@ impl<'f> File<'f> {
     /// many bytes were written.
     ///
     /// Memory card files can only be written to in increments of 128 bytes.
-    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error> {
+    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error<T>> {
         let src = src.as_ref();
         let res = unsafe { kernel::file_write(self.fd, src.as_ptr().cast(), src.len() * 128) };
         match res {
@@ -320,20 +329,20 @@ impl<'f> File<'f> {
     /// This function internally uses [`File::read`] since the
     /// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
     /// can't disambiguate between an error code and a return value of `0xFF`.
-    pub fn getc(&self) -> Result<u8, Error> {
+    pub fn getc(&self) -> Result<u8, Error<T>> {
         let mut ret = [0; 128];
         self.read(&mut ret).map(|_| ret[0])
     }
 
     /// Writes a byte to the file.
-    pub fn putc(&mut self, ch: u8) -> Result<usize, Error> {
+    pub fn putc(&mut self, ch: u8) -> Result<usize, Error<T>> {
         let mut temp = [0; 128];
         temp[0] = ch;
         self.write(&temp)
     }
 
     /// Manually closes the file, returning a possible BIOS error code.
-    pub fn close<'a>(self) -> Result<Fd, Error<'a>> {
+    pub fn close<'a>(self) -> Result<Fd, Error<'a, T>> {
         let res = unsafe { kernel::file_close(self.fd) };
         forget(self);
         match res {
@@ -346,7 +355,7 @@ impl<'f> File<'f> {
     }
 
     /// Renames a file.
-    pub fn rename(&mut self, new_name: &'f str) -> Result<(), Error> {
+    pub fn rename(&mut self, new_name: &'f str) -> Result<(), Error<T>> {
         let res = self.path.as_cstr::<_, _, MAX_FILENAME>(|old| {
             new_name.as_cstr::<_, _, MAX_FILENAME>(|new| unsafe {
                 kernel::file_rename(old.as_ptr(), new.as_ptr())
@@ -366,7 +375,7 @@ impl<'f> File<'f> {
     ///
     /// The deleted file references must still be closed either by going out of
     /// scope or with [`File::close`].
-    pub fn delete(&mut self) -> Result<(), Error> {
+    pub fn delete(&mut self) -> Result<(), Error<T>> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_delete(path.as_ptr()) });
@@ -378,7 +387,7 @@ impl<'f> File<'f> {
     }
 
     /// Recovers a deleted file.
-    pub fn recover(&mut self) -> Result<(), Error> {
+    pub fn recover(&mut self) -> Result<(), Error<T>> {
         let res = self
             .path
             .as_cstr::<_, _, MAX_FILENAME>(|path| unsafe { kernel::file_undelete(path.as_ptr()) });
@@ -390,7 +399,7 @@ impl<'f> File<'f> {
     }
 }
 
-impl Drop for File<'_> {
+impl<T: FileTy> Drop for File<'_, T> {
     fn drop(&mut self) {
         let _res = unsafe { kernel::file_close(self.fd) };
     }
