@@ -14,6 +14,7 @@ mod tests;
 #[macro_use]
 #[doc(hidden)]
 pub mod tty;
+pub mod event;
 pub mod fs;
 pub mod pad;
 mod thread;

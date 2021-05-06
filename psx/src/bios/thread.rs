@@ -11,6 +11,11 @@ pub struct Thread {
 }
 
 impl Thread {
+    /// Gets the thread's handle.
+    pub(super) fn handle(&self) -> Handle {
+        self.handle
+    }
+
     /// A handle to the initial thread created by the BIOS.
     pub const INIT: Thread = Thread::new(0xFF00_0000);
 

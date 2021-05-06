@@ -166,13 +166,16 @@ B(03h) get_timer(t: u32);
 B(04h) enable_timer_irq(t: u32);
 B(05h) disable_timer_irq(t: u32);
 B(06h) restart_timer(t: u32);
-//B(07h) DeliverEvent(class, spec)
-//B(08h) OpenEvent(class,spec,mode,func)
-//B(09h) CloseEvent(event)
-//B(0Ah) WaitEvent(event)
-//B(0Bh) TestEvent(event)
-//B(0Ch) EnableEvent(event)
-//B(0Dh) DisableEvent(event)
+
+B(07h) deliver_event(class: u32, spec: u16);
+// Returns an event descriptor
+B(08h) open_event(class: u32, spec: u16, mode: u16, func: *const u32) -> u32;
+B(09h) close_event(event: u32);
+B(0Ah) wait_event(event: u32) -> bool;
+B(0Bh) test_event(event: u32) -> bool;
+B(0Ch) enable_event(event: u32);
+B(0Dh) disable_event(event: u32);
+
 B(0Eh) open_thread(pc: u32, sp: u32, gp: u32) -> u32;
 B(0Fh) close_thread(handle: u32);
 B(10h) change_thread(handle: u32);
@@ -186,9 +189,11 @@ B(14h) stop_pad();
 //B(15h) OutdatedPadInitAndStart(type,button_dest,unused,unused)
 //B(16h) OutdatedPadGetButtons()
 //B(17h) ReturnFromException()
-//B(18h) SetDefaultExitFromException()
+B(18h) set_default_exit_from_exception();
 //B(19h) SetCustomExitFromException(addr)
-//B(20h) UnDeliverEvent(class,spec)
+
+B(20h) undeliver_event(class: u32, spec: u16);
+
 //B(40h) chdir(name)
 //B(41h) FormatDevice(devicename)
 //B(42h) firstfile(filename,direntry)
@@ -205,7 +210,7 @@ B(46h) file_undelete(filename: *const u8) -> u8;
 
 //B(47h) AddDevice(device_info)  ;subfunction for AddXxxDevice functions
 //B(48h) RemoveDevice(device_name_lowercase)
-//B(49h) PrintInstalledDevices()
+B(49h) print_installed_devices();
 B(4Ah) init_card(pad_enable: bool);
 B(4Bh) start_card();
 B(4Ch) stop_card();

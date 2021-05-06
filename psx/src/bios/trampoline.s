@@ -247,6 +247,48 @@ restart_timer:
     j 0xB0
     li $9, 0x06
 
+.section .text.bios.deliver_event
+.globl deliver_event
+deliver_event:
+    j 0xB0
+    li $9, 0x07
+
+.section .text.bios.open_event
+.globl open_event
+open_event:
+    j 0xB0
+    li $9, 0x08
+
+.section .text.bios.close_event
+.globl close_event
+close_event:
+    j 0xB0
+    li $9, 0x09
+
+.section .text.bios.wait_event
+.globl wait_event
+wait_event:
+    j 0xB0
+    li $9, 0x0A
+
+.section .text.bios.test_event
+.globl test_event
+test_event:
+    j 0xB0
+    li $9, 0x0B
+
+.section .text.bios.enable_event
+.globl enable_event
+enable_event:
+    j 0xB0
+    li $9, 0x0C
+
+.section .text.bios.disable_event
+.globl disable_event
+disable_event:
+    j 0xB0
+    li $9, 0x0D
+
 .section .text.bios.open_thread
 .globl open_thread
 open_thread:
@@ -283,6 +325,18 @@ stop_pad:
     j 0xB0
     li $9, 0x14
 
+.section .text.bios.set_default_exit_from_exception
+.globl set_default_exit_from_exception
+set_default_exit_from_exception:
+    j 0xB0
+    li $9, 0x18
+
+.section .text.bios.undeliver_event
+.globl undeliver_event
+undeliver_event:
+    j 0xB0
+    li $9, 0x20
+
 .section .text.bios.file_rename
 .globl file_rename
 file_rename:
@@ -300,6 +354,12 @@ file_delete:
 file_undelete:
     j 0xB0
     li $9, 0x46
+
+.section .text.bios.print_installed_devices
+.globl print_installed_devices
+print_installed_devices:
+    j 0xB0
+    li $9, 0x49
 
 .section .text.bios.init_card
 .globl init_card

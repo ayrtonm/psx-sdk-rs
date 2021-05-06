@@ -254,6 +254,11 @@ pub struct File<'f, T: FileTy> {
 }
 
 impl<'f, T: FileTy> File<'f, T> {
+    /// Gets the file descriptor.
+    pub(super) fn fd(&self) -> Fd {
+        self.fd
+    }
+
     /// Attempts to open a file.
     ///
     /// Paths should be formatted as `"dev:\\FILE_NAME"` where the
