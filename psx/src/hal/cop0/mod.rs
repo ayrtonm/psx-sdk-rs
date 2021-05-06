@@ -9,6 +9,8 @@ pub enum Mode {
     User = 1,
 }
 
+pub use status::IntMask;
+
 read_only_cop! {
     /// cop0r14     - EPC - Return Address from Trap
     EPC<u32>; COP: 0; R: 14

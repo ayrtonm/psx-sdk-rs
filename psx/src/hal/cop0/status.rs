@@ -1,6 +1,3 @@
-// Temporary
-#![allow(dead_code)]
-
 use super::{Mode, Status};
 use crate::hal::{MutRegister, Mutable, Register, State};
 
@@ -17,8 +14,17 @@ const ISC: u32 = 16;
 const CU0: u32 = 28;
 const CU2: u32 = 30;
 
+// TODO: Is it worth representing bits 8-9? i.e. is there some use for software
+// ints (maybe in callbacks)?
+#[repr(u32)]
+pub enum IntMask {
+    Software0 = IM_SW0,
+    Software1 = IM_SW1,
+    Hardware = IM_HW,
+}
+
 impl<S: State> Status<S> {
-    pub fn interrupts_enabled(&self) -> bool {
+    pub fn ints_enabled(&self) -> bool {
         self.all_set(1 << IEC)
     }
 
@@ -28,6 +34,10 @@ impl<S: State> Status<S> {
         } else {
             Mode::Kernel
         }
+    }
+
+    pub fn int_masked(&self, int: IntMask) -> bool {
+        self.all_set(1 << (int as u32))
     }
 
     pub fn user_cop0_enabled(&self) -> bool {
@@ -40,12 +50,16 @@ impl<S: State> Status<S> {
 }
 
 impl Status<Mutable> {
-    pub fn enable_interrupts(&mut self, enable: bool) -> &mut Self {
+    pub fn enable_ints(&mut self, enable: bool) -> &mut Self {
         self.set_bits((enable as u32) << IEC)
     }
 
     pub fn set_mode(&mut self, mode: Mode) -> &mut Self {
         self.set_bits((mode as u32) << KUC)
+    }
+
+    pub fn mask_int(&mut self, int: IntMask, enable: bool) -> &mut Self {
+        self.set_bits((enable as u32) << (int as u32))
     }
 
     pub fn enable_user_cop0(&mut self, enable: bool) -> &mut Self {
