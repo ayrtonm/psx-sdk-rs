@@ -1,33 +1,17 @@
-use super::kernel;
+use super::{kernel, RootCounter};
 use crate::bios::fs::{File, MemCard};
 use crate::bios::thread::Thread;
+use crate::interrupt::IRQ;
+use crate::timer;
 
 // TODO: Complete this list and make names clearer than nocash defaults
 pub enum Class<'a> {
     FileDescriptor(&'a File<'a, MemCard>),
-    // These are almost identical to IRQs, but not close enough to use the IRQ enum
-    Vblank,
-    GPU,
-    CDRDecoder,
-    DMAController,
-    RTC0,
-    RTC1,
-    // This can be joypad or memcard
-    Pad,
-    SPU,
-    PIO,
-    SIO,
-
+    IRQ(IRQ),
     Exception,
-
     // There are two missing memory card event classes
     MemCard,
-
-    // TODO: Use RootCounter here
-    DotClock,
-    Hblank,
-    Fractional,
-
+    RootCounter(RootCounter),
     Thread(&'a Thread),
 }
 
@@ -35,21 +19,30 @@ impl<'a> From<Class<'a>> for u32 {
     fn from(cl: Class) -> u32 {
         match cl {
             Class::FileDescriptor(file) => file.fd().into(),
-            Class::Vblank => 0xF0000001,
-            Class::GPU => 0xF0000002,
-            Class::CDRDecoder => 0xF0000003,
-            Class::DMAController => 0xF0000004,
-            Class::RTC0 => 0xF0000005,
-            Class::RTC1 => 0xF0000006,
-            Class::Pad => 0xF0000008,
-            Class::SPU => 0xF0000009,
-            Class::PIO => 0xF000000A,
-            Class::SIO => 0xF000000B,
+            Class::IRQ(irq) => match irq {
+                IRQ::Vblank => 0xF0000001,
+                IRQ::GPU => 0xF0000002,
+                IRQ::CDROM => 0xF0000003,
+                IRQ::DMA => 0xF0000004,
+                IRQ::Timer0 => 0xF0000005,
+                IRQ::Timer1 => 0xF0000006,
+                // This isn't a typoe, timer 1 and 2's IRQs use the same event
+                IRQ::Timer2 => 0xF0000006,
+                IRQ::ControllerMemoryCard => 0xF0000008,
+                IRQ::SPU => 0xF0000009,
+                IRQ::ControllerPIO => 0xF000000A,
+                IRQ::SIO => 0xF000000B,
+            },
             Class::Exception => 0xF0000010,
             Class::MemCard => 0xF0000011,
-            Class::DotClock => 0xF200_0000,
-            Class::Hblank => 0xF200_0001,
-            Class::Fractional => 0xF200_000,
+            Class::RootCounter(rc) => match rc {
+                RootCounter::Timer(timer) => match timer {
+                    timer::Name::DotClock => 0xF200_0000,
+                    timer::Name::Hblank => 0xF200_0001,
+                    timer::Name::Fractional => 0xF200_0002,
+                },
+                RootCounter::Vblank => 0xF200_0003,
+            },
             Class::Thread(thread) => 0xFF00_0000 | thread.handle(),
         }
     }

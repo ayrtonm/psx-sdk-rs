@@ -10,5 +10,5 @@ pub enum IRQ {
     ControllerMemoryCard,
     SIO,
     SPU,
-    ControllerMisc,
+    ControllerPIO,
 }
