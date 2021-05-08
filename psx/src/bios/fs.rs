@@ -1,12 +1,12 @@
 //! Filesystem manipulation operations
 //!
 //! This module contains basic methods to manipulate the contents of the
-//! filesystem using BIOS functions. This module follows the general design of
+//! filesystem using BIOS functions. The module follows the general design of
 //! `std::fs` in the standard library with PlayStation-specific deviations where
 //! necessary. The BIOS internally uses C-style null-terminated strings for path
 //! names, but all methods in this module support string slices. Omitting
 //! null-terminators incurs the runtime cost of copying the path into a
-//! temporary buffer however. Only memory card files are currently supported.
+//! temporary buffer however.
 
 #![deny(missing_docs)]
 
@@ -60,6 +60,8 @@ pub struct OpenOptions<T: FileTy> {
     create: bool,
     async_mode: bool,
     blocks: u16,
+
+    // Unused zero-sized type
     _file_ty: T,
 }
 
@@ -254,9 +256,10 @@ pub struct File<'f, T: FileTy> {
 impl<'f, T: FileTy> File<'f, T> {
     /// Attempts to open a file.
     ///
-    /// Memory card paths should be formatted as `"bu00:\\FILE_NAME"` where
-    /// `bu00` is the [device name](http://problemkaputt.de/psx-spx.htm#controllerandmemorycardmisc) and `FILE_NAME`
-    /// is the [file name](http://problemkaputt.de/psx-spx.htm#memorycarddataformat).
+    /// Paths should be formatted as `"dev:\\FILE_NAME"` where the
+    /// [device name](http://problemkaputt.de/psx-spx.htm#controllerandmemorycardmisc)
+    /// `dev` is one of `bu00`, `bu10` or `cdrom` and `FILE_NAME` is the
+    /// [file name](http://problemkaputt.de/psx-spx.htm#memorycarddataformat).
     ///
     /// See the [`OpenOptions::open`] function for more details.
     pub fn open(path: &str) -> Result<File<T>, Error<T>> {
@@ -286,7 +289,8 @@ impl<'f, T: FileTy> File<'f, T> {
     /// Reads some bytes from the file into the specified `dst`, returning how
     /// many bytes were read.
     ///
-    /// Memory card files can only be read in increments of 128 bytes.
+    /// Memory card and CDROM files can only be read in increments of 128 and
+    /// 2048 bytes, respectively.
     pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error<T>> {
         let res = unsafe {
             kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * T::SECTOR_SIZE)
@@ -417,6 +421,7 @@ impl<T: FileTy> Drop for File<'_, T> {
     }
 }
 
+/*
 #[cfg(test)]
 mod tests {
     use super::{ErrorKind, File, FileError, OpenOptions, SeekFrom};
@@ -537,3 +542,4 @@ mod tests {
         })
     }
 }
+*/
