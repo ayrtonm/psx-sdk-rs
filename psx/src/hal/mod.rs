@@ -38,6 +38,7 @@
 mod macros;
 
 mod mmio;
+pub use mmio::GEV;
 pub use mmio::{D0_BCR, D0_CHCR, D0_MADR};
 pub use mmio::{D1_BCR, D1_CHCR, D1_MADR};
 pub use mmio::{D2_BCR, D2_CHCR, D2_MADR};
@@ -170,7 +171,7 @@ pub trait Register<T: private::Primitive>: private::HasValue<T> + Read<T> {
 /// methods also return `&mut Self` for convenience.
 pub trait MutRegister<T: private::Primitive>: Sized + Register<T> + Write<T> {
     /// Creates a handle without reading the register's current value.
-    fn skip_load() -> Self;
+    unsafe fn skip_load() -> Self;
 
     /// Writes the handle's copy of the register's value to the register. Note
     /// that the write will not be elided by the compiler.

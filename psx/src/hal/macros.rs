@@ -59,7 +59,7 @@ macro_rules! read_write {
         }
 
         impl MutRegister<$size> for $name<Mutable> {
-            fn skip_load() -> Self {
+            unsafe fn skip_load() -> Self {
                 $name(0, PhantomData)
             }
         }

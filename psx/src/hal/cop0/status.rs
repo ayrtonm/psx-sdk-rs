@@ -1,5 +1,8 @@
+#![allow(dead_code)]
 use super::{Mode, Status};
 use crate::hal::{MutRegister, Mutable, Register, State};
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 
 const IEC: u32 = 0;
 const KUC: u32 = 1;
@@ -68,5 +71,20 @@ impl Status<Mutable> {
 
     pub fn enable_gte(&mut self, enable: bool) -> &mut Self {
         self.set_bits((enable as u32) << CU2)
+    }
+}
+
+impl<S: State> Debug for Status<S> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("cop0::Status")
+            .field("bits", &self.bits())
+            .field("ints_enabled", &self.ints_enabled())
+            .field("mode", &self.get_mode())
+            .field("hw_int_masked", &self.int_masked(IntMask::Hardware))
+            .field("sw0_int_masked", &self.int_masked(IntMask::Software0))
+            .field("sw1_int_masked", &self.int_masked(IntMask::Software1))
+            .field("user_cop0_enabled", &self.user_cop0_enabled())
+            .field("gte_enabled", &self.gte_enabled())
+            .finish()
     }
 }
