@@ -75,7 +75,7 @@ pub struct Event {
 }
 
 impl Event {
-    fn open(class: Class, spec: Spec, callback: Option<fn()>) -> Option<Self> {
+    pub fn open(class: Class, spec: Spec, callback: Option<fn()>) -> Option<Self> {
         let (mode, func) = match callback {
             Some(func) => (0x1000, func as *const u32),
             None => (0x2000, 0 as *const u32),
@@ -87,31 +87,31 @@ impl Event {
         }
     }
 
-    fn close(self) {
+    pub fn close(self) {
         // Drop impl takes care of dropping the event
     }
 
-    fn wait(&self) -> bool {
+    pub fn wait(&self) -> bool {
         unsafe { kernel::wait_event(self.ev) }
     }
 
-    fn test(&self) -> bool {
+    pub fn test(&self) -> bool {
         unsafe { kernel::test_event(self.ev) }
     }
 
-    fn enable(&mut self) {
+    pub fn enable(&mut self) {
         unsafe { kernel::enable_event(self.ev) }
     }
 
-    fn disable(&mut self) {
+    pub fn disable(&mut self) {
         unsafe { kernel::disable_event(self.ev) }
     }
 
-    fn deliver(class: Class, spec: Spec) {
+    pub fn deliver(class: Class, spec: Spec) {
         unsafe { kernel::deliver_event(class.into(), spec as u16) }
     }
 
-    fn undeliver(class: Class, spec: Spec) {
+    pub fn undeliver(class: Class, spec: Spec) {
         unsafe { kernel::undeliver_event(class.into(), spec as u16) }
     }
 }
