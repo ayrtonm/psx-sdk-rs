@@ -8,88 +8,90 @@ mod macros;
 
 // Comments and address taken more or less verbatim from nocash specs
 read_only_mmio! {
-  /// Read responses to GP0(C0h) and GP1(10h) commands
-  GPUREAD<u32>: 0x1F801810,
-  /// Read GPU Status Register
-  GPUSTAT<u32>: 0x1F801814
+    /// Read responses to GP0(C0h) and GP1(10h) commands
+    GPUREAD<u32>: 0x1F801810,
+    /// Read GPU Status Register
+    GPUSTAT<u32>: 0x1F801814
 }
 
 write_only! {
-  /// Send GP0 Commands/Packets (Rendering and VRAM Access)
-  GP0<u32>: 0x1F801810,
-  /// Send GP1 Commands (Display Control)
-  GP1<u32>: 0x1F801814
+    /// Send GP0 Commands/Packets (Rendering and VRAM Access)
+    GP0<u32>: 0x1F801810,
+    /// Send GP1 Commands (Display Control)
+    GP1<u32>: 0x1F801814,
+    /// General exception vector
+    GEV<u32>: 0x80000080
 }
 
 read_write_mmio! {
-  /// Interrupt status register
-  I_STAT<u16>: 0x1F801070,
-  /// Interrupt mask register
-  I_MASK<u16>: 0x1F801074,
-  /// DMA0 channel 0 - MDECin base address register
-  D0_MADR<u32>: 0x1F801080,
-  /// DMA0 channel 0 - MDECin block control register
-  D0_BCR<u32>: 0x1F801084,
-  /// DMA0 channel 0 - MDECin channel control register
-  D0_CHCR<u32>: 0x1F801088,
-  /// DMA1 channel 1 - MDECout base address register
-  D1_MADR<u32>: 0x1F801090,
-  /// DMA1 channel 1 - MDECout block control register
-  D1_BCR<u32>: 0x1F801094,
-  /// DMA1 channel 1 - MDECout channel control register
-  D1_CHCR<u32>: 0x1F801098,
-  /// DMA2 channel 2 - GPU (lists + image data) base address register
-  D2_MADR<u32>: 0x1F8010A0,
-  /// DMA2 channel 2 - GPU (lists + image data) block control register
-  D2_BCR<u32>: 0x1F8010A4,
-  /// DMA2 channel 2 - GPU (lists + image data) channel control register
-  D2_CHCR<u32>: 0x1F8010A8,
-  /// DMA3 channel 3 - CDROM base address register
-  D3_MADR<u32>: 0x1F8010B0,
-  /// DMA3 channel 3 - CDROM block control register
-  D3_BCR<u32>: 0x1F8010B4,
-  /// DMA3 channel 3 - CDROM channel control register
-  D3_CHCR<u32>: 0x1F8010B8,
-  /// DMA4 channel 4 - SPU base address register
-  D4_MADR<u32>: 0x1F8010C0,
-  /// DMA4 channel 4 - SPU block control register
-  D4_BCR<u32>: 0x1F8010C4,
-  /// DMA4 channel 4 - SPU channel control register
-  D4_CHCR<u32>: 0x1F8010C8,
-  /// DMA5 channel 5 - PIO (Expansion Port) base address register
-  D5_MADR<u32>: 0x1F8010D0,
-  /// DMA5 channel 5 - PIO (Expansion Port) block control register
-  D5_BCR<u32>: 0x1F8010D4,
-  /// DMA5 channel 5 - PIO (Expansion Port) channel control register
-  D5_CHCR<u32>: 0x1F8010D8,
-  /// DMA6 channel 6 - OTC (reverse clear OT) (GPU related) base address register
-  D6_MADR<u32>: 0x1F8010E0,
-  /// DMA6 channel 6 - OTC (reverse clear OT) (GPU related) block control register
-  D6_BCR<u32>: 0x1F8010E4,
-  /// DMA6 channel 6 - OTC (reverse clear OT) (GPU related) channel control register
-  D6_CHCR<u32>: 0x1F8010E8,
-  /// DMA Control register
-  DPCR<u32>: 0x1F8010F0,
-  /// DMA Interrupt register
-  DICR<u32>: 0x1F8010F4,
-  /// Timer 0 Dotclock current counter value
-  T0_CNT<u16>: 0x1F801100,
-  /// Timer 0 Dotclock counter mode
-  T0_MODE<u16>: 0x1F801104,
-  /// Timer 0 Dotclock counter target value
-  T0_TGT<u16>: 0x1F801108,
-  /// Timer 1 Horizontal Retrace current counter value
-  T1_CNT<u16>: 0x1F801110,
-  /// Timer 1 Horizontal Retrace counter mode
-  T1_MODE<u16>: 0x1F801114,
-  /// Timer 1 Horizontal Retrace counter target value
-  T1_TGT<u16>: 0x1F801118,
-  /// Timer 2 1/8 system clock current counter value
-  T2_CNT<u16>: 0x1F801120,
-  /// Timer 2 1/8 system clock counter mode
-  T2_MODE<u16>: 0x1F801124,
-  /// Timer 2 1/8 system clock counter target value
-  T2_TGT<u16>: 0x1F801128
+    /// Interrupt status register
+    I_STAT<u16>: 0x1F801070,
+    /// Interrupt mask register
+    I_MASK<u16>: 0x1F801074,
+    /// DMA0 channel 0 - MDECin base address register
+    D0_MADR<u32>: 0x1F801080,
+    /// DMA0 channel 0 - MDECin block control register
+    D0_BCR<u32>: 0x1F801084,
+    /// DMA0 channel 0 - MDECin channel control register
+    D0_CHCR<u32>: 0x1F801088,
+    /// DMA1 channel 1 - MDECout base address register
+    D1_MADR<u32>: 0x1F801090,
+    /// DMA1 channel 1 - MDECout block control register
+    D1_BCR<u32>: 0x1F801094,
+    /// DMA1 channel 1 - MDECout channel control register
+    D1_CHCR<u32>: 0x1F801098,
+    /// DMA2 channel 2 - GPU (lists + image data) base address register
+    D2_MADR<u32>: 0x1F8010A0,
+    /// DMA2 channel 2 - GPU (lists + image data) block control register
+    D2_BCR<u32>: 0x1F8010A4,
+    /// DMA2 channel 2 - GPU (lists + image data) channel control register
+    D2_CHCR<u32>: 0x1F8010A8,
+    /// DMA3 channel 3 - CDROM base address register
+    D3_MADR<u32>: 0x1F8010B0,
+    /// DMA3 channel 3 - CDROM block control register
+    D3_BCR<u32>: 0x1F8010B4,
+    /// DMA3 channel 3 - CDROM channel control register
+    D3_CHCR<u32>: 0x1F8010B8,
+    /// DMA4 channel 4 - SPU base address register
+    D4_MADR<u32>: 0x1F8010C0,
+    /// DMA4 channel 4 - SPU block control register
+    D4_BCR<u32>: 0x1F8010C4,
+    /// DMA4 channel 4 - SPU channel control register
+    D4_CHCR<u32>: 0x1F8010C8,
+    /// DMA5 channel 5 - PIO (Expansion Port) base address register
+    D5_MADR<u32>: 0x1F8010D0,
+    /// DMA5 channel 5 - PIO (Expansion Port) block control register
+    D5_BCR<u32>: 0x1F8010D4,
+    /// DMA5 channel 5 - PIO (Expansion Port) channel control register
+    D5_CHCR<u32>: 0x1F8010D8,
+    /// DMA6 channel 6 - OTC (reverse clear OT) (GPU related) base address register
+    D6_MADR<u32>: 0x1F8010E0,
+    /// DMA6 channel 6 - OTC (reverse clear OT) (GPU related) block control register
+    D6_BCR<u32>: 0x1F8010E4,
+    /// DMA6 channel 6 - OTC (reverse clear OT) (GPU related) channel control register
+    D6_CHCR<u32>: 0x1F8010E8,
+    /// DMA Control register
+    DPCR<u32>: 0x1F8010F0,
+    /// DMA Interrupt register
+    DICR<u32>: 0x1F8010F4,
+    /// Timer 0 Dotclock current counter value
+    T0_CNT<u16>: 0x1F801100,
+    /// Timer 0 Dotclock counter mode
+    T0_MODE<u16>: 0x1F801104,
+    /// Timer 0 Dotclock counter target value
+    T0_TGT<u16>: 0x1F801108,
+    /// Timer 1 Horizontal Retrace current counter value
+    T1_CNT<u16>: 0x1F801110,
+    /// Timer 1 Horizontal Retrace counter mode
+    T1_MODE<u16>: 0x1F801114,
+    /// Timer 1 Horizontal Retrace counter target value
+    T1_TGT<u16>: 0x1F801118,
+    /// Timer 2 1/8 system clock current counter value
+    T2_CNT<u16>: 0x1F801120,
+    /// Timer 2 1/8 system clock counter mode
+    T2_MODE<u16>: 0x1F801124,
+    /// Timer 2 1/8 system clock counter target value
+    T2_TGT<u16>: 0x1F801128
 }
 
 /*
