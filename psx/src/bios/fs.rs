@@ -23,7 +23,7 @@ pub trait FileTy: Default {
 }
 
 /// A marker type for memory card files managed by the BIOS.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MemCard;
 
 impl FileTy for MemCard {
@@ -31,7 +31,7 @@ impl FileTy for MemCard {
 }
 
 /// A marker type for CD-ROM files managed by the BIOS.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CDROM;
 
 impl FileTy for CDROM {
@@ -255,7 +255,7 @@ pub struct File<'f, T: FileTy> {
 
 impl<'f, T: FileTy> File<'f, T> {
     /// Gets the file descriptor.
-    pub(super) fn fd(&self) -> Fd {
+    pub fn fd(&self) -> Fd {
         self.fd
     }
 
@@ -297,9 +297,7 @@ impl<'f, T: FileTy> File<'f, T> {
     /// Memory card and CDROM files can only be read in increments of 128 and
     /// 2048 bytes, respectively.
     pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error<T>> {
-        let res = unsafe {
-            kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * T::SECTOR_SIZE)
-        };
+        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr(), dst.len()) };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_read`")
@@ -352,13 +350,7 @@ impl<'f> File<'f, MemCard> {
     /// Memory card files can only be written to in increments of 128 bytes.
     pub fn write(&mut self, src: &[u8]) -> Result<usize, Error<MemCard>> {
         let src = src.as_ref();
-        let res = unsafe {
-            kernel::file_write(
-                self.fd,
-                src.as_ptr().cast(),
-                src.len() * MemCard::SECTOR_SIZE,
-            )
-        };
+        let res = unsafe { kernel::file_write(self.fd, src.as_ptr(), src.len()) };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_write`")
