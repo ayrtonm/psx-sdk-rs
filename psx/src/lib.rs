@@ -25,7 +25,12 @@
 // Required for pinning bios::pad::Controller and possibly more
 #![feature(negative_impls)]
 // Could be removed if necessary.
-#![feature(array_map, variant_count, result_contains_err)]
+#![feature(
+    array_map,
+    variant_count,
+    result_contains_err,
+    option_result_unwrap_unchecked
+)]
 // Required to test psx crate
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]

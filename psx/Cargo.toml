@@ -9,6 +9,9 @@ links = "psx"
 
 [dependencies]
 
+[dev-dependencies]
+num = { version = "0.4.0", default-features = false }
+
 [features]
 # Prints panic messages to the screen instead of TTY
 pretty_panic = []
@@ -17,3 +20,4 @@ forbid_UB = []
 NA_region = []
 EU_region = []
 J_region = []
+deterministic_test_runner = []

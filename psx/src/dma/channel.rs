@@ -27,7 +27,7 @@ where
 
     /// Returns the channel's registers without enabling it.
     pub fn skip_enable() -> Self {
-        // TODO: reconsider if this function should MADR and BCR
+        // TODO: reconsider if this function should load MADR and BCR
         Channel {
             madr: unsafe { MADR::skip_load() },
             bcr: unsafe { BCR::skip_load() },

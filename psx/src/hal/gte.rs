@@ -28,7 +28,9 @@ mod tests {
         // Test case has three leading zeros
         let value = 0b0001_0000u32 << 24;
         cop0::Status::load().enable_gte(true).store();
-        LZCS::skip_load().assign(value).store();
+        unsafe {
+            LZCS::skip_load().assign(value).store();
+        }
         // lzc is a special GTE function in that it doesn't halt the CPU when trying to
         // read incomplete results so we have to manually insert NOPs
         crate::timer::delay(150);
