@@ -15,6 +15,8 @@ pub use crate::hal::dma::ty::{BlockMode, Chop, Direction, Name, Step, TransferMo
 mod channel;
 mod gpu;
 
+pub use channel::ChunkedSendGuard;
+
 /// DMA channel registers
 pub struct Channel<MADR: MemoryAddress, BCR: BlockControl, CHCR: ChannelControl, const NAME: Name> {
     madr: MADR,
