@@ -296,8 +296,8 @@ impl<'f, T: FileTy> File<'f, T> {
     ///
     /// Memory card and CDROM files can only be read in increments of 128 and
     /// 2048 bytes, respectively.
-    pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error<T>> {
-        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr(), dst.len()) };
+    pub fn read(&self, dst: &mut [u32]) -> Result<usize, Error<T>> {
+        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr().cast(), dst.len() * 4) };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_read`")
@@ -307,15 +307,15 @@ impl<'f, T: FileTy> File<'f, T> {
         }
     }
 
-    /// Reads a byte from the file.
-    ///
-    /// This function internally uses [`File::read`] since the
-    /// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
-    /// can't disambiguate between an error code and a return value of `0xFF`.
-    pub fn getc(&self) -> Result<u8, Error<T>> {
-        let mut ret = [0; 128];
-        self.read(&mut ret).map(|_| ret[0])
-    }
+    ///// Reads a byte from the file.
+    /////
+    ///// This function internally uses [`File::read`] since the
+    ///// [BIOS `getc`](http://problemkaputt.de/psx-spx.htm#biosfilefunctions)
+    ///// can't disambiguate between an error code and a return value of `0xFF`.
+    //pub fn getc(&self) -> Result<u8, Error<T>> {
+    //    let mut ret = [0; 128];
+    //    self.read(&mut ret).map(|_| ret[0])
+    //}
 
     /// Manually closes the file, returning a possible BIOS error code.
     pub fn close<'a>(self) -> Result<Fd, Error<'a, T>> {
@@ -348,9 +348,9 @@ impl<'f> File<'f, MemCard> {
     /// many bytes were written.
     ///
     /// Memory card files can only be written to in increments of 128 bytes.
-    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error<MemCard>> {
+    pub fn write(&mut self, src: &[u32]) -> Result<usize, Error<MemCard>> {
         let src = src.as_ref();
-        let res = unsafe { kernel::file_write(self.fd, src.as_ptr(), src.len()) };
+        let res = unsafe { kernel::file_write(self.fd, src.as_ptr().cast(), src.len() * 4) };
         match res {
             i32::MIN..=-2 => {
                 illegal!("Received unknown error code from BIOS in `kernel::file_write`")
@@ -360,12 +360,12 @@ impl<'f> File<'f, MemCard> {
         }
     }
 
-    /// Writes a byte to the file.
-    pub fn putc(&mut self, ch: u8) -> Result<usize, Error<MemCard>> {
-        let mut temp = [0; 128];
-        temp[0] = ch;
-        self.write(&temp)
-    }
+    ///// Writes a byte to the file.
+    //pub fn putc(&mut self, ch: u8) -> Result<usize, Error<MemCard>> {
+    //    let mut temp = [0u8; 128];
+    //    temp[0] = ch;
+    //    self.write(&temp)
+    //}
 
     /// Renames a file.
     pub fn rename(&mut self, new_name: &'f str) -> Result<(), Error<MemCard>> {
