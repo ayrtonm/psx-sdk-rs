@@ -16,11 +16,22 @@ fn table_of_tables() -> *const u32 {
     addr as *const u32
 }
 
+/// Runs the given function in an interrupt-free critical section using BIOS
+/// syscalls.
+pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
+    unsafe {
+        kernel::enter_critical_section();
+        let res = f();
+        kernel::exit_critical_section();
+        res
+    }
+}
+
 /// A random number generator
 ///
 /// Each call to [`Self::rand`] advances the generator state to `x = x *
 /// 0x41C6_4E6D + 0x3039` and returns the lower **15 bits** of `x /
-/// 0x10000`.
+/// 0x1_0000`.
 pub struct Rng(());
 
 impl Rng {
@@ -42,13 +53,15 @@ impl Rng {
     }
 }
 
-/// Runs the given function in an interrupt-free critical section using BIOS
-/// syscalls.
-pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
-    unsafe {
-        kernel::enter_critical_section();
-        let res = f();
-        kernel::exit_critical_section();
-        res
+#[test_case]
+fn rng() {
+    let SEED = 0xdeadbeef;
+    let NUM = 32;
+    let mut rng = Rng::new(SEED);
+    let mut state = SEED;
+    for n in 0..NUM {
+        let x = rng.rand() as u32;
+        state = state * 0x41C6_4E6D + 0x3039;
+        assert!(x == (state / 0x1_0000) & 0x7F_FF);
     }
 }

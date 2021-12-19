@@ -77,7 +77,7 @@ impl Status {
         self
     }
 
-    pub(crate) fn bits_no_parity(&self) -> u32 {
+    pub(crate) fn bits_avg(&self) -> u32 {
         self.0.to_bits() & !(1 << LINE_PARITY)
     }
 }

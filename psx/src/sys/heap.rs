@@ -2,7 +2,8 @@
 //!
 //! This module provides dynamic memory allocation backed by the BIOS's
 //! `malloc`, `heap_init` and `free`.
-use super::kernel;
+
+use crate::sys::{critical_section, kernel};
 use core::ops::{Deref, DerefMut};
 use core::slice;
 
@@ -64,7 +65,7 @@ impl Heap {
     /// Creates a new heap if one has not already been created.
     pub fn new(heap: &mut [u32]) -> Result<Self, InitError> {
         static mut HEAP_INITIALIZED: bool = false;
-        super::critical_section(||
+        critical_section(||
             // SAFETY: Interrupts are disabled within a critical section allowing safe access to
             // HEAP_INITIALIZED.
             unsafe {

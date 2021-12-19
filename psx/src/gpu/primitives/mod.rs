@@ -1,4 +1,4 @@
-use super::{Clut, Color, Command, TexCoord, TexPage, Vertex};
+use crate::gpu::{Clut, Color, Command, TexCoord, TexPage, Vertex};
 use crate::hw::gpu::GP0Command;
 use core::mem::MaybeUninit;
 

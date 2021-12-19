@@ -1,5 +1,5 @@
 //! Gamepad input
-use super::kernel;
+use crate::sys::kernel;
 
 const BUFFER_SIZE: usize = 0x22;
 

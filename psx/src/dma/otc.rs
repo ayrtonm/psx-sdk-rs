@@ -1,6 +1,6 @@
-use crate::Result;
 use crate::dma::Channel;
 use crate::hw::dma::otc::{Address, Block, Control};
+use crate::Result;
 
 pub struct OTC(Channel<Address, Block, Control>);
 

@@ -1,6 +1,6 @@
 //! Memory card and CD-ROM filesystem operations
-use super::kernel;
 use crate::std::AsCStr;
+use crate::sys::{critical_section, kernel};
 use core::marker::PhantomData;
 use core::mem::forget;
 
@@ -67,7 +67,7 @@ impl<T: FileTy> OpenOptions<T> {
     /// All options are initially set to `false`.
     pub fn new() -> Self {
         static mut FILESYSTEM_INITIALIZED: bool = false;
-        super::critical_section(|| {
+        critical_section(|| {
             // SAFETY: Interrupts are disabled within a critical section allowing safe
             // access to FILESYSTEM_INITIALIZED.
             unsafe {

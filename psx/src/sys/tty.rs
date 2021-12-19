@@ -1,8 +1,8 @@
 #![doc(hidden)]
+use crate::std::AsCStr;
 /// Only the macros defined in this module are explicitly public-facing and
 /// they're exported from the crate root.
-use super::kernel;
-use crate::std::AsCStr;
+use crate::sys::kernel;
 use core::fmt;
 
 pub struct TTY;

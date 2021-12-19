@@ -25,7 +25,6 @@
 #![test_runner(crate::test::runner)]
 #![reexport_test_harness_main = "main"]
 #![cfg_attr(test, no_main)]
-
 // This is temporary to make it easier to migrate old code to the new psx crate
 #![allow(dead_code)]
 

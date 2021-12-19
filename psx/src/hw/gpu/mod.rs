@@ -7,6 +7,7 @@ mod gp0;
 mod gp1;
 mod response;
 mod status;
+mod tests;
 
 pub struct GP0(MemRegister<u32, 0x1F80_1810>);
 pub struct GP1(MemRegister<u32, 0x1F80_1814>);
