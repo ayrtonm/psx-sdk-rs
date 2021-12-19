@@ -1,35 +1,17 @@
-diff --git a/lld/ELF/ScriptParser.cpp b/lld/ELF/ScriptParser.cpp
-index b81812d11821..15b847061040 100644
---- a/lld/ELF/ScriptParser.cpp
-+++ b/lld/ELF/ScriptParser.cpp
-@@ -441,10 +441,12 @@ void ScriptParser::readOutputFormat() {
-     config->osabi = ELFOSABI_FREEBSD;
- 
-   std::tie(config->ekind, config->emachine) = parseBfdName(s);
--  if (config->emachine == EM_NONE)
-+  if (config->emachine == EM_NONE && s != "binary")
-     setError("unknown output format name: " + config->bfdname);
-   if (s == "elf32-ntradlittlemips" || s == "elf32-ntradbigmips")
-     config->mipsN32Abi = true;
-+  if (s == "binary")
-+    config->oFormatBinary = true;
-   if (config->emachine == EM_MSP430)
-     config->osabi = ELFOSABI_STANDALONE;
- 
 diff --git a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
-index aa8e298fa759..0ed671bb3657 100644
+index 4e9a23d077da..7db3b785e079 100644
 --- a/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
 +++ b/llvm/lib/Target/Mips/MipsBranchExpansion.cpp
-@@ -160,6 +160,7 @@ private:
-   bool buildProperJumpMI(MachineBasicBlock *MBB,
-                          MachineBasicBlock::iterator Pos, DebugLoc DL);
-   void expandToLongBranch(MBBInfo &Info);
-+  bool handleLoadDelaySlot();
+@@ -165,6 +165,7 @@ private:
    bool handleForbiddenSlot();
+   bool handleFPUDelaySlot();
    bool handlePossibleLongBranch();
++  bool handleLoadDelaySlot();
  
-@@ -778,6 +779,46 @@ bool MipsBranchExpansion::handleForbiddenSlot() {
-   return Changed;
+   const MipsSubtarget *STI;
+   const MipsInstrInfo *TII;
+@@ -863,6 +864,46 @@ bool MipsBranchExpansion::handlePossibleLongBranch() {
+   return EverMadeChange;
  }
  
 +bool MipsBranchExpansion::handleLoadDelaySlot() {
@@ -72,29 +54,32 @@ index aa8e298fa759..0ed671bb3657 100644
 +  return Changed;
 +}
 +
- bool MipsBranchExpansion::handlePossibleLongBranch() {
-   if (STI->inMips16Mode() || !STI->enableLongBranchPass())
-     return false;
-@@ -857,8 +898,9 @@ bool MipsBranchExpansion::runOnMachineFunction(MachineFunction &MF) {
-   // Run these two at least once
+ bool MipsBranchExpansion::runOnMachineFunction(MachineFunction &MF) {
+   const TargetMachine &TM = MF.getTarget();
+   IsPIC = TM.isPositionIndependent();
+@@ -881,9 +922,10 @@ bool MipsBranchExpansion::runOnMachineFunction(MachineFunction &MF) {
    bool longBranchChanged = handlePossibleLongBranch();
    bool forbiddenSlotChanged = handleForbiddenSlot();
+   bool fpuDelaySlotChanged = handleFPUDelaySlot();
 +  bool loadDelaySlotChanged = handleLoadDelaySlot();
  
--  bool Changed = longBranchChanged || forbiddenSlotChanged;
-+  bool Changed = longBranchChanged || forbiddenSlotChanged || loadDelaySlotChanged;
+-  bool Changed =
+-      longBranchChanged || forbiddenSlotChanged || fpuDelaySlotChanged;
++  bool Changed = longBranchChanged || forbiddenSlotChanged ||
++                 fpuDelaySlotChanged || loadDelaySlotChanged;
  
    // Then run them alternatively while there are changes
    while (forbiddenSlotChanged) {
 diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.cpp b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
-index 94828a976695..9f254e5a6a9f 100644
+index 2bf8562895d7..63c80ad13b5d 100644
 --- a/llvm/lib/Target/Mips/MipsInstrInfo.cpp
 +++ b/llvm/lib/Target/Mips/MipsInstrInfo.cpp
-@@ -568,11 +568,39 @@ bool MipsInstrInfo::SafeInForbiddenSlot(const MachineInstr &MI) const {
-   return (MI.getDesc().TSFlags & MipsII::IsCTI) == 0;
+@@ -598,6 +598,19 @@ bool MipsInstrInfo::SafeInFPUDelaySlot(const MachineInstr &MIInSlot,
+   return true;
  }
  
-+bool MipsInstrInfo::SafeInLoadDelaySlot(const MachineInstr &MIInSlot, const MachineInstr &LoadMI) const {
++bool MipsInstrInfo::SafeInLoadDelaySlot(const MachineInstr &MIInSlot,
++                                        const MachineInstr &LoadMI) const {
 +  if (MIInSlot.isInlineAsm())
 +    return false;
 +
@@ -109,6 +94,8 @@ index 94828a976695..9f254e5a6a9f 100644
  /// Predicate for distingushing instructions that have forbidden slots.
  bool MipsInstrInfo::HasForbiddenSlot(const MachineInstr &MI) const {
    return (MI.getDesc().TSFlags & MipsII::HasForbiddenSlot) != 0;
+@@ -622,6 +635,22 @@ bool MipsInstrInfo::HasFPUDelaySlot(const MachineInstr &MI) const {
+   }
  }
  
 +/// Predicate for distingushing instructions that have load delay slots.
@@ -131,18 +118,22 @@ index 94828a976695..9f254e5a6a9f 100644
  unsigned MipsInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
    switch (MI.getOpcode()) {
 diff --git a/llvm/lib/Target/Mips/MipsInstrInfo.h b/llvm/lib/Target/Mips/MipsInstrInfo.h
-index c96ed202df30..8b665e867f5a 100644
+index 46c1b73d512f..54281faa71e8 100644
 --- a/llvm/lib/Target/Mips/MipsInstrInfo.h
 +++ b/llvm/lib/Target/Mips/MipsInstrInfo.h
-@@ -92,9 +92,15 @@ public:
-   /// Predicate to determine if an instruction can go in a forbidden slot.
-   bool SafeInForbiddenSlot(const MachineInstr &MI) const;
+@@ -96,12 +96,19 @@ public:
+   bool SafeInFPUDelaySlot(const MachineInstr &MIInSlot,
+                           const MachineInstr &FPUMI) const;
  
 +  /// Predicate to determine if an instruction can go in a load delay slot.
-+  bool SafeInLoadDelaySlot(const MachineInstr &MIInSlot, const MachineInstr &LoadMI) const;
++  bool SafeInLoadDelaySlot(const MachineInstr &MIInSlot,
++                           const MachineInstr &LoadMI) const;
 +
    /// Predicate to determine if an instruction has a forbidden slot.
    bool HasForbiddenSlot(const MachineInstr &MI) const;
+ 
+   /// Predicate to determine if an instruction has an FPU delay slot.
+   bool HasFPUDelaySlot(const MachineInstr &MI) const;
  
 +  /// Predicate to determine if an instruction has a load delay slot.
 +  bool HasLoadDelaySlot(const MachineInstr &MI) const;
@@ -151,18 +142,10 @@ index c96ed202df30..8b665e867f5a 100644
    void insertNoop(MachineBasicBlock &MBB,
                    MachineBasicBlock::iterator MI) const override;
 diff --git a/llvm/lib/Target/Mips/MipsSubtarget.cpp b/llvm/lib/Target/Mips/MipsSubtarget.cpp
-index 8bb9d75e9173..782b3f98057d 100644
+index 8bb9d75e9173..601e0f12cd55 100644
 --- a/llvm/lib/Target/Mips/MipsSubtarget.cpp
 +++ b/llvm/lib/Target/Mips/MipsSubtarget.cpp
-@@ -64,6 +64,7 @@ bool MipsSubtarget::MSAWarningPrinted = false;
- bool MipsSubtarget::VirtWarningPrinted = false;
- bool MipsSubtarget::CRCWarningPrinted = false;
- bool MipsSubtarget::GINVWarningPrinted = false;
-+bool MipsSubtarget::MIPS1WarningPrinted = false;
- 
- void MipsSubtarget::anchor() {}
- 
-@@ -91,10 +92,13 @@ MipsSubtarget::MipsSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
+@@ -91,10 +91,8 @@ MipsSubtarget::MipsSubtarget(const Triple &TT, StringRef CPU, StringRef FS,
    if (MipsArchVersion == MipsDefault)
      MipsArchVersion = Mips32;
  
@@ -170,27 +153,8 @@ index 8bb9d75e9173..782b3f98057d 100644
 -  // been tested and currently exist for the integrated assembler only.
 -  if (MipsArchVersion == Mips1)
 -    report_fatal_error("Code generation for MIPS-I is not implemented", false);
-+  // MIPS-I has not been tested.
-+  if (MipsArchVersion == Mips1 && !MIPS1WarningPrinted) {
-+    errs() << "warning: MIPS-I support is experimental\n";
-+    MIPS1WarningPrinted = true;
-+  }
-+  // Don't even attempt to generate code for MIPS-V. It has not
-+  // been tested and currently exists for the integrated assembler only.
++  // Don't even attempt to generate code for MIPS-V. It has not been
++  // tested and currently exist for the integrated assembler only.
    if (MipsArchVersion == Mips5)
      report_fatal_error("Code generation for MIPS-V is not implemented", false);
- 
-diff --git a/llvm/lib/Target/Mips/MipsSubtarget.h b/llvm/lib/Target/Mips/MipsSubtarget.h
-index 2b4c2b19a95d..1d630a382f35 100644
---- a/llvm/lib/Target/Mips/MipsSubtarget.h
-+++ b/llvm/lib/Target/Mips/MipsSubtarget.h
-@@ -59,6 +59,9 @@ class MipsSubtarget : public MipsGenSubtargetInfo {
-   // Used to avoid printing ginv warnings multiple times.
-   static bool GINVWarningPrinted;
- 
-+  // Used to avoid printing MIPS I warnings multiple times.
-+  static bool MIPS1WarningPrinted;
-+
-   // Used to avoid printing virt warnings multiple times.
-   static bool VirtWarningPrinted;
  

@@ -8,39 +8,46 @@ for building the rust compiler and LLVM for more specifics.
 
 ## Building the compiler
 
-1. Clone the rust source:
+1. Clone the rust source and checkout this specific commit:
 
     ```
     git clone https://github.com/rust-lang/rust.git
     cd rust
+    git checkout c12f7efd01f44b67c2c233f7f84a4584e231295a
     ```
 
 2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:
 
     ```
     cp config.toml.example config.toml
+    # Set lld to true
     sed -i 's/#lld = false/lld = true/' config.toml
+    # Only build the MIPS and X86 targets
     sed -i 's/#targets.*$/targets = "Mips;X86"/' config.toml
+    # Don't build any experimental targets
     sed -i 's/#experimental-targets.*$/experimental-targets = ""/' config.toml
     ```
 
-3. Patch the rust compiler. Since the patch has a moving target this might require a bit of manual intervention:
+3. Patch the rust compiler. Applying this to a different rustc commit may require some manual intervention:
 
     ```
-    git apply ../rustc_psx.patch
+    git apply /path/to/rustc_psx.patch
     ```
 
-4. Patch LLVM:
+4. Patch LLVM. An optional patch for LLD is also provided to allow specifying `OUTPUT_FORMAT` in linker scripts:
 
     ```
     git submodule update --init --progress src/llvm-project
     cd src/llvm-project
-    git apply ../../../llvm_mips1.patch
+    git apply /path/to/llvm_mips1.patch
+    # This is optional
+    git apply /path/to/lld.patch
     ```
 
 5. Build the rust compiler:
 
     ```
+    # Go to the root of rust repo
     cd ../..
     ./x.py build --stage 1 compiler/rustc
     ```
@@ -79,10 +86,8 @@ moment due to changes in the `psx` crate. To try them out just run `cargo psx
 run` from the demo's directory. The demos are configured to run in
 [mednafen](https://mednafen.github.io/) by default. To use another emulator run
 `cargo psx build` then open the PS-EXE in `/target/mipsel-sony-psx/release/`.
-Some emulators may require appending the ".psexe" file extension to the
-executable. To use `cargo psx run` with other emulators change the
-[runner](https://doc.rust-lang.org/cargo/reference/config.html#target) for the
-`mipsel-sony-psx` target.
+To use `cargo psx run` with other emulators change the [runner](https://doc.rust-lang.org/cargo/reference/config.html#target)
+for the `mipsel-sony-psx` target.
 
 ### Program template
 
@@ -91,18 +96,24 @@ To create a new program just use `cargo init` and add `psx = { path =
 `src/main.rs` with the following template
 
 ```rust
+// Tells rustc to [link the `core` crate instead of `std`](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean)
 #![no_std]
+
+// Tells rustc to make no assumptions about the [program's entry point](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#the-code)
 #![no_main]
 
+// This is only required if nothing is imported from the `psx` crate.
 extern crate psx;
 
+// The entry point defined in the `psx` crate expects an [unmangled function](https://docs.rust-embedded.org/book/interoperability/rust-with-c.html#no_mangle) named `main`.
+// This function should not return, but the return type can be `()`, `!` or `Result<()>`.
 #[no_mangle]
 fn main() {
 }
 ```
 
 Optionally create a `.cargo` directory and a `config.toml` inside with the
-following
+following to allow running with `cargo psx run`
 
 ```
 [target.mipsel-sony-psx]

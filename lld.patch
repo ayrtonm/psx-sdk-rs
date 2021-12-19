@@ -1,0 +1,16 @@
+diff --git a/lld/ELF/ScriptParser.cpp b/lld/ELF/ScriptParser.cpp
+index 1c743fd47747..251c5618c18e 100644
+--- a/lld/ELF/ScriptParser.cpp
++++ b/lld/ELF/ScriptParser.cpp
+@@ -459,8 +459,10 @@ void ScriptParser::readOutputFormat() {
+     config->osabi = ELFOSABI_FREEBSD;
+ 
+   std::tie(config->ekind, config->emachine) = parseBfdName(s);
+-  if (config->emachine == EM_NONE)
++  if (config->emachine == EM_NONE && s != "binary")
+     setError("unknown output format name: " + config->bfdname);
++  if (s == "binary")
++      config->oFormatBinary = true;
+   if (s == "elf32-ntradlittlemips" || s == "elf32-ntradbigmips")
+     config->mipsN32Abi = true;
+   if (config->emachine == EM_MSP430)
