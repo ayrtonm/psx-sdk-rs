@@ -27,6 +27,7 @@
 #![cfg_attr(test, no_main)]
 
 use core::arch::asm;
+use core::mem::size_of;
 use core::slice;
 
 pub mod dma;
@@ -40,11 +41,13 @@ pub mod std;
 pub mod sys;
 mod test;
 
-// This is the crate-wide fallback for artisanally-crafted errors for each function.
+// This is the crate-wide fallback for artisanally-crafted errors for each
+// function.
 pub type Result<T> = core::result::Result<T, &'static str>;
 
 pub const KUSEG: usize = 0x0000_0000;
 pub const KSEG0: usize = 0x8000_0000;
+pub const CACHE: usize = 0x9F80_0000;
 
 /// The runtime used by the default linker scripts.
 #[no_mangle]
@@ -80,6 +83,13 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
         println!("{}", msg)
     }
     loop {}
+}
+
+/// Returns a mutable slice to the data cache.
+pub unsafe fn data_cache<'a>() -> &'a mut [u32] {
+    let ptr = CACHE as *const u32;
+    let len = 1024 / size_of::<u32>();
+    slice::from_raw_parts_mut(ptr, len)
 }
 
 /// Returns a mutable slice to the unused part of main RAM.

@@ -37,12 +37,7 @@ impl GamePad {
     pub fn new(buf0: &mut [u8; BUFFER_SIZE], buf1: &mut [u8; BUFFER_SIZE]) -> Self {
         unsafe {
             kernel::start_pad();
-            kernel::init_pad(
-                buf0.as_mut_ptr(),
-                buf0.len(),
-                buf1.as_mut_ptr(),
-                buf1.len(),
-            );
+            kernel::init_pad(buf0.as_mut_ptr(), buf0.len(), buf1.as_mut_ptr(), buf1.len());
         }
         GamePad {
             buf0: buf0.as_mut_ptr(),
