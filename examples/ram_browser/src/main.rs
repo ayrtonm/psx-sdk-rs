@@ -4,7 +4,7 @@
 use core::slice;
 use pretty_hex::{HexConfig, PrettyHex};
 use psx::println;
-use psx::sys::gamepad::{Buffer, Button, GamePad};
+use psx::sys::gamepad::{Button, GamePad};
 
 #[no_mangle]
 fn main() {
@@ -32,8 +32,8 @@ fn main() {
     let mut len: usize = 0x100;
     let mut start = text_start;
 
-    let mut buf0 = Buffer::new();
-    let mut buf1 = Buffer::new();
+    let mut buf0 = GamePad::buffer();
+    let mut buf1 = GamePad::buffer();
     let pad = GamePad::new(&mut buf0, &mut buf1);
 
     let mut conf = HexConfig {

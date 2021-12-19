@@ -2,7 +2,7 @@
 name = "psx"
 version = "0.1.0"
 authors = ["Ayrton <a.munoz3327@gmail.com>"]
-edition = "2018"
+edition = "2021"
 links = "psx"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -14,10 +14,6 @@ num = { version = "0.4.0", default-features = false }
 const-random = "0.1.13"
 
 [features]
-# Prints panic messages to the screen instead of TTY
-pretty_panic = []
-# Replaces internal use of `unreachable_unchecked` with `panic`
-forbid_UB = []
 NA_region = []
 EU_region = []
 J_region = []

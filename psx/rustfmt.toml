@@ -16,9 +16,7 @@ tab_spaces = 4
 imports_indent = "Visual"
 imports_layout = "Mixed"
 
-#still not totally sold on this option, but at least the spacing is consistent
 indent_style = "Block"
-#indent_style = "Visual"
 
 match_arm_blocks = true
 match_block_trailing_comma = true

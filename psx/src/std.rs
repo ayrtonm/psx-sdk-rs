@@ -1,130 +1,51 @@
-use core::ops::{Range, RangeFrom};
-use core::ptr::slice_from_raw_parts;
+use core::mem::MaybeUninit;
 
-// cfg(test) is only needed because this is private and only used in tests for
-// now
-#[cfg(test)]
-macro_rules! slice_cmp {
-    ($a:expr, $b:expr) => {{
-        let n = $a.len();
-        let mut res = true;
-        if n != $b.len() {
-            res = false;
-        }
-        const_for! {
-            i in 0, n => {
-                if $a[i] != $b[i] {
-                    res = false;
-                }
-            }
-        }
-        res
-    }};
-}
-
-macro_rules! const_for {
-    {$idx:ident in $start:expr, $end:expr => $body:block} => {
-        {
-            let mut $idx = $start;
-            while $idx < $end {
-                $body
-                $idx += 1;
-            }
-        }
-    };
-}
-
-macro_rules! const_iter {
-    {$element:ident in $slice:expr => $body:block} => {
-        {
-            let mut i = 0;
-            while i < $slice.len() {
-                let $element = unsafe { *$crate::std::get_unchecked($slice, i) };
-                i += 1;
-                $body
-            }
-        }
-    };
-
-    {&$element:ident in $slice:expr => $body:block} => {
-        {
-            let mut i = 0;
-            while i < $slice.len() {
-                let $element = unsafe { &*$crate::std::get_unchecked($slice, i) };
-                i += 1;
-                $body
-            }
-        }
-    };
-}
-
-macro_rules! illegal {
-    ($msg:literal) => {
-        if cfg!(feature = "forbid_UB") {
-            panic!($msg)
-        } else {
-            unsafe { core::hint::unreachable_unchecked() }
-        }
-    };
-}
-
+/// This trait converts byte slices to null-terminated C-style strings without
+/// heap allocations. It's essentially a workaround for not being able to use
+/// Rust's `CStr` with no_std and intended only for internal use. The trait is
+/// public, but undocumented to allow using it from other crates in `printf!`.
 pub trait AsCStr: AsRef<[u8]> {
-    fn as_cstr<F: FnOnce(&[u8]) -> R, R, const N: usize>(&self, f: F) -> R;
+    fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R;
 }
 
 impl<T: AsRef<[u8]>> AsCStr for T {
-    fn as_cstr<F: FnOnce(&[u8]) -> R, R, const N: usize>(&self, f: F) -> R {
+    /// Runs a function `f` with `Self` as a null-terminated C-style string.
+    /// This panics if the string is not null-terminated and requires more than
+    /// 256 bytes of stack space.
+    fn as_cstr<F: FnOnce(&[u8]) -> R, R>(&self, f: F) -> R {
         let slice = self.as_ref();
-        if slice.len() == 0 {
+        // If the string is empty call `f` with just a null-terminator.
+        if slice.is_empty() {
             return f(&[0])
         };
-        if slice[slice.len() - 1] != 0 {
-            //const MAX_LEN: usize = 64;
-            let mut null_terminated = [0; N];
-            if slice.len() >= N - 1 {
-                panic!("Increase `N` in `psx::std::AsCstr::as_cstr`");
-            };
-            null_terminated[0..slice.len()].copy_from_slice(slice);
-            let cstr = &null_terminated[0..slice.len() + 1];
-            f(cstr)
-        } else {
+        // If the string is already null-terminated just call `f` on the original
+        // string.
+        let last = slice[slice.len() - 1];
+        if last == 0 {
             f(slice)
+        } else {
+            // Panic if we need more than 256 bytes for the CStr. This is an arbitrary and
+            // reasonably large limit. Since the executables are statically linked, the
+            // compiler should avoid allocating the maximum stack space most of the time.
+            // When printing strings with unknown length at compile-time such as
+            // strings from the BIOS or user input, the compiler will allocate
+            // the maximum space on the stack which is why this limit is not as high as it
+            // could be.
+            const MAX_STACK_ARRAY: usize = 256;
+            if slice.len() >= MAX_STACK_ARRAY {
+                panic!("Attempted to allocate more than 256 bytes on the stack for a `CStr`\n");
+            }
+            // Create an uninitialized array of up to 256 bytes on the stack
+            let mut uninitialized = MaybeUninit::uninit_array::<MAX_STACK_ARRAY>();
+            // Initialize the CStr with the input string
+            let initialized_portion = &mut uninitialized[0..slice.len() + 1];
+            MaybeUninit::write_slice(&mut initialized_portion[0..slice.len()], slice);
+            // Add a null-terminator to the CStr
+            initialized_portion[slice.len()].write(0);
+            // SAFETY: The initialized portion of the CStr on the stack was explicitly
+            // initialized and null-terminated
+            let cstr = unsafe { MaybeUninit::slice_assume_init_ref(initialized_portion) };
+            f(cstr)
         }
-    }
-}
-
-pub const unsafe fn get_unchecked<T>(slice: &[T], idx: usize) -> &T {
-    &*slice.as_ptr().add(idx)
-}
-
-pub const unsafe fn slice<T>(slice: &[T], range: Range<usize>) -> &[T] {
-    let ptr = slice.as_ptr().add(range.start);
-    let len = range.end - range.start;
-    &*slice_from_raw_parts(ptr, len)
-}
-
-pub const unsafe fn slice_from<T>(slice: &[T], range: RangeFrom<usize>) -> &[T] {
-    let ptr = slice.as_ptr().add(range.start);
-    let len = slice.len() - range.start;
-    &*slice_from_raw_parts(ptr, len)
-}
-
-pub const fn binary_search(slice: &[u32], x: u32) -> Option<usize> {
-    let mut size = slice.len();
-    if size == 0 {
-        return None
-    };
-    let mut base = 0;
-    while size > 1 {
-        let half = size / 2;
-        let mid = base + half;
-        let cmp = unsafe { *get_unchecked(slice, mid) } > x;
-        base = if cmp { base } else { mid };
-        size -= half;
-    }
-    if unsafe { *get_unchecked(slice, base) } == x {
-        Some(base)
-    } else {
-        None
     }
 }

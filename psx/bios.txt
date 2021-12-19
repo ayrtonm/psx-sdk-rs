@@ -7,10 +7,10 @@ A(00h) file_open(filename: *const u8, accessmode: u32) -> i8;
 A(01h) file_seek(fd: u8, offset: u32, seektype: u8) -> i32;
 
 // Returns number of bytes read or -1 for error
-A(02h) file_read(fd: u8, dst: *mut u8, length: usize) -> i32;
+A(02h) file_read(fd: u8, dst: *mut u32, length: usize) -> i32;
 
 // Returns number of bytes written or -1 for error
-A(03h) file_write(fd: u8, src: *const u8, length: usize) -> i32;
+A(03h) file_write(fd: u8, src: *const u32, length: usize) -> i32;
 
 // Returns the closed file descriptor or -1 for error
 A(04h) file_close(fd: u8) -> i8;
@@ -80,8 +80,12 @@ A(3Ah) system_error_exit(exitcode: i32) -> !;
 //A(3Bh) std_in_getchar();
 //A(3Ch) std_out_putchar(char);
 //A(3Dh) std_in_gets(dst);
-//A(3Eh) std_out_puts(src);
+
+// Prints the specified string to stdout without resolving C-style escape codes.
+A(3Eh) std_out_puts(msg: *const u8);
+// Prints the specified format string to stdout. The string may contain C-style escape codes.
 A(3Fh) printf(msg: *const u8, ...);
+
 //A(40h) systemerrorunresolvedexception();
 A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);
 A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);
@@ -176,7 +180,7 @@ B(0Bh) test_event(event: u32) -> bool;
 B(0Ch) enable_event(event: u32);
 B(0Dh) disable_event(event: u32);
 
-B(0Eh) open_thread(pc: u32, sp: u32, gp: u32) -> u32;
+B(0Eh) open_thread(pc: usize, sp: usize, gp: usize) -> u32;
 B(0Fh) close_thread(handle: u32);
 B(10h) change_thread(handle: u32);
 //B(11h) jump_to_00000000h

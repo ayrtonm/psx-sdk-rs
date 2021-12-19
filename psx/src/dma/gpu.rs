@@ -1,25 +1,31 @@
-use super::{Direction, Step, TransferMode, GPU};
-use crate::gpu::DMAMode;
-use crate::hal::dma::{ChannelControl, MemoryAddress, SharedChannelControl};
-use crate::hal::{MutRegister, GP1};
+use crate::dma::{Channel, LinkedList};
+use crate::hw::dma::gpu::{Address, Block, Control};
+use crate::Result;
 
+/// The DMA channel for GPU transfers
+pub struct GPU(Channel<Address, Block, Control>);
 impl GPU {
-    // This works even if `list` is stack allocated because it's blocking.
-    pub fn send_list<L>(&mut self, list: &L) {
-        GP1.dma_mode(Some(DMAMode::GP0));
-        // TODO: is it necessary to reload `D2_CHCR` here?
-        //self.reload();
-        self.chcr.wait();
-        let ptr = list as *const L as *const u32;
-        self.madr.set_address(ptr).store();
-        self.bcr.clear_all().store();
-        self.chcr
-            .set_step(Step::Forward)
-            .set_chop(None)
-            .set_direction(Direction::FromMemory)
-            .set_mode(TransferMode::LinkedList)
-            .start()
-            .store()
-            .wait();
+    pub fn new() -> Self {
+        GPU(Channel::new())
+    }
+
+    /// The channel control register for the DMA channel.
+    pub fn control(&mut self) -> &mut Control {
+        &mut self.0.control
+    }
+
+    pub fn send_list<L: LinkedList>(&mut self, list: &L) -> Result<()> {
+        self.send_list_and(list, || ())
+    }
+
+    /// Sends a buffer through a DMA channel in single-block mode and call `f`
+    /// while the transfer completes.
+    ///
+    /// This blocks if the function `f` returns before the transfer completes.
+    /// Returns `f`'s return value or `None` if the buffer is too large.
+    pub fn send_list_and<L: LinkedList, F: FnOnce() -> R, R>(
+        &mut self, list: &L, f: F,
+    ) -> Result<R> {
+        self.0.send_list_and(list, f)
     }
 }
