@@ -66,24 +66,30 @@ for building the rust compiler and LLVM for more specifics.
 flags and arguments. Basically this lets you just run `cargo psx run` instead of
 `cargo run +psx -Z build-std=core,alloc --target mipsel-sony-psx`.
 
-To install, just do:
+To install:
 
 ```
 cd cargo-psx
 cargo install --path .
 ```
 
-To uninstall, just do:
+To uninstall:
 
 ```
 cargo uninstall cargo-psx
+```
+
+For more options:
+
+```
+cargo psx --help
 ```
     
 ## Usage
 
 The `examples` directory has some demos which have been tested in
 [mednafen](https://mednafen.github.io/) with the SCPH7001 BIOS. Getting stdout
-may require setting `psx.dbg_level 2` in `mednafen.cfg`. Other BIOS
+may require setting `psx.dbg_level` in `mednafen.cfg` to at least 2. Other BIOS
 versions/regions may work but have not been tested. To try out a demo run `cargo
 psx run` from its directory. To use a different emulator run `cargo psx build`
 then open the .exe in `/target/mipsel-sony-psx/release/`. To use `cargo psx run`
