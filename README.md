@@ -81,13 +81,15 @@ cargo uninstall cargo-psx
     
 ## Usage
 
-The `examples` directory has some demos which may or may not be broken at the
-moment due to changes in the `psx` crate. To try them out just run `cargo psx
-run` from the demo's directory. The demos are configured to run in
-[mednafen](https://mednafen.github.io/) by default. To use another emulator run
-`cargo psx build` then open the PS-EXE in `/target/mipsel-sony-psx/release/`.
-To use `cargo psx run` with other emulators change the [runner](https://doc.rust-lang.org/cargo/reference/config.html#target)
-for the `mipsel-sony-psx` target.
+The `examples` directory has some demos which have been tested in
+[mednafen](https://mednafen.github.io/) with the SCPH7001 BIOS. Getting stdout
+may require setting `psx.dbg_level 2` in `mednafen.cfg`. Other BIOS
+versions/regions may work but have not been tested. To try out a demo run `cargo
+psx run` from its directory. To use a different emulator run `cargo psx build`
+then open the .exe in `/target/mipsel-sony-psx/release/`. To use `cargo psx run`
+with other emulators change the
+[runner](https://doc.rust-lang.org/cargo/reference/config.html#target) for the
+`mipsel-sony-psx` target.
 
 ### Program template
 
