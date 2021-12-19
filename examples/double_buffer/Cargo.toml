@@ -1,5 +1,5 @@
 [package]
-name = "hello_world"
+name = "double_buffer"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 psx = { path = "../../psx" }
+libm = "0.2.1"
