@@ -1,172 +1,137 @@
-#![feature(bool_to_option)]
-
-use cargo_metadata::{Metadata, MetadataCommand, Package};
+use cargo_metadata::MetadataCommand;
 use std::env;
 use std::process::{self, Command, Stdio};
+use std::str::FromStr;
+use structopt::StructOpt;
 
-trait Args {
-    fn extract_flag(&mut self, flag: &str) -> bool;
-    fn extract_key_value(&mut self, key: &str) -> Option<String>;
+#[derive(Debug)]
+enum CargoCommand {
+    Build,
+    Check,
+    Run,
+    Test,
 }
 
-impl Args for Vec<String> {
-    fn extract_flag(&mut self, flag: &str) -> bool {
-        self.iter()
-            .position(|arg| arg == flag)
-            .map(|n| {
-                self.remove(n);
-            })
-            .is_some()
-    }
-
-    fn extract_key_value(&mut self, key: &str) -> Option<String> {
-        self.iter().position(|arg| arg == key).map(|n| {
-            let value = self[n + 1].clone();
-            self.remove(n + 1);
-            self.remove(n);
-            value
-        })
+impl From<CargoCommand> for &'static str {
+    fn from(cmd: CargoCommand) -> &'static str {
+        match cmd {
+            CargoCommand::Build => "build",
+            CargoCommand::Check => "check",
+            CargoCommand::Run => "run",
+            CargoCommand::Test => "test",
+        }
     }
 }
 
-fn apply_packages<F: Fn(&Package)>(metadata: &Metadata, f: F) {
-    for pkg in &metadata.packages {
-        f(&pkg);
+impl FromStr for CargoCommand {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "build" => Ok(CargoCommand::Build),
+            "check" => Ok(CargoCommand::Check),
+            "run" => Ok(CargoCommand::Run),
+            "test" => Ok(CargoCommand::Test),
+            _ => Err(format!("Invalid cargo command {}", s)),
+        }
     }
 }
 
-fn print_help() {
-    println!("cargo-psx");
-    println!("Runs `cargo build` to produce a PlayStation executable\n");
-    println!("USAGE:");
-    println!("  cargo psx [clean] [build|check|run|test] [OPTIONS] [cargo-build OPTIONS]\n");
-    println!("OPTIONS:");
-    println!("  --help, -h           Prints help information");
-    println!("  --debug              Builds an ELF in release mode with debug info");
-    println!("  --toolchain <NAME>   Sets the rustup toolchain to use (defaults to `psx`)");
-    println!("  --region <REGION>    Sets the game region to NA (default), EU, J or none");
-    println!("  --alloc              Builds the `alloc` crate");
-    println!("  --lto                Enables link-time optimization and sets codegen units to 1");
-    println!("  --small              Sets opt-level=s to optimize for size");
-    println!("  --panic              Enables on-screen panic messages");
-    println!("  --link <SCRIPT>      Specifies a custom linker script to use");
-    println!("  --forbid-UB          Add runtime-checks for unreachable code in the psx crate");
-    println!("");
-    println!("Run `cargo build -h` for build options");
+#[derive(Debug, StructOpt)]
+struct Opt {
+    #[structopt(parse(try_from_str), hidden = true)]
+    _psx: String,
+
+    #[structopt(long, help = "run `cargo clean` before the build subcommand")]
+    clean: bool,
+    #[structopt(name = "build|check|run|test", parse(try_from_str))]
+    cargo_subcmd: Option<CargoCommand>,
+
+    #[structopt(long, help = "Sets the rustup toolchain (defaults to `psx`)")]
+    toolchain: Option<String>,
+    #[structopt(long, help = "Sets the game region to NA, EU or J")]
+    region: Option<String>,
+    #[structopt(long, help = "Specifies a custom linker script to use")]
+    link: Option<String>,
+    #[structopt(long, help = "Builds the `alloc` crate")]
+    alloc: bool,
+    #[structopt(
+        long,
+        help = "Enables link-time optimization and sets codegen units to 1"
+    )]
+    lto: bool,
+    #[structopt(long, help = "Sets opt-level=s to optimize for size")]
+    small: bool,
+
+    #[structopt(long)]
+    cargo_args: Vec<String>,
 }
 
 fn main() {
-    // Skips `cargo psx`
-    let mut args = env::args().skip(2).collect::<Vec<String>>();
-    if args.iter().any(|arg| arg == "-h" || arg == "--help") {
-        print_help();
-        // Printing help info short circuits everything
-        return
-    };
+    let opt = Opt::from_args();
+    const TARGET_TRIPLE: &str = "mipsel-sony-psx";
+    const LTO_FLAGS: &str = " -Clto=fat -Ccodegen-units=1 -Cembed-bitcode=yes";
+    const SMALL_FLAGS: &str = " -Copt-level=s";
+    const LINKER_SCRIPT_ARG: &str = "-Clink-arg=-T";
+    const CARGO_CMD: &str = "cargo";
+    const BUILD_STD: &str = "-Zbuild-std=core";
 
-    // Extract cargo subcommand(s)
-    let check = args.extract_flag("check");
-    let clean = args.extract_flag("clean");
-    let build = args.extract_flag("build");
-    let run = args.extract_flag("run");
-    let test = args.extract_flag("test");
-    let skip_build = clean && !build && !check && !run && !test;
+    let mut cargo_args: Vec<String> = opt
+        .cargo_args
+        .iter()
+        .map(|arg| {
+            let mut s = arg.to_string();
+            s.insert_str(0, "--");
+            s.split(' ').map(|s| s.to_string()).collect::<Vec<String>>()
+        })
+        .flatten()
+        .collect();
 
-    let lto_flags = " -C lto=fat -C codegen-units=1 -C embed-bitcode=yes";
-    let small_flag = " -C opt-level=s";
-    let debug_flag = " -g";
-
-    // Extract flags and key/value pairs
-    let debug = args.extract_flag("--debug").then_some(debug_flag);
-    let toolchain_name = args.extract_key_value("--toolchain");
-    let region = args.extract_key_value("--region");
-    let use_alloc = args.extract_flag("--alloc");
-    let lto = args.extract_flag("--lto").then_some(lto_flags);
-    let small = args.extract_flag("--small").then_some(small_flag);
-    let pretty_panic = args
-        .extract_flag("--panic")
-        .then_some("pretty_panic".to_string());
-    let no_ub = args
-        .extract_flag("--no-UB")
-        .then_some("forbid_UB".to_string());
-    let linker_script = args.extract_key_value("--link");
-
-    // The remaining args will be directly passed to cargo
-    let mut cargo_args = args;
-
-    // Set defaults for unspecified flags
-    let region = match region {
-        None => Some("NA_region".to_string()),
-        Some(s) if s.to_ascii_lowercase() == "none" => None,
-        Some(mut s) => {
-            s.push_str("_region");
-            Some(s)
-        },
-    };
-    let toolchain_name = toolchain_name.unwrap_or("psx".to_string());
-    let build_std = if use_alloc { "core,alloc" } else { "core" };
-    // Pick user-specified linker script. Otherwise check if debug mode is enabled
-    // to pick between PSEXE and ELF
-    let linker_script = linker_script.unwrap_or(
-        if debug.is_some() {
-            "ELF.ld"
-        } else {
-            "psexe.ld"
-        }
-        .to_string(),
-    );
-
-    // Set psx-specific features
-    let mut enable_feature = |opt_flag: Option<String>| {
-        opt_flag.map(|flag| {
-            cargo_args.push("--features".to_string());
-            cargo_args.push(format!("psx/{}", flag));
-        });
-    };
-    enable_feature(pretty_panic);
-    enable_feature(no_ub);
-    enable_feature(region);
-
-    // Try getting RUSTFLAGS from env
-    let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or("".to_string());
-
-    // Set linker script in rustflags
-    rustflags.push_str(&format!(" -C link-arg=-T{}", linker_script));
-    // Set remaining optional rustflag args
-    let mut enable_rustflag = |opt_flag: Option<&str>| {
-        opt_flag.map(|flag| {
-            rustflags.push_str(flag);
-        });
-    };
-    enable_rustflag(lto);
-    enable_rustflag(small);
-    enable_rustflag(debug);
-
-    let target_triple = "mipsel-sony-psx";
-
-    let cargo_subcmd = if check {
-        // `build` and `check` are mutually exclusive
-        assert!(!build);
-        "check"
-    } else if run {
-        "run"
-    } else if test {
-        "test"
-    } else {
-        "build"
-    };
-
-    // Always build in release mode
+    // Always compile in release mode
     cargo_args.push("--release".to_string());
 
-    // Gets cargo metadata for `clean` and `pack` steps
+    // Set specified region
+    let region = opt.region.map(|s| format!("psx/{}_region", s));
+    if let Some(region) = region {
+        cargo_args.push("--features".to_string());
+        cargo_args.push(region);
+    }
+
+    // Set toolchain if not default
+    let toolchain = match opt.toolchain {
+        Some(name) => format!("+{}", name),
+        None => "+psx".to_string(),
+    };
+
+    // Set build-std option to pass to cargo
+    let mut build_std = BUILD_STD.to_string();
+    if opt.alloc {
+        build_std.push_str(",alloc");
+    };
+
+    // Try getting RUSTFLAGS from env
+    let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or(String::new());
+
+    // Set linker script if any
+    if let Some(script) = opt.link {
+        rustflags.push_str(&format!(" {}{}", LINKER_SCRIPT_ARG, script));
+    };
+
+    // Set other RUSTFLAGS
+    if opt.lto {
+        rustflags.push_str(LTO_FLAGS);
+    }
+
+    if opt.small {
+        rustflags.push_str(SMALL_FLAGS);
+    }
+
     let metadata = &MetadataCommand::new()
         .exec()
-        .expect("Could not parse cargo metadata");
+        .expect("Could not parse metadata");
 
-    if clean {
-        apply_packages(metadata, |pkg| {
-            let mut clean = Command::new("cargo")
+    if opt.clean {
+        for pkg in &metadata.packages {
+            let mut clean = Command::new(CARGO_CMD)
                 .arg("clean")
                 .arg("-p")
                 .arg(&pkg.name)
@@ -180,24 +145,25 @@ fn main() {
                 let code = status.code().unwrap_or(1);
                 process::exit(code);
             }
-        });
+        }
     }
 
-    if !skip_build {
-        let mut build = Command::new("cargo")
-            .arg("+".to_string() + &toolchain_name)
-            .arg(cargo_subcmd)
-            .arg("-Z")
-            .arg("build-std=".to_string() + &build_std)
+    if let Some(subcmd) = opt.cargo_subcmd {
+        let subcmd: &str = subcmd.into();
+        let mut build = Command::new(CARGO_CMD)
+            .arg(toolchain)
+            .arg(subcmd)
+            .arg(build_std)
+            .arg("-Zbuild-std-features=compiler-builtins-mem")
             .arg("--target")
-            .arg(target_triple)
+            .arg(TARGET_TRIPLE)
             .args(cargo_args)
             .env("RUSTFLAGS", rustflags)
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .spawn()
-            .expect(&format!("`cargo {}` failed to start", cargo_subcmd));
+            .expect(&format!("`cargo {:?}` failed to start", subcmd));
 
         let status = build.wait().expect("`cargo build` wasn't running");
         if !status.success() {
