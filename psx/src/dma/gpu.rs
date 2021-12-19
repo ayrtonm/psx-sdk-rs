@@ -4,6 +4,7 @@ use crate::Result;
 
 /// The DMA channel for GPU transfers
 pub struct GPU(Channel<Address, Block, Control>);
+
 impl GPU {
     pub fn new() -> Self {
         GPU(Channel::new())

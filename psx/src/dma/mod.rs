@@ -1,14 +1,16 @@
 //! Higher-level DMA channel operations and types.
 use crate::hw::dma;
-use crate::hw::dma::{cdrom, mdec_in, mdec_out, otc, pio, spu};
+use crate::hw::dma::{cdrom, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
 use crate::Result;
 use core::convert::TryInto;
 
 mod gpu;
+mod otc;
 
 pub use gpu::GPU;
+pub use otc::OTC;
 
 /// A marker trait for DMA linked lists.
 pub trait LinkedList {}
@@ -98,8 +100,6 @@ pub struct CDROM(Channel<cdrom::Address, cdrom::Block, cdrom::Control>);
 pub struct SPU(Channel<spu::Address, spu::Block, spu::Control>);
 /// The DMA channel for PIO transfers
 pub struct PIO(Channel<pio::Address, pio::Block, pio::Control>);
-/// The DMA channel for clearing ordering tables
-pub struct OTC(Channel<otc::Address, otc::Block, otc::Control>);
 
 impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     /// Creates a handle to a DMA channel, initializing the channel if

@@ -26,6 +26,9 @@
 #![reexport_test_harness_main = "main"]
 #![cfg_attr(test, no_main)]
 
+// This is temporary to make it easier to migrate old code to the new psx crate
+#![allow(dead_code)]
+
 use core::arch::asm;
 use core::mem::size_of;
 use core::slice;
@@ -87,7 +90,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 
 /// Returns a mutable slice to the data cache.
 pub unsafe fn data_cache<'a>() -> &'a mut [u32] {
-    let ptr = CACHE as *const u32;
+    let ptr = CACHE as *mut u32;
     let len = 1024 / size_of::<u32>();
     slice::from_raw_parts_mut(ptr, len)
 }
@@ -115,7 +118,7 @@ pub unsafe fn free_memory<'a>() -> &'a mut [u32] {
         static mut __heap_start: u32;
     }
     // SAFETY: This symbol is defined by the linker script
-    let ptr = unsafe { &mut __heap_start as *mut u32 };
+    let ptr = &mut __heap_start as *mut u32;
     let sp: usize;
     asm! {
         ".set noat

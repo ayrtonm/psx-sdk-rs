@@ -1,6 +1,7 @@
 //! BIOS function wrappers.
 //!
 //! This modules contains wrappers for functions provided by the BIOS.
+
 use crate::KSEG0;
 use core::mem::size_of;
 

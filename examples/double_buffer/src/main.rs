@@ -10,7 +10,7 @@ use psx::gpu::primitives::*;
 use psx::hw::dma::ChannelControl;
 use psx::hw::{gpu, irq, Register};
 use psx::irq::IRQ;
-use psx::{println, Result};
+use psx::Result;
 
 mod framebuffer;
 use framebuffer::Framebuffer;
