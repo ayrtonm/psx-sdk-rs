@@ -60,8 +60,3 @@ pub fn runner<const N: usize>(tests: &[&dyn Test; N]) {
 fn sanity_check() {
     assert!(true);
 }
-
-#[test_case]
-fn nontrivial_test() {
-    assert!(false);
-}
