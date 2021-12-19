@@ -54,6 +54,8 @@ struct Opt {
     link: Option<String>,
     #[structopt(long, help = "Builds the `alloc` crate")]
     alloc: bool,
+    #[structopt(long, help = "Ouputs an ELF with debug info")]
+    debug: bool,
     #[structopt(
         long,
         help = "Enables link-time optimization and sets codegen units to 1"
@@ -68,12 +70,6 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    const TARGET_TRIPLE: &str = "mipsel-sony-psx";
-    const LTO_FLAGS: &str = " -Clto=fat -Ccodegen-units=1 -Cembed-bitcode=yes";
-    const SMALL_FLAGS: &str = " -Copt-level=s";
-    const LINKER_SCRIPT_ARG: &str = "-Clink-arg=-T";
-    const CARGO_CMD: &str = "cargo";
-    const BUILD_STD: &str = "-Zbuild-std=core";
 
     let mut cargo_args: Vec<String> = opt
         .cargo_args
@@ -103,7 +99,7 @@ fn main() {
     };
 
     // Set build-std option to pass to cargo
-    let mut build_std = BUILD_STD.to_string();
+    let mut build_std = "-Zbuild-std=core".to_string();
     if opt.alloc {
         build_std.push_str(",alloc");
     };
@@ -112,23 +108,32 @@ fn main() {
     let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or(String::new());
 
     // Set linker script if any
-    if let Some(script) = opt.link {
-        rustflags.push_str(&format!(" {}{}", LINKER_SCRIPT_ARG, script));
-    };
+    let script = opt.link.unwrap_or("psexe.ld".to_string());
+    rustflags.push_str(&format!(" -Clink-arg=-T{}", script));
+    if !opt.debug {
+        // This linker arg has a space so it must be passed as two args.
+        rustflags.push_str(" -Clink-arg=--oformat");
+        rustflags.push_str(" -Clink-arg=binary");
+    }
 
-    // Set other RUSTFLAGS
+    // Set optional RUSTFLAGS
+    if opt.debug {
+        rustflags.push_str(" -g");
+    }
+
     if opt.lto {
-        rustflags.push_str(LTO_FLAGS);
+        rustflags.push_str(" -Clto=fat -Ccodegen-units=1 -Cembed-bitcode=yes");
     }
 
     if opt.small {
-        rustflags.push_str(SMALL_FLAGS);
+        rustflags.push_str(" -Copt-level=s");
     }
 
     let metadata = &MetadataCommand::new()
         .exec()
         .expect("Could not parse metadata");
 
+    const CARGO_CMD: &str = "cargo";
     if opt.clean {
         for pkg in &metadata.packages {
             let mut clean = Command::new(CARGO_CMD)
@@ -156,7 +161,7 @@ fn main() {
             .arg(build_std)
             .arg("-Zbuild-std-features=compiler-builtins-mem")
             .arg("--target")
-            .arg(TARGET_TRIPLE)
+            .arg("mipsel-sony-psx")
             .args(cargo_args)
             .env("RUSTFLAGS", rustflags)
             .stdin(Stdio::inherit())
