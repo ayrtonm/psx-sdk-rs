@@ -98,21 +98,26 @@ To create a new program just use `cargo init` and add `psx = { path =
 `src/main.rs` with the following template
 
 ```rust
-// Tells rustc to [link the `core` crate instead of `std`](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean)
 #![no_std]
-
-// Tells rustc to make no assumptions about the [program's entry point](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#the-code)
 #![no_main]
 
-// This is only required if nothing is imported from the `psx` crate.
-extern crate psx;
+// This can be any import from the `psx` crate.
+use psx;
 
-// The entry point defined in the `psx` crate expects an [unmangled function](https://docs.rust-embedded.org/book/interoperability/rust-with-c.html#no_mangle) named `main`.
-// This function should not return, but the return type can be `()`, `!` or `Result<()>`.
 #[no_mangle]
 fn main() {
 }
 ```
+
+[`no_std`](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean)
+is required to link the `core` crate instead of `std`. `no_main` tells rustc to
+make no assumption about the [program's entry
+point](https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#the-code).
+The attribute on `main` is required since the entry point defined in the `psx`
+crate expects to call an [`unmangled
+function`](https://docs.rust-embedded.org/book/interoperability/rust-with-c.html#no_mangle).
+The `main` function should not return, but the return type can be either `()`,
+`!` or `Result<()>`.
 
 Optionally create a `.cargo` directory and a `config.toml` inside with the
 following to allow running with `cargo psx run`
