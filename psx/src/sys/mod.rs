@@ -3,6 +3,7 @@
 //! This modules contains wrappers for functions provided by the BIOS.
 
 use crate::KSEG0;
+use core::slice;
 use core::mem::size_of;
 
 pub mod fs;
@@ -46,22 +47,48 @@ impl Rng {
         // SAFETY: srand has no safety requirements.
         unsafe { kernel::srand(seed) }
     }
-    /// Returns a random **15 bit** number.
-    pub fn rand(&mut self) -> u16 {
+    /// Steps the rng state and returns a random **15 bit** number.
+    pub fn step(&mut self) -> u16 {
         // SAFETY: The BIOS rng was seeded in `Rng::new`.
         unsafe { kernel::rand() }
     }
+
+    /// Generates a random number with multiple calls to the BIOS.
+    pub fn rand<T: From<u8>>(&mut self) -> T {
+        let mut res = T::from(0);
+        let ptr = &mut res as *mut T as *mut u8;
+        let mut slice = unsafe {
+            slice::from_raw_parts_mut(ptr, size_of::<T>())
+        };
+        for n in 0..slice.len() {
+            slice[n] = self.step() as u8;
+        }
+        res
+    }
+}
+
+/// Checks that a single rng step produces a 15-bit number.
+#[test_case]
+fn rng_size() {
+    fuzz!(|seed: u32| {
+        let mut rng = Rng::new(seed);
+        let rand = rng.step();
+        assert!(rand < (1 << 15));
+    });
 }
 
 #[test_case]
-fn rng() {
-    fuzz!(|seed: u32, num: u8| {
+fn rng_state() {
+    fuzz!(|seed: u32, steps: u8| {
         let mut rng = Rng::new(seed);
         let mut state = seed;
-        for _ in 0..num {
-            let x = rng.rand() as u32;
+        // The fuzzer steps the global rng state an unspecified number of times
+        // between cases so we iterate the rng within a single fuzz case
+        for _ in 0..steps {
+            let x = rng.step() as u32;
             state = state * 0x41C6_4E6D + 0x3039;
-            assert!(x == (state / 0x1_0000) & 0x7F_FF);
+            let expected = (state / 0x1_0000) & 0x7F_FF;
+            assert!(x == expected);
         }
     });
 }
