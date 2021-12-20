@@ -55,13 +55,13 @@ impl Rng {
 
 #[test_case]
 fn rng() {
-    let SEED = 0xdeadbeef;
-    let NUM = 32;
-    let mut rng = Rng::new(SEED);
-    let mut state = SEED;
-    for n in 0..NUM {
-        let x = rng.rand() as u32;
-        state = state * 0x41C6_4E6D + 0x3039;
-        assert!(x == (state / 0x1_0000) & 0x7F_FF);
-    }
+    fuzz!(|seed: u32, num: u8| {
+        let mut rng = Rng::new(seed);
+        let mut state = seed;
+        for _ in 0..num {
+            let x = rng.rand() as u32;
+            state = state * 0x41C6_4E6D + 0x3039;
+            assert!(x == (state / 0x1_0000) & 0x7F_FF);
+        }
+    });
 }

@@ -11,7 +11,7 @@ macro_rules! fuzz {
         use const_random::const_random;
         const MAX_TESTS: usize = 1_000;
         let mut rng = crate::sys::Rng::new(const_random!(u32));
-        for i in 0..const_random!(usize) % MAX_TESTS {
+        for _ in 0..const_random!(usize) % MAX_TESTS {
             $(let $name = rng.rand() as $ty;)*
             $($body)*
         }

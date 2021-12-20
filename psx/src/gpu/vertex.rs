@@ -59,7 +59,7 @@ impl<const N: usize, const X: usize, const Y: usize> TryFrom<(i16, i16)> for Pac
 fn create_packed() {
     fuzz!(|x: i16, y: i16| {
         const X: usize = const_random!(usize) % 16;
-        const Y: usize = const_random!(usize) % 16;;
+        const Y: usize = const_random!(usize) % 16;
         let packed = PackedVertex::<2, X, Y>::try_from((x, y));
         let x_too_big = x >= 1 << X;
         let y_too_big = y >= 1 << Y;
