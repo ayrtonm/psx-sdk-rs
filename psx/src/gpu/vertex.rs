@@ -25,16 +25,24 @@ impl<const X: usize, const Y: usize> From<PackedVertex<3, X, Y>> for u32 {
     }
 }
 
-impl<const N: usize, const X: usize, const Y: usize> TryFrom<(i16, i16)> for PackedVertex<N, X, Y> {
-    type Error = &'static str;
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Error {
+    OversizedX,
+    OversizedY,
+    InvalidX,
+    InvalidY,
+}
 
-    fn try_from(p: (i16, i16)) -> Result<Self, <Self as TryFrom<(i16, i16)>>::Error> {
+impl<const N: usize, const X: usize, const Y: usize> TryFrom<(i16, i16)> for PackedVertex<N, X, Y> {
+    type Error = Error;
+
+    fn try_from(p: (i16, i16)) -> Result<Self, Error> {
         let v = Vertex::from(p);
         if v.x >= 1 << X {
-            return Err("Could not encode x in PackedVertex")
+            return Err(Error::OversizedX)
         }
         if v.y >= 1 << Y {
-            return Err("Could not encode y in PackedVertex")
+            return Err(Error::OversizedY)
         }
         let mut data = [0; N];
         let value = ((v.x as u32) | ((v.y as u32) << X)).to_le_bytes();
@@ -45,4 +53,22 @@ impl<const N: usize, const X: usize, const Y: usize> TryFrom<(i16, i16)> for Pac
         }
         Ok(PackedVertex { data })
     }
+}
+
+#[test_case]
+fn create_packed() {
+    fuzz!(|x: i16, y: i16| {
+        const X: usize = const_random!(usize) % 16;
+        const Y: usize = const_random!(usize) % 16;;
+        let packed = PackedVertex::<2, X, Y>::try_from((x, y));
+        let x_too_big = x >= 1 << X;
+        let y_too_big = y >= 1 << Y;
+        if x_too_big {
+            assert!(packed == Err(Error::OversizedX));
+        } else if y_too_big {
+            assert!(packed == Err(Error::OversizedY));
+        } else {
+            assert!(packed.is_ok());
+        }
+    });
 }

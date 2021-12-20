@@ -1,9 +1,11 @@
+use crate::gpu::vertex::Error;
 use crate::gpu::DispEnv;
 use crate::gpu::{DMAMode, Depth, PackedVertex, Vertex, VideoMode};
 use crate::hw::gpu::GP1;
 use crate::hw::{MemRegister, Register};
-use crate::Result;
 use core::convert::TryFrom;
+
+type Result<T> = core::result::Result<T, Error>;
 
 impl GP1 {
     pub fn new() -> Self {
@@ -81,12 +83,12 @@ impl GP1 {
             512 => 2,
             640 => 3,
             368 => 1 << 6,
-            _ => return Err("Invalid x resolution"),
+            _ => return Err(Error::InvalidX),
         };
         let vres = match res.y {
             240 => 0,
             480 => 1,
-            _ => return Err("Invalid y resolution"),
+            _ => return Err(Error::InvalidY),
         };
         let settings =
             hres | vres << 2 | (mode as u32) << 3 | (depth as u32) << 4 | (interlace as u32) << 5;

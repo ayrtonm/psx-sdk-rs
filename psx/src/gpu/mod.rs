@@ -2,13 +2,12 @@
 
 use crate::gpu::colors::BLACK;
 use crate::hw::gpu::GP0Command;
-use crate::Result;
 use core::convert::TryFrom;
 
 pub mod colors;
 mod packet;
 pub mod primitives;
-mod vertex;
+pub mod vertex;
 
 pub use packet::Packet;
 
@@ -90,6 +89,7 @@ pub enum Bpp {
     Bit15,
 }
 
+type Result<T> = core::result::Result<T, crate::gpu::vertex::Error>;
 pub struct DispEnv {
     pub(crate) horizontal_range: PackedVertex<3, 12, 12>,
     pub(crate) vertical_range: PackedVertex<3, 10, 10>,

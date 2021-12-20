@@ -32,6 +32,9 @@ use core::arch::asm;
 use core::mem::size_of;
 use core::slice;
 
+#[macro_use]
+mod test;
+
 pub mod dma;
 pub mod gpu;
 pub mod hw;
@@ -41,7 +44,6 @@ pub mod irq;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
-mod test;
 
 // This is the crate-wide fallback for artisanally-crafted errors for each
 // function.
@@ -68,21 +70,23 @@ extern "C" fn _start() -> ! {
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-    match info.location() {
-        Some(location) => {
-            println!(
-                "Panicked at {}:{}:{}",
-                location.file(),
-                location.line(),
-                location.column()
-            )
-        },
-        None => {
-            println!("Panicked at unknown location")
-        },
-    }
-    if let Some(msg) = info.message() {
-        println!("{}", msg)
+    if cfg!(not(feature = "min_panic")) {
+        match info.location() {
+            Some(location) => {
+                println!(
+                    "Panicked at {}:{}:{}",
+                    location.file(),
+                    location.line(),
+                    location.column()
+                )
+            },
+            None => {
+                println!("Panicked at unknown location")
+            },
+        }
+        if let Some(msg) = info.message() {
+            println!("{}", msg)
+        }
     }
     loop {}
 }

@@ -31,7 +31,7 @@ pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
 ///
 /// Each call to [`Self::rand`] advances the generator state to `x = x *
 /// 0x41C6_4E6D + 0x3039` and returns the lower **15 bits** of `x /
-/// 0x1_0000`.
+/// 0x1_0000`. Note that all `Rng` instances share a global state.
 pub struct Rng(());
 
 impl Rng {
