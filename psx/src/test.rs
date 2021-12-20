@@ -5,6 +5,19 @@ use const_random::const_random;
 use core::any::type_name;
 use num::integer::gcd;
 
+#[macro_export]
+macro_rules! fuzz {
+    (|$($name:ident: $ty:ty),+| { $($body:tt)* }) => {
+        use const_random::const_random;
+        const MAX_TESTS: usize = 1_000;
+        let mut rng = crate::sys::Rng::new(const_random!(u32));
+        for i in 0..const_random!(usize) % MAX_TESTS {
+            $(let $name = rng.rand() as $ty;)*
+            $($body)*
+        }
+    };
+}
+
 pub trait Test {
     fn run(&self);
 }
