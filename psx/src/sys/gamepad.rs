@@ -24,12 +24,12 @@ pub enum Button {
 }
 
 #[derive(Debug)]
-pub struct GamePad {
-    pub buf0: *mut u8,
+pub struct Gamepad {
+    buf0: *mut u8,
     buf1: *mut u8,
 }
 
-impl GamePad {
+impl Gamepad {
     pub fn buffer() -> [u8; BUFFER_SIZE] {
         [0; BUFFER_SIZE]
     }
@@ -39,7 +39,7 @@ impl GamePad {
             kernel::start_pad();
             kernel::init_pad(buf0.as_mut_ptr(), buf0.len(), buf1.as_mut_ptr(), buf1.len());
         }
-        GamePad {
+        Gamepad {
             buf0: buf0.as_mut_ptr(),
             buf1: buf1.as_mut_ptr(),
         }
@@ -55,7 +55,7 @@ impl GamePad {
     }
 }
 
-impl Drop for GamePad {
+impl Drop for Gamepad {
     fn drop(&mut self) {
         unsafe {
             kernel::stop_pad();
