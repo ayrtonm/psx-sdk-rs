@@ -3,7 +3,6 @@ use crate::hw::dma;
 use crate::hw::dma::{cdrom, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
-use crate::Result;
 use core::convert::TryInto;
 
 mod gpu;
@@ -11,6 +10,15 @@ mod otc;
 
 pub use gpu::GPU;
 pub use otc::OTC;
+
+pub enum Error {
+    UnalignedAddress,
+    OversizedBlock,
+    EmptyBlock,
+    BadBlockPartition,
+}
+
+type Result<T> = core::result::Result<T, Error>;
 
 /// A marker trait for DMA linked lists.
 pub trait LinkedList {}
@@ -116,13 +124,24 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         }
     }
 
+    fn block_ptr(&self, block: &[u32]) -> Result<*const u32> {
+        match block.last() {
+            Some(last) => match self.control.get_step() {
+                Step::Forward => Ok(block.as_ptr()),
+                Step::Backward => Ok(last as *const u32),
+            },
+            None => Err(Error::EmptyBlock),
+        }
+    }
+
     /// Sends a buffer through a DMA channel in single-block mode and call `f`
     /// while the transfer completes.
     ///
     /// This blocks if the function `f` returns before the transfer completes.
     /// Returns `f`'s return value or `None` if the buffer is too large.
     pub fn send_and<F: FnOnce() -> R, R>(&mut self, block: &[u32], f: F) -> Result<R> {
-        self.madr.set_address(block.as_ptr())?.store();
+        let ptr = self.block_ptr(block)?;
+        self.madr.set_address(ptr)?.store();
         self.bcr.set_block(block.len())?.store();
         self.control.start().store();
         let res = f();
@@ -138,14 +157,17 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     pub fn send_blocks_and<F: FnOnce() -> R, R>(
         &mut self, block: &[u32], size: usize, f: F,
     ) -> Result<R> {
-        self.madr.set_address(block.as_ptr())?.store();
+        let ptr = self.block_ptr(block)?;
+        self.madr.set_address(ptr)?.store();
         if block.len() % size != 0 {
-            return Err("Invalid block size")
+            return Err(Error::BadBlockPartition)
         }
-        let words = (block.len() / size).try_into().map_err(|_| "")?;
+        let words = (block.len() / size)
+            .try_into()
+            .map_err(|_| Error::OversizedBlock)?;
         let block_len = BlockMode::Multi {
             words,
-            blocks: size.try_into().map_err(|_| "")?,
+            blocks: size.try_into().map_err(|_| Error::OversizedBlock)?,
         };
         self.bcr.set_block(block_len)?.store();
         self.control.start().store();

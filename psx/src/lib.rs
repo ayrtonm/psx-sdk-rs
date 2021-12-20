@@ -45,10 +45,6 @@ pub mod irq;
 pub mod std;
 pub mod sys;
 
-// This is the crate-wide fallback for artisanally-crafted errors for each
-// function.
-pub type Result<T> = core::result::Result<T, &'static str>;
-
 pub const KUSEG: usize = 0x0000_0000;
 pub const KSEG0: usize = 0x8000_0000;
 pub const CACHE: usize = 0x9F80_0000;

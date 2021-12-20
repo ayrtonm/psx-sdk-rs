@@ -1,9 +1,10 @@
 //! Direct memory access (DMA) control registers
 
-use crate::dma::{BlockMode, Chop, Direction, Step, TransferMode};
+use crate::dma::{BlockMode, Chop, Direction, Error, Step, TransferMode};
 use crate::hw::{MemRegister, Register};
-use crate::Result;
 use core::mem::align_of;
+
+pub type Result<T> = core::result::Result<T, Error>;
 
 const STEP: u32 = 1;
 const CHOP: u32 = 8;
@@ -199,7 +200,7 @@ pub trait MemoryAddress: Register<u32> {
     /// word-aligned.
     fn set_address(&mut self, ptr: *const u32) -> Result<&mut Self> {
         if ptr.align_offset(align_of::<u32>()) != 0 {
-            Err("Unaligned dma address")
+            Err(Error::UnalignedAddress)
         } else {
             let val = ptr as u32 & ADDRESS_MASK;
             //crate::println!("{:#x?}", val);
@@ -236,7 +237,7 @@ pub trait BlockControl: Register<u32> {
                 let words = match words {
                     0..=0xFFFF => words,
                     0x1_0000 => 0,
-                    _ => return Err(""),
+                    _ => return Err(Error::OversizedBlock),
                 };
                 Ok(self.assign(words))
             },

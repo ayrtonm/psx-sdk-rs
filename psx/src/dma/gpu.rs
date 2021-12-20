@@ -1,6 +1,6 @@
+use crate::dma::Result;
 use crate::dma::{Channel, LinkedList};
 use crate::hw::dma::gpu::{Address, Block, Control};
-use crate::Result;
 
 /// The DMA channel for GPU transfers
 pub struct GPU(Channel<Address, Block, Control>);
