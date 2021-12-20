@@ -17,4 +17,5 @@ const-random = "0.1.13"
 NA_region = []
 EU_region = []
 J_region = []
+min_panic = []
 deterministic_test_runner = []

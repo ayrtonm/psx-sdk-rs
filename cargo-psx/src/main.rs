@@ -63,6 +63,8 @@ struct Opt {
     lto: bool,
     #[structopt(long, help = "Sets opt-level=s to optimize for size")]
     small: bool,
+    #[structopt(long, help = "Disables error messages in the panic handler to reduce binary size")]
+    min_panic: bool,
 
     #[structopt(long)]
     cargo_args: Vec<String>,
@@ -127,6 +129,11 @@ fn main() {
 
     if opt.small {
         rustflags.push_str(" -Copt-level=s");
+    }
+
+    if opt.min_panic {
+        cargo_args.push("--features".to_string());
+        cargo_args.push("psx/min_panic".to_string());
     }
 
     let metadata = &MetadataCommand::new()
