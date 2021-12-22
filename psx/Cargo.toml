@@ -8,6 +8,7 @@ links = "psx"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+strum_macros = "0.23.1"
 
 [dev-dependencies]
 num = { version = "0.4.0", default-features = false }
@@ -18,4 +19,4 @@ NA_region = []
 EU_region = []
 J_region = []
 min_panic = []
-deterministic_test_runner = []
+custom_oom = []
