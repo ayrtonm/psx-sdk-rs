@@ -9,8 +9,8 @@ pub mod fs;
 pub mod gamepad;
 pub mod heap;
 pub mod kernel;
-pub mod tty;
 pub mod rng;
+pub mod tty;
 
 fn table_of_tables() -> *const u32 {
     let addr = KSEG0 + (0x100 / size_of::<u32>());

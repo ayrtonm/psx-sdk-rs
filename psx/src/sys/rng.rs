@@ -1,14 +1,14 @@
 //! Random number generator
 use crate::sys::kernel;
-use core::slice;
 use core::mem::size_of;
+use core::slice;
 
 /// A random number generator
 ///
 /// Use [`Self::rand`] to generate a random integer or float. Note that each
-/// call to [`Self::step`] advances the generator state to `x = x * 0x41C6_4E6D + 0x3039`
-/// and returns the lower **15 bits** of `x / 0x1_0000`. Also all `Rng`
-/// instances share a global state.
+/// call to [`Self::step`] advances the generator state to `x = x * 0x41C6_4E6D
+/// + 0x3039` and returns the lower **15 bits** of `x / 0x1_0000`. Also all
+/// `Rng` instances share a global state.
 pub struct Rng(());
 
 impl Rng {
@@ -33,9 +33,7 @@ impl Rng {
     pub fn rand<T: From<u8>>(&mut self) -> T {
         let mut res = T::from(0);
         let ptr = &mut res as *mut T as *mut u8;
-        let mut slice = unsafe {
-            slice::from_raw_parts_mut(ptr, size_of::<T>())
-        };
+        let mut slice = unsafe { slice::from_raw_parts_mut(ptr, size_of::<T>()) };
         for n in 0..slice.len() {
             slice[n] = self.step() as u8;
         }
