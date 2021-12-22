@@ -22,7 +22,8 @@ unsafe impl GlobalAlloc for BiosAllocator {
     }
 }
 
-/// Define a region of memory specified by a mutable slice as a BIOS-backed heap.
+/// Define a region of memory specified by a mutable slice as a BIOS-backed
+/// heap.
 #[macro_export]
 macro_rules! heap {
     ($mut_slice:expr) => {

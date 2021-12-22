@@ -4,10 +4,10 @@
 use core::slice;
 use pretty_hex::{HexConfig, PrettyHex};
 use psx::println;
-use psx::sys::gamepad::{Button, Gamepad};
+use psx::sys::gamepad::{Button, Gamepad, BUFFER_SIZE};
 
 #[no_mangle]
-fn main() {
+fn main() -> Result<(), &'static str> {
     const MAX_LEN: usize = 0x350;
     let ram_start = psx::KSEG0 as *const u8;
     let text_start = {
@@ -32,9 +32,9 @@ fn main() {
     let mut len: usize = 0x100;
     let mut start = text_start;
 
-    let mut buf0 = Gamepad::buffer();
-    let mut buf1 = Gamepad::buffer();
-    let pad = Gamepad::new(&mut buf0, &mut buf1);
+    let mut buf0 = [0; BUFFER_SIZE];
+    let mut buf1 = [0; BUFFER_SIZE];
+    let pad = Gamepad::new(&mut buf0, &mut buf1)?;
 
     let mut conf = HexConfig {
         title: false,
@@ -95,4 +95,5 @@ fn main() {
             print_memory(start, len);
         }
     }
+    Ok(())
 }
