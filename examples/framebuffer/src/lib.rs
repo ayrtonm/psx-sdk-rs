@@ -1,7 +1,11 @@
+#![no_std]
+
 use psx::dma;
-use psx::gpu::{DMAMode, Depth, DispEnv, DrawEnv, NTSC, Packet};
+use psx::gpu::{packet, vertex};
+use psx::gpu::{DMAMode, Depth, DispEnv, DrawEnv, Packet, NTSC};
 use psx::hw::gpu::{GP0, GP1};
-use psx::Result;
+
+pub type Result<T> = core::result::Result<T, &'static str>;
 
 pub struct Framebuffer {
     pub gp0: GP0,
@@ -37,13 +41,8 @@ impl Framebuffer {
         let idx = self.swapped as usize;
         self.gp1.set_display_env(&self.disp_envs[idx]);
         match gpu_dma {
-            Some(dma) => {
-                //dma.send_list_and(&self.draw_envs[idx], || ())?;
-                self.gp0.send_command(&self.draw_envs[idx].payload);
-            }
-            None => {
-                self.gp0.send_command(&self.draw_envs[idx].payload);
-            }
+            Some(dma) => dma.send_list(&self.draw_envs[idx])?,
+            None => self.gp0.send_command(&self.draw_envs[idx].payload),
         }
         Ok(())
     }

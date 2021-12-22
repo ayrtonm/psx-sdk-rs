@@ -1,19 +1,21 @@
 #![no_std]
 #![no_main]
 
+use const_random::const_random;
 use libm::{acosf, cosf, sinf};
-use psx::gpu::Packet;
 use psx::dma;
 use psx::dma::{Direction, Step};
 use psx::gpu::colors::*;
 use psx::gpu::primitives::*;
+use psx::gpu::vertex::Error;
+use psx::gpu::Packet;
 use psx::hw::dma::ChannelControl;
 use psx::hw::{gpu, irq, Register};
 use psx::irq::IRQ;
-use psx::Result;
+use psx::println;
+use psx::sys::rng::Rng;
 
-mod framebuffer;
-use framebuffer::Framebuffer;
+use framebuffer::{Framebuffer, Result};
 
 fn rotate((px, py): (i16, i16), theta: f32, (cx, cy): (i16, i16)) -> (i16, i16) {
     let (dx, dy) = (px - cx, py - cy);
@@ -38,6 +40,7 @@ fn main() -> Result<()> {
         .set_step(Step::Forward)
         .store();
     let mut fb = Framebuffer::new(buf0, buf1, res)?;
+    let mut rng = Rng::new(const_random!(u32));
     let mut quad = Packet::new(PolyG4::new())?;
     let pi = acosf(-1.0);
     let mut theta = 0.0;
@@ -48,7 +51,8 @@ fn main() -> Result<()> {
         cy += y / 4;
     }
     let center = (cx, cy);
-    quad.payload.set_vertices(vertices)
+    quad.payload
+        .set_vertices(vertices)
         .set_colors([INDIGO, ORANGE, MINT, YELLOW]);
     irq::Mask::new().enable_irq(IRQ::Vblank).store();
     loop {
@@ -56,10 +60,11 @@ fn main() -> Result<()> {
         if theta >= 2.0 * pi {
             theta -= 2.0 * pi;
         }
-        quad.payload.set_vertices(vertices.map(|v| rotate(v, theta, center)));
+        quad.payload
+            .set_vertices(vertices.map(|v| rotate(v, theta, center)));
 
-        fb.gp0.send_command(&quad.payload);
-        //gpu_dma.send_list_and(&quad, || ())?;
+        //fb.gp0.send_command(&quad.payload);
+        gpu_dma.send_list(&quad)?;
         let mut gpu_stat = gpu::Status::new();
         while !gpu_stat.cmd_ready() || !gpu_stat.dma_ready() {
             gpu_stat.load();
