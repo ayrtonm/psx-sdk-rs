@@ -67,7 +67,9 @@ extern "C" fn _start() -> ! {
         let ptr_size = size_of::<usize>();
         let end = &__ctors_end as *const usize as usize;
         let start = &__ctors_start as *const usize as usize;
-        let num_ctors = (end - start) / ptr_size;
+        let ctors_range = end - start;
+        assert!((ctors_range % 4) == 0, ".ctors section is not 4-byte aligned");
+        let num_ctors = ctors_range / ptr_size;
         for n in 0..num_ctors {
             let ptr = __ctors_start + (n * ptr_size);
             let ctor = transmute::<usize, fn()>(ptr);

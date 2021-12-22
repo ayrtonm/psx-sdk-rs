@@ -7,12 +7,10 @@ use psx::dma;
 use psx::dma::{Direction, Step};
 use psx::gpu::colors::*;
 use psx::gpu::primitives::*;
-use psx::gpu::vertex::Error;
 use psx::gpu::Packet;
 use psx::hw::dma::ChannelControl;
 use psx::hw::{gpu, irq, Register};
 use psx::irq::IRQ;
-use psx::println;
 use psx::sys::rng::Rng;
 
 use framebuffer::{Framebuffer, Result};
@@ -44,26 +42,40 @@ fn main() -> Result<()> {
     let mut quad = Packet::new(PolyG4::new())?;
     let pi = acosf(-1.0);
     let mut theta = 0.0;
-    let vertices = [(150, 150), (200, 150), (150, 200), (200, 200)];
-    let (mut cx, mut cy) = (0, 0);
-    for (x, y) in vertices {
-        cx += x / 4;
-        cy += y / 4;
-    }
-    let center = (cx, cy);
+    let vertices = [(0, 0), (50, 0), (0, 50), (50, 50)];
+    let mut cx = (rng.rand::<u16>() % 320) as i16;
+    let mut cy = (rng.rand::<u16>() % 240) as i16;
+    let mut min_v = 3;
+    let (mut vx, mut vy) = (min_v + rng.rand::<i16>() % 5, min_v + rng.rand::<i16>() % 5);
     quad.payload
-        .set_vertices(vertices)
+        .set_vertices(vertices.map(|(x, y)| (x + cx, y + cy)))
         .set_colors([INDIGO, ORANGE, MINT, YELLOW]);
     irq::Mask::new().enable_irq(IRQ::Vblank).store();
+    let mut dir = 1.0;
     loop {
-        theta += pi / 100.0;
+        theta += dir * pi / 100.0;
         if theta >= 2.0 * pi {
             theta -= 2.0 * pi;
         }
-        quad.payload
-            .set_vertices(vertices.map(|v| rotate(v, theta, center)));
+        cx += vx;
+        cy += vy;
+        let new_vertices = vertices
+            .map(|v| rotate(v, theta, (25, 25)))
+            .map(|(x, y)| (x + cx, y + cy));
+        for (x, y) in new_vertices {
+            if x >= 320 || x <= 0 {
+                vx *= -1;
+                dir *= -1.0;
+                break;
+            }
+            if y >= 240 || y <= 0 {
+                vy *= -1;
+                dir *= -1.0;
+                break;
+            }
+        }
+        quad.payload.set_vertices(new_vertices);
 
-        //fb.gp0.send_command(&quad.payload);
         gpu_dma.send_list(&quad)?;
         let mut gpu_stat = gpu::Status::new();
         while !gpu_stat.cmd_ready() || !gpu_stat.dma_ready() {
