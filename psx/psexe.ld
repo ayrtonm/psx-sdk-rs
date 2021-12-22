@@ -49,6 +49,9 @@ SECTIONS {
 
     .text : {
         __text_start = .;
+        __ctors_start = .;
+        *(.ctors*)
+        __ctors_end = .;
         *(.text*)
         __text_end = .;
     } > RAM
@@ -78,5 +81,7 @@ SECTIONS {
     /DISCARD/ : {
         *(.MIPS.abiflags)
         *(.reginfo)
+        *(.eh_frame_hdr)
+        *(.eh_frame)
     }
 }

@@ -29,7 +29,7 @@
 #![allow(dead_code)]
 
 use core::arch::asm;
-use core::mem::size_of;
+use core::mem::{size_of, transmute};
 use core::slice;
 
 #[macro_use]
@@ -44,6 +44,7 @@ pub mod irq;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
+pub mod tim;
 
 pub const KUSEG: usize = 0x0000_0000;
 pub const KSEG0: usize = 0x8000_0000;
@@ -58,6 +59,19 @@ extern "C" fn _start() -> ! {
         #[cfg(not(test))]
         extern "Rust" {
             fn main();
+        }
+        extern "C" {
+            static __ctors_start: usize;
+            static __ctors_end: usize;
+        }
+        let ptr_size = size_of::<usize>();
+        let end = &__ctors_end as *const usize as usize;
+        let start = &__ctors_start as *const usize as usize;
+        let num_ctors = (end - start) / ptr_size;
+        for n in 0..num_ctors {
+            let ptr = __ctors_start + (n * ptr_size);
+            let ctor = transmute::<usize, fn()>(ptr);
+            ctor();
         }
         main();
     }
