@@ -5,7 +5,7 @@ use crate::hw::gpu::GP0Command;
 use core::convert::TryFrom;
 
 pub mod colors;
-mod packet;
+pub mod packet;
 pub mod primitives;
 pub mod vertex;
 
@@ -14,7 +14,7 @@ pub use packet::Packet;
 pub const NTSC: VideoMode = VideoMode::NTSC;
 pub const PAL: VideoMode = VideoMode::PAL;
 
-pub type Command = u8;
+type Command = u8;
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -34,7 +34,10 @@ pub(crate) struct Vertex {
 /// A packed vertex
 ///
 /// This represents two logical values in an `N`-byte array. One value is
-/// represented by the lowest `X` bits and the other is the next `Y` bits.
+/// represented by the lowest `X` bits and the other is the next `Y` bits. The
+/// generic parameters are underconstrained because Rust currently doesn't have
+/// a good way to express this, but the struct is internal to the crate so it's
+/// not a huge problem.
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct PackedVertex<const N: usize, const X: usize, const Y: usize> {

@@ -324,6 +324,19 @@ impl PolyGT4 {
 //impl_primitive!(Tile1, 0x68);
 //impl_primitive!(Tile8, 0x70);
 //impl_primitive!(Tile16, 0x78);
-//impl_primitive!(Sprt, 0x64);
-//impl_primitive!(Sprt8, 0x74);
-//impl_primitive!(Sprt16, 0x7C);
+impl_primitive!(Sprt, 0x64);
+impl Sprt {
+    color_fn!();
+    offset_fn!();
+    size_fn!();
+}
+impl_primitive!(Sprt8, 0x74);
+impl Sprt8 {
+    color_fn!();
+    offset_fn!();
+}
+impl_primitive!(Sprt16, 0x7C);
+impl Sprt16 {
+    color_fn!();
+    offset_fn!();
+}
