@@ -4,10 +4,8 @@
 //! This module provides dynamic memory allocation backed by the BIOS's
 //! `malloc`, `init_heap` and `free`.
 
-use crate::sys::{critical_section, kernel};
+use crate::sys::kernel;
 use core::alloc::{GlobalAlloc, Layout};
-use core::ops::{Deref, DerefMut};
-use core::slice;
 
 #[doc(hidden)]
 pub struct BiosAllocator;

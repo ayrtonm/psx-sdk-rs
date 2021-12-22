@@ -1,6 +1,9 @@
 use crate::gpu::Bpp;
 use strum_macros::IntoStaticStr;
 
+const MAGIC: u32 = 0x0000_0010;
+
+#[derive(Debug)]
 pub struct TIM<'a> {
     bpp: Bpp,
     bmp: Bitmap<'a>,
@@ -18,9 +21,8 @@ pub enum Error {
 
 impl<'a> TIM<'a> {
     pub fn new(src: &'a mut [u32]) -> Result<Self, Error> {
-        const MAGIC: u32 = 0x0000_0010;
-        if src.get(0).ok_or(Error::MissingMagic)? != MAGIC {
-            return Err(Error::BadMagic);
+        if *src.get(0).ok_or(Error::MissingMagic)? != MAGIC {
+            return Err(Error::BadMagic)
         }
         let flags = src.get(1).ok_or(Error::MissingBpp)?;
         let bpp = match flags & 0b11 {
@@ -30,7 +32,7 @@ impl<'a> TIM<'a> {
             _ => return Err(Error::InvalidBpp),
         };
         if src.len() < 3 {
-            return Err(Error::MissingData);
+            return Err(Error::MissingData)
         }
         let (clut_bmp, other) = if (flags & 8) != 0 {
             let (bmp, other) = Bitmap::new(&mut src[2..]);
@@ -43,6 +45,7 @@ impl<'a> TIM<'a> {
     }
 }
 
+#[derive(Debug)]
 struct Bitmap<'a>(&'a [u32]);
 
 impl<'a> Bitmap<'a> {
@@ -51,5 +54,43 @@ impl<'a> Bitmap<'a> {
         src[0] = 0xA0 << 24;
         let (data, other) = src.split_at_mut(words as usize);
         (Bitmap(data), other)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::{MAGIC, TIM, Error};
+
+    macro_rules! tim_test {
+        ($tim:expr, $err:tt) => {
+            let mut tim = $tim;
+            assert!(TIM::new(&mut tim).unwrap_err() == Error::$err);
+        };
+    }
+
+    #[test_case]
+    fn bad_magic() {
+        tim_test!([], MissingMagic);
+        tim_test!([MAGIC + 1], BadMagic);
+    }
+
+    #[test_case]
+    fn bad_bpp() {
+        tim_test!([MAGIC], MissingBpp);
+        tim_test!([MAGIC, 0x0000_0003], InvalidBpp);
+    }
+
+    #[test_case]
+    fn no_data() {
+        tim_test!([MAGIC, 0x0000_0000], MissingData);
+        tim_test!([MAGIC, 0x0000_0002], MissingData);
+        tim_test!([MAGIC, 0x0000_0002], MissingData);
+    }
+
+    #[test_case]
+    fn minimal_tim() {
+        let mut tim = [MAGIC, 0, 0];
+        assert!(TIM::new(&mut tim).is_ok());
     }
 }

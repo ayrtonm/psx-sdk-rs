@@ -85,7 +85,7 @@ pub enum Depth {
     True,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Bpp {
     Bit4,
     Bit8,

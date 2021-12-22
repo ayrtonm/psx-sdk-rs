@@ -46,7 +46,7 @@ pub struct Gamepad<'a, 'b> {
 impl<'a, 'b> Gamepad<'a, 'b> {
     pub fn new(
         buf0: &'a mut [u8; BUFFER_SIZE], buf1: &'b mut [u8; BUFFER_SIZE],
-    ) -> Result<Self<'a, 'b>, Error> {
+    ) -> Result<Self, Error> {
         let buf0 = buf0.as_mut_ptr();
         let buf1 = buf1.as_mut_ptr();
         critical_section(|| unsafe {

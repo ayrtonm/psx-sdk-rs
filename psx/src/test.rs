@@ -15,7 +15,7 @@ macro_rules! fuzz {
             use crate::sys::rng::Rng;
 
             let mut rng = Rng::new(const_random!(u32));
-            for _ in 0..const_random!(usize) % crate::test::MAX_TESTS {
+            for _ in 0..crate::test::MAX_TESTS {
                 $(let $name = rng.rand::<$ty>();)*
                 $($body)*
             }
@@ -33,7 +33,7 @@ macro_rules! fuzz_data {
             const MAX_SIZE: usize = 1_000;
             const SIZE: usize = const_random!(usize) % MAX_SIZE;
             let mut rng = Rng::new(const_random!(u32));
-            for _ in 0..const_random!(usize) % crate::test::MAX_TESTS {
+            for _ in 0..crate::test::MAX_TESTS {
                 let mut ar: [$ty; SIZE] = [0; SIZE];
                 for n in 0..SIZE {
                     ar[n] = rng.rand::<$ty>();
@@ -55,18 +55,20 @@ fn index_params(n: usize) -> (usize, usize) {
     if a == 0 {
         a = 1;
     }
-    while gcd(a, b) != 1 {
-        a = a / gcd(a, b);
+    while gcd(a, n) != 1 {
+        a = a / gcd(a, n);
     }
     (a, b)
 }
 
 #[test_case]
-fn coprime_params() {
+fn test_params() {
     fuzz!(|num_tests: usize| {
         let (a, b) = index_params(num_tests);
         assert!(a != 0);
-        assert!(gcd(a, b) == 1);
+        assert!(a < num_tests);
+        assert!(b < num_tests);
+        assert!(gcd(a, num_tests) == 1);
     });
 }
 

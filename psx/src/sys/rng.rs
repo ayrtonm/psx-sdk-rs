@@ -33,7 +33,7 @@ impl Rng {
     pub fn rand<T: From<u8>>(&mut self) -> T {
         let mut res = T::from(0);
         let ptr = &mut res as *mut T as *mut u8;
-        let mut slice = unsafe { slice::from_raw_parts_mut(ptr, size_of::<T>()) };
+        let slice = unsafe { slice::from_raw_parts_mut(ptr, size_of::<T>()) };
         for n in 0..slice.len() {
             slice[n] = self.step() as u8;
         }
