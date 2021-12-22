@@ -10,11 +10,15 @@ pub const MAX_TESTS: usize = 1_000;
 #[macro_export]
 macro_rules! fuzz {
     (|$($name:ident: $ty:ty),+| { $($body:tt)* }) => {
-        use const_random::const_random;
-        let mut rng = crate::sys::rng::Rng::new(const_random!(u32));
-        for _ in 0..const_random!(usize) % crate::test::MAX_TESTS {
-            $(let $name = rng.rand::<$ty>();)*
-            $($body)*
+        {
+            use const_random::const_random;
+            use crate::sys::rng::Rng;
+
+            let mut rng = Rng::new(const_random!(u32));
+            for _ in 0..const_random!(usize) % crate::test::MAX_TESTS {
+                $(let $name = rng.rand::<$ty>();)*
+                $($body)*
+            }
         }
     };
 }
@@ -22,17 +26,21 @@ macro_rules! fuzz {
 #[macro_export]
 macro_rules! fuzz_data {
     (|$name:ident: &[$ty:ty]| { $($body:tt)* }) => {
-        use const_random::const_random;
-        const MAX_SIZE: usize = 1_000;
-        const SIZE: usize = const_random!(usize) % MAX_SIZE;
-        let mut rng = crate::sys::rng::Rng::new(const_random!(u32));
-        for _ in 0..const_random!(usize) % crate::test::MAX_TESTS {
-            let mut ar: [$ty; SIZE] = [0; SIZE];
-            for n in 0..SIZE {
-                ar[n] = rng.rand::<$ty>();
+        {
+            use const_random::const_random;
+            use crate::sys::rng::Rng;
+
+            const MAX_SIZE: usize = 1_000;
+            const SIZE: usize = const_random!(usize) % MAX_SIZE;
+            let mut rng = Rng::new(const_random!(u32));
+            for _ in 0..const_random!(usize) % crate::test::MAX_TESTS {
+                let mut ar: [$ty; SIZE] = [0; SIZE];
+                for n in 0..SIZE {
+                    ar[n] = rng.rand::<$ty>();
+                }
+                let $name = &ar;
+                $($body)*
             }
-            let $name = &ar;
-            $($body)*
         }
     };
 }
@@ -41,13 +49,25 @@ pub trait Test {
     fn run(&self);
 }
 
-fn index_params<const N: usize>() -> (usize, usize) {
-    let b = const_random!(usize) % N;
-    let mut a = const_random!(usize);
-    while gcd(a, N) != 1 {
-        a = a / gcd(a, N);
+fn index_params(n: usize) -> (usize, usize) {
+    let b = const_random!(usize) % n;
+    let mut a = const_random!(usize) % n;
+    if a == 0 {
+        a = 1;
     }
-    (a % N, b)
+    while gcd(a, b) != 1 {
+        a = a / gcd(a, b);
+    }
+    (a, b)
+}
+
+#[test_case]
+fn coprime_params() {
+    fuzz!(|num_tests: usize| {
+        let (a, b) = index_params(num_tests);
+        assert!(a != 0);
+        assert!(gcd(a, b) == 1);
+    });
 }
 
 impl<T: Fn()> Test for T {
@@ -59,30 +79,19 @@ impl<T: Fn()> Test for T {
 }
 
 pub fn runner<const N: usize>(tests: &[&dyn Test; N]) {
-    let (a, b) = if cfg!(not(feature = "deterministic_test_runner")) {
-        index_params::<N>()
-    } else {
-        (0, 0)
-    };
+    let (a, b) = index_params(N);
 
-    let mut idx_count = 0;
+    let mut executed_tests = [0; N];
 
     println!("running {} tests", N);
     for n in 0..N {
-        let idx = if cfg!(not(feature = "deterministic_test_runner")) {
-            (a * n + b) % N
-        } else {
-            n
-        };
-        idx_count += idx;
+        let idx = (a * n + b) % N;
         tests[idx].run();
+        executed_tests[n] = idx;
     }
-    if cfg!(not(feature = "deterministic_test_runner")) {
-        assert!(
-            idx_count == (N * (N - 1)) / 2,
-            "Panicked due to error in test framework!"
-        );
-    }
+    executed_tests.as_mut_slice().sort_unstable();
+    let ran_all_tests = executed_tests.iter().cloned().eq(0..N);
+    assert!(ran_all_tests, "Test framework failed to run all tests!");
     println!("\ntest result: ok. {} passed; 0 failed\n", N);
     loop {}
 }
