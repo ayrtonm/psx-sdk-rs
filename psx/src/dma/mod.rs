@@ -4,6 +4,7 @@ use crate::hw::dma::{cdrom, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
 use core::convert::TryInto;
+use strum_macros::IntoStaticStr;
 
 mod gpu;
 mod otc;
@@ -11,6 +12,7 @@ mod otc;
 pub use gpu::GPU;
 pub use otc::OTC;
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy, IntoStaticStr)]
 pub enum Error {
     UnalignedAddress,
     OversizedBlock,
@@ -74,10 +76,10 @@ pub enum Direction {
 /// The DMA channel's memory address step.
 #[derive(Debug)]
 pub enum Step {
-    /// Step backwards by 4 bytes.
-    Backward = 0,
     /// Step forwards by 4 bytes.
-    Forward,
+    Forward = 0,
+    /// Step backwards by 4 bytes.
+    Backward,
 }
 
 /// The DMA channel's CPU/transfer window sizes.
@@ -187,6 +189,7 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         let ptr = list as *const L as *const u32;
         self.madr.set_address(ptr)?.store();
         self.control
+            .set_step(Step::Forward)
             .set_mode(TransferMode::LinkedList)
             .start()
             .store();
