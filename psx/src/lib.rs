@@ -50,9 +50,14 @@ pub const KUSEG: usize = 0x0000_0000;
 pub const KSEG0: usize = 0x8000_0000;
 pub const CACHE: usize = 0x9F80_0000;
 
+#[cfg(feature = "loadable_app")]
+type RtReturn = ();
+#[cfg(not(feature = "loadable_app"))]
+type RtReturn = !;
+
 /// The runtime used by the default linker scripts.
 #[no_mangle]
-extern "C" fn _start() -> ! {
+extern "C" fn _start() -> RtReturn {
     // SAFETY: If there is no unmangled function named `main` this causes an error
     // at link-time.
     unsafe {
@@ -68,7 +73,10 @@ extern "C" fn _start() -> ! {
         let end = &__ctors_end as *const usize as usize;
         let start = &__ctors_start as *const usize as usize;
         let ctors_range = end - start;
-        assert!((ctors_range % 4) == 0, ".ctors section is not 4-byte aligned");
+        assert!(
+            (ctors_range % 4) == 0,
+            ".ctors section is not 4-byte aligned"
+        );
         let num_ctors = ctors_range / ptr_size;
         for n in 0..num_ctors {
             let ptr = __ctors_start + (n * ptr_size);
@@ -77,6 +85,7 @@ extern "C" fn _start() -> ! {
         }
         main();
     }
+    #[cfg(not(feature = "loadable_app"))]
     panic!("`main` should not return")
 }
 
