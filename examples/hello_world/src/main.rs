@@ -4,7 +4,6 @@
 use psx::println;
 
 #[no_mangle]
-fn main() -> ! {
+fn main() {
     println!("Hello, world!");
-    loop {}
 }

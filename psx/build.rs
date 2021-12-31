@@ -83,6 +83,7 @@ fn mk_bios_trampoline(func: &FnDesc) -> String {
 }
 
 fn main() {
+    println!("cargo:rerun-if-changed=bios.txt");
     const SYS_MODULE_SRC_DIR: &str = "src/sys";
     let bios_functions: Vec<FnDesc> = include_str!("bios.txt")
         .lines()
