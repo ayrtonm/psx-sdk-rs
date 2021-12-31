@@ -1,13 +1,20 @@
 use crate::dma::Result;
-use crate::dma::{Channel, LinkedList};
+use crate::dma::{Channel, Direction, LinkedList};
 use crate::hw::dma::gpu::{Address, Block, Control};
+use crate::hw::dma::ChannelControl;
 
 /// The DMA channel for GPU transfers
 pub struct GPU(Channel<Address, Block, Control>);
 
 impl GPU {
+    /// Initialize the GPU DMA channel.
     pub fn new() -> Self {
-        GPU(Channel::new())
+        let mut channel = Channel::<Address, Block, Control>::new();
+        // Set the channel direction to a reasonable default, but intentionally
+        // avoid defer the store until the transfer is initiated to avoid an
+        // unnecessary write.
+        channel.control.set_direction(Direction::FromMemory);
+        GPU(channel)
     }
 
     /// The channel control register for the DMA channel.

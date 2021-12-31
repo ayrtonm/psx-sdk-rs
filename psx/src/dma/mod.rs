@@ -188,9 +188,7 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     ) -> Result<R> {
         let ptr = list as *const L as *const u32;
         self.madr.set_address(ptr)?.store();
-        // Setting Step::Forward shouldn't matter, but mednafen requires it
         self.control
-            .set_step(Step::Forward)
             .set_mode(TransferMode::LinkedList)
             .start()
             .store();
