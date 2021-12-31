@@ -8,8 +8,8 @@ impl From<Vertex> for u32 {
     }
 }
 
-impl From<(i16, i16)> for Vertex {
-    fn from((x, y): (i16, i16)) -> Vertex {
+impl From<[i16; 2]> for Vertex {
+    fn from([x, y]: [i16; 2]) -> Vertex {
         Vertex { x, y }
     }
 }
@@ -34,10 +34,10 @@ pub enum Error {
     InvalidY,
 }
 
-impl<const N: usize, const X: usize, const Y: usize> TryFrom<(i16, i16)> for PackedVertex<N, X, Y> {
+impl<const N: usize, const X: usize, const Y: usize> TryFrom<[i16; 2]> for PackedVertex<N, X, Y> {
     type Error = Error;
 
-    fn try_from((x, y): (i16, i16)) -> Result<Self, Error> {
+    fn try_from([x, y]: [i16; 2]) -> Result<Self, Error> {
         let x = x as u16;
         let y = y as u16;
         if x >= 1 << X {
@@ -56,7 +56,7 @@ impl<const N: usize, const X: usize, const Y: usize> TryFrom<(i16, i16)> for Pac
 }
 
 impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
-    pub fn unpack(&self) -> (i16, i16) {
+    pub fn unpack(&self) -> [i16; 2] {
         let mut ar = [0; 4];
         for i in 0..self.data.len() {
             ar[i] = self.data[i];
@@ -67,7 +67,7 @@ impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
         let y_shift = X;
         let x = data & x_mask;
         let y = (data >> y_shift) & y_mask;
-        (x as i16, y as i16)
+        [x as i16, y as i16]
     }
 }
 

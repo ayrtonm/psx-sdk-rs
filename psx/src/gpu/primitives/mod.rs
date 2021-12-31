@@ -7,7 +7,7 @@ mod macros;
 
 /// Flat-shaded, non-textured triangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyF3 {
     color: Color,
     cmd: Command,
@@ -18,7 +18,7 @@ pub struct PolyF3 {
 
 /// Flat-shaded, non-textured quad.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyF4 {
     color: Color,
     cmd: Command,
@@ -30,7 +30,7 @@ pub struct PolyF4 {
 
 /// Flat-shaded, textured triangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyFT3 {
     color: Color,
     cmd: Command,
@@ -47,7 +47,7 @@ pub struct PolyFT3 {
 
 /// Flat-shaded, textured quad.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyFT4 {
     color: Color,
     cmd: Command,
@@ -67,7 +67,7 @@ pub struct PolyFT4 {
 
 /// Gouraud-shaded, non-textured triangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyG3 {
     color0: Color,
     cmd: Command,
@@ -82,7 +82,7 @@ pub struct PolyG3 {
 
 /// Gouraud-shaded, non-textured quad.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyG4 {
     color0: Color,
     cmd: Command,
@@ -100,7 +100,7 @@ pub struct PolyG4 {
 
 /// Gouraud-shaded, textured triangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyGT3 {
     color0: Color,
     cmd: Command,
@@ -121,7 +121,7 @@ pub struct PolyGT3 {
 
 /// Gouraud-shaded, textured quad.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PolyGT4 {
     color0: Color,
     cmd: Command,
@@ -147,7 +147,7 @@ pub struct PolyGT4 {
 
 /// Flat-shaded line.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LineF2 {
     color: Color,
     cmd: Command,
@@ -157,7 +157,7 @@ pub struct LineF2 {
 
 /// Flat-shaded poly-line.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LineF<const N: usize> {
     color: Color,
     cmd: Command,
@@ -167,7 +167,7 @@ pub struct LineF<const N: usize> {
 
 /// Gouraud-shaded line.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LineG2 {
     color0: Color,
     cmd: Command,
@@ -178,7 +178,7 @@ pub struct LineG2 {
 }
 
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct ColoredVertex {
     c: Color,
     _pad: u8,
@@ -187,7 +187,7 @@ struct ColoredVertex {
 
 /// Gouraud-shaded poly-line.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LineG<const N: usize> {
     colored_vertices: [ColoredVertex; N],
     term: u32,
@@ -195,7 +195,7 @@ pub struct LineG<const N: usize> {
 
 /// Monochrome rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Tile {
     color: Color,
     cmd: Command,
@@ -205,7 +205,7 @@ pub struct Tile {
 
 /// Monochrome 1x1 rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Tile1 {
     color: Color,
     cmd: Command,
@@ -214,7 +214,7 @@ pub struct Tile1 {
 
 /// Monochrome 8x8 rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Tile8 {
     color: Color,
     cmd: Command,
@@ -223,7 +223,7 @@ pub struct Tile8 {
 
 /// Monochrome 16x16 rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Tile16 {
     color: Color,
     cmd: Command,
@@ -232,7 +232,7 @@ pub struct Tile16 {
 
 /// Textured rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Sprt {
     color: Color,
     cmd: Command,
@@ -244,7 +244,7 @@ pub struct Sprt {
 
 /// Textured 8x8 rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Sprt8 {
     color: Color,
     cmd: Command,
@@ -255,7 +255,7 @@ pub struct Sprt8 {
 
 /// Textured 16x16 rectangle.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Sprt16 {
     color: Color,
     cmd: Command,

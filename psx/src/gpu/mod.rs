@@ -100,11 +100,11 @@ pub struct DispEnv {
 }
 
 impl DispEnv {
-    pub fn new(offset: (i16, i16), size: (i16, i16)) -> Result<Self> {
+    pub fn new(offset: [i16; 2], size: [i16; 2]) -> Result<Self> {
         let offset = PackedVertex::try_from(offset)?;
         let size = Vertex::from(size);
-        let ntsc_vrange = (0x88 - (224 / 2), 0x88 + (224 / 2));
-        let hrange = (0x260, 0x260 + (size.x * 8));
+        let ntsc_vrange = [0x88 - (240 / 2), 0x88 + (240 / 2)];
+        let hrange = [0x260, 0x260 + (size.x * 8)];
 
         let horizontal_range = PackedVertex::try_from(hrange)?;
         let vertical_range = PackedVertex::try_from(ntsc_vrange)?;
@@ -140,10 +140,10 @@ pub struct DrawEnv {
 }
 
 impl DrawEnv {
-    pub fn new(offset: (i16, i16), size: (i16, i16), bg_color: Option<Color>) -> Result<Self> {
+    pub fn new(offset: [i16; 2], size: [i16; 2], bg_color: Option<Color>) -> Result<Self> {
         let bg_color = bg_color.unwrap_or(BLACK);
         let upper_left = PackedVertex::try_from(offset)?;
-        let lower_right = PackedVertex::try_from((offset.0 + size.0, offset.1 + size.1))?;
+        let lower_right = PackedVertex::try_from([offset[0] + size[0], offset[1] + size[1]])?;
         Ok(DrawEnv {
             texpage_cmd: 0xE1,
             upper_left_cmd: 0xE3,

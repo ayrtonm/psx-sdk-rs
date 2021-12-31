@@ -17,9 +17,7 @@ impl GP0 {
         self
     }
 
-    pub fn fill_rectangle(
-        &mut self, color: Color, offset: (i16, i16), size: (i16, i16),
-    ) -> &mut Self {
+    pub fn fill_rectangle(&mut self, color: Color, offset: [i16; 2], size: [i16; 2]) -> &mut Self {
         let offset = Vertex::from(offset);
         let size = Vertex::from(size);
         self.0

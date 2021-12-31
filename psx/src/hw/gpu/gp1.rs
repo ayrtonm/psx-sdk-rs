@@ -39,7 +39,7 @@ impl GP1 {
     }
 
     /// The `start` tuple has fields restricted to (9 bits, 10 bits).
-    pub fn display_start(&mut self, start: (i16, i16)) -> Result<&mut Self> {
+    pub fn display_start(&mut self, start: [i16; 2]) -> Result<&mut Self> {
         let start = PackedVertex::<3, 10, 9>::try_from(start)?;
         self._display_start(start)
     }
@@ -50,7 +50,7 @@ impl GP1 {
     }
 
     /// The `range` tuple has fields restricted to (12 bits, 12 bits).
-    pub fn horizontal_range(&mut self, range: (i16, i16)) -> Result<&mut Self> {
+    pub fn horizontal_range(&mut self, range: [i16; 2]) -> Result<&mut Self> {
         let range = PackedVertex::<3, 12, 12>::try_from(range)?;
         self._horizontal_range(range)
     }
@@ -61,7 +61,7 @@ impl GP1 {
     }
 
     /// The `range` tuple has fields restricted to (10 bits, 10 bits).
-    pub fn vertical_range(&mut self, range: (i16, i16)) -> Result<&mut Self> {
+    pub fn vertical_range(&mut self, range: [i16; 2]) -> Result<&mut Self> {
         let range = PackedVertex::<3, 10, 10>::try_from(range)?;
         self._vertical_range(range)
     }
@@ -74,7 +74,7 @@ impl GP1 {
     /// The x resolution is restricted to 256, 320, 512, 640 or 368. The y
     /// resolution is restricted to 240 or 480.
     pub fn display_mode(
-        &mut self, res: (i16, i16), mode: VideoMode, depth: Depth, interlace: bool,
+        &mut self, res: [i16; 2], mode: VideoMode, depth: Depth, interlace: bool,
     ) -> Result<&mut Self> {
         let res = Vertex::from(res);
         let hres = match res.x {
