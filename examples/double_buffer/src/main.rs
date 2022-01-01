@@ -2,11 +2,13 @@
 #![no_main]
 
 use framebuffer::constants::*;
-use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer, Plane2, Plane3, Result, V2, V3};
-use psx::gpu::colors::*;
-use psx::gpu::primitives::PolyG4;
+use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer, Plane3, Result, V2, V3};
+use psx::dma;
+use psx::constants::*;
+use psx::gpu::OrderingTable;
+use psx::gpu::Color;
 use psx::println;
-use psx::sys::gamepad::{Button, Gamepad, BUFFER_SIZE};
+use psx::sys::gamepad::{Gamepad, BUFFER_SIZE};
 
 psx::heap! {
     unsafe {
@@ -19,61 +21,90 @@ const BUF1: V2 = V2(0, 240);
 const RES: V2 = V2(320, 240);
 
 fn basic(v: V3) -> V2 {
-    let ex = (v.2 as f32 / 2.0) as i16;
-    let ey = (v.2 as f32 / 2.0) as i16;
-    V2(v.0 + ex, v.1 + ey)
+    V2(v.0, v.1)
 }
 
-fn sum_z(plane: &Plane3) -> i16 {
+fn sum_z((_, plane): &(Color, Plane3)) -> i16 {
     let mut res = 0;
-    for V3(_x, _y, z) in *plane {
+    for V3(_, _, z) in *plane {
         res += z;
     }
     -res
 }
 
+fn poll_controller(pad: &Gamepad, pos: &mut V3, theta: &mut f32, phi: &mut f32) {
+    let pos_y = Y;
+    let pos_x = X;
+    let pad = pad.poll();
+    if pad.pressed(UP) {
+        *pos -= pos_y;
+    } else if pad.pressed(DOWN) {
+        *pos += pos_y;
+    }
+
+    if pad.pressed(LEFT) {
+        *pos -= pos_x;
+    } else if pad.pressed(RIGHT) {
+        *pos += pos_x;
+    }
+
+    if pad.pressed(CROSS) {
+        *theta -= 0.1;
+    } else if pad.pressed(TRIANGLE) {
+        *theta += 0.1;
+    }
+
+    if pad.pressed(CIRCLE) {
+        *phi -= 0.1;
+    } else if pad.pressed(SQUARE) {
+        *phi += 0.1;
+    }
+}
+
 #[no_mangle]
 fn main() -> Result<()> {
     let mut fb = Framebuffer::new(BUF0, BUF1, RES)?;
+    let mut gpu_dma = dma::GPU::new();
     let mut buf0 = [0; BUFFER_SIZE];
     let mut buf1 = [0; BUFFER_SIZE];
-    let mut pad = Gamepad::new(&mut buf0, &mut buf1)?;
+    let pad = Gamepad::new(&mut buf0, &mut buf1)?;
 
-    let mut cube = [XY, YZ, XZ, XY + Z, YZ + X, XZ + Y].map(|p| p * 50);
-    cube.sort_by_key(sum_z);
-    println!("{:?}", cube);
-    let mut quads = [PolyG4::new(); 6];
-    for q in &mut quads {
-        q.set_colors([INDIGO, ORANGE, MINT, YELLOW]);
-    }
+    let scale = 50;
+    let center = (X + Y + Z) * 50 / 2;
+    let unit = [
+        (BLUE, XY),
+        (GREEN, YZ),
+        (RED, XZ),
+        (YELLOW, XY + Z),
+        (CYAN, YZ + X),
+        (VIOLET, XZ + Y),
+    ]
+    .map(|(c, p)| (c, (p * scale) - center));
+    let mut pos = V3(120, 80, 50);
+    let mut theta = 0.0;
+    let mut phi = 0.0;
+
+    let mut quads = OrderingTable::new([PolyF4::new(); 6])?;
+    quads.link();
+
+    let mut cube = unit.map(|(c, p)| (c, p.Rx(theta, ZERO).Ry(phi, ZERO) + pos));
+
     enable_vblank();
     loop {
-        let mut shift = ZERO;
-        if pad.pressed(Button::Up) {
-            shift -= Z;
+        for n in 0..6 {
+            let (color, plane) = cube[n];
+            quads.list[n]
+                .payload
+                .set_vertices(plane.project(basic).into())
+                .set_color(color);
         }
-        if pad.pressed(Button::Down) {
-            shift += Z;
-        }
-        if pad.pressed(Button::Left) {
-            shift -= X;
-        }
-        if pad.pressed(Button::Right) {
-            shift += X;
-        }
-        for p in cube {
-            p += shift;
-        }
-        if pad.pressed(Button::Cross) {
-            println!("pressed X");
-        }
-        for (n, q) in quads.iter_mut().enumerate() {
-            let plane = cube[n];
-            q.set_vertices(plane.project(basic).into());
-            fb.gp0.send_command(q);
-            draw_sync();
-        }
+        gpu_dma.send_list_and(&quads, || {
+            poll_controller(&pad, &mut pos, &mut theta, &mut phi);
+            cube = unit.map(|(c, p)| (c, p.Rx(theta, ZERO).Ry(phi, ZERO) + pos));
+            cube.sort_by_key(sum_z);
+        })?;
+        draw_sync();
         vsync();
-        fb.swap(None)?;
+        fb.swap(Some(&mut gpu_dma))?;
     }
 }
