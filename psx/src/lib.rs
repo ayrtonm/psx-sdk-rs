@@ -35,6 +35,7 @@ use core::slice;
 #[macro_use]
 mod test;
 
+pub mod constants;
 pub mod dma;
 pub mod gpu;
 pub mod hw;
@@ -63,7 +64,7 @@ extern "C" fn _start() -> RtReturn {
     unsafe {
         #[cfg(not(test))]
         extern "Rust" {
-            fn main();
+            fn main() -> Result<(), &'static str>;
         }
         extern "C" {
             static __ctors_start: usize;
@@ -83,7 +84,7 @@ extern "C" fn _start() -> RtReturn {
             let ctor = transmute::<usize, fn()>(ptr);
             ctor();
         }
-        main();
+        main().unwrap();
     }
     #[cfg(not(feature = "loadable_app"))]
     panic!("`main` should not return")

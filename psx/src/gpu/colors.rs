@@ -6,9 +6,9 @@ pub const RED: Color = Color::new(0xFF, 0, 0);
 pub const GREEN: Color = Color::new(0, 0xFF, 0);
 pub const BLUE: Color = Color::new(0, 0, 0xFF);
 
-pub const YELLOW: Color = RED.average(GREEN);
-pub const CYAN: Color = GREEN.average(BLUE);
-pub const VIOLET: Color = BLUE.average(RED);
+pub const YELLOW: Color = RED.sum(GREEN);
+pub const CYAN: Color = GREEN.sum(BLUE);
+pub const VIOLET: Color = BLUE.sum(RED);
 
 pub const PINK: Color = RED.average(VIOLET);
 pub const ORANGE: Color = RED.average(YELLOW);

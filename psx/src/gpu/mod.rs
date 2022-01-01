@@ -9,10 +9,12 @@ pub mod packet;
 pub mod primitives;
 pub mod vertex;
 
-pub use packet::Packet;
+pub mod video_modes {
+    use super::VideoMode;
 
-pub const NTSC: VideoMode = VideoMode::NTSC;
-pub const PAL: VideoMode = VideoMode::PAL;
+    pub const NTSC: VideoMode = VideoMode::NTSC;
+    pub const PAL: VideoMode = VideoMode::PAL;
+}
 
 type Command = u8;
 
@@ -91,6 +93,25 @@ pub enum Bpp {
     Bit8,
     Bit15,
 }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PhysAddr([u8; 3]);
+
+#[repr(C)]
+#[derive(Debug, PartialEq, Eq)]
+pub struct Packet<T> {
+    next: PhysAddr,
+    size: u8,
+    pub payload: T,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct OrderingTable<T, const N: usize> {
+    pub list: [Packet<T>; N],
+}
+
 
 type Result<T> = core::result::Result<T, crate::gpu::vertex::Error>;
 pub struct DispEnv {
