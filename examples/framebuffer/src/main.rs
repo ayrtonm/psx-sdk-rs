@@ -16,17 +16,6 @@ const BUF0: V2 = V2(0, 0);
 const BUF1: V2 = V2(0, 240);
 const RES: V2 = V2(320, 240);
 
-fn rotate(point: V2, theta: f32, center: Option<V2>) -> V2 {
-    let center = center.unwrap_or(ZERO2);
-    let d = point - center;
-    let dxf = d.0 as f32;
-    let dyf = d.1 as f32;
-    let newxf = dxf * cosf(theta) - dyf * sinf(theta);
-    let newyf = dxf * sinf(theta) + dyf * cosf(theta);
-    let new = V2(newxf as i16, newyf as i16);
-    center + new
-}
-
 fn rand_vector(rng: &mut Rng) -> V2 {
     V2(rng.rand(), rng.rand())
 }
@@ -60,7 +49,7 @@ fn main() -> Result<()> {
         }
         center += velocity;
 
-        let new_vertices = vertices.map(|v| rotate(v, theta, None)) + center;
+        let new_vertices = vertices.R(theta, ZERO2) + center;
 
         for V2(x, y) in new_vertices {
             if x >= 320 || x <= 0 {

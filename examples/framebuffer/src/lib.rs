@@ -1,7 +1,9 @@
 #![no_std]
+#![allow(non_snake_case)]
 
+use psx::constants::*;
 use psx::dma;
-use psx::gpu::{DMAMode, Depth, DispEnv, DrawEnv, Packet, NTSC};
+use psx::gpu::{DMAMode, Depth, DispEnv, DrawEnv, Packet};
 use psx::hw::gpu::{GP0, GP1};
 use psx::hw::{gpu, irq, Register};
 use psx::irq::IRQ;

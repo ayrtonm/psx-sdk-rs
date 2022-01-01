@@ -19,6 +19,10 @@ impl Plane2 {
         self.3 = f(self.3);
         self
     }
+
+    pub fn R(self, theta: f32, center: V2) -> Self {
+        self.map(|v| v.R(theta, center))
+    }
 }
 
 impl From<Plane2> for [[i16; 2]; 4] {
@@ -113,6 +117,18 @@ impl Plane3 {
         res.2 = f(self.2);
         res.3 = f(self.3);
         res
+    }
+
+    pub fn Rx(self, theta: f32, center: V3) -> Self {
+        self.map(|v| v.Rx(theta, center))
+    }
+
+    pub fn Ry(self, theta: f32, center: V3) -> Self {
+        self.map(|v| v.Ry(theta, center))
+    }
+
+    pub fn Rz(self, theta: f32, center: V3) -> Self {
+        self.map(|v| v.Rz(theta, center))
     }
 }
 
