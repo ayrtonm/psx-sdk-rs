@@ -13,6 +13,7 @@ mod cop;
 pub mod cop0;
 pub mod dma;
 pub mod gpu;
+pub mod gte;
 pub mod irq;
 pub mod mmio;
 

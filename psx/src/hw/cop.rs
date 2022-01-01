@@ -1,6 +1,9 @@
 macro_rules! define_cop {
-    ($cop:expr, $reg:expr) => {
-        impl Register<u32> for CopRegister<$cop, $reg> {
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(,)?) => {
+        $(#[$($meta)*])*
+        pub type $name = CopRegister<$cop, $reg>;
+
+        impl Register<$ty> for CopRegister<$cop, $reg> {
             fn skip_load() -> Self {
                 Self { value: 0 }
             }
@@ -24,5 +27,9 @@ macro_rules! define_cop {
                 self
             }
         }
+    };
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr, $($others:tt)*) => {
+        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg);
+        define_cop!($($others)*);
     };
 }

@@ -48,51 +48,25 @@ impl<const COP: u32, const REG: u32> AsMut<u32> for CopRegister<COP, REG> {
     }
 }
 
-macro_rules! define_cop0 {
-    ($(#[$($meta:meta)*])* $name:ident, $reg:expr) => {
-        $(#[$($meta)*])*
-        pub type $name = CopRegister<0, $reg>;
-        define_cop!(0, $reg);
-    };
-}
-
-define_cop0! {
+define_cop! {
     /// Breakpoint on execute register
-    BPC, 3
-}
-define_cop0! {
+    BPC<u32>; COP: 0; R: 3,
     /// Breakpoint on data access register
-    BDA, 5
-}
-define_cop0! {
+    BDA<u32>; COP: 0; R: 5,
     /// Breakpoint control register
-    DCIC, 7
-}
-define_cop0! {
+    DCIC<u32>; COP: 0; R: 7,
     /// Bad virtual address
-    BadVaddr, 8
-}
-define_cop0! {
+    BadVaddr<u32>; COP: 0; R: 8,
     /// Data access breakpoint mask
-    BDAM, 9
-}
-define_cop0! {
+    BDAM<u32>; COP: 0; R: 9,
     /// Execute breakpoint mask
-    BPCM, 11
-}
-define_cop0! {
+    BPCM<u32>; COP: 0; R: 11,
     /// Coprocessor system status register
-    Status, 12
-}
-define_cop0! {
+    Status<u32>; COP: 0; R: 12,
     /// Exception cause register
-    Cause, 13
-}
-define_cop0! {
+    Cause<u32>; COP: 0; R: 13,
     /// Exception program counter
-    EPC, 14
-}
-define_cop0! {
+    EPC<u32>; COP: 0; R: 14,
     /// Processor ID register
-    PRID, 15
+    PRID<u32>; COP: 0; R: 15,
 }
