@@ -91,7 +91,7 @@ mod tests {
             fuzz!(|x: i16, y: i16| {
                 const X: usize = const_random!(usize) % 16;
                 const Y: usize = const_random!(usize) % 16;
-                let packed = PackedVertex::<N, X, Y>::try_from((x, y));
+                let packed = PackedVertex::<N, X, Y>::try_from([x, y]);
                 let x_too_big = x as u16 >= 1 << X;
                 let y_too_big = y as u16 >= 1 << Y;
                 if x_too_big {
@@ -127,9 +127,9 @@ mod tests {
                 const Y: usize = (BITS - X - UNUSED) % 16;
                 let valid_x = (x % (1 << X)) as i16;
                 let valid_y = (y % (1 << Y)) as i16;
-                let packed = PackedVertex::<N, X, Y>::try_from((valid_x, valid_y));
+                let packed = PackedVertex::<N, X, Y>::try_from([valid_x, valid_y]);
                 assert!(packed.is_ok());
-                let (new_x, new_y) = packed.unwrap().unpack();
+                let [new_x, new_y] = packed.unwrap().unpack();
                 assert!(new_x == valid_x);
                 assert!(new_y == valid_y);
             });

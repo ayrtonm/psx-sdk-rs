@@ -84,7 +84,11 @@ extern "C" fn _start() -> RtReturn {
             let ctor = transmute::<usize, fn()>(ptr);
             ctor();
         }
+        #[cfg(not(test))]
         main().unwrap();
+
+        #[cfg(test)]
+        main();
     }
     #[cfg(not(feature = "loadable_app"))]
     panic!("`main` should not return")
