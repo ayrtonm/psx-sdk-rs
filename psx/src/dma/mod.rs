@@ -188,12 +188,19 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     ) -> Result<R> {
         let ptr = list as *const L as *const u32;
         self.madr.set_address(ptr)?.store();
+        // TODO: Is there a way to make a proper compiler fence on MIPS-I?
+        unsafe {
+            core::arch::asm!("");
+        }
         self.control
             .set_mode(TransferMode::LinkedList)
             .start()
             .store();
         let res = f();
         self.control.wait();
+        unsafe {
+            core::arch::asm!("");
+        }
         Ok(res)
     }
 }
