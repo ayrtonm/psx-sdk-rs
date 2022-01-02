@@ -38,6 +38,7 @@ mod test;
 pub mod constants;
 pub mod dma;
 pub mod gpu;
+pub mod gte;
 pub mod hw;
 pub mod irq;
 // The `std` module should be public but hidden since `as_cstr` is used from

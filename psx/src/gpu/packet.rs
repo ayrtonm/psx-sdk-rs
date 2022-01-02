@@ -1,5 +1,5 @@
-use crate::gpu::{PhysAddr, Packet, OrderingTable};
 use crate::dma::LinkedList;
+use crate::gpu::{OrderingTable, Packet, PhysAddr};
 use crate::hw::gpu::GP0Command;
 use core::convert::TryFrom;
 use core::mem::size_of;

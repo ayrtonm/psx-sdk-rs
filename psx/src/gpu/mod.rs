@@ -112,7 +112,6 @@ pub struct OrderingTable<T, const N: usize> {
     pub list: [Packet<T>; N],
 }
 
-
 type Result<T> = core::result::Result<T, crate::gpu::vertex::Error>;
 pub struct DispEnv {
     pub(crate) horizontal_range: PackedVertex<3, 12, 12>,

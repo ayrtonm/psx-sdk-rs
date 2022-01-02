@@ -1,17 +1,36 @@
+//! Coprocessor register definitions
+use crate::hw::private::Primitive;
+
+/// A handle to a coprocessor register
+pub struct CopRegister<T: Primitive, const COP: u32, const REG: u32> {
+    pub(super) value: T,
+}
+
+impl<T: Primitive, const COP: u32, const REG: u32> AsRef<T> for CopRegister<T, COP, REG> {
+    fn as_ref(&self) -> &T {
+        &self.value
+    }
+}
+
+impl<T: Primitive, const COP: u32, const REG: u32> AsMut<T> for CopRegister<T, COP, REG> {
+    fn as_mut(&mut self) -> &mut T {
+        &mut self.value
+    }
+}
+
 macro_rules! define_cop {
     ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(,)?) => {
         $(#[$($meta)*])*
-        pub type $name = CopRegister<$cop, $reg>;
+        pub type $name = crate::hw::cop::CopRegister<$ty, $cop, $reg>;
 
-        impl Register<$ty> for CopRegister<$cop, $reg> {
+        impl Register<$ty> for crate::hw::cop::CopRegister<$ty, $cop, $reg> {
             fn skip_load() -> Self {
                 Self { value: 0 }
             }
             fn load(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!(".set noat
-            mfc", $cop, " {0}, $", $reg), out(reg) self.value
+                        concat!("mfc", $cop, " $2, $", $reg), out("$2") self.value
                     }
                 }
                 self
@@ -20,8 +39,7 @@ macro_rules! define_cop {
             fn store(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!(".set noat
-            mtc", $cop, " {0}, $", $reg), in(reg) self.value
+                        concat!("mtc", $cop, " $2, $", $reg), in("$2") self.value
                     }
                 }
                 self

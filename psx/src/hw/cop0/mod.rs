@@ -31,23 +31,6 @@ pub enum IntMask {
     Hardware = IM_HW,
 }
 
-/// A handle to a coprocessor register
-pub struct CopRegister<const COP: u32, const REG: u32> {
-    value: u32,
-}
-
-impl<const COP: u32, const REG: u32> AsRef<u32> for CopRegister<COP, REG> {
-    fn as_ref(&self) -> &u32 {
-        &self.value
-    }
-}
-
-impl<const COP: u32, const REG: u32> AsMut<u32> for CopRegister<COP, REG> {
-    fn as_mut(&mut self) -> &mut u32 {
-        &mut self.value
-    }
-}
-
 define_cop! {
     /// Breakpoint on execute register
     BPC<u32>; COP: 0; R: 3,

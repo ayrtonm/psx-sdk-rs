@@ -9,7 +9,7 @@
 #![allow(non_camel_case_types)]
 
 #[macro_use]
-mod cop;
+pub mod cop;
 pub mod cop0;
 pub mod dma;
 pub mod gpu;
@@ -62,6 +62,8 @@ mod private {
     impl Primitive for u8 {}
     impl Primitive for u16 {}
     impl Primitive for u32 {}
+    impl Primitive for i16 {}
+    impl Primitive for i32 {}
 }
 
 /// A handle to a volatile memory or coprocessor register.
