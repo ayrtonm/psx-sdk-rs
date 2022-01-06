@@ -7,33 +7,44 @@ use core::fmt;
 
 pub struct TTY;
 
+// TODO: Consider adding a feature for alloc to allow downcasting printf! args
+// to String for implicit null-termination
 /// Prints an ASCII string containing C-style escape codes to stdout.
 ///
 /// This uses a single call to the BIOS `printf` function. The format string may
 /// be any expression implementing `AsRef<[u8]>`.
-///
-/// # Safety
-///
-/// Any string arguments formatted with `%s` must be explicitly null-terminated,
-/// otherwise **undefined behavior** occurs. For example:
-///
-/// ```
-/// // Explicit null-termination required since `world` is formatted with `%s`
-/// let world = "world\0";
-/// // The format string itself is implicitly null-terminated
-/// printf!("hello %s!", world);
-/// ```
 #[macro_export]
 macro_rules! printf {
-    ($msg:expr $(,$args:tt)*) => {
+    // This is the entry point of the macro
+    ($msg:expr $(,$args:expr)*) => {
         {
+            use core::any::Any;
             use $crate::std::AsCStr;
-            $msg.as_cstr(|cstr| {
-                // SAFETY: the first argument is null-terminated.
-                unsafe {
-                    $crate::sys::kernel::printf(cstr.as_ptr() $(,$args)*)
-                }
-            })
+            use alloc::string::String;
+            $msg.as_cstr(|cs| {
+                printf!(@parse $($args,)*; {cs.as_ptr()});
+            });
+        }
+    };
+    (@parse $msg:expr $(,$args:expr)* $(,)?; {$($acc:tt)*}) => {
+        {
+            let any_ref = (&$msg as &dyn Any);
+            if let Some(s) = any_ref.downcast_ref::<&[u8]>() {
+                s.as_cstr(|cs| {
+                    printf!(@parse $($args,)*; {$($acc)*, cs});
+                })
+            } else if let Some(s) = any_ref.downcast_ref::<&str>() {
+                s.as_cstr(|cs| {
+                    printf!(@parse $($args,)*; {$($acc)*, cs});
+                })
+            } else {
+                printf!(@parse $($args,)*; {$($acc)*,$msg});
+            }
+        }
+    };
+    (@parse; {$($acc:tt)*}) => {
+        unsafe {
+            $crate::sys::kernel::printf($($acc)*)
         }
     };
 }
@@ -63,7 +74,9 @@ macro_rules! println {
         {
             use $crate::sys::tty::TTY;
             <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($args)*)).ok();
-            $crate::printf!("\n");
+            unsafe {
+                $crate::sys::kernel::printf("\n\0".as_ptr());
+            }
         }
     };
 }
