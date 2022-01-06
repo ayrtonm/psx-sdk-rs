@@ -27,12 +27,6 @@ impl<VXY: VectorXY, VZ: VectorZ> Vector<VXY, VZ> {
         vz.assign(z);
         Self { vxy, vz }
     }
-
-    //pub fn use(&mut self) {
-    //    self.vxy.store();
-    //    self.vz.store();
-    //    // gte cmd goes here
-    //}
 }
 
 pub struct Matrix<AB: MatrixAB, CD: MatrixAB, EF: MatrixAB, GH: MatrixAB, I: MatrixC> {
@@ -69,5 +63,16 @@ impl<AB: MatrixAB, CD: MatrixAB, EF: MatrixAB, GH: MatrixAB, I: MatrixC> Matrix<
         Self {
             ab, cd, ef, gh, i
         }
+    }
+
+    pub fn multiply<VXY: VectorXY, VZ: VectorZ>(&mut self, v: &mut Vector<VXY, VZ>) {
+        v.vxy.store();
+        v.vz.store();
+        self.ab.store();
+        self.cd.store();
+        self.ef.store();
+        self.gh.store();
+        self.i.store();
+        // TODO: Call cop2 cmd here
     }
 }

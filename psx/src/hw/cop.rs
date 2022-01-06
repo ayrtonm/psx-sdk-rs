@@ -20,6 +20,9 @@ impl<T: Primitive, const COP: u32, const REG: u32> AsMut<T> for CopRegister<T, C
 
 macro_rules! define_cop {
     ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(,)?) => {
+        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; "m");
+    };
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr; $cop_ty:literal $(,)?) => {
         $(#[$($meta)*])*
         pub type $name = crate::hw::cop::CopRegister<$ty, $cop, $reg>;
 
@@ -30,7 +33,7 @@ macro_rules! define_cop {
             fn load(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!("mfc", $cop, " $2, $", $reg), out("$2") self.value
+                        concat!($cop_ty, "fc", $cop, " $2, $", $reg), out("$2") self.value
                     }
                 }
                 self
@@ -39,15 +42,15 @@ macro_rules! define_cop {
             fn store(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!("mtc", $cop, " $2, $", $reg), in("$2") self.value
+                        concat!($cop_ty, "tc", $cop, " $2, $", $reg), in("$2") self.value
                     }
                 }
                 self
             }
         }
     };
-    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr, $($others:tt)*) => {
-        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg);
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(;$cop_ty:literal)?, $($others:tt)*) => {
+        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg $(;$cop_ty)*);
         define_cop!($($others)*);
     };
 }

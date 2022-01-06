@@ -27,7 +27,7 @@ define_cop! {
     LZCR<u32>; COP: 2; R: 31,
 
     /// Rotation matrix entries RT11 and RT12
-    RT11_12<u32>; COP: 2; R: 32,
+    RT11_12<u32>; COP: 2; R: 6; "c",
     /// Rotation matrix entries RT13 and RT21
     RT13_21<u32>; COP: 2; R: 33,
     /// Rotation matrix entries RT22 and RT23
