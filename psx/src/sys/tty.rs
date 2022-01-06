@@ -1,14 +1,59 @@
 #![doc(hidden)]
+/// This module is hidden because only the macros defined in this module are
+/// explicitly public-facing and they're exported from the crate root.
 use crate::std::AsCStr;
-/// Only the macros defined in this module are explicitly public-facing and
-/// they're exported from the crate root.
 use crate::sys::kernel;
 use core::fmt;
 
+pub trait PrintfString {
+    fn impls_as_cstr(&self) -> Option<&[u8]>;
+}
+
+// min_specialization currently doesn't allow an impl<T: AsRef<[u8]>> so we have
+// to enumerate the possible CStr types. This approach is better than the
+// previous "if downcast_ref" in the macro because it supports all `[u8; N]`
+impl<const N: usize> PrintfString for [u8; N] {
+    fn impls_as_cstr(&self) -> Option<&[u8]> {
+        Some(self.as_ref())
+    }
+}
+impl PrintfString for &[u8] {
+    fn impls_as_cstr(&self) -> Option<&[u8]> {
+        Some(self.as_ref())
+    }
+}
+impl PrintfString for &str {
+    fn impls_as_cstr(&self) -> Option<&[u8]> {
+        Some(self.as_ref())
+    }
+}
+
+impl<T> PrintfString for T {
+    default fn impls_as_cstr(&self) -> Option<&[u8]> {
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test_case]
+    fn impls_as_cstr() {
+        let array : [u8; 0] = [];
+        let array_ref: &[u8; 0] = b"";
+        let slice: &[u8] = &array_ref[..];
+        let str_ref: &str = "";
+        assert!(array.impls_as_cstr().is_some());
+        assert!(array_ref.impls_as_cstr().is_some());
+        assert!(slice.impls_as_cstr().is_some());
+        assert!(str_ref.impls_as_cstr().is_some());
+        assert!(0xdeadbeefu32.impls_as_cstr().is_none());
+    }
+}
+
 pub struct TTY;
 
-// TODO: Consider adding a feature for alloc to allow downcasting printf! args
-// to String for implicit null-termination
 /// Prints an ASCII string containing C-style escape codes to stdout.
 ///
 /// This uses a single call to the BIOS `printf` function. The format string may
@@ -18,9 +63,8 @@ macro_rules! printf {
     // This is the entry point of the macro
     ($msg:expr $(,$args:expr)*) => {
         {
-            use core::any::Any;
             use $crate::std::AsCStr;
-            use alloc::string::String;
+            use $crate::sys::tty::PrintfString;
             $msg.as_cstr(|cs| {
                 printf!(@parse $($args,)*; {cs.as_ptr()});
             });
@@ -28,14 +72,9 @@ macro_rules! printf {
     };
     (@parse $msg:expr $(,$args:expr)* $(,)?; {$($acc:tt)*}) => {
         {
-            let any_ref = (&$msg as &dyn Any);
-            if let Some(s) = any_ref.downcast_ref::<&[u8]>() {
+            if let Some(s) = $msg.impls_as_cstr() {
                 s.as_cstr(|cs| {
-                    printf!(@parse $($args,)*; {$($acc)*, cs});
-                })
-            } else if let Some(s) = any_ref.downcast_ref::<&str>() {
-                s.as_cstr(|cs| {
-                    printf!(@parse $($args,)*; {$($acc)*, cs});
+                    printf!(@parse $($args,)*; {$($acc)*, cs.as_ptr()});
                 })
             } else {
                 printf!(@parse $($args,)*; {$($acc)*,$msg});

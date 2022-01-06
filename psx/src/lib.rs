@@ -1,6 +1,9 @@
 //! This is a crate for developing homebrew for the Sony PlayStation 1.
 #![no_std]
 //#![deny(missing_docs)]
+// Used to implement PrintfArg trait
+#![feature(min_specialization)]
+// Required for global_asm! on MIPS
 #![feature(asm_experimental_arch)]
 // For an efficient `AsCStr` implementation
 #![feature(
@@ -38,7 +41,8 @@ mod test;
 pub mod constants;
 pub mod dma;
 pub mod gpu;
-pub mod gte;
+// TODO: Add cfc2 and ctc2 to LLVM to enable this
+//pub mod gte;
 pub mod hw;
 pub mod irq;
 // The `std` module should be public but hidden since `as_cstr` is used from
