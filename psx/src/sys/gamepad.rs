@@ -51,6 +51,22 @@ pub enum Button {
     Square,
 }
 
+#[derive(Debug)]
+#[repr(u16)]
+pub enum PadType {
+    Mouse = 0x5a12,
+    NegCon = 0x5A23,
+    Konami = 0x5A31,
+    Digital = 0x5A41,
+    AnalogStick = 0x5A53,
+    NamcoLightgun = 0x5A63,
+    AnalogPad = 0x5A73,
+    Multitap = 0x5A80,
+    Jogcon = 0x5AE3,
+    ConfigMode = 0x5AF3,
+    Disconnected = 0xFFFF,
+}
+
 #[derive(Debug, IntoStaticStr)]
 pub enum Error {
     AlreadyInitialized,
