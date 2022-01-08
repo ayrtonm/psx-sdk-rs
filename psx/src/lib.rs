@@ -35,6 +35,17 @@ use core::arch::asm;
 use core::mem::{size_of, transmute};
 use core::slice;
 
+#[macro_export]
+macro_rules! ctor {
+    (fn $name:ident() { $($body:tt)* }) => {
+        #[used]
+        #[link_section = ".ctors"]
+        static $name: fn() = || {
+            $($body)*
+        };
+    };
+}
+
 #[macro_use]
 mod test;
 
@@ -43,6 +54,7 @@ pub mod dma;
 pub mod gpu;
 // TODO: Add cfc2 and ctc2 to LLVM to enable this
 //pub mod gte;
+pub mod heap;
 pub mod hw;
 pub mod irq;
 // The `std` module should be public but hidden since `as_cstr` is used from

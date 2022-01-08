@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::hw::cop0::{IntMask, Mode, Status};
+use crate::hw::cop0::{IntSrc, Mode, Status};
 use crate::hw::Register;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
@@ -45,9 +45,10 @@ impl Status {
         }
     }
 
-    /// Checks if individual interrupt sources are allowed to cause exceptions.
-    pub fn interrupt_masked(&self, int_mask: IntMask) -> bool {
-        self.all_clear(1 << (int_mask as u32))
+    /// Checks if individual interrupt sources are forbidden from causing
+    /// exceptions.
+    pub fn interrupt_masked(&self, int_src: IntSrc) -> bool {
+        self.all_clear(1 << (int_src as u32))
     }
 
     /// Checks if coprocessor 0 is enabled in user-mode.
@@ -76,13 +77,13 @@ impl Status {
     }
 
     /// Masks an interrupt source, forbidding it from causing exceptions.
-    pub fn mask_interrupt(&mut self, int_mask: IntMask) -> &mut Self {
-        self.clear_bits(1 << (int_mask as u32))
+    pub fn mask_interrupt(&mut self, int_src: IntSrc) -> &mut Self {
+        self.clear_bits(1 << (int_src as u32))
     }
 
     /// Unmasks an interrupt source, allowing it to cause exceptions.
-    pub fn unmask_interrupt(&mut self, int_mask: IntMask) -> &mut Self {
-        self.set_bits(1 << (int_mask as u32))
+    pub fn unmask_interrupt(&mut self, int_src: IntSrc) -> &mut Self {
+        self.set_bits(1 << (int_src as u32))
     }
 
     /// Enables coprocessor 0 in user-mode.
@@ -114,15 +115,15 @@ impl Debug for Status {
             .field("mode", &self.get_mode())
             .field(
                 "hw_interrupt_masked",
-                &self.interrupt_masked(IntMask::Hardware),
+                &self.interrupt_masked(IntSrc::Hardware),
             )
             .field(
                 "sw0_interrupt_masked",
-                &self.interrupt_masked(IntMask::Software0),
+                &self.interrupt_masked(IntSrc::Software0),
             )
             .field(
                 "sw1_interrupt_masked",
-                &self.interrupt_masked(IntMask::Software1),
+                &self.interrupt_masked(IntSrc::Software1),
             )
             .field("user_cop0_enabled", &self.user_cop0_enabled())
             .field("gte_enabled", &self.gte_enabled())

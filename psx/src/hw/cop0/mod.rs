@@ -22,7 +22,7 @@ pub enum Mode {
 /// Interrupt mask for determining which interrupts are allowed to cause
 /// exceptions.
 #[repr(u32)]
-pub enum IntMask {
+pub enum IntSrc {
     /// One of the software-based interrupts
     Software0 = IM_SW0,
     /// One of the software-based interrupts

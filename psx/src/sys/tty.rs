@@ -40,7 +40,7 @@ mod tests {
 
     #[test_case]
     fn impls_as_cstr() {
-        let array : [u8; 0] = [];
+        let array: [u8; 0] = [];
         let array_ref: &[u8; 0] = b"";
         let slice: &[u8] = &array_ref[..];
         let str_ref: &str = "";

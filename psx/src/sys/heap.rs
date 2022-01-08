@@ -20,30 +20,28 @@ unsafe impl GlobalAlloc for BiosAllocator {
     }
 }
 
-/// Define a region of memory specified by a mutable slice as a BIOS-backed
-/// heap.
+/// Define a region of memory specified by a mutable slice as a heap managed by
+/// the BIOS.
 #[macro_export]
-macro_rules! heap {
+macro_rules! kernel_heap {
     ($mut_slice:expr) => {
         extern crate alloc;
 
         #[global_allocator]
         static _HEAP: psx::sys::heap::BiosAllocator = psx::sys::heap::BiosAllocator;
 
-        #[used]
-        #[link_section = ".ctors"]
-        static _INIT_HEAP: fn() = _init_heap;
+        $crate::ctor! {
+            fn heap() {
+                use core::mem::size_of;
+                use psx::sys::kernel;
 
-        fn _init_heap() {
-            use core::mem::size_of;
-            use psx::sys::kernel;
-
-            // Type-check the macro argument
-            let slice: &'static mut [u32] = $mut_slice;
-            let ptr = slice.as_mut_ptr() as usize;
-            let len = slice.len() * size_of::<usize>();
-            unsafe {
-                kernel::init_heap(ptr, len);
+                // Type-check the macro argument
+                let slice: &'static mut [u32] = $mut_slice;
+                let ptr = slice.as_mut_ptr() as usize;
+                let len = slice.len() * size_of::<u32>();
+                unsafe {
+                    kernel::init_heap(ptr, len);
+                }
             }
         }
     };
