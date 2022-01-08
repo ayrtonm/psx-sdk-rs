@@ -4,6 +4,7 @@ use crate::hw::gpu::GP0Command;
 use core::convert::TryFrom;
 use core::mem::size_of;
 use core::mem::MaybeUninit;
+use core::ops::Range;
 use strum_macros::IntoStaticStr;
 
 impl<'a, T> From<&'a mut T> for PhysAddr {
@@ -86,8 +87,9 @@ impl<T, const N: usize> OrderingTable<T, N> {
         })
     }
 
-    pub fn link(&mut self) {
-        for i in 1..N {
+    pub fn link(&mut self, mut range: Range<usize>) {
+        range.start += 1;
+        for i in range {
             let (a, b) = self.list.split_at_mut(i);
             let last_a = &mut a[a.len() - 1];
             let first_b = &mut b[0];
