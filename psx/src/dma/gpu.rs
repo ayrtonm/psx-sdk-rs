@@ -22,7 +22,7 @@ impl GPU {
         &mut self.0.control
     }
 
-    pub fn send_list<L: LinkedList>(&mut self, list: &L) -> Result<()> {
+    pub fn send_list<L: LinkedList + ?Sized>(&mut self, list: &L) -> Result<()> {
         self.send_list_and(list, || ())
     }
 
@@ -31,7 +31,7 @@ impl GPU {
     ///
     /// This blocks if the function `f` returns before the transfer completes.
     /// Returns `f`'s return value or `None` if the buffer is too large.
-    pub fn send_list_and<L: LinkedList, F: FnOnce() -> R, R>(
+    pub fn send_list_and<L: LinkedList + ?Sized, F: FnOnce() -> R, R>(
         &mut self, list: &L, f: F,
     ) -> Result<R> {
         self.0.send_list_and(list, f)

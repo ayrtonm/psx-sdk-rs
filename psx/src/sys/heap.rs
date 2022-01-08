@@ -23,7 +23,7 @@ unsafe impl GlobalAlloc for BiosAllocator {
 /// Define a region of memory specified by a mutable slice as a heap managed by
 /// the BIOS.
 #[macro_export]
-macro_rules! kernel_heap {
+macro_rules! sys_heap {
     ($mut_slice:expr) => {
         extern crate alloc;
 

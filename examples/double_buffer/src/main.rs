@@ -12,7 +12,7 @@ use psx::hw::Register;
 use psx::println;
 use psx::sys::gamepad::{Gamepad, BUFFER_SIZE};
 
-psx::heap! {
+psx::sys_heap! {
     unsafe {
         psx::data_cache()
     }
@@ -88,32 +88,26 @@ fn main() -> Result<()> {
 
     let mut quads = OrderingTable::new([PolyF4::new(); 12])?;
     quads.link(0..6);
-    quads.link(7..12);
+    quads.link(6..12);
 
-    let mut cube = unit.map(|(c, p)| (c, p.Rx(theta, ZERO).Ry(phi, ZERO) + pos));
-    cube.sort_by_key(sum_z);
-    for n in 0..6 {
-        let (color, plane) = cube[n];
-        quads.list[n]
-            .payload
-            .set_vertices(plane.project(basic).into())
-            .set_color(color);
-    }
-
-    enable_vblank();
+    let mut display_a = true;
     loop {
-        for n in 0..6 {
-            let (color, plane) = cube[n];
-            quads.list[n]
-                .payload
-                .set_vertices(plane.project(basic).into())
-                .set_color(color);
-        }
-        gpu_dma.send_list_and(&quads, || {
-            poll_controller(&pad, &mut pos, &mut theta, &mut phi);
-            cube = unit.map(|(c, p)| (c, p.Rx(theta, ZERO).Ry(phi, ZERO) + pos));
+        let (list_a, list_b) = quads.list.split_at_mut(6);
+        let (display_list, draw_list) = if display_a {
+            (list_a, list_b)
+        } else {
+            (list_b, list_a)
+        };
+        gpu_dma.send_list_and(display_list, || {
+            let mut cube = unit.map(|(c, p)| (c, p.Rx(theta, ZERO).Ry(phi, ZERO) + pos));
             cube.sort_by_key(sum_z);
+            for face in 0..6 {
+                let (color, plane) = cube[face];
+                draw_list[face].payload.set_vertices(plane.project(basic).into()).set_color(color);
+            }
         })?;
+        display_a = !display_a;
+        poll_controller(&pad, &mut pos, &mut theta, &mut phi);
         draw_sync();
         vsync();
         fb.swap(Some(&mut gpu_dma))?;

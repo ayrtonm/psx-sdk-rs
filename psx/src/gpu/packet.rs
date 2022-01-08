@@ -101,3 +101,4 @@ impl<T, const N: usize> OrderingTable<T, N> {
 impl<T> LinkedList for Packet<T> where T: GP0Command {}
 impl LinkedList for Packet<()> {}
 impl<T, const N: usize> LinkedList for OrderingTable<T, N> where T: GP0Command {}
+impl<T> LinkedList for [Packet<T>] where T: GP0Command {}

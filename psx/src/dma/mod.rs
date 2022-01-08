@@ -183,7 +183,7 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     ///
     /// This blocks if the function `f` returns before the transfer completes.
     /// Returns `f`'s return value.
-    pub fn send_list_and<F: FnOnce() -> R, R, L: LinkedList>(
+    pub fn send_list_and<F: FnOnce() -> R, R, L: LinkedList + ?Sized>(
         &mut self, list: &L, f: F,
     ) -> Result<R> {
         let ptr = list as *const L as *const u32;
