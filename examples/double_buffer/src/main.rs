@@ -3,10 +3,12 @@
 
 use framebuffer::constants::*;
 use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer, Plane3, Result, V2, V3};
-use psx::dma;
 use psx::constants::*;
-use psx::gpu::OrderingTable;
+use psx::dma;
 use psx::gpu::Color;
+use psx::gpu::OrderingTable;
+use psx::hw::cop0;
+use psx::hw::Register;
 use psx::println;
 use psx::sys::gamepad::{Gamepad, BUFFER_SIZE};
 
@@ -84,10 +86,19 @@ fn main() -> Result<()> {
     let mut theta = 0.0;
     let mut phi = 0.0;
 
-    let mut quads = OrderingTable::new([PolyF4::new(); 6])?;
-    quads.link();
+    let mut quads = OrderingTable::new([PolyF4::new(); 12])?;
+    quads.link(0..6);
+    quads.link(7..12);
 
     let mut cube = unit.map(|(c, p)| (c, p.Rx(theta, ZERO).Ry(phi, ZERO) + pos));
+    cube.sort_by_key(sum_z);
+    for n in 0..6 {
+        let (color, plane) = cube[n];
+        quads.list[n]
+            .payload
+            .set_vertices(plane.project(basic).into())
+            .set_color(color);
+    }
 
     enable_vblank();
     loop {
