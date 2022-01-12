@@ -1,6 +1,6 @@
 //! Interrupt request and acknowledge
 use crate::hw::{MemRegister, Register};
-use crate::irq::IRQ;
+use crate::IRQ;
 use core::mem::variant_count;
 
 /// Interrupt status register

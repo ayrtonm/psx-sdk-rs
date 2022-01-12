@@ -1,4 +1,4 @@
-//! Higher-level DMA channel operations and types.
+//! High-level DMA channel operations and types.
 use crate::hw::dma;
 use crate::hw::dma::{cdrom, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};

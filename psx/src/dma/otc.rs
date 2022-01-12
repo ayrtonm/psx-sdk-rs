@@ -19,14 +19,15 @@ impl OTC {
         Ok(ordering_table)
     }
 
-    pub fn init_and<'a, F: FnOnce() -> R, R>(&mut self, list: &'a mut [u32], f: F) -> Result<(&'a mut [Packet<()>], R)> {
+    pub fn init_and<'a, F: FnOnce() -> R, R>(
+        &mut self, list: &'a mut [u32], f: F,
+    ) -> Result<(&'a mut [Packet<()>], R)> {
         self.control()
             .set_direction(Direction::ToMemory)
             .set_step(Step::Backward);
         let res = self.0.send_and(list, f)?;
-        let ordering_table = unsafe {
-            slice::from_raw_parts_mut(list.as_ptr() as *mut Packet<()>, list.len())
-        };
+        let ordering_table =
+            unsafe { slice::from_raw_parts_mut(list.as_ptr() as *mut Packet<()>, list.len()) };
         Ok((ordering_table, res))
     }
 }

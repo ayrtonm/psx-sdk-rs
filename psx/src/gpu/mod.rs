@@ -9,13 +9,6 @@ pub mod packet;
 pub mod primitives;
 pub mod vertex;
 
-pub mod video_modes {
-    use super::VideoMode;
-
-    pub const NTSC: VideoMode = VideoMode::NTSC;
-    pub const PAL: VideoMode = VideoMode::PAL;
-}
-
 type Command = u8;
 
 #[repr(C)]

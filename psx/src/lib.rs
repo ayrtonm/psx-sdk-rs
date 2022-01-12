@@ -32,13 +32,12 @@
 #![test_runner(crate::test::runner)]
 #![reexport_test_harness_main = "main"]
 #![cfg_attr(test, no_main)]
-// This is temporary to make it easier to migrate old code to the new psx crate
-#![allow(dead_code)]
 
 use core::arch::asm;
 use core::mem::{size_of, transmute};
 use core::slice;
 
+/// Define a constructor that runs before main.
 #[macro_export]
 macro_rules! ctor {
     (fn $name:ident() { $($body:tt)* }) => {
@@ -53,16 +52,16 @@ macro_rules! ctor {
 #[macro_use]
 mod test;
 
-pub mod constants;
 pub mod dma;
 pub mod gpu;
 // TODO: Add cfc2 and ctc2 to LLVM to enable this
 //pub mod gte;
+#[doc(hidden)]
 pub mod heap;
 pub mod hw;
-pub mod irq;
 // The `std` module should be public but hidden since `as_cstr` is used from
 // macros which may be in user crates.
+mod framebuffer;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
@@ -214,3 +213,36 @@ pub static _REGION: [u8; 47] = as_array!("Sony Computer Entertainment Inc. for J
 #[doc(hidden)]
 #[link_section = ".psx_exe"]
 pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
+
+/// An interrupt request
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum IRQ {
+    /// vertical blank interrupt request (NTSC = 60Hz, PAL = 50Hz)
+    Vblank = 0,
+    /// GPU interrupt requested via the GP0(1Fh) command
+    GPU,
+    /// CDROM interrupt request
+    CDROM,
+    /// DMA interrupt request
+    DMA,
+    /// Timer 0 (dot clock or sysclock)
+    Timer0,
+    /// Timer 1 (Hblank or sysclock)
+    Timer1,
+    /// Timer 2 (sysclock or fractional sysclock)
+    Timer2,
+    /// Controller and memory card byte received
+    ControllerMemoryCard,
+    /// Serial IO port
+    SIO,
+    /// Sound processing unit
+    SPU,
+    /// Secondary controller interrupt request
+    ControllerPIO,
+}
+
+pub use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer};
+pub use crate::gpu::colors::*;
+pub use crate::gpu::primitives::*;
+pub use crate::sys::gamepad::buttons::*;
+pub use crate::sys::gamepad::pad_types::*;
