@@ -332,10 +332,10 @@ pub trait ChannelControl: Register<u32> {
     fn set_chop(&mut self, chop: Option<Chop>) -> Option<&mut Self> {
         match chop {
             Some(chop) => {
-                if chop.cpu_window & 0b111 != 0 {
+                if chop.cpu_window & !0b111 != 0 {
                     return None
                 }
-                if chop.dma_window & 0b111 != 0 {
+                if chop.dma_window & !0b111 != 0 {
                     return None
                 }
                 Some(

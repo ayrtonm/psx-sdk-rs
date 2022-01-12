@@ -1,5 +1,6 @@
-use crate::dma::Channel;
-use crate::dma::Result;
+use core::slice;
+use crate::gpu::Packet;
+use crate::dma::{Step, Channel, ChannelControl, Direction, LinkedList, Result};
 use crate::hw::dma::otc::{Address, Block, Control};
 
 pub struct OTC(Channel<Address, Block, Control>);
@@ -13,13 +14,17 @@ impl OTC {
         &mut self.0.control
     }
 
-    pub fn init(&mut self, block: &mut [u32]) -> Result<()> {
-        self.0.send_and(block, || ())
+    pub fn init<'a>(&mut self, list: &'a mut [u32]) -> Result<&'a mut [Packet<()>]> {
+        self.control().set_direction(Direction::ToMemory).set_step(Step::Backward);
+        self.0.send_and(list, || ())?;
+        unsafe {
+            Ok(slice::from_raw_parts_mut(list.as_ptr() as *mut Packet<()>, list.len()))
+        }
     }
 
-    pub fn init_and<F: FnOnce() -> R, R>(&mut self, block: &mut [u32], f: F) -> Result<R> {
-        self.0.send_and(block, f)
-    }
+    //pub fn init_and<L: LinkedList + ?Sized, F: FnOnce() -> R, R>(&mut self,
+    // block: &mut L, f: F) -> Result<R> {    self.0.send_and(block, f)
+    //}
 }
 
 // This test is flaky

@@ -1,6 +1,8 @@
 //! This is a crate for developing homebrew for the Sony PlayStation 1.
 #![no_std]
 //#![deny(missing_docs)]
+// Hacky workaround for the lack of compiler fences in llvm's MIPS-I codegen
+#![feature(bench_black_box)]
 // Used to implement PrintfArg trait
 #![feature(min_specialization)]
 // Required for global_asm! on MIPS

@@ -4,6 +4,7 @@ use crate::hw::dma::{cdrom, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
 use core::convert::TryInto;
+use core::mem::size_of_val;
 use strum_macros::IntoStaticStr;
 
 mod gpu;
@@ -18,6 +19,7 @@ pub enum Error {
     OversizedBlock,
     EmptyBlock,
     BadBlockPartition,
+    InvalidChop,
 }
 
 type Result<T> = core::result::Result<T, Error>;
@@ -145,7 +147,11 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         let ptr = self.block_ptr(block)?;
         self.madr.set_address(ptr)?.store();
         self.bcr.set_block(block.len())?.store();
-        self.control.start().store();
+        self.control
+            .set_mode(TransferMode::Immediate)
+            .start()
+            .store();
+        core::hint::black_box(block);
         let res = f();
         self.control.wait();
         Ok(res)
@@ -173,6 +179,7 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         };
         self.bcr.set_block(block_len)?.store();
         self.control.start().store();
+        core::hint::black_box(block);
         let res = f();
         self.control.wait();
         Ok(res)
@@ -188,19 +195,13 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     ) -> Result<R> {
         let ptr = list as *const L as *const u32;
         self.madr.set_address(ptr)?.store();
-        // TODO: Is there a way to make a proper compiler fence on MIPS-I?
-        unsafe {
-            core::arch::asm!("");
-        }
         self.control
             .set_mode(TransferMode::LinkedList)
             .start()
             .store();
+        core::hint::black_box(list);
         let res = f();
         self.control.wait();
-        unsafe {
-            core::arch::asm!("");
-        }
         Ok(res)
     }
 }
