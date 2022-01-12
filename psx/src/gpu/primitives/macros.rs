@@ -3,26 +3,20 @@
 macro_rules! impl_primitive {
     ($name:ident, $cmd:expr) => {
         impl $name {
-            pub fn new() -> Self {
-                let mut primitive = unsafe { MaybeUninit::<Self>::zeroed().assume_init() };
+            pub const fn new() -> Self {
+                let buf = [0u8; size_of::<Self>()];
+                let mut primitive = unsafe { transmute::<_, Self>(buf) };
                 primitive.cmd = $cmd;
                 primitive
-            }
-
-            pub fn new_array<const N: usize>() -> [Self; N] {
-                let mut array = unsafe { MaybeUninit::<[Self; N]>::zeroed().assume_init() };
-                for primitive in &mut array {
-                    primitive.cmd = $cmd;
-                }
-                array
             }
         }
         impl GP0Command for $name {}
     };
     ($name:ident < N > , $cmd:expr) => {
         impl<const N: usize> $name<N> {
-            pub fn new() -> Self {
-                let mut primitive = unsafe { MaybeUninit::<Self>::zeroed().assume_init() };
+            pub const fn new() -> Self {
+                let buf = [0u8; size_of::<Self>()];
+                let mut primitive = unsafe { transmute::<_, Self>(buf) };
                 primitive.cmd = $cmd;
                 primitive
             }
