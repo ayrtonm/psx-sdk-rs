@@ -1,4 +1,5 @@
-use crate::gpu::{Color, Vertex};
+use crate::graphics::Vi;
+use crate::gpu::{Color};
 use crate::hw::gpu::{GP0Command, GP0};
 use crate::hw::{MemRegister, Register};
 
@@ -17,9 +18,7 @@ impl GP0 {
         self
     }
 
-    pub fn fill_rectangle(&mut self, color: Color, offset: [i16; 2], size: [i16; 2]) -> &mut Self {
-        let offset = Vertex::from(offset);
-        let size = Vertex::from(size);
+    pub fn fill_rectangle(&mut self, color: Color, offset: Vi, size: Vi) -> &mut Self {
         self.0
             .assign(0x02 << 24 | u32::from(color))
             .store()

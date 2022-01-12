@@ -1,4 +1,5 @@
-use crate::gpu::{Clut, Color, Command, TexCoord, TexPage, Vertex};
+use crate::graphics::Vi;
+use crate::gpu::{Clut, Color, Command, TexCoord, TexPage};
 use crate::hw::gpu::GP0Command;
 use core::mem::{size_of, transmute};
 
@@ -11,9 +12,9 @@ mod macros;
 pub struct PolyF3 {
     color: Color,
     cmd: Command,
-    v0: Vertex,
-    v1: Vertex,
-    v2: Vertex,
+    v0: Vi,
+    v1: Vi,
+    v2: Vi,
 }
 
 /// Flat-shaded, non-textured quad.
@@ -22,10 +23,10 @@ pub struct PolyF3 {
 pub struct PolyF4 {
     color: Color,
     cmd: Command,
-    v0: Vertex,
-    v1: Vertex,
-    v2: Vertex,
-    v3: Vertex,
+    v0: Vi,
+    v1: Vi,
+    v2: Vi,
+    v3: Vi,
 }
 
 /// Flat-shaded, textured triangle.
@@ -34,13 +35,13 @@ pub struct PolyF4 {
 pub struct PolyFT3 {
     color: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     t0: TexCoord,
     clut: Clut,
-    v1: Vertex,
+    v1: Vi,
     t1: TexCoord,
     tpage: TexPage,
-    v2: Vertex,
+    v2: Vi,
     t2: TexCoord,
     _pad: u16,
 }
@@ -51,16 +52,16 @@ pub struct PolyFT3 {
 pub struct PolyFT4 {
     color: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     t0: TexCoord,
     clut: Clut,
-    v1: Vertex,
+    v1: Vi,
     t1: TexCoord,
     tpage: TexPage,
-    v2: Vertex,
+    v2: Vi,
     t2: TexCoord,
     _pad0: u16,
-    v3: Vertex,
+    v3: Vi,
     t3: TexCoord,
     _pad1: u16,
 }
@@ -71,13 +72,13 @@ pub struct PolyFT4 {
 pub struct PolyG3 {
     color0: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     color1: Color,
     _pad0: u8,
-    v1: Vertex,
+    v1: Vi,
     color2: Color,
     _pad1: u8,
-    v2: Vertex,
+    v2: Vi,
 }
 
 /// Gouraud-shaded, non-textured quad.
@@ -86,16 +87,16 @@ pub struct PolyG3 {
 pub struct PolyG4 {
     color0: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     color1: Color,
     _pad0: u8,
-    v1: Vertex,
+    v1: Vi,
     color2: Color,
     _pad1: u8,
-    v2: Vertex,
+    v2: Vi,
     color3: Color,
     _pad2: u8,
-    v3: Vertex,
+    v3: Vi,
 }
 
 /// Gouraud-shaded, textured triangle.
@@ -104,17 +105,17 @@ pub struct PolyG4 {
 pub struct PolyGT3 {
     color0: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     t0: TexCoord,
     clut: Clut,
     color1: Color,
     _pad0: u8,
-    v1: Vertex,
+    v1: Vi,
     t1: TexCoord,
     tpage: TexPage,
     color2: Color,
     _pad1: u8,
-    v2: Vertex,
+    v2: Vi,
     t2: TexCoord,
     _pad2: u16,
 }
@@ -125,22 +126,22 @@ pub struct PolyGT3 {
 pub struct PolyGT4 {
     color0: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     t0: TexCoord,
     clut: Clut,
     color1: Color,
     _pad0: u8,
-    v1: Vertex,
+    v1: Vi,
     t1: TexCoord,
     tpage: TexPage,
     color2: Color,
     _pad1: u8,
-    v2: Vertex,
+    v2: Vi,
     t2: TexCoord,
     _pad2: u16,
     color3: Color,
     _pad3: u8,
-    v3: Vertex,
+    v3: Vi,
     t3: TexCoord,
     _pad4: u16,
 }
@@ -151,8 +152,8 @@ pub struct PolyGT4 {
 pub struct LineF2 {
     color: Color,
     cmd: Command,
-    v0: Vertex,
-    v1: Vertex,
+    v0: Vi,
+    v1: Vi,
 }
 
 /// Flat-shaded poly-line.
@@ -161,7 +162,7 @@ pub struct LineF2 {
 pub struct LineF<const N: usize> {
     color: Color,
     cmd: Command,
-    vertices: [Vertex; N],
+    vertices: [Vi; N],
     term: u32,
 }
 
@@ -171,25 +172,25 @@ pub struct LineF<const N: usize> {
 pub struct LineG2 {
     color0: Color,
     cmd: Command,
-    v0: Vertex,
+    v0: Vi,
     color1: Color,
     _pad: u8,
-    v1: Vertex,
+    v1: Vi,
 }
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-struct ColoredVertex {
+struct ColoredVi {
     c: Color,
     _pad: u8,
-    v: Vertex,
+    v: Vi,
 }
 
 /// Gouraud-shaded poly-line.
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LineG<const N: usize> {
-    colored_vertices: [ColoredVertex; N],
+    colored_vertices: [ColoredVi; N],
     term: u32,
 }
 
@@ -199,8 +200,8 @@ pub struct LineG<const N: usize> {
 pub struct Tile {
     color: Color,
     cmd: Command,
-    offset: Vertex,
-    size: Vertex,
+    offset: Vi,
+    size: Vi,
 }
 
 /// Monochrome 1x1 rectangle.
@@ -209,7 +210,7 @@ pub struct Tile {
 pub struct Tile1 {
     color: Color,
     cmd: Command,
-    offset: Vertex,
+    offset: Vi,
 }
 
 /// Monochrome 8x8 rectangle.
@@ -218,7 +219,7 @@ pub struct Tile1 {
 pub struct Tile8 {
     color: Color,
     cmd: Command,
-    offset: Vertex,
+    offset: Vi,
 }
 
 /// Monochrome 16x16 rectangle.
@@ -227,7 +228,7 @@ pub struct Tile8 {
 pub struct Tile16 {
     color: Color,
     cmd: Command,
-    offset: Vertex,
+    offset: Vi,
 }
 
 /// Textured rectangle.
@@ -236,10 +237,10 @@ pub struct Tile16 {
 pub struct Sprt {
     color: Color,
     cmd: Command,
-    offset: Vertex,
+    offset: Vi,
     t0: TexCoord,
     clut: Clut,
-    size: Vertex,
+    size: Vi,
 }
 
 /// Textured 8x8 rectangle.
@@ -248,7 +249,7 @@ pub struct Sprt {
 pub struct Sprt8 {
     color: Color,
     cmd: Command,
-    offset: Vertex,
+    offset: Vi,
     t0: TexCoord,
     clut: Clut,
 }
@@ -259,7 +260,7 @@ pub struct Sprt8 {
 pub struct Sprt16 {
     color: Color,
     cmd: Command,
-    offset: Vertex,
+    offset: Vi,
     t0: TexCoord,
     clut: Clut,
 }

@@ -34,26 +34,17 @@
 #![cfg_attr(test, no_main)]
 
 use core::arch::asm;
-use core::mem::{size_of, transmute};
+use core::mem::size_of;
 use core::slice;
-
-/// Define a constructor that runs before main.
-#[macro_export]
-macro_rules! ctor {
-    (fn $name:ident() { $($body:tt)* }) => {
-        #[used]
-        #[link_section = ".ctors"]
-        static $name: fn() = || {
-            $($body)*
-        };
-    };
-}
 
 #[macro_use]
 mod test;
 
 pub mod dma;
+#[doc(hidden)]
+pub mod graphics;
 pub mod gpu;
+pub mod runtime;
 // TODO: Add cfc2 and ctc2 to LLVM to enable this
 //pub mod gte;
 #[doc(hidden)]
@@ -62,6 +53,7 @@ pub mod hw;
 // The `std` module should be public but hidden since `as_cstr` is used from
 // macros which may be in user crates.
 mod framebuffer;
+mod panic;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
@@ -70,72 +62,6 @@ pub mod tim;
 pub const KUSEG: usize = 0x0000_0000;
 pub const KSEG0: usize = 0x8000_0000;
 pub const CACHE: usize = 0x9F80_0000;
-
-#[cfg(feature = "loadable_app")]
-type RtReturn = ();
-#[cfg(not(feature = "loadable_app"))]
-type RtReturn = !;
-
-/// The runtime used by the default linker scripts.
-#[no_mangle]
-extern "C" fn _start() -> RtReturn {
-    // SAFETY: If there is no unmangled function named `main` this causes an error
-    // at link-time.
-    unsafe {
-        #[cfg(not(test))]
-        extern "Rust" {
-            fn main() -> Result<(), &'static str>;
-        }
-        extern "C" {
-            static __ctors_start: usize;
-            static __ctors_end: usize;
-        }
-        let ptr_size = size_of::<usize>();
-        let end = &__ctors_end as *const usize as usize;
-        let start = &__ctors_start as *const usize as usize;
-        let ctors_range = end - start;
-        assert!(
-            (ctors_range % 4) == 0,
-            ".ctors section is not 4-byte aligned"
-        );
-        let num_ctors = ctors_range / ptr_size;
-        for n in 0..num_ctors {
-            let ptr = __ctors_start + (n * ptr_size);
-            let ctor = transmute::<usize, fn()>(ptr);
-            ctor();
-        }
-        #[cfg(not(test))]
-        main().unwrap();
-
-        #[cfg(test)]
-        main();
-    }
-    #[cfg(not(feature = "loadable_app"))]
-    panic!("`main` should not return")
-}
-
-#[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
-    if cfg!(not(feature = "min_panic")) {
-        match info.location() {
-            Some(location) => {
-                println!(
-                    "Panicked at {}:{}:{}",
-                    location.file(),
-                    location.line(),
-                    location.column()
-                )
-            },
-            None => {
-                println!("Panicked at unknown location")
-            },
-        }
-        if let Some(msg) = info.message() {
-            println!("{}", msg)
-        }
-    }
-    loop {}
-}
 
 /// Returns a mutable slice to the data cache.
 pub unsafe fn data_cache<'a>() -> &'a mut [u32] {
@@ -177,43 +103,6 @@ pub unsafe fn free_memory<'a>() -> &'a mut [u32] {
     slice::from_raw_parts_mut(ptr, len)
 }
 
-// Define string-literals to embed in PSEXE header
-// Using the same identifier for all regions conveniently makes the crate
-// features mutually exclusive
-macro_rules! as_array {
-    ($msg:literal) => {
-        // SAFETY: This dereferences a pointer to a literal which has a static lifetime.
-        unsafe { *($msg.as_ptr() as *const _) }
-    };
-}
-
-#[cfg(any(feature = "NA_region", test))]
-#[used]
-#[no_mangle]
-#[doc(hidden)]
-#[link_section = ".region"]
-pub static _REGION: [u8; 55] = as_array!("Sony Computer Entertainment Inc. for North America area");
-
-#[cfg(feature = "EU_region")]
-#[used]
-#[no_mangle]
-#[doc(hidden)]
-#[link_section = ".region"]
-pub static _REGION: [u8; 48] = as_array!("Sony Computer Entertainment Inc. for Europe area");
-
-#[cfg(feature = "J_region")]
-#[used]
-#[no_mangle]
-#[doc(hidden)]
-#[link_section = ".region"]
-pub static _REGION: [u8; 47] = as_array!("Sony Computer Entertainment Inc. for Japan area");
-
-#[used]
-#[no_mangle]
-#[doc(hidden)]
-#[link_section = ".psx_exe"]
-pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
-
 /// An interrupt request
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum IRQ {
@@ -241,8 +130,9 @@ pub enum IRQ {
     ControllerPIO,
 }
 
+pub use crate::gpu::packet::{link_list, ordering_table};
+pub use graphics::trig::{sin, cos};
+pub use graphics::fixed_point::{F16};
+pub use graphics::{f16, Vf, Vi};
 pub use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer};
-pub use crate::gpu::colors::*;
-pub use crate::gpu::primitives::*;
-pub use crate::sys::gamepad::buttons::*;
-pub use crate::sys::gamepad::pad_types::*;
+pub use heap::{Global, critical_section};

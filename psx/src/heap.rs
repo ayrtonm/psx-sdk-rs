@@ -3,19 +3,20 @@ use core::cell::RefCell;
 use core::ptr;
 use core::ptr::NonNull;
 
-pub struct Lock<T>(RefCell<T>);
+pub struct Global<T>(RefCell<T>);
 
-unsafe impl<T> Sync for Lock<T> {}
+unsafe impl<T> Sync for Global<T> {}
 
-impl<T> Lock<T> {
+impl<T> Global<T> {
     pub const fn new(t: T) -> Self {
-        Lock(RefCell::new(t))
+        Global(RefCell::new(t))
     }
 
     pub fn interrupt_free<F: FnOnce(&mut T) -> R, R>(&self, f: F) -> R {
         critical_section(|| f(&mut self.0.borrow_mut()))
     }
 }
+
 pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
     use crate::hw::cop0::IntSrc;
     use crate::hw::{cop0, Register};
@@ -30,11 +31,11 @@ pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
     }
 }
 
-pub struct Heap(Lock<linked_list_allocator::Heap>);
+pub struct Heap(Global<linked_list_allocator::Heap>);
 
 impl Heap {
     pub const fn new() -> Self {
-        Self(Lock::new(linked_list_allocator::Heap::empty()))
+        Self(Global::new(linked_list_allocator::Heap::empty()))
     }
 
     pub unsafe fn init(&self, base: usize, len: usize) {

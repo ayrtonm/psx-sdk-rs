@@ -1,7 +1,6 @@
+use crate::graphics::Vi;
 use crate::dma;
-use crate::gpu::vertex;
-use crate::gpu::VideoMode;
-use crate::gpu::{Color, DMAMode, Depth, DispEnv, DrawEnv, Packet};
+use crate::gpu::{Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, VectorError, VideoMode};
 use crate::hw::gpu;
 use crate::hw::gpu::{GP0, GP1};
 use crate::hw::irq;
@@ -36,8 +35,8 @@ pub struct Framebuffer {
 
 impl Framebuffer {
     pub fn new(
-        buf0: [i16; 2], buf1: [i16; 2], res: [i16; 2], bg_color: Option<Color>,
-    ) -> Result<Self, vertex::Error> {
+        buf0: Vi, buf1: Vi, res: Vi, bg_color: Option<Color>,
+    ) -> Result<Self, VectorError> {
         let mut fb = Framebuffer {
             gp0: GP0::new(),
             gp1: GP1::new(),

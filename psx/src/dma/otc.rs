@@ -14,6 +14,8 @@ impl OTC {
         &mut self.0.control
     }
 
+    /// Initializes a reversed ordering table from a `&mut [u32]`. Note the DMA
+    /// channel links the packets from last to first.
     pub fn init<'a>(&mut self, list: &'a mut [u32]) -> Result<&'a mut [Packet<()>]> {
         let (ordering_table, _) = self.init_and(list, || ())?;
         Ok(ordering_table)

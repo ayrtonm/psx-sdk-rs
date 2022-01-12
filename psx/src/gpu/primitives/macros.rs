@@ -28,13 +28,12 @@ macro_rules! impl_primitive {
 macro_rules! vertices_fn {
     (3) => {
         /// Gets the primitive's vertices.
-        pub fn get_vertices(&self) -> [[i16; 2]; 3] {
-            [self.v0, self.v1, self.v2].map(|v| [v.x, v.y])
+        pub fn get_vertices(&self) -> [Vi; 3] {
+            [self.v0, self.v1, self.v2]
         }
 
         /// Sets the primitive's vertices.
-        pub fn set_vertices(&mut self, vertices: [[i16; 2]; 3]) -> &mut Self {
-            let vertices = vertices.map(|t| Vertex::from(t));
+        pub fn set_vertices(&mut self, vertices: [Vi; 3]) -> &mut Self {
             self.v0 = vertices[0];
             self.v1 = vertices[1];
             self.v2 = vertices[2];
@@ -43,13 +42,12 @@ macro_rules! vertices_fn {
     };
     (4) => {
         /// Gets the primitive's vertices.
-        pub fn get_vertices(&self) -> [[i16; 2]; 4] {
-            [self.v0, self.v1, self.v2, self.v3].map(|v| [v.x, v.y])
+        pub fn get_vertices(&self) -> [Vi; 4] {
+            [self.v0, self.v1, self.v2, self.v3]
         }
 
         /// Sets the primitive's vertices.
-        pub fn set_vertices(&mut self, vertices: [[i16; 2]; 4]) -> &mut Self {
-            let vertices = vertices.map(|t| Vertex::from(t));
+        pub fn set_vertices(&mut self, vertices: [Vi; 4]) -> &mut Self {
             self.v0 = vertices[0];
             self.v1 = vertices[1];
             self.v2 = vertices[2];
@@ -126,13 +124,13 @@ macro_rules! gouraud_fn {
 macro_rules! offset_fn {
     () => {
         /// Gets the primitive's offset.
-        pub fn get_offset(&self) -> [i16; 2] {
-            [self.offset.x, self.offset.y]
+        pub fn get_offset(&self) -> Vi {
+            self.offset
         }
 
         /// Sets the primitive's offset.
-        pub fn set_offset(&mut self, offset: [i16; 2]) -> &mut Self {
-            self.offset = Vertex::from(offset);
+        pub fn set_offset(&mut self, offset: Vi) -> &mut Self {
+            self.offset = offset;
             self
         }
     };
@@ -141,13 +139,13 @@ macro_rules! offset_fn {
 macro_rules! size_fn {
     () => {
         /// Gets the primitive's offset.
-        pub fn get_size(&self) -> [i16; 2] {
-            [self.size.x, self.size.y]
+        pub fn get_size(&self) -> Vi {
+            self.size
         }
 
         /// Sets the primitive's offset.
-        pub fn set_size(&mut self, size: [i16; 2]) -> &mut Self {
-            self.size = Vertex::from(size);
+        pub fn set_size(&mut self, size: Vi) -> &mut Self {
+            self.size = size;
             self
         }
     };
