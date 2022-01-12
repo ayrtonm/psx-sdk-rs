@@ -4,7 +4,6 @@ use crate::hw::dma::{cdrom, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
 use core::convert::TryInto;
-use core::mem::size_of_val;
 use strum_macros::IntoStaticStr;
 
 mod gpu;

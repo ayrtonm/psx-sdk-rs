@@ -1,6 +1,6 @@
 use crate::gpu::{Clut, Color, Command, TexCoord, TexPage, Vertex};
 use crate::hw::gpu::GP0Command;
-use core::mem::{transmute, size_of};
+use core::mem::{size_of, transmute};
 
 #[macro_use]
 mod macros;

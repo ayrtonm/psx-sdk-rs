@@ -1,5 +1,7 @@
 //! This is a crate for developing homebrew for the Sony PlayStation 1.
 #![no_std]
+// Used for const constraints (e.g. Packet::new)
+#![allow(path_statements)]
 //#![deny(missing_docs)]
 // Hacky workaround for the lack of compiler fences in llvm's MIPS-I codegen
 #![feature(bench_black_box)]

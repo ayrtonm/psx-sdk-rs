@@ -103,7 +103,7 @@ pub struct PhysAddr([u8; 3]);
 pub struct Packet<T> {
     next: PhysAddr,
     size: u8,
-    pub payload: T,
+    pub contents: T,
 }
 
 #[repr(C)]
