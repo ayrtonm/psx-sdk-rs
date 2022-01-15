@@ -1,10 +1,9 @@
-use crate::graphics::Vi;
-use crate::gpu::{DispEnv,VectorError,DMAMode, Depth, PackedVector, VideoMode};
+use crate::gpu::{Vertex,DispEnv,VertexError,DMAMode, Depth, PackedVertex, VertexdeoMode};
 use crate::hw::gpu::GP1;
 use crate::hw::{MemRegister, Register};
 use core::convert::TryFrom;
 
-type Result<T> = core::result::Result<T, VectorError>;
+type Result<T> = core::result::Result<T, VertexError>;
 
 impl GP1 {
     pub fn new() -> Self {
@@ -38,34 +37,34 @@ impl GP1 {
     }
 
     /// The `start` tuple has fields restricted to (9 bits, 10 bits).
-    pub fn display_start(&mut self, start: Vi) -> Result<&mut Self> {
-        let start = PackedVector::<3, 10, 9>::try_from(start)?;
+    pub fn display_start(&mut self, start: Vertex) -> Result<&mut Self> {
+        let start = PackedVertex::<3, 10, 9>::try_from(start)?;
         self._display_start(start)
     }
 
-    fn _display_start(&mut self, start: PackedVector<3, 10, 9>) -> Result<&mut Self> {
+    fn _display_start(&mut self, start: PackedVertex<3, 10, 9>) -> Result<&mut Self> {
         self.0.assign((0x05 << 24) | u32::from(start)).store();
         Ok(self)
     }
 
     /// The `range` tuple has fields restricted to (12 bits, 12 bits).
-    pub fn horizontal_range(&mut self, range: Vi) -> Result<&mut Self> {
-        let range = PackedVector::<3, 12, 12>::try_from(range)?;
+    pub fn horizontal_range(&mut self, range: Vertex) -> Result<&mut Self> {
+        let range = PackedVertex::<3, 12, 12>::try_from(range)?;
         self._horizontal_range(range)
     }
 
-    fn _horizontal_range(&mut self, range: PackedVector<3, 12, 12>) -> Result<&mut Self> {
+    fn _horizontal_range(&mut self, range: PackedVertex<3, 12, 12>) -> Result<&mut Self> {
         self.0.assign((0x06 << 24) | u32::from(range)).store();
         Ok(self)
     }
 
     /// The `range` tuple has fields restricted to (10 bits, 10 bits).
-    pub fn vertical_range(&mut self, range: Vi) -> Result<&mut Self> {
-        let range = PackedVector::<3, 10, 10>::try_from(range)?;
+    pub fn vertical_range(&mut self, range: Vertex) -> Result<&mut Self> {
+        let range = PackedVertex::<3, 10, 10>::try_from(range)?;
         self._vertical_range(range)
     }
 
-    fn _vertical_range(&mut self, range: PackedVector<3, 10, 10>) -> Result<&mut Self> {
+    fn _vertical_range(&mut self, range: PackedVertex<3, 10, 10>) -> Result<&mut Self> {
         self.0.assign((0x07 << 24) | u32::from(range)).store();
         Ok(self)
     }
@@ -73,7 +72,7 @@ impl GP1 {
     /// The x resolution is restricted to 256, 320, 512, 640 or 368. The y
     /// resolution is restricted to 240 or 480.
     pub fn display_mode(
-        &mut self, res: Vi, mode: VideoMode, depth: Depth, interlace: bool,
+        &mut self, res: Vertex, mode: VertexdeoMode, depth: Depth, interlace: bool,
     ) -> Result<&mut Self> {
         let hres = match res.0 {
             256 => 0,
@@ -81,12 +80,12 @@ impl GP1 {
             512 => 2,
             640 => 3,
             368 => 1 << 6,
-            _ => return Err(VectorError::InvalidX),
+            _ => return Err(VertexError::InvalidX),
         };
         let vres = match res.1 {
             240 => 0,
             480 => 1,
-            _ => return Err(VectorError::InvalidY),
+            _ => return Err(VertexError::InvalidY),
         };
         let settings =
             hres | vres << 2 | (mode as u32) << 3 | (depth as u32) << 4 | (interlace as u32) << 5;

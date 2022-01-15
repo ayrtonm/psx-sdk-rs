@@ -1,4 +1,4 @@
-use crate::gpu::VideoMode;
+use crate::gpu::VertexdeoMode;
 use crate::hw::gpu::Status;
 use crate::hw::{MemRegister, Register};
 use core::fmt;
@@ -23,11 +23,11 @@ impl Status {
         self
     }
 
-    pub fn video_mode(&self) -> VideoMode {
+    pub fn video_mode(&self) -> VertexdeoMode {
         if self.0.all_set(1 << VIDEO_MODE) {
-            VideoMode::PAL
+            VertexdeoMode::PAL
         } else {
-            VideoMode::NTSC
+            VertexdeoMode::NTSC
         }
     }
 

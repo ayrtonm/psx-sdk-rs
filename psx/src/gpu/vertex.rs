@@ -1,50 +1,82 @@
-use crate::graphics::Vi;
-use crate::gpu::{PackedVector, VectorError};
+use core::ops::{Add, AddAssign, Sub, SubAssign};
+use crate::gpu::{Vertex,PackedVertex, VertexError};
 use core::convert::TryFrom;
 
-impl<const N: usize, const X: usize, const Y: usize> PackedVector<N, X, Y> {
+impl Add for Vertex {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self(self.0 + other.0, self.1 + other.1)
+    }
+}
+
+impl AddAssign for Vertex {
+    fn add_assign(&mut self, other: Self) {
+        *self = *self + other;
+    }
+}
+
+impl Sub for Vertex {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        Self(self.0 - other.0, self.1 - other.1)
+    }
+}
+
+impl SubAssign for Vertex {
+    fn sub_assign(&mut self, other: Self) {
+        *self = *self - other;
+    }
+}
+
+impl From<Vertex> for u32 {
+    fn from(Vertex(x, y): Vertex) -> u32 {
+        (x as u32) | ((y as u32) << 16)
+    }
+}
+
+impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
         const VALIDATE_X_PLUS_Y: () = {
             if X + Y > (N * 8) {
-                panic!("Vector elements are larger than backing array");
+                panic!("Vertex elements are larger than backing array");
             }
         };
 }
-impl<const X: usize, const Y: usize> From<PackedVector<2, X, Y>> for u32 {
-    fn from(vector: PackedVector<2, X, Y>) -> u32 {
-        vector.data[0] as u32 | (vector.data[1] as u32) << 8
+impl<const X: usize, const Y: usize> From<PackedVertex<2, X, Y>> for u32 {
+    fn from(vertex: PackedVertex<2, X, Y>) -> u32 {
+        vertex.data[0] as u32 | (vertex.data[1] as u32) << 8
     }
 }
 
-impl<const X: usize, const Y: usize> From<PackedVector<3, X, Y>> for u32 {
-    fn from(vector: PackedVector<3, X, Y>) -> u32 {
-        vector.data[0] as u32 | (vector.data[1] as u32) << 8 | (vector.data[2] as u32) << 16
+impl<const X: usize, const Y: usize> From<PackedVertex<3, X, Y>> for u32 {
+    fn from(vertex: PackedVertex<3, X, Y>) -> u32 {
+        vertex.data[0] as u32 | (vertex.data[1] as u32) << 8 | (vertex.data[2] as u32) << 16
     }
 }
 
-impl<const N: usize, const X: usize, const Y: usize> TryFrom<Vi> for PackedVector<N, X, Y> {
-    type Error = VectorError;
+impl<const N: usize, const X: usize, const Y: usize> TryFrom<Vertex> for PackedVertex<N, X, Y> {
+    type Error = VertexError;
 
-    fn try_from(Vi(x, y): Vi) -> Result<Self, VectorError> {
+    fn try_from(Vertex(x, y): Vertex) -> Result<Self, VertexError> {
         Self::VALIDATE_X_PLUS_Y;
         let x = x as u16;
         let y = y as u16;
         if x >= 1 << X {
-            return Err(VectorError::InvalidX)
+            return Err(VertexError::InvalidX)
         }
         if y >= 1 << Y {
-            return Err(VectorError::InvalidY)
+            return Err(VertexError::InvalidY)
         }
         let mut data = [0; N];
         let value = (x as u32 | ((y as u32) << X)).to_le_bytes();
         for i in 0..data.len() {
             data[i] = value[i];
         }
-        Ok(PackedVector { data })
+        Ok(PackedVertex { data })
     }
 }
 
-impl<const N: usize, const X: usize, const Y: usize> PackedVector<N, X, Y> {
-    pub fn unpack(&self) -> Vi {
+impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
+    pub fn unpack(&self) -> Vertex {
         let mut ar = [0; 4];
         for i in 0..self.data.len() {
             ar[i] = self.data[i];
@@ -55,16 +87,16 @@ impl<const N: usize, const X: usize, const Y: usize> PackedVector<N, X, Y> {
         let y_shift = X;
         let x = data & x_mask;
         let y = (data >> y_shift) & y_mask;
-        Vi(x as i16, y as i16)
+        Vertex(x as i16, y as i16)
     }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::PackedVector;
-    use crate::gpu::VectorError;
-    use crate::graphics::Vi;
+    use super::PackedVertex;
+    use crate::gpu::VertexError;
+    use crate::graphics::Vertex;
 
     macro_rules! with_bytes {
         ($bytes:expr, { $($body:tt)* }) => {
@@ -82,13 +114,13 @@ mod tests {
                 const X: usize = const_random!(usize) % 16;
                 const UNUSED: usize = const_random!(usize) % (BITS - X);
                 const Y: usize = (BITS - X - UNUSED) % 16;
-                let packed = PackedVector::<N, X, Y>::try_from(Vi(x, y));
+                let packed = PackedVertex::<N, X, Y>::try_from(Vertex(x, y));
                 let x_too_big = x as u16 >= 1 << X;
                 let y_too_big = y as u16 >= 1 << Y;
                 if x_too_big {
-                    assert!(packed == Err(VectorError::InvalidX));
+                    assert!(packed == Err(VertexError::InvalidX));
                 } else if y_too_big {
-                    assert!(packed == Err(VectorError::InvalidY));
+                    assert!(packed == Err(VertexError::InvalidY));
                 } else {
                     assert!(packed.is_ok());
                 }
@@ -118,9 +150,9 @@ mod tests {
                 const Y: usize = (BITS - X - UNUSED) % 16;
                 let valid_x = (x % (1 << X)) as i16;
                 let valid_y = (y % (1 << Y)) as i16;
-                let packed = PackedVector::<N, X, Y>::try_from(Vi(valid_x, valid_y));
+                let packed = PackedVertex::<N, X, Y>::try_from(Vertex(valid_x, valid_y));
                 assert!(packed.is_ok());
-                let Vi(new_x, new_y) = packed.unwrap().unpack();
+                let Vertex(new_x, new_y) = packed.unwrap().unpack();
                 assert!(new_x == valid_x);
                 assert!(new_y == valid_y);
             });

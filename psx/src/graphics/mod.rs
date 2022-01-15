@@ -7,6 +7,7 @@ pub mod trig;
 pub mod vector;
 
 pub type f16 = F16<12>;
+
 /// Reinterprets an i16 as a signed 16-bit fixed point number with a 12-bit
 /// fraction.
 ///
@@ -18,11 +19,11 @@ pub const fn f16(x: i16) -> f16 {
     F16(x)
 }
 
-/// A vector of f16.
+/// A vector of i16.
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Vi(pub i16, pub i16);
+pub struct Vi(pub i16, pub i16, pub i16);
 
-/// A vector of i16.
+/// A vector of f16.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Vf(pub f16, pub f16, pub f16);

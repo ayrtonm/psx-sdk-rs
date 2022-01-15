@@ -28,12 +28,12 @@ macro_rules! impl_primitive {
 macro_rules! vertices_fn {
     (3) => {
         /// Gets the primitive's vertices.
-        pub fn get_vertices(&self) -> [Vi; 3] {
+        pub fn get_vertices(&self) -> [Vertex; 3] {
             [self.v0, self.v1, self.v2]
         }
 
         /// Sets the primitive's vertices.
-        pub fn set_vertices(&mut self, vertices: [Vi; 3]) -> &mut Self {
+        pub fn set_vertices(&mut self, vertices: [Vertex; 3]) -> &mut Self {
             self.v0 = vertices[0];
             self.v1 = vertices[1];
             self.v2 = vertices[2];
@@ -42,12 +42,12 @@ macro_rules! vertices_fn {
     };
     (4) => {
         /// Gets the primitive's vertices.
-        pub fn get_vertices(&self) -> [Vi; 4] {
+        pub fn get_vertices(&self) -> [Vertex; 4] {
             [self.v0, self.v1, self.v2, self.v3]
         }
 
         /// Sets the primitive's vertices.
-        pub fn set_vertices(&mut self, vertices: [Vi; 4]) -> &mut Self {
+        pub fn set_vertices(&mut self, vertices: [Vertex; 4]) -> &mut Self {
             self.v0 = vertices[0];
             self.v1 = vertices[1];
             self.v2 = vertices[2];
@@ -124,12 +124,12 @@ macro_rules! gouraud_fn {
 macro_rules! offset_fn {
     () => {
         /// Gets the primitive's offset.
-        pub fn get_offset(&self) -> Vi {
+        pub fn get_offset(&self) -> Vertex {
             self.offset
         }
 
         /// Sets the primitive's offset.
-        pub fn set_offset(&mut self, offset: Vi) -> &mut Self {
+        pub fn set_offset(&mut self, offset: Vertex) -> &mut Self {
             self.offset = offset;
             self
         }
@@ -139,12 +139,12 @@ macro_rules! offset_fn {
 macro_rules! size_fn {
     () => {
         /// Gets the primitive's offset.
-        pub fn get_size(&self) -> Vi {
+        pub fn get_size(&self) -> Vertex {
             self.size
         }
 
         /// Sets the primitive's offset.
-        pub fn set_size(&mut self, size: Vi) -> &mut Self {
+        pub fn set_size(&mut self, size: Vertex) -> &mut Self {
             self.size = size;
             self
         }

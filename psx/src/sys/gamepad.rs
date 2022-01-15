@@ -9,8 +9,11 @@ use core::ptr::read_volatile;
 use core::slice;
 use strum_macros::IntoStaticStr;
 
+// This is the real minimum buffer size
 const BUFFER_BYTES: usize = 0x22;
-pub const BUFFER_SIZE: usize = BUFFER_BYTES / size_of::<u32>();
+
+// This wrapper takes slightly larger buffers to ensure the buffer can be a &[u32].
+const BUFFER_SIZE: usize = (BUFFER_BYTES + 2) / size_of::<u32>();
 
 pub mod buttons {
     use super::Button;
@@ -118,6 +121,7 @@ pub struct Stick {
 pub struct PolledButtons(u16);
 
 impl<'a, 'b> Gamepad<'a, 'b> {
+    pub const BUFFER_SIZE: usize = BUFFER_SIZE;
     pub fn new(
         buf0: &'a mut [u32; BUFFER_SIZE], buf1: &'b mut [u32; BUFFER_SIZE],
     ) -> Result<Self, Error> {

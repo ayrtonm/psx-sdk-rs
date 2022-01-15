@@ -1,6 +1,5 @@
-use crate::graphics::Vi;
 use crate::dma;
-use crate::gpu::{Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, VectorError, VideoMode};
+use crate::gpu::{Vertex,Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, VertexError, VertexdeoMode};
 use crate::hw::gpu;
 use crate::hw::gpu::{GP0, GP1};
 use crate::hw::irq;
@@ -35,8 +34,8 @@ pub struct Framebuffer {
 
 impl Framebuffer {
     pub fn new(
-        buf0: Vi, buf1: Vi, res: Vi, bg_color: Option<Color>,
-    ) -> Result<Self, VectorError> {
+        buf0: Vertex, buf1: Vertex, res: Vertex, bg_color: Option<Color>,
+    ) -> Result<Self, VertexError> {
         let mut fb = Framebuffer {
             gp0: GP0::new(),
             gp1: GP1::new(),
@@ -50,7 +49,7 @@ impl Framebuffer {
         GP1::new()
             .reset_gpu()
             .dma_mode(Some(DMAMode::GP0))
-            .display_mode(res, VideoMode::NTSC, Depth::High, false)?
+            .display_mode(res, VertexdeoMode::NTSC, Depth::High, false)?
             .enable_display(true);
         fb.swap(None)
             .expect("Framebuffer swaps without the DMA will never fail");
