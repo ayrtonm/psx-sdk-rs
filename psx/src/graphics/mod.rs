@@ -2,8 +2,8 @@
 
 use crate::graphics::fixed_point::F16;
 
-mod trig;
 pub mod fixed_point;
+mod trig;
 pub mod vector;
 
 use trig::{COSINE_TABLE, COSINE_TABLE_SIZE};

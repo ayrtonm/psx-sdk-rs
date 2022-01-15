@@ -1,5 +1,7 @@
 //! This is a crate for developing homebrew for the Sony PlayStation 1.
 #![no_std]
+// Temporarily supress dead code warnings for modules that are WIP
+#![allow(dead_code)]
 // Used for const constraints (e.g. Packet::new)
 #![allow(path_statements)]
 //#![deny(missing_docs)]
@@ -133,5 +135,6 @@ pub enum IRQ {
 pub use crate::gpu::packet::{link_list, ordering_table};
 pub use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer};
 pub use graphics::fixed_point::F16;
-pub use graphics::{cos, f16, sin, Vf, Vi, FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8, PI};
+pub use graphics::{cos, f16, sin, Vf, Vi, FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8,
+                   PI};
 pub use heap::{critical_section, Global};
