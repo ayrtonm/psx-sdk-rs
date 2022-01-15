@@ -6,6 +6,7 @@ use psx::sys::rng::Rng;
 use psx::{printf, print, println};
 
 // Printing to stdout was tested with SCPH7001 on mednafen with `psx.dbg_level 2` in mednafen.cfg
+// Duckstation is also known to work with this BIOS.
 // Other BIOS/emulator combinations may or may not work
 #[no_mangle]
 fn main() {
@@ -15,7 +16,7 @@ fn main() {
     // The raw BIOS function can be used to print to stdout
     // Format strings can be variables and they must be a pointer (i.e. *const u8).
     let fmt_str = "Hello, %s! 0x%x\n\0".as_ptr();
-    // Args formatted with `%s` must also pointers even though it isn't enforced by the type-system.
+    // Args formatted with `%s` must also be pointers even though it can't be enforced by the type-system.
     let str_arg = "world\0".as_ptr();
     let rand_num: u32 = rng.rand();
     // SAFETY: Format strings and arguments formatted with '%s' are explicitly null-terminated
