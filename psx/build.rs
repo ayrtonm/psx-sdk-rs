@@ -1,3 +1,4 @@
+use libm::cos;
 use std::path::PathBuf;
 use std::{env, fs};
 
@@ -128,4 +129,17 @@ fn main() {
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
     fs::write(out.join("psexe.ld"), include_str!("psexe.ld").to_string()).unwrap();
     println!("cargo:rustc-link-search={}", out.display());
+
+    let mut cosine_table = String::from("pub const COSINE_TABLE: [i16; 0x1_0000] = [\n");
+    for x in i16::MIN..=i16::MAX {
+        let shifted_x = (x as u16) + 0x8000;
+        let radians = f64::from(shifted_x) * core::f64::consts::FRAC_PI_8 / 4096.0;
+        let float = cos(radians);
+        let fixed = (float * 4096.0).trunc() as i16;
+        cosine_table += &format!("{:?},\n", fixed);
+    }
+    cosine_table += "];";
+    let cos_table_file = "src/graphics/cosine_table.rs";
+    fs::write(cos_table_file, cosine_table)
+        .unwrap_or_else(|_| panic!("Unable to write to {}", cos_table_file));
 }

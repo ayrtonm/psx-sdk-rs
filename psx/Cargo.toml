@@ -16,6 +16,9 @@ num = { version = "0.4.0", default-features = false }
 const-random = "0.1.13"
 aligned = "0.4.0"
 
+[build-dependencies]
+libm = "0.2.1"
+
 [features]
 NA_region = []
 EU_region = []
