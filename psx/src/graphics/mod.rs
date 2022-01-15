@@ -2,9 +2,11 @@
 
 use crate::graphics::fixed_point::F16;
 
+mod cosine_table;
 pub mod fixed_point;
-pub mod trig;
 pub mod vector;
+
+use cosine_table::COSINE_TABLE;
 
 pub type f16 = F16<12>;
 
@@ -27,3 +29,12 @@ pub struct Vi(pub i16, pub i16, pub i16);
 /// A vector of f16.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Vf(pub f16, pub f16, pub f16);
+
+pub fn cos(x: f16) -> f16 {
+    let idx = x.to_bits() as u16 as usize;
+    f16(COSINE_TABLE[idx])
+}
+
+pub fn sin(x: f16) -> f16 {
+    cos(f16(0x4000) - x)
+}

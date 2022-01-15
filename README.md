@@ -34,14 +34,12 @@ for building the rust compiler and LLVM for more specifics.
     git apply /path/to/rustc_psx.patch
     ```
 
-4. Patch LLVM. An optional patch for LLD is also provided to allow specifying `OUTPUT_FORMAT` in linker scripts:
+4. Patch LLVM.
 
     ```
     git submodule update --init --progress src/llvm-project
     cd src/llvm-project
     git apply /path/to/llvm_mips1.patch
-    # This is optional
-    git apply /path/to/lld.patch
     ```
 
 5. Build the rust compiler:

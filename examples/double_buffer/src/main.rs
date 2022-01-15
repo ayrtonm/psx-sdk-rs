@@ -15,7 +15,7 @@ const BUF1: Vertex = Vertex(0, 240);
 const RES: Vertex = Vertex(320, 240);
 
 // `sort_by_key` is only available when linking alloc so let's create a heap in
-// the 1KB data cache
+// the 1KB data cache and make sure to build with `cargo psx run --alloc`.
 psx::heap! {
     // SAFETY: The data cache isn't used by anything else
     unsafe {

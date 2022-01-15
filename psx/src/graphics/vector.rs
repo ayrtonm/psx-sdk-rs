@@ -1,6 +1,5 @@
-use core::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign};
-use crate::graphics::trig::{sin, cos};
-use crate::graphics::{f16, Vf, Vi};
+use crate::graphics::{cos, f16, sin, Vf, Vi};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 impl Vi {
     pub const ZERO: Vi = Vi(0, 0, 0);
@@ -18,32 +17,50 @@ impl Vi {
 
     pub fn rotate_x(self, theta: f16, center: Self) -> Self {
         let diff = self - center;
-        let M = [
-            f16::ONE, f16::ZERO, f16::ZERO,
-            f16::ZERO, cos(theta), -sin(theta),
-            f16::ZERO, sin(theta), cos(theta),
+        let m = [
+            f16::ONE,
+            f16::ZERO,
+            f16::ZERO,
+            f16::ZERO,
+            cos(theta),
+            -sin(theta),
+            f16::ZERO,
+            sin(theta),
+            cos(theta),
         ];
-        diff.apply_matrix(M) + center
+        diff.apply_matrix(m) + center
     }
 
     pub fn rotate_y(self, theta: f16, center: Self) -> Self {
         let diff = self - center;
-        let M = [
-            cos(theta), f16::ZERO, sin(theta),
-            f16::ZERO, f16::ONE, f16::ZERO,
-            -sin(theta), f16::ZERO, cos(theta),
+        let m = [
+            cos(theta),
+            f16::ZERO,
+            sin(theta),
+            f16::ZERO,
+            f16::ONE,
+            f16::ZERO,
+            -sin(theta),
+            f16::ZERO,
+            cos(theta),
         ];
-        diff.apply_matrix(M) + center
+        diff.apply_matrix(m) + center
     }
 
     pub fn rotate_z(self, theta: f16, center: Self) -> Self {
         let diff = self - center;
-        let M = [
-            cos(theta), -sin(theta), f16::ZERO,
-            sin(theta), cos(theta), f16::ZERO,
-            f16::ZERO, f16::ZERO, f16::ONE,
+        let m = [
+            cos(theta),
+            -sin(theta),
+            f16::ZERO,
+            sin(theta),
+            cos(theta),
+            f16::ZERO,
+            f16::ZERO,
+            f16::ZERO,
+            f16::ONE,
         ];
-        diff.apply_matrix(M) + center
+        diff.apply_matrix(m) + center
     }
 }
 
@@ -134,32 +151,50 @@ impl Vf {
 
     pub fn rotate_x(self, theta: f16, center: Self) -> Self {
         let diff = self - center;
-        let M = [
-            f16::ONE, f16::ZERO, f16::ZERO,
-            f16::ZERO, cos(theta), -sin(theta),
-            f16::ZERO, sin(theta), cos(theta),
+        let m = [
+            f16::ONE,
+            f16::ZERO,
+            f16::ZERO,
+            f16::ZERO,
+            cos(theta),
+            -sin(theta),
+            f16::ZERO,
+            sin(theta),
+            cos(theta),
         ];
-        diff.apply_matrix(M) + center
+        diff.apply_matrix(m) + center
     }
 
     pub fn rotate_y(self, theta: f16, center: Self) -> Self {
         let diff = self - center;
-        let M = [
-            cos(theta), f16::ZERO, sin(theta),
-            f16::ZERO, f16::ONE, f16::ZERO,
-            -sin(theta), f16::ZERO, cos(theta),
+        let m = [
+            cos(theta),
+            f16::ZERO,
+            sin(theta),
+            f16::ZERO,
+            f16::ONE,
+            f16::ZERO,
+            -sin(theta),
+            f16::ZERO,
+            cos(theta),
         ];
-        diff.apply_matrix(M) + center
+        diff.apply_matrix(m) + center
     }
 
     pub fn rotate_z(self, theta: f16, center: Self) -> Self {
         let diff = self - center;
-        let M = [
-            cos(theta), -sin(theta), f16::ZERO,
-            sin(theta), cos(theta), f16::ZERO,
-            f16::ZERO, f16::ZERO, f16::ONE,
+        let m = [
+            cos(theta),
+            -sin(theta),
+            f16::ZERO,
+            sin(theta),
+            cos(theta),
+            f16::ZERO,
+            f16::ZERO,
+            f16::ZERO,
+            f16::ONE,
         ];
-        diff.apply_matrix(M) + center
+        diff.apply_matrix(m) + center
     }
 }
 

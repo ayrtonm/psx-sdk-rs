@@ -1,4 +1,4 @@
-use crate::gpu::{Vertex,DispEnv,VertexError,DMAMode, Depth, PackedVertex, VertexdeoMode};
+use crate::gpu::{DMAMode, Depth, DispEnv, PackedVertex, Vertex, VertexError, VertexdeoMode};
 use crate::hw::gpu::GP1;
 use crate::hw::{MemRegister, Register};
 use core::convert::TryFrom;

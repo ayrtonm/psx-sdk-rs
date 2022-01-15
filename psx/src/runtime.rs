@@ -12,9 +12,9 @@ macro_rules! ctor {
     };
 }
 
-#[cfg(feature = "loadable_app")]
+#[cfg(feature = "loadable_exe")]
 type RtReturn = ();
-#[cfg(not(feature = "loadable_app"))]
+#[cfg(not(feature = "loadable_exe"))]
 type RtReturn = !;
 
 /// The runtime used by the default linker scripts.
@@ -51,7 +51,7 @@ extern "C" fn _start() -> RtReturn {
         #[cfg(test)]
         crate::main();
     }
-    #[cfg(not(feature = "loadable_app"))]
+    #[cfg(not(feature = "loadable_exe"))]
     panic!("`main` should not return")
 }
 

@@ -1,6 +1,6 @@
-use core::ops::{Add, AddAssign, Sub, SubAssign};
-use crate::gpu::{Vertex,PackedVertex, VertexError};
+use crate::gpu::{PackedVertex, Vertex, VertexError};
 use core::convert::TryFrom;
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 impl Add for Vertex {
     type Output = Self;
@@ -35,11 +35,11 @@ impl From<Vertex> for u32 {
 }
 
 impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
-        const VALIDATE_X_PLUS_Y: () = {
-            if X + Y > (N * 8) {
-                panic!("Vertex elements are larger than backing array");
-            }
-        };
+    const VALIDATE_X_PLUS_Y: () = {
+        if X + Y > (N * 8) {
+            panic!("Vertex elements are larger than backing array");
+        }
+    };
 }
 impl<const X: usize, const Y: usize> From<PackedVertex<2, X, Y>> for u32 {
     fn from(vertex: PackedVertex<2, X, Y>) -> u32 {
@@ -95,8 +95,7 @@ impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
 mod tests {
 
     use super::PackedVertex;
-    use crate::gpu::VertexError;
-    use crate::graphics::Vertex;
+    use crate::gpu::{Vertex, VertexError};
 
     macro_rules! with_bytes {
         ($bytes:expr, { $($body:tt)* }) => {

@@ -12,7 +12,8 @@ use strum_macros::IntoStaticStr;
 // This is the real minimum buffer size
 const BUFFER_BYTES: usize = 0x22;
 
-// This wrapper takes slightly larger buffers to ensure the buffer can be a &[u32].
+// This wrapper takes slightly larger buffers to ensure the buffer can be a
+// &[u32].
 const BUFFER_SIZE: usize = (BUFFER_BYTES + 2) / size_of::<u32>();
 
 pub mod buttons {
@@ -226,7 +227,7 @@ impl<'a, 'b> Debug for Gamepad<'a, 'b> {
         let player_1 = unsafe { slice::from_raw_parts(self.buf1_ptr as *const u8, BUFFER_BYTES) };
         f.debug_struct("sys::Gamepad")
             .field("player_0", &player_0)
-            //.field("player_1", &player_1)
+            .field("player_1", &player_1)
             .finish()
     }
 }

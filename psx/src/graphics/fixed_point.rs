@@ -42,20 +42,6 @@ impl<const FRAC: usize> From<F16<FRAC>> for i32 {
     }
 }
 
-// TODO: Remove all soft-float
-impl<const FRAC: usize> From<f32> for F16<FRAC> {
-    fn from(x: f32) -> Self {
-        let scale = (1 << FRAC) as f32;
-        let res = unsafe { (x * scale).to_int_unchecked::<i16>() };
-        Self(res)
-    }
-}
-impl<const FRAC: usize> From<F16<FRAC>> for f32 {
-    fn from(x: F16<FRAC>) -> Self {
-        (x.0 as f32) / ((1 << FRAC) as f32)
-    }
-}
-
 impl<const FRAC: usize> Neg for F16<FRAC> {
     type Output = Self;
     fn neg(self) -> Self {
@@ -138,6 +124,12 @@ impl<const FRAC: usize> Div<F16<FRAC>> for F16<FRAC> {
         let rhs = i32::from(rhs.0);
         let res = (lhs << FRAC) / rhs;
         Self(res as i16)
+    }
+}
+
+impl<const FRAC: usize> DivAssign<F16<FRAC>> for F16<FRAC> {
+    fn div_assign(&mut self, rhs: Self) {
+        *self = *self / rhs;
     }
 }
 

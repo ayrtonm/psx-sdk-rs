@@ -1,5 +1,6 @@
 use crate::dma;
-use crate::gpu::{Vertex,Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, VertexError, VertexdeoMode};
+use crate::gpu::{Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, Vertex, VertexError,
+                 VertexdeoMode};
 use crate::hw::gpu;
 use crate::hw::gpu::{GP0, GP1};
 use crate::hw::irq;

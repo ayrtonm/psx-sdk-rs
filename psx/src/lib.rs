@@ -41,9 +41,9 @@ use core::slice;
 mod test;
 
 pub mod dma;
+pub mod gpu;
 #[doc(hidden)]
 pub mod graphics;
-pub mod gpu;
 pub mod runtime;
 // TODO: Add cfc2 and ctc2 to LLVM to enable this
 //pub mod gte;
@@ -131,8 +131,7 @@ pub enum IRQ {
 }
 
 pub use crate::gpu::packet::{link_list, ordering_table};
-pub use graphics::trig::{sin, cos};
-pub use graphics::fixed_point::{F16};
-pub use graphics::{f16, Vf, Vi};
 pub use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer};
-pub use heap::{Global, critical_section};
+pub use graphics::fixed_point::F16;
+pub use graphics::{cos, f16, sin, Vf, Vi};
+pub use heap::{critical_section, Global};

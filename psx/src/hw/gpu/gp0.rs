@@ -1,4 +1,4 @@
-use crate::gpu::{Vertex,Color};
+use crate::gpu::{Color, Vertex};
 use crate::hw::gpu::{GP0Command, GP0};
 use crate::hw::{MemRegister, Register};
 
