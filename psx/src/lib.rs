@@ -88,7 +88,7 @@ pub unsafe fn data_cache<'a>() -> &'a mut [u32] {
 /// [`split_at_mut`][`slice::split_at_mut()`] or similar, then drop the upper
 /// part of the slice to create more space for the stack to grow without causing
 /// undefined behavior.
-pub unsafe fn free_memory<'a>() -> &'a mut [u32] {
+pub unsafe fn unused_memory<'a>() -> &'a mut [u32] {
     extern "C" {
         static mut __heap_start: u32;
     }
@@ -133,5 +133,5 @@ pub enum IRQ {
 pub use crate::gpu::packet::{link_list, ordering_table};
 pub use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer};
 pub use graphics::fixed_point::F16;
-pub use graphics::{cos, f16, sin, Vf, Vi};
+pub use graphics::{cos, f16, sin, Vf, Vi, FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8, PI};
 pub use heap::{critical_section, Global};

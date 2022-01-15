@@ -93,14 +93,8 @@ pub enum Bpp {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhysAddr([u8; 3]);
 
-// TODO: Consider deriving Copy for Packet<T>. This would make it simpler to
-// create a Packet array, but implicit copies might make its use harder to
-// reason about since most functions that use Packet<T> expect them to have a
-// stable address. This is currently enforced only enforced for the lifetime of
-// the call, but implicit copies between calls might make things harder to
-// debug.
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Packet<T> {
     next: PhysAddr,
     size: u8,

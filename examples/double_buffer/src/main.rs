@@ -8,7 +8,7 @@ use psx::gpu::{Color, Packet, Vertex};
 use psx::println;
 use psx::sys::gamepad::buttons::*;
 use psx::sys::gamepad::{Gamepad, PadType};
-use psx::{draw_sync, enable_vblank, f16, link_list, vsync, Framebuffer, Vi};
+use psx::{draw_sync, enable_vblank, f16, link_list, vsync, Framebuffer, Vi, FRAC_PI_3, FRAC_PI_4};
 
 const BUF0: Vertex = Vertex(0, 0);
 const BUF1: Vertex = Vertex(0, 240);
@@ -23,10 +23,20 @@ psx::heap! {
     }
 }
 
+struct Coordinates {
+    pos: Vi,
+    vel: Vi,
+}
+
+struct Angle {
+    angle: f16,
+    angular_vel: f16,
+}
+
 #[no_mangle]
 fn main() -> Result<(), &'static str> {
     // Initializes the GPU and creates a Framebuffer with a white background
-    let mut fb = Framebuffer::new(BUF0, BUF1, RES, Some(WHITE))?;
+    let mut fb = Framebuffer::new(BUF0, BUF1, RES, Some(INDIGO))?;
     // Initializes the GPU DMA channel
     let mut gpu_dma = dma::GPU::new();
     // The BIOS Gamepad wrapper needs pinned buffers for the controller data so
@@ -49,15 +59,24 @@ fn main() -> Result<(), &'static str> {
         (xz.map(|v| v + Vi::Y), VIOLET),
     ];
     // Define the initial position and angles of the cube
-    let mut pos = Vi(0, 0, 0x2000);
-    let mut theta = f16(0);
-    let mut phi = f16(0);
+    let mut coord = Coordinates {
+        pos: Vi(0, 0, 0x3000),
+        vel: Vi(0, 0, 0),
+    };
+    let mut theta = Angle {
+        angle: FRAC_PI_4,
+        angular_vel: FRAC_PI_4,
+    };
+    let mut phi = Angle {
+        angle: FRAC_PI_3,
+        angular_vel: f16(0),
+    };
 
     // Define the data that will be sent to the GPU. `PolyF4` is a four-point
     // monochrome polygon and they're wrapped in a `Packet` to allow sending
     // them through the DMA channel in a linked list. Since we're double
     // buffering we need two `Packet<PolyF4>`s per cube face for a total of 12.
-    let mut quads = [PolyF4::new(); 12].map(|q| Packet::new(q));
+    let mut quads = [Packet::new(PolyF4::new()); 12];
     // quads[0..6] is the first cube and quads[6..12] is the second one
     let (cube_a, cube_b) = quads.split_at_mut(6);
     // Link the packets (face polygons) in each slice (cube) as follows
@@ -94,19 +113,23 @@ fn main() -> Result<(), &'static str> {
             // concurrently with the DMA. If the closure terminates before the DMA transfer ends
             // the CPU hangs until the transfer is done.
 
-            // Scale up the unit cube defined above, rotate it about its center and shift its position.
+            // Scale the unit cube defined above, rotate it about its center and shift its position.
             let mut cube = unit_cube.map(|(face, color)| {
                 let scale = 0x1000;
                 let center = (Vi::X + Vi::Y + Vi::Z) * scale / 2;
                 (
                     face.map(|vi| {
-                        (vi * scale).rotate_x(theta, center).rotate_y(phi, center) - center + pos
+                        (vi * scale)
+                            .rotate_x(theta.angle, center)
+                            .rotate_y(phi.angle, center)
+                            - center
+                            + coord.pos
                     }),
                     color,
                 )
             });
 
-            // Sort the faces of the cube based on the average of the z-coordinates of their vertices.
+            // Sort the faces of the cube by the average of the z-coordinates of their vertices.
             // This ensures that the `PolyF4`s in the draw list are ordered from farthest to closest.
             cube.sort_by_key(avg_z);
 
@@ -124,7 +147,7 @@ fn main() -> Result<(), &'static str> {
             display_a = !display_a;
 
             // Update the cube's position and angles based on the controller
-            poll_controller(&pad, &mut pos, &mut theta, &mut phi);
+            poll_controller(&pad, &mut coord, &mut theta, &mut phi);
         })?;
         // Wait until the GPU processes all the `PolyF4`s
         draw_sync();
@@ -145,38 +168,50 @@ fn project_vector(Vi(x, y, z): Vi) -> Vertex {
     res
 }
 
-fn avg_z((face, _): &([Vi; 4], Color)) -> i32 {
+fn avg_z((face, _): &([Vi; 4], Color)) -> i16 {
     let mut res = 0;
     for Vi(_, _, z) in *face {
-        res += i32::from(z) / 4;
+        res += z / 4;
     }
     -res
 }
 
-fn poll_controller(pad: &Gamepad, pos: &mut Vi, theta: &mut f16, phi: &mut f16) {
+fn poll_controller(pad: &Gamepad, coord: &mut Coordinates, theta: &mut Angle, phi: &mut Angle) {
     let buttons = pad.poll();
 
-    let pos_step = 0x100;
+    let vel_step = 0xC0;
+    coord.pos += coord.vel;
     if buttons.pressed(UP) {
-        *pos -= Vi::Y * pos_step;
+        coord.vel -= Vi::Y * vel_step;
     } else if buttons.pressed(DOWN) {
-        *pos += Vi::Y * pos_step;
+        coord.vel += Vi::Y * vel_step;
+    } else {
+        coord.vel.1 *= f16(0x0_C00);
     }
     if buttons.pressed(LEFT) {
-        *pos -= Vi::X * pos_step;
+        coord.vel -= Vi::X * vel_step;
     } else if buttons.pressed(RIGHT) {
-        *pos += Vi::X * pos_step;
+        coord.vel += Vi::X * vel_step;
+    } else {
+        coord.vel.0 *= f16(0x0_C00);
     }
-    let theta_step = f16(0x_200);
-    if buttons.pressed(CROSS) {
-        *theta += theta_step;
-    } else if buttons.pressed(TRIANGLE) {
-        *theta -= theta_step;
+
+    let theta_vel_step = f16(0x_180);
+    theta.angle += theta.angular_vel;
+    if buttons.pressed(TRIANGLE) {
+        theta.angular_vel += theta_vel_step;
+    } else if buttons.pressed(CROSS) {
+        theta.angular_vel -= theta_vel_step;
+    } else {
+        theta.angular_vel *= f16(0x0_C00);
     }
-    let phi_step = f16(0x_200);
-    if buttons.pressed(SQUARE) {
-        *phi += phi_step;
-    } else if buttons.pressed(CIRCLE) {
-        *phi -= phi_step;
+    let phi_vel_step = f16(0x_180);
+    phi.angle += phi.angular_vel;
+    if buttons.pressed(CIRCLE) {
+        phi.angular_vel += phi_vel_step;
+    } else if buttons.pressed(SQUARE) {
+        phi.angular_vel -= phi_vel_step;
+    } else {
+        phi.angular_vel *= f16(0x0_C00);
     }
 }
