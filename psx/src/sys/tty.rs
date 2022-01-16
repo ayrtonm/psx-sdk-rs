@@ -34,24 +34,6 @@ impl<T> PrintfString for T {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test_case]
-    fn impls_as_cstr() {
-        let array: [u8; 0] = [];
-        let array_ref: &[u8; 0] = b"";
-        let slice: &[u8] = &array_ref[..];
-        let str_ref: &str = "";
-        assert!(array.impls_as_cstr().is_some());
-        assert!(array_ref.impls_as_cstr().is_some());
-        assert!(slice.impls_as_cstr().is_some());
-        assert!(str_ref.impls_as_cstr().is_some());
-        assert!(0xdeadbeefu32.impls_as_cstr().is_none());
-    }
-}
-
 pub struct TTY;
 
 /// Prints an ASCII string containing C-style escape codes to stdout.
@@ -128,5 +110,23 @@ impl fmt::Write for TTY {
                 kernel::printf("%s\0".as_ptr(), cstr.as_ptr());
             });
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test_case]
+    fn impls_as_cstr() {
+        let array: [u8; 0] = [];
+        let array_ref: &[u8; 0] = b"";
+        let slice: &[u8] = &array_ref[..];
+        let str_ref: &str = "";
+        assert!(array.impls_as_cstr().is_some());
+        assert!(array_ref.impls_as_cstr().is_some());
+        assert!(slice.impls_as_cstr().is_some());
+        assert!(str_ref.impls_as_cstr().is_some());
+        assert!(0xdeadbeefu32.impls_as_cstr().is_none());
     }
 }

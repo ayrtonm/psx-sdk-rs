@@ -21,9 +21,12 @@ fn table_of_tables() -> *const u32 {
 /// syscalls.
 pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
     unsafe {
-        kernel::enter_critical_section();
-        let res = f();
-        kernel::exit_critical_section();
-        res
+        if kernel::enter_critical_section() {
+            let res = f();
+            kernel::exit_critical_section();
+            res
+        } else {
+            f()
+        }
     }
 }

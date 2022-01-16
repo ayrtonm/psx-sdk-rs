@@ -46,6 +46,8 @@ pub mod dma;
 pub mod gpu;
 #[doc(hidden)]
 pub mod graphics;
+pub mod printer;
+#[doc(hidden)]
 pub mod runtime;
 // TODO: Add cfc2 and ctc2 to LLVM to enable this
 //pub mod gte;
@@ -132,9 +134,11 @@ pub enum IRQ {
     ControllerPIO,
 }
 
-pub use crate::gpu::packet::{link_list, ordering_table};
 pub use framebuffer::{draw_sync, enable_vblank, vsync, Framebuffer};
+pub use gpu::packet::{link_list, ordering_table};
 pub use graphics::fixed_point::F16;
 pub use graphics::{cos, f16, sin, Vf, Vi, FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8,
                    PI};
 pub use heap::{critical_section, Global};
+pub use printer::Font;
+pub use tim::TIM;

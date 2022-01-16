@@ -132,11 +132,7 @@ fn main() {
     println!("cargo:rustc-link-search={}", out.display());
 
     let high_precision = cfg!(feature = "hi_prec_trig");
-    let cos_entry_ty = if high_precision {
-        "f16"
-    } else {
-        "u8"
-    };
+    let cos_entry_ty = if high_precision { "f16" } else { "u8" };
     let cos_idx_fn = if high_precision {
         // There is a sharp perf drop when building without LTO if this is not
         // marked inline always.
@@ -159,20 +155,31 @@ fn main() {
          use crate::graphics::f16;\n\n\
          {}\n\
          pub const COSINE_TABLE_SIZE: usize = 0x4000;\n\
-         const COSINE_TABLE: [{}; COSINE_TABLE_SIZE] = [\n", cos_idx_fn, cos_entry_ty
+         const COSINE_TABLE: [{}; COSINE_TABLE_SIZE] = [",
+        cos_idx_fn, cos_entry_ty
     );
+    let mut line_length = 0;
     for x in 0..=(u16::MAX / 4) {
         let radians = f64::from(x) * FRAC_PI_8 / 4096.0;
         let float = cos(radians);
         let fixed = (float * 4096.0).trunc() as i16;
         let table_entry = if high_precision {
-            format!("f16({:?})", fixed)
+            format!(" f16({:?}),", fixed)
         } else {
-            format!("{:?}", ((fixed as u16) >> 4) as u8)
+            format!(" {:?},", ((fixed as u16) >> 4) as u8)
         };
-        cosine_table += &format!("{}{},\n", INDENT, table_entry);
+        if line_length + table_entry.len() > 100 {
+            line_length = 0;
+        }
+        if line_length == 0 {
+            cosine_table += "\n";
+            cosine_table += "   ";
+            line_length += INDENT.len();
+        }
+        cosine_table += &table_entry;
+        line_length += table_entry.len();
     }
-    cosine_table += "];\n";
+    cosine_table += "\n];\n";
     let cos_table_file = "src/graphics/trig.rs";
     fs::write(cos_table_file, cosine_table)
         .unwrap_or_else(|_| panic!("Unable to write to {}", cos_table_file));

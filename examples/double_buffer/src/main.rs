@@ -3,12 +3,12 @@
 
 use psx::dma;
 use psx::gpu::colors::*;
-use psx::gpu::primitives::PolyF4;
+use psx::gpu::primitives::*;
 use psx::gpu::{Color, Packet, Vertex};
-use psx::println;
+use psx::{dprintln, println};
 use psx::sys::gamepad::buttons::*;
 use psx::sys::gamepad::{Gamepad, PadType};
-use psx::{draw_sync, enable_vblank, f16, link_list, vsync, Framebuffer, Vi, FRAC_PI_3, FRAC_PI_4};
+use psx::{Font, draw_sync, enable_vblank, f16, link_list, vsync, Framebuffer, Vi, FRAC_PI_3, FRAC_PI_4};
 
 const BUF0: Vertex = Vertex(0, 0);
 const BUF1: Vertex = Vertex(0, 240);
@@ -23,11 +23,13 @@ psx::heap! {
     }
 }
 
+#[derive(Debug)]
 struct Coordinates {
     pos: Vi,
     vel: Vi,
 }
 
+#[derive(Debug)]
 struct Angle {
     angle: f16,
     angular_vel: f16,
@@ -35,10 +37,15 @@ struct Angle {
 
 #[no_mangle]
 fn main() -> Result<(), &'static str> {
+    let font = Font::default();
     // Initializes the GPU and creates a Framebuffer with a white background
     let mut fb = Framebuffer::new(BUF0, BUF1, RES, Some(INDIGO))?;
     // Initializes the GPU DMA channel
     let mut gpu_dma = dma::GPU::new();
+
+    let mut upper_box = font.text_box(Vertex(0, 8), Some(GREEN));
+    let mut lower_box = font.text_box(Vertex(0, 200), None);
+
     // The BIOS Gamepad wrapper needs pinned buffers for the controller data so
     // it must be created outside of `Gamepad::new`
     let mut buf0 = [0; Gamepad::BUFFER_SIZE];
@@ -151,6 +158,18 @@ fn main() -> Result<(), &'static str> {
         })?;
         // Wait until the GPU processes all the `PolyF4`s
         draw_sync();
+
+        // Write the cube's coordinates to the screen
+        dprintln!(upper_box, "pos: {:?}", coord.pos);
+        dprintln!(upper_box, "vel: {:?}", coord.vel);
+        upper_box.reset();
+
+        dprintln!(lower_box, "theta: {:?}", theta.angle);
+        dprintln!(lower_box, "dtheta/dt: {:?}", theta.angular_vel);
+        dprintln!(lower_box, "phi: {:?}", phi.angle);
+        dprintln!(lower_box, "dphi/dt: {:?}", phi.angular_vel);
+        lower_box.reset();
+
         // Wait until vertical blank
         vsync();
         // Swap the frambuffer using the GPU DMA channel
@@ -179,39 +198,40 @@ fn avg_z((face, _): &([Vi; 4], Color)) -> i16 {
 fn poll_controller(pad: &Gamepad, coord: &mut Coordinates, theta: &mut Angle, phi: &mut Angle) {
     let buttons = pad.poll();
 
-    let vel_step = 0xC0;
+    let vel_step = 0x100;
+    let friction = f16(0x0_C00);
     coord.pos += coord.vel;
     if buttons.pressed(UP) {
         coord.vel -= Vi::Y * vel_step;
     } else if buttons.pressed(DOWN) {
         coord.vel += Vi::Y * vel_step;
     } else {
-        coord.vel.1 *= f16(0x0_C00);
+        coord.vel.1 *= friction;
     }
     if buttons.pressed(LEFT) {
         coord.vel -= Vi::X * vel_step;
     } else if buttons.pressed(RIGHT) {
         coord.vel += Vi::X * vel_step;
     } else {
-        coord.vel.0 *= f16(0x0_C00);
+        coord.vel.0 *= friction;
     }
 
-    let theta_vel_step = f16(0x_180);
+    let theta_vel_step = f16(0x_300);
     theta.angle += theta.angular_vel;
     if buttons.pressed(TRIANGLE) {
         theta.angular_vel += theta_vel_step;
     } else if buttons.pressed(CROSS) {
         theta.angular_vel -= theta_vel_step;
     } else {
-        theta.angular_vel *= f16(0x0_C00);
+        theta.angular_vel *= friction;
     }
-    let phi_vel_step = f16(0x_180);
+    let phi_vel_step = f16(0x_300);
     phi.angle += phi.angular_vel;
     if buttons.pressed(CIRCLE) {
         phi.angular_vel += phi_vel_step;
     } else if buttons.pressed(SQUARE) {
         phi.angular_vel -= phi_vel_step;
     } else {
-        phi.angular_vel *= f16(0x0_C00);
+        phi.angular_vel *= friction;
     }
 }

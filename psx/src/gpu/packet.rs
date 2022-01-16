@@ -1,4 +1,5 @@
 use crate::dma::LinkedList;
+use crate::gpu;
 use crate::gpu::{Packet, PacketError, PhysAddr};
 use crate::hw::gpu::GP0Command;
 use crate::KSEG0;
@@ -32,13 +33,10 @@ impl Packet<()> {
     }
 }
 
-// The GPU buffer can only fit 64 bytes.
-const BUFFER_SIZE: usize = 64;
-
 impl<T> Packet<T> {
     const VALIDATE_SIZE: () = {
         let size = size_of::<T>();
-        if size > BUFFER_SIZE {
+        if size > gpu::BUFFER_SIZE {
             panic!("Packet contents will overflow the GPU buffer. Use `Packet::new_unchecked` if this is intentional.");
         }
     };
@@ -129,3 +127,5 @@ impl<T> LinkedList for Packet<T> where T: GP0Command {}
 impl LinkedList for Packet<()> {}
 impl<T> LinkedList for [Packet<T>] where T: GP0Command {}
 impl LinkedList for [Packet<()>] {}
+impl<const N: usize> LinkedList for [Packet<()>; N] {}
+impl<T, const N: usize> LinkedList for [Packet<T>; N] where T: GP0Command {}

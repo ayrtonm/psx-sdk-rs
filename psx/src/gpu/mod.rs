@@ -9,9 +9,13 @@ pub mod colors;
 #[doc(hidden)]
 pub mod packet;
 pub mod primitives;
+mod texture;
 mod vertex;
 
 type Command = u8;
+
+// The GPU buffer can only fit 64 bytes.
+pub const BUFFER_SIZE: usize = 64;
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -46,7 +50,9 @@ pub(crate) struct PackedVertex<const N: usize, const X: usize, const Y: usize> {
 /// This is represented as a two-byte packed vertex with the following layout
 /// bits 0-5 X coordinate
 /// bits 6-14 Y coordinate
-type Clut = PackedVertex<2, 6, 9>;
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Clut(PackedVertex<2, 6, 9>);
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -60,7 +66,9 @@ pub struct TexCoord {
 /// This is represented as a two-byte packed vertex with the following layout
 /// bits 0-3 texture page X base
 /// bit 4 texture page Y base
-type TexPage = PackedVertex<2, 4, 1>;
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct TexPage(PackedVertex<2, 4, 1>);
 
 #[derive(Debug)]
 pub enum DMAMode {

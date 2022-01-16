@@ -159,9 +159,8 @@ macro_rules! clut_fn {
         }
 
         /// Sets the color lookup table.
-        pub fn set_clut<T>(&mut self, clut: T) -> &mut Self
-        where Clut: From<T> {
-            self.clut = clut.into();
+        pub fn set_clut(&mut self, clut: Clut) -> &mut Self {
+            self.clut = clut;
             self
         }
     };
@@ -175,9 +174,8 @@ macro_rules! tex_coord_fn {
         }
 
         /// Sets the primitive's texcoord.
-        pub fn set_tex_coord<T>(&mut self, t0: T) -> &mut Self
-        where TexCoord: From<T> {
-            self.t0 = t0.into();
+        pub fn set_tex_coord(&mut self, t0: TexCoord) -> &mut Self {
+            self.t0 = t0;
             self
         }
     };

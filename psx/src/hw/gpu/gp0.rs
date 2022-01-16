@@ -28,7 +28,7 @@ impl GP0 {
         self
     }
 
-    pub fn send_command<C: GP0Command>(&mut self, cmd: &C) -> &mut Self {
+    pub fn send_command<C: GP0Command + ?Sized>(&mut self, cmd: &C) -> &mut Self {
         for &word in cmd.words() {
             self.0.assign(word).store();
         }

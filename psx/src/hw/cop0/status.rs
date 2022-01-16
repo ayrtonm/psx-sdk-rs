@@ -45,10 +45,15 @@ impl Status {
         }
     }
 
+    /// Checks if individual interrupt sources are allowed to cause exceptions.
+    pub fn interrupt_unmasked(&self, int_src: IntSrc) -> bool {
+        self.all_set(1 << (int_src as u32))
+    }
+
     /// Checks if individual interrupt sources are forbidden from causing
     /// exceptions.
     pub fn interrupt_masked(&self, int_src: IntSrc) -> bool {
-        self.all_clear(1 << (int_src as u32))
+        !self.interrupt_unmasked(int_src)
     }
 
     /// Checks if coprocessor 0 is enabled in user-mode.

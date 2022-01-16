@@ -1,34 +1,47 @@
+use crate::hw::cop0::IntSrc;
+use crate::hw::{cop0, Register};
 use core::alloc::{GlobalAlloc, Layout};
-use core::cell::RefCell;
+use core::cell::UnsafeCell;
 use core::ptr;
 use core::ptr::NonNull;
 
-pub struct Global<T>(RefCell<T>);
+pub struct Global<T>(UnsafeCell<T>);
 
 unsafe impl<T> Sync for Global<T> {}
 
 impl<T> Global<T> {
     pub const fn new(t: T) -> Self {
-        Global(RefCell::new(t))
+        Global(UnsafeCell::new(t))
     }
 
     pub fn interrupt_free<F: FnOnce(&mut T) -> R, R>(&self, f: F) -> R {
-        critical_section(|| f(&mut self.0.borrow_mut()))
+        critical_section(|| {
+            let t_ref = unsafe { self.0.get().as_mut().unwrap() };
+            f(t_ref)
+        })
     }
 }
 
 pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
-    use crate::hw::cop0::IntSrc;
-    use crate::hw::{cop0, Register};
     let mut status = cop0::Status::new();
-    if status.interrupt_masked(IntSrc::Hardware) {
-        f()
-    } else {
-        status.mask_interrupt(IntSrc::Hardware).store();
-        let res = f();
-        status.load().unmask_interrupt(IntSrc::Hardware).store();
-        res
+    let int_enabled = status.interrupts_enabled();
+    let int_unmasked = status.interrupt_unmasked(IntSrc::Hardware);
+    let modify_status = int_enabled && int_unmasked;
+    if modify_status {
+        status
+            .disable_interrupts()
+            .mask_interrupt(IntSrc::Hardware)
+            .store();
     }
+    let res = f();
+    if modify_status {
+        status
+            .load()
+            .enable_interrupts()
+            .unmask_interrupt(IntSrc::Hardware)
+            .store();
+    }
+    res
 }
 
 pub struct Heap(Global<linked_list_allocator::Heap>);
