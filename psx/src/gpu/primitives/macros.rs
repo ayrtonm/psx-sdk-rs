@@ -66,7 +66,21 @@ macro_rules! color_fn {
 
         /// Sets the primitive's color.
         pub fn set_color(&mut self, color: Color) -> &mut Self {
-            self.color = color.into();
+            self.color = color;
+            self
+        }
+    };
+    (textured) => {
+        /// Gets the primitive's color. Note that textured primitive colors are scaled
+        /// down by 1/2 so the return value is double the primitive's actual color.
+        pub fn get_color(&self) -> Color {
+            self.color.from_textured()
+        }
+
+        /// Sets the primitive's color. Note that textured primitive colors are scaled
+        /// down by 1/2 so the primitive's actual color will be half the argument.
+        pub fn set_color(&mut self, color: Color) -> &mut Self {
+            self.color = color.to_textured();
             self
         }
     };
@@ -86,7 +100,6 @@ macro_rules! gouraud_fn {
 
         /// Sets the primitive's color.
         pub fn set_colors(&mut self, colors: [Color; 3]) -> &mut Self {
-            let colors = colors.map(|t| Color::from(t));
             self.color0 = colors[0];
             self.color1 = colors[1];
             self.color2 = colors[2];
@@ -111,7 +124,56 @@ macro_rules! gouraud_fn {
 
         /// Sets the primitive's color.
         pub fn set_colors(&mut self, colors: [Color; 4]) -> &mut Self {
-            let colors = colors.map(|t| Color::from(t));
+            self.color0 = colors[0];
+            self.color1 = colors[1];
+            self.color2 = colors[2];
+            self.color3 = colors[3];
+            self
+        }
+    };
+    (3, textured) => {
+        /// Gets the primitive's color.
+        pub fn get_colors(&self) -> [Color; 3] {
+            [self.color0, self.color1, self.color2].map(|c| c.from_textured())
+        }
+
+        // TODO: Figure out a better way to handle color scaling for textured
+        // primitives. It might also be perfectly reasonable to not have a
+        // get_colors_mut to avoid the issue of dealing directly with the primitive's data.
+        ///// Returns mutable references to the primitive's colors.
+        //pub fn get_colors_mut(&mut self) -> [&mut Color; 3] {
+        //    [&mut self.color0, &mut self.color1, &mut self.color2]
+        //}
+
+        /// Sets the primitive's color.
+        pub fn set_colors(&mut self, colors: [Color; 3]) -> &mut Self {
+            let colors = colors.map(|c| c.to_textured());
+            self.color0 = colors[0];
+            self.color1 = colors[1];
+            self.color2 = colors[2];
+            self
+        }
+    };
+    (4, textured) => {
+        /// Gets the primitive's color.
+        pub fn get_colors(&self) -> [Color; 4] {
+            [self.color0, self.color1, self.color2, self.color3].map(|c| c.from_textured())
+        }
+
+        // TODO: See comment on (3, textured) case
+        ///// Returns mutable references to the primitive's colors.
+        //pub fn get_colors_mut(&mut self) -> [&mut Color; 4] {
+        //    [
+        //        &mut self.color0,
+        //        &mut self.color1,
+        //        &mut self.color2,
+        //        &mut self.color3,
+        //    ]
+        //}
+
+        /// Sets the primitive's color.
+        pub fn set_colors(&mut self, colors: [Color; 4]) -> &mut Self {
+            let colors = colors.map(|c| c.to_textured());
             self.color0 = colors[0];
             self.color1 = colors[1];
             self.color2 = colors[2];

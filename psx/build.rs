@@ -134,15 +134,11 @@ fn main() {
     let high_precision = cfg!(feature = "hi_prec_trig");
     let cos_entry_ty = if high_precision { "f16" } else { "u8" };
     let cos_idx_fn = if high_precision {
-        // There is a sharp perf drop when building without LTO if this is not
-        // marked inline always.
-        "#[inline(always)]\n\
-         pub fn cosine_table(idx: usize) -> f16 {\
+        "pub fn cosine_table(idx: usize) -> f16 {\
          \n   COSINE_TABLE[idx]\n\
          }"
     } else {
-        "#[inline(always)]\n\
-         pub fn cosine_table(idx: usize) -> f16 {\
+        "pub fn cosine_table(idx: usize) -> f16 {\
          \n    if idx == 0 {\
          \n        f16(0x1_000)\
          \n    } else {\

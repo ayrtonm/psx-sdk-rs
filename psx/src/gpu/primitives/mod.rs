@@ -277,7 +277,7 @@ impl PolyF4 {
 impl_primitive!(PolyFT3, 0x24);
 impl PolyFT3 {
     vertices_fn!(3);
-    color_fn!();
+    color_fn!(textured);
     //clut_fn!();
     //tex_page_fn!();
     //tex_coord_fn!(3);
@@ -285,7 +285,7 @@ impl PolyFT3 {
 impl_primitive!(PolyFT4, 0x2C);
 impl PolyFT4 {
     vertices_fn!(4);
-    color_fn!();
+    color_fn!(textured);
     //clut_fn!();
     //tex_page_fn!();
     //tex_coord_fn!(4);
@@ -303,7 +303,7 @@ impl PolyG4 {
 impl_primitive!(PolyGT3, 0x34);
 impl PolyGT3 {
     vertices_fn!(3);
-    gouraud_fn!(3);
+    gouraud_fn!(3, textured);
     //clut_fn!();
     //tex_page_fn!();
     //tex_coord_fn!(3);
@@ -311,7 +311,7 @@ impl PolyGT3 {
 impl_primitive!(PolyGT4, 0x3C);
 impl PolyGT4 {
     vertices_fn!(4);
-    gouraud_fn!(4);
+    gouraud_fn!(4, textured);
     //clut_fn!();
     //tex_page_fn!();
     //tex_coord_fn!(4);
@@ -330,7 +330,7 @@ impl Tile8 {
 impl_primitive!(Tile16, 0x78);
 impl_primitive!(Sprt, 0x64);
 impl Sprt {
-    color_fn!();
+    color_fn!(textured);
     offset_fn!();
     size_fn!();
     clut_fn!();
@@ -338,14 +338,14 @@ impl Sprt {
 }
 impl_primitive!(Sprt8, 0x74);
 impl Sprt8 {
-    color_fn!();
+    color_fn!(textured);
     offset_fn!();
     clut_fn!();
     tex_coord_fn!(1);
 }
 impl_primitive!(Sprt16, 0x7C);
 impl Sprt16 {
-    color_fn!();
+    color_fn!(textured);
     offset_fn!();
     clut_fn!();
     tex_coord_fn!(1);

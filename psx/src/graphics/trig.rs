@@ -2,7 +2,6 @@
 
 use crate::graphics::f16;
 
-#[inline(always)]
 pub fn cosine_table(idx: usize) -> f16 {
     if idx == 0 {
         f16(0x1_000)

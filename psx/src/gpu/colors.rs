@@ -1,10 +1,13 @@
 use crate::gpu::Color;
 
+// This is the max value for untextured graphics. Colors for textured graphics
+// should be scaled down to a max of 0x80.
+const MAX: u8 = 0xFF;
 pub const BLACK: Color = Color::new(0, 0, 0);
-pub const WHITE: Color = Color::new(0xFF, 0xFF, 0xFF);
-pub const RED: Color = Color::new(0xFF, 0, 0);
-pub const GREEN: Color = Color::new(0, 0xFF, 0);
-pub const BLUE: Color = Color::new(0, 0, 0xFF);
+pub const WHITE: Color = Color::new(MAX, MAX, MAX);
+pub const RED: Color = Color::new(MAX, 0, 0);
+pub const GREEN: Color = Color::new(0, MAX, 0);
+pub const BLUE: Color = Color::new(0, 0, MAX);
 
 pub const YELLOW: Color = RED.sum(GREEN);
 pub const CYAN: Color = GREEN.sum(BLUE);
@@ -46,5 +49,13 @@ impl Color {
 
     pub const fn average(&self, other: Self) -> Self {
         self.halve().sum(other.halve())
+    }
+
+    pub const fn to_textured(&self) -> Self {
+        self.halve()
+    }
+
+    pub const fn from_textured(&self) -> Self {
+        self.double()
     }
 }

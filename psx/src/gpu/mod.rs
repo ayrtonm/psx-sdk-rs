@@ -186,6 +186,10 @@ impl DrawEnv {
             _pad: 0,
         })
     }
+
+    pub fn set_color(&mut self, color: Color) {
+        self.bg_color = color;
+    }
 }
 
 impl GP0Command for DrawEnv {}

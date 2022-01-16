@@ -46,8 +46,8 @@ impl Font {
         Self::new(font)
     }
 
-    pub fn text_box(&self, offset: Vertex, color: Option<Color>) -> TextBox {
-        let color = color.unwrap_or(WHITE);
+    pub fn text_box(&self, offset: Vertex) -> TextBox {
+        let color = WHITE;
         let mut buffer = [Sprt8::new(); BUFFER_SIZE];
         for letter in &mut buffer {
             if let Some(clut) = self.coords.clut {

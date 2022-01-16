@@ -35,8 +35,9 @@ pub struct Framebuffer {
 
 impl Framebuffer {
     pub fn new(
-        buf0: Vertex, buf1: Vertex, res: Vertex, bg_color: Option<Color>,
+        buf0: Vertex, buf1: Vertex, res: Vertex
     ) -> Result<Self, VertexError> {
+        let bg_color = None;
         let mut fb = Framebuffer {
             gp0: GP0::new(),
             gp1: GP1::new(),
@@ -54,6 +55,12 @@ impl Framebuffer {
             .enable_display(true);
         fb.swap(None);
         Ok(fb)
+    }
+
+    pub fn set_bg_color(&mut self, color: Color) {
+        for packet_env in &mut self.draw_envs {
+            packet_env.contents.set_color(color);
+        }
     }
 
     pub fn swap(&mut self, gpu_dma: Option<&mut dma::GPU>) {

@@ -39,12 +39,13 @@ struct Angle {
 fn main() -> Result<(), &'static str> {
     let font = Font::default();
     // Initializes the GPU and creates a Framebuffer with a white background
-    let mut fb = Framebuffer::new(BUF0, BUF1, RES, Some(INDIGO))?;
+    let mut fb = Framebuffer::new(BUF0, BUF1, RES)?;
+    fb.set_bg_color(INDIGO);
     // Initializes the GPU DMA channel
     let mut gpu_dma = dma::GPU::new();
 
-    let mut upper_box = font.text_box(Vertex(0, 8), Some(GREEN));
-    let mut lower_box = font.text_box(Vertex(0, 200), None);
+    let mut upper_box = font.text_box(Vertex(0, 8));
+    let mut lower_box = font.text_box(Vertex(0, 200));
 
     // The BIOS Gamepad wrapper needs pinned buffers for the controller data so
     // it must be created outside of `Gamepad::new`
@@ -136,6 +137,10 @@ fn main() -> Result<(), &'static str> {
             // Sort the faces of the cube by the average of the z-coordinates of their vertices.
             // This ensures that the `PolyF4`s in the draw list are ordered from farthest to closest.
             cube.sort_by_key(avg_z);
+
+            // Set the upper text box's color to match the nearest face
+            // This only writes to the 5 `Sprt8`s in the box's buffer if the color actually changed
+            upper_box.change_color(cube[5].1);
 
             for n in 0..6 {
                 let (face, color) = cube[n];
