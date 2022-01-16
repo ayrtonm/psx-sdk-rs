@@ -11,7 +11,7 @@ fn main() {
     let buf1 = Vertex(0, 240);
     let res = Vertex(320, 240);
     // Creating a new Framebuffer will `Err` if the resolution isn't valid.
-    let mut fb = Framebuffer::new(buf0, buf1, res).expect("Resolution is valid");
+    let mut fb = Framebuffer::new(buf0, buf1, res).expect("Invalid resolution");
     let offset = Vertex(0, 8);
     let mut text_box = Font::default().text_box(offset);
     dprintln!(text_box, "Hello, world!");

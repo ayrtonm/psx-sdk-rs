@@ -144,7 +144,7 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     /// Returns `f`'s return value or `None` if the buffer is too large.
     pub fn send_and<F: FnOnce() -> R, R>(&mut self, block: &[u32], f: F) -> Result<R> {
         let ptr = self.block_ptr(block)?;
-        self.madr.set_address(ptr)?.store();
+        self.madr.set_address(ptr).expect("u32 slice isn't word-aligned").store();
         self.bcr.set_block(block.len())?.store();
         self.control
             .set_mode(TransferMode::Immediate)
@@ -195,7 +195,7 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         let ptr = list as *const L as *const u32;
         self.madr
             .set_address(ptr)
-            .expect("LinkedList implementors are always word-aligned")
+            .expect("LinkedList implementor was not word-aligned")
             .store();
         self.control
             .set_mode(TransferMode::LinkedList)

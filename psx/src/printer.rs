@@ -41,7 +41,7 @@ impl Font {
                 tim.as_mut_ptr().cast(),
                 tim.len() / size_of::<u32>(),
             ))
-            .expect("The default font is a valid TIM file")
+            .expect("Default font isn't a valid TIM file")
         };
         Self::new(font)
     }
