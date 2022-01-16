@@ -101,7 +101,7 @@ pub enum Bpp {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhysAddr([u8; 3]);
 
-#[repr(C)]
+#[repr(C, align(4))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Packet<T> {
     next: PhysAddr,

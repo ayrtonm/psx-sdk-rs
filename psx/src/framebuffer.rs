@@ -52,21 +52,19 @@ impl Framebuffer {
             .dma_mode(Some(DMAMode::GP0))
             .display_mode(res, VertexdeoMode::NTSC, Depth::High, false)?
             .enable_display(true);
-        fb.swap(None)
-            .expect("Framebuffer swaps without the DMA will never fail");
+        fb.swap(None);
         Ok(fb)
     }
 
-    pub fn swap(&mut self, gpu_dma: Option<&mut dma::GPU>) -> Result<(), dma::Error> {
+    pub fn swap(&mut self, gpu_dma: Option<&mut dma::GPU>) {
         self.swapped = !self.swapped;
         let idx = self.swapped as usize;
         self.gp1.set_display_env(&self.disp_envs[idx]);
         match gpu_dma {
-            Some(dma) => dma.send_list(&self.draw_envs[idx])?,
+            Some(dma) => dma.send_list(&self.draw_envs[idx]),
             None => {
                 self.gp0.send_command(&self.draw_envs[idx].contents);
             },
         }
-        Ok(())
     }
 }

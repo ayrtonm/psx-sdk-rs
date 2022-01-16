@@ -152,7 +152,7 @@ fn main() -> Result<(), &'static str> {
 
             // Update the cube's position and angles based on the controller
             poll_controller(&pad, &mut coord, &mut theta, &mut phi);
-        })?;
+        });
         // Wait until the GPU processes all the `PolyF4`s
         draw_sync();
 
@@ -170,7 +170,7 @@ fn main() -> Result<(), &'static str> {
         // Wait until vertical blank
         vsync();
         // Swap the frambuffer using the GPU DMA channel
-        fb.swap(Some(&mut gpu_dma))?;
+        fb.swap(Some(&mut gpu_dma));
     }
 }
 

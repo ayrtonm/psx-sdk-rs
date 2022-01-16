@@ -203,7 +203,6 @@ pub trait MemoryAddress: Register<u32> {
             Err(Error::UnalignedAddress)
         } else {
             let val = ptr as u32 & ADDRESS_MASK;
-            //crate::println!("{:#x?}", val);
             Ok(self.assign(val))
         }
     }

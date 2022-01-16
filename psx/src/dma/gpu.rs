@@ -1,4 +1,3 @@
-use crate::dma::Result;
 use crate::dma::{Channel, Direction, LinkedList};
 use crate::hw::dma::gpu::{Address, Block, Control};
 use crate::hw::dma::ChannelControl;
@@ -22,7 +21,7 @@ impl GPU {
         &mut self.0.control
     }
 
-    pub fn send_list<L: LinkedList + ?Sized>(&mut self, list: &L) -> Result<()> {
+    pub fn send_list<L: LinkedList + ?Sized>(&mut self, list: &L) {
         self.send_list_and(list, || ())
     }
 
@@ -33,7 +32,7 @@ impl GPU {
     /// Returns `f`'s return value or `None` if the buffer is too large.
     pub fn send_list_and<L: LinkedList + ?Sized, F: FnOnce() -> R, R>(
         &mut self, list: &L, f: F,
-    ) -> Result<R> {
+    ) -> R {
         self.0.send_list_and(list, f)
     }
 }

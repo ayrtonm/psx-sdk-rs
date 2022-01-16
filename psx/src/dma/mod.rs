@@ -191,9 +191,12 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     /// Returns `f`'s return value.
     pub fn send_list_and<F: FnOnce() -> R, R, L: LinkedList + ?Sized>(
         &mut self, list: &L, f: F,
-    ) -> Result<R> {
+    ) -> R {
         let ptr = list as *const L as *const u32;
-        self.madr.set_address(ptr)?.store();
+        self.madr
+            .set_address(ptr)
+            .expect("LinkedList implementors are always word-aligned")
+            .store();
         self.control
             .set_mode(TransferMode::LinkedList)
             .start()
@@ -201,6 +204,6 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         core::hint::black_box(list);
         let res = f();
         self.control.wait();
-        Ok(res)
+        res
     }
 }
