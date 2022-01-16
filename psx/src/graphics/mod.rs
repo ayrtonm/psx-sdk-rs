@@ -6,7 +6,7 @@ pub mod fixed_point;
 mod trig;
 pub mod vector;
 
-use trig::{COSINE_TABLE, COSINE_TABLE_SIZE};
+use trig::{cosine_table, COSINE_TABLE_SIZE};
 
 pub type f16 = F16<12>;
 
@@ -45,10 +45,10 @@ pub fn cos(x: f16) -> f16 {
     let idx = offset as usize;
     let reverse_idx = (table_size - offset - 1) as usize;
     match quarter_cycle {
-        0 => COSINE_TABLE[reverse_idx],
-        1 => COSINE_TABLE[idx],
-        2 => -COSINE_TABLE[reverse_idx],
-        3 => -COSINE_TABLE[idx],
+        0 => cosine_table(reverse_idx),
+        1 => cosine_table(idx),
+        2 => -cosine_table(reverse_idx),
+        3 => -cosine_table(idx),
         _ => unreachable!("a u16 divided by 0x4000 can't be greater than 3"),
     }
 }
