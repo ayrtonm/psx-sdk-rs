@@ -121,20 +121,17 @@ fn main() -> Result<(), &'static str> {
             // the CPU hangs until the transfer is done.
 
             // Scale the unit cube defined above, rotate it about its center and shift its position.
-            let mut cube = unit_cube.map(|(face, color)| {
-                let scale = 0x1000;
-                let center = (Vi::X + Vi::Y + Vi::Z) * scale / 2;
-                (
-                    face.map(|vi| {
-                        (vi * scale)
-                            .rotate_x(theta.angle, center)
-                            .rotate_y(phi.angle, center)
-                            - center
-                            + coord.pos
-                    }),
-                    color,
-                )
-            });
+            let mut cube = unit_cube;
+            for (face, _) in &mut cube {
+                for vi in face {
+                    let scale = 0x1000;
+                    let center = (Vi::X + Vi::Y + Vi::Z) * scale / 2;
+                    *vi *= scale;
+                    *vi = vi.rotate_x(theta.angle, center).rotate_y(phi.angle, center);
+                    *vi -= center;
+                    *vi += coord.pos;
+                }
+            }
 
             // Sort the faces of the cube by the average of the z-coordinates of their vertices.
             // This ensures that the `PolyF4`s in the draw list are ordered from farthest to closest.
@@ -198,38 +195,49 @@ fn avg_z((face, _): &([Vi; 4], Color)) -> i16 {
 fn poll_controller(pad: &Gamepad, coord: &mut Coordinates, theta: &mut Angle, phi: &mut Angle) {
     let buttons = pad.poll();
 
+    let pos_step = 0x80;
     let vel_step = 0x100;
     let friction = f16(0x0_C00);
     coord.pos += coord.vel;
     if buttons.pressed(UP) {
+        coord.pos -= Vi::Y * pos_step;
         coord.vel -= Vi::Y * vel_step;
     } else if buttons.pressed(DOWN) {
+        coord.pos += Vi::Y * pos_step;
         coord.vel += Vi::Y * vel_step;
     } else {
         coord.vel.1 *= friction;
     }
     if buttons.pressed(LEFT) {
+        coord.pos -= Vi::X * pos_step;
         coord.vel -= Vi::X * vel_step;
     } else if buttons.pressed(RIGHT) {
+        coord.pos += Vi::X * pos_step;
         coord.vel += Vi::X * vel_step;
     } else {
         coord.vel.0 *= friction;
     }
 
+    let theta_step = f16(0x_180);
     let theta_vel_step = f16(0x_300);
     theta.angle += theta.angular_vel;
     if buttons.pressed(TRIANGLE) {
+        theta.angle += theta_step;
         theta.angular_vel += theta_vel_step;
     } else if buttons.pressed(CROSS) {
+        theta.angle -= theta_step;
         theta.angular_vel -= theta_vel_step;
     } else {
         theta.angular_vel *= friction;
     }
+    let phi_step = f16(0x_180);
     let phi_vel_step = f16(0x_300);
     phi.angle += phi.angular_vel;
     if buttons.pressed(CIRCLE) {
+        phi.angle += phi_step;
         phi.angular_vel += phi_vel_step;
     } else if buttons.pressed(SQUARE) {
+        phi.angle -= phi_step;
         phi.angular_vel -= phi_vel_step;
     } else {
         phi.angular_vel *= friction;

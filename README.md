@@ -93,7 +93,8 @@ psx run` from its directory. To use a different emulator run `cargo psx build`
 then open the .exe in `/target/mipsel-sony-psx/release/`. To use `cargo psx run`
 with other emulators change the
 [runner](https://doc.rust-lang.org/cargo/reference/config.html#target) for the
-`mipsel-sony-psx` target.
+`mipsel-sony-psx` target. Note that some examples may require building with
+`cargo psx run --alloc` to link in the alloc crate.
 
 ### Program template
 
