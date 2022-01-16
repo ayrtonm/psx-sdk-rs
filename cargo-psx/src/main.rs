@@ -63,7 +63,10 @@ struct Opt {
     lto: bool,
     #[structopt(long, help = "Sets opt-level=s to optimize for size")]
     small: bool,
-    #[structopt(long, help = "Disables error messages in the panic handler to reduce binary size")]
+    #[structopt(
+        long,
+        help = "Disables error messages in the panic handler to reduce binary size"
+    )]
     min_panic: bool,
 
     #[structopt(long)]
@@ -106,8 +109,16 @@ fn main() {
         build_std.push_str(",alloc");
     };
 
+    // Rust doesn't do cross-crate inlining unless functions are marked as
+    // #[inline]. Pretty much everything in the psx crate should be inlined since
+    // they're such low-level functions, but to avoid doing that manually we
+    // codegen-units to 1 by default to get essentially the same effect without the
+    // burden of always doing LTO. This default is overriden when setting RUSTFLAGS
+    // through an env var, but the performance of builds without this flag is
+    // extremely unpredictable.
+    let default_rustflags = "-Ccodegen-units=1".to_string();
     // Try getting RUSTFLAGS from env
-    let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or(String::new());
+    let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or(default_rustflags);
 
     // Set linker script if any
     let script = opt.link.unwrap_or("psexe.ld".to_string());
@@ -124,7 +135,7 @@ fn main() {
     }
 
     if opt.lto {
-        rustflags.push_str(" -Clto=fat -Ccodegen-units=1 -Cembed-bitcode=yes");
+        rustflags.push_str(" -Clto=fat -Cembed-bitcode=yes");
     }
 
     if opt.small {
