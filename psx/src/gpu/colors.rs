@@ -1,3 +1,4 @@
+use crate::graphics::f16;
 use crate::gpu::Color;
 
 // This is the max value for untextured graphics. Colors for textured graphics
@@ -57,5 +58,18 @@ impl Color {
 
     pub const fn from_textured(&self) -> Self {
         self.double()
+    }
+
+    pub fn scale(&self, a: f16) -> Self {
+        if a >= f16(0x1_000) {
+            *self
+        } else if a <= f16(0) {
+            BLACK
+        } else {
+        let red = self.red * a;
+        let green = self.green * a;
+        let blue = self.blue * a;
+        Color::new(red, green, blue)
+        }
     }
 }

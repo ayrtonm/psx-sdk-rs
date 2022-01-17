@@ -5,10 +5,12 @@ use psx::dma;
 use psx::gpu::colors::*;
 use psx::gpu::primitives::*;
 use psx::gpu::{Color, Packet, Vertex};
-use psx::{dprintln, println};
 use psx::sys::gamepad::buttons::*;
 use psx::sys::gamepad::{Gamepad, PadType};
-use psx::{Font, draw_sync, enable_vblank, f16, link_list, vsync, Framebuffer, Vi, FRAC_PI_3, FRAC_PI_4};
+use psx::{dprintln, println};
+use psx::{
+    draw_sync, enable_vblank, f16, link_list, vsync, Font, Framebuffer, Vi, FRAC_PI_3, FRAC_PI_4,
+};
 
 const BUF0: Vertex = Vertex(0, 0);
 const BUF1: Vertex = Vertex(0, 240);
@@ -57,14 +59,23 @@ fn main() -> Result<(), &'static str> {
     // which define a unit cube.
     let xy = [Vi::ZERO, Vi::X, Vi::Y, Vi::X + Vi::Y];
     let yz = [Vi::ZERO, Vi::Y, Vi::Z, Vi::Y + Vi::Z];
-    let xz = [Vi::ZERO, Vi::X, Vi::Z, Vi::Z + Vi::X];
+    let zx = [Vi::ZERO, Vi::Z, Vi::X, Vi::Z + Vi::X];
+    // The arrays above have a normal pointing away from the center of the unit
+    // cube for the first 3 faces. This function flips them to make all normals
+    // point away from the center.
+    fn flip(mut face: [Vi; 4]) -> [Vi; 4] {
+        let tmp = face[1];
+        face[1] = face[2];
+        face[2] = tmp;
+        face
+    }
     let unit_cube = [
         (xy, RED),
         (yz, GREEN),
-        (xz, BLUE),
-        (xy.map(|v| v + Vi::Z), YELLOW),
-        (yz.map(|v| v + Vi::X), CYAN),
-        (xz.map(|v| v + Vi::Y), VIOLET),
+        (zx, BLUE),
+        (flip(xy).map(|v| v + Vi::Z), YELLOW),
+        (flip(yz).map(|v| v + Vi::X), CYAN),
+        (flip(zx).map(|v| v + Vi::Y), VIOLET),
     ];
     // Define the initial position and angles of the cube
     let mut coord = Coordinates {
@@ -72,19 +83,21 @@ fn main() -> Result<(), &'static str> {
         vel: Vi(0, 0, 0),
     };
     let mut theta = Angle {
-        angle: FRAC_PI_4,
-        angular_vel: FRAC_PI_4,
+        angle: /*f16(0),       */FRAC_PI_4,
+        angular_vel: /*f16(0), */FRAC_PI_4,
     };
     let mut phi = Angle {
-        angle: FRAC_PI_3,
+        angle: /*f16(0), */FRAC_PI_3,
         angular_vel: f16(0),
     };
+
+    let mut light_source = Vi(-0x5000, -0x5000, 0x2000);
 
     // Define the data that will be sent to the GPU. `PolyF4` is a four-point
     // monochrome polygon and they're wrapped in a `Packet` to allow sending
     // them through the DMA channel in a linked list. Since we're double
     // buffering we need two `Packet<PolyF4>`s per cube face for a total of 12.
-    let mut quads = [Packet::new(PolyF4::new()); 12];
+    let mut quads = [Packet::new(PolyG4::new()); 12];
     // quads[0..6] is the first cube and quads[6..12] is the second one
     let (cube_a, cube_b) = quads.split_at_mut(6);
     // Link the packets (face polygons) in each slice (cube) as follows
@@ -121,6 +134,8 @@ fn main() -> Result<(), &'static str> {
             // concurrently with the DMA. If the closure terminates before the DMA transfer ends
             // the CPU hangs until the transfer is done.
 
+            //light_source = coord.pos;
+
             // Scale the unit cube defined above, rotate it about its center and shift its position.
             let mut cube = unit_cube;
             for (face, _) in &mut cube {
@@ -130,6 +145,7 @@ fn main() -> Result<(), &'static str> {
                     *vi *= scale;
                     *vi = vi.rotate_x(theta.angle, center).rotate_y(phi.angle, center);
                     *vi -= center;
+                    //*vi += Vi(0,0,0x3000);
                     *vi += coord.pos;
                 }
             }
@@ -140,17 +156,26 @@ fn main() -> Result<(), &'static str> {
 
             // Set the upper text box's color to match the nearest face
             // This only writes to the 5 `Sprt8`s in the box's buffer if the color actually changed
-            upper_box.change_color(cube[5].1);
+            //upper_box.change_color(cube[5].1);
 
             for n in 0..6 {
                 let (face, color) = cube[n];
                 // Project each 3D integer vector onto the 2D screen
                 let projected_quad = face.map(project_vector);
+                // Compute colors at each corner based on the lighting
+                let v0 = face[1] - face[0];
+                let v1 = face[2] - face[0];
+                let normal = v0.cross_product(v1);
+                let colors = face.map(|corner| {
+                    let ray = corner - light_source;
+                    let mut intensity = normal.dot_product(ray) / f16(0x1_000);
+                    color.average(WHITE.scale(intensity))
+                });
                 // Update the contents of each `PolyF4`s in the draw list.
                 draw_list[n]
                     .contents
                     .set_vertices(projected_quad)
-                    .set_color(color);
+                    .set_colors(colors);
             }
             // Swap the display list and draw list next time
             display_a = !display_a;
@@ -161,8 +186,15 @@ fn main() -> Result<(), &'static str> {
         // Wait until the GPU processes all the `PolyF4`s
         draw_sync();
 
+        //let mut light = PolyF4::new();
+        //let light_pos = xy.map(|vi| (vi * 10) + light_source);
+        //light.set_color(WHITE).set_vertices(light_pos.map(project_vector));
+        //fb.gp0.send_command(&light);
+        //draw_sync();
+
         // Write the cube's coordinates to the screen
-        dprintln!(upper_box, "pos: {:?}", coord.pos);
+        dprintln!(upper_box, "light: {:x?}", light_source);
+        dprintln!(upper_box, "pos: {:x?}", coord.pos);
         dprintln!(upper_box, "vel: {:?}", coord.vel);
         upper_box.reset();
 

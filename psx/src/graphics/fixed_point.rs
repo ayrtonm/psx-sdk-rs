@@ -9,7 +9,7 @@ impl f16 {
     pub const ZERO: f16 = f16(0x0_000);
     pub const ONE: f16 = f16(0x1_000);
 
-    /// Raw transmutation to `u32`.
+    /// Raw transmutation to `i16`.
     pub fn to_bits(&self) -> i16 {
         self.0
     }
@@ -88,6 +88,16 @@ impl<const FRAC: usize> Mul<F16<FRAC>> for F16<FRAC> {
 impl<const FRAC: usize> MulAssign<F16<FRAC>> for F16<FRAC> {
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs;
+    }
+}
+
+impl<const FRAC: usize> Mul<F16<FRAC>> for u8 {
+    type Output = Self;
+    fn mul(self, rhs: F16<FRAC>) -> Self {
+        let lhs = i32::from(self);
+        let rhs = i32::from(rhs.0);
+        let res = (lhs * rhs) >> FRAC;
+        res as u8
     }
 }
 

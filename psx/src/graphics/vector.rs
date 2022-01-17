@@ -62,6 +62,32 @@ impl Vi {
         ];
         diff.apply_matrix(m) + center
     }
+
+    // TODO: Double check the cast to f16
+    pub fn dot_product(self, other: Self) -> f16 {
+        let this = Vf(f16(self.0), f16(self.1), f16(self.2));
+        let other = Vf(f16(other.0), f16(other.1), f16(other.2));
+        let x = this.0 * other.0;
+        let y = this.1 * other.1;
+        let z = this.2 * other.2;
+        x + y + z
+    }
+    // TODO: Double check the cast to f16
+    pub fn cross_product(self, other: Self) -> Self {
+        let this = Vf(f16(self.0), f16(self.1), f16(self.2));
+        let other = Vf(f16(other.0), f16(other.1), f16(other.2));
+        let x = (this.1 * other.2) - (this.2 * other.1);
+        let y = (this.0 * other.2) - (this.2 * other.0);
+        let z = (this.0 * other.1) - (this.1 * other.0);
+        Self(x.to_bits(), y.to_bits(), z.to_bits())
+    }
+
+    pub fn len_sq(&self) -> f16 {
+        let x_sq = f16(self.0) * f16(self.0);
+        let y_sq = f16(self.1) * f16(self.1);
+        let z_sq = f16(self.2) * f16(self.2);
+        x_sq + y_sq + z_sq
+    }
 }
 
 impl Add<Vi> for Vi {
