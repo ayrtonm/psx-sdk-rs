@@ -1,11 +1,13 @@
 [package]
 name = "cargo-psx"
 version = "0.1.0"
-authors = ["Ayrton <a.munoz3327@gmail.com>"]
+description = "`cargo` wrapper for the Sony PS1"
+license = "MIT"
+authors = ["Ayrton Muñoz <a.munoz3327@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 cargo_metadata = "0.14.1"
-structopt = "0.3.25"
+clap = { version = "3.1.9", features = ["derive"] }

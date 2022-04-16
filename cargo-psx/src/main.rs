@@ -2,7 +2,7 @@ use cargo_metadata::MetadataCommand;
 use std::env;
 use std::process::{self, Command, Stdio};
 use std::str::FromStr;
-use structopt::StructOpt;
+use clap::Parser;
 
 #[derive(Debug)]
 enum CargoCommand {
@@ -36,45 +36,45 @@ impl FromStr for CargoCommand {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 struct Opt {
-    #[structopt(parse(try_from_str), hidden = true)]
+    #[clap(parse(try_from_str), hide = true)]
     _psx: String,
 
-    #[structopt(long, help = "run `cargo clean` before the build subcommand")]
+    #[clap(long, help = "run `cargo clean` before the build subcommand")]
     clean: bool,
-    #[structopt(name = "build|check|run|test", parse(try_from_str))]
+    #[clap(name = "build|check|run|test", parse(try_from_str))]
     cargo_subcmd: Option<CargoCommand>,
 
-    #[structopt(long, help = "Sets the rustup toolchain (defaults to `psx`)")]
+    #[clap(long, help = "Sets the rustup toolchain (defaults to `psx`)")]
     toolchain: Option<String>,
-    #[structopt(long, help = "Sets the game region to NA, EU or J")]
+    #[clap(long, help = "Sets the game region to NA, EU or J")]
     region: Option<String>,
-    #[structopt(long, help = "Specifies a custom linker script to use")]
+    #[clap(long, help = "Specifies a custom linker script to use")]
     link: Option<String>,
-    #[structopt(long, help = "Builds the `alloc` crate")]
+    #[clap(long, help = "Builds the `alloc` crate")]
     alloc: bool,
-    #[structopt(long, help = "Ouputs an ELF with debug info")]
+    #[clap(long, help = "Ouputs an ELF with debug info")]
     debug: bool,
-    #[structopt(
+    #[clap(
         long,
         help = "Enables link-time optimization and sets codegen units to 1"
     )]
     lto: bool,
-    #[structopt(long, help = "Sets opt-level=s to optimize for size")]
+    #[clap(long, help = "Sets opt-level=s to optimize for size")]
     small: bool,
-    #[structopt(
+    #[clap(
         long,
         help = "Disables error messages in the panic handler to reduce binary size"
     )]
     min_panic: bool,
 
-    #[structopt(long)]
+    #[clap(long)]
     cargo_args: Vec<String>,
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     let mut cargo_args: Vec<String> = opt
         .cargo_args
