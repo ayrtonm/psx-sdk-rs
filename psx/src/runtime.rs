@@ -19,7 +19,7 @@ type RtReturn = !;
 
 /// The runtime used by the default linker scripts.
 #[no_mangle]
-extern "C" fn _start() -> RtReturn {
+extern "C" fn __start() -> RtReturn {
     // SAFETY: If there is no unmangled function named `main` this causes an error
     // at link-time.
     unsafe {
@@ -58,6 +58,12 @@ extern "C" fn _start() -> RtReturn {
 // Define string-literals to embed in PSEXE header
 // Using the same identifier for all regions conveniently makes the crate
 // features mutually exclusive
+#[cfg(any(
+    feature = "NA_region",
+    feature = "EU_region",
+    feature = "J_region",
+    test
+))]
 macro_rules! as_array {
     ($msg:literal) => {
         // SAFETY: This dereferences a pointer to a literal which has a static lifetime.
@@ -85,9 +91,3 @@ pub static _REGION: [u8; 48] = as_array!("Sony Computer Entertainment Inc. for E
 #[doc(hidden)]
 #[link_section = ".region"]
 pub static _REGION: [u8; 47] = as_array!("Sony Computer Entertainment Inc. for Japan area");
-
-#[used]
-#[no_mangle]
-#[doc(hidden)]
-#[link_section = ".psx_exe"]
-pub static _PSX_EXE: [u8; 8] = as_array!("PS-X EXE");
