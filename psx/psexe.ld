@@ -67,7 +67,7 @@ SECTIONS {
         __bss_end = .;
     } > RAM
 
-    /* Leak up to 3 bytes to make the heap word-aligned */
+    /* Make the heap word-aligned */
     . = ALIGN(4);
     __heap_start = .;
 

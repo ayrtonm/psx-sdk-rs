@@ -5,30 +5,34 @@ use crate::std::AsCStr;
 use crate::sys::kernel;
 use core::fmt;
 
-pub trait PrintfString {
+// Since this crate's print functions are currently built on top of the BIOS,
+// strings must be null-terminated. This trait is a terrible hack to avoid
+// needing explicit null-terminators everywhere.
+pub trait ImplsAsCStr {
     fn impls_as_cstr(&self) -> Option<&[u8]>;
 }
 
 // min_specialization currently doesn't allow an impl<T: AsRef<[u8]>> so we have
-// to enumerate the possible CStr types. This approach is better than the
-// previous "if downcast_ref" in the macro because it supports all `[u8; N]`
-impl<const N: usize> PrintfString for [u8; N] {
+// to enumerate the possible CStr types. This approach is better than
+// `downcast_ref` in the macro because it supports all `[u8; N]`. However it's
+// missing the CStr types from `alloc` (e.g. String).
+impl<const N: usize> ImplsAsCStr for [u8; N] {
     fn impls_as_cstr(&self) -> Option<&[u8]> {
         Some(self.as_ref())
     }
 }
-impl PrintfString for &[u8] {
+impl ImplsAsCStr for &[u8] {
     fn impls_as_cstr(&self) -> Option<&[u8]> {
         Some(self.as_ref())
     }
 }
-impl PrintfString for &str {
+impl ImplsAsCStr for &str {
     fn impls_as_cstr(&self) -> Option<&[u8]> {
         Some(self.as_ref())
     }
 }
 
-impl<T> PrintfString for T {
+impl<T> ImplsAsCStr for T {
     default fn impls_as_cstr(&self) -> Option<&[u8]> {
         None
     }
@@ -46,9 +50,9 @@ macro_rules! printf {
     ($msg:expr $(,$args:expr)*) => {
         {
             use $crate::std::AsCStr;
-            use $crate::sys::tty::PrintfString;
+            use $crate::sys::tty::ImplsAsCStr;
             $msg.as_cstr(|cs| {
-                printf!(@parse $($args,)*; {cs.as_ptr()});
+                printf!(@parse $($args,)*; {cs.as_ptr() as *const u8});
             });
         }
     };
@@ -56,7 +60,7 @@ macro_rules! printf {
         {
             if let Some(s) = $msg.impls_as_cstr() {
                 s.as_cstr(|cs| {
-                    printf!(@parse $($args,)*; {$($acc)*, cs.as_ptr()});
+                    printf!(@parse $($args,)*; {$($acc)*, cs.as_ptr() as *const u8});
                 })
             } else {
                 printf!(@parse $($args,)*; {$($acc)*,$msg});

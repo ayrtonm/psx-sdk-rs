@@ -2,6 +2,7 @@
 name = "psx"
 version = "0.1.0"
 description = "Library for developing homebrew for the Sony PS1"
+readme = "../README.md"
 license = "MIT"
 authors = ["Ayrton Muñoz <a.munoz3327@gmail.com>"]
 edition = "2021"
@@ -9,22 +10,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-strum_macros = "0.23.1"
-linked_list_allocator = { version = "0.9.1", default-features = false, features = [ "const_mut_refs" ] }
 
 [dev-dependencies]
 num = { version = "0.4.0", default-features = false }
 const-random = "0.1.13"
-aligned = "0.4.0"
 
 [build-dependencies]
-libm = "0.2.1"
 
 [features]
 NA_region = []
 EU_region = []
 J_region = []
 min_panic = []
-custom_oom = []
 loadable_exe = []
-hi_prec_trig = []
+custom_oom = []

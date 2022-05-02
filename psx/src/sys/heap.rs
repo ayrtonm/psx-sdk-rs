@@ -33,7 +33,7 @@ macro_rules! sys_heap {
         $crate::ctor! {
             fn heap() {
                 use core::mem::size_of;
-                use psx::sys::kernel;
+                use $crate::sys::kernel;
 
                 // Type-check the macro argument
                 let slice: &'static mut [u32] = $mut_slice;

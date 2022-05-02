@@ -1,8 +1,8 @@
 use cargo_metadata::MetadataCommand;
+use clap::Parser;
 use std::env;
 use std::process::{self, Command, Stdio};
 use std::str::FromStr;
-use clap::Parser;
 
 #[derive(Debug)]
 enum CargoCommand {
