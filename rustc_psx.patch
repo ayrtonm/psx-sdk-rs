@@ -1,62 +1,51 @@
 diff --git a/compiler/rustc_target/src/spec/mipsel_sony_psx.rs b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
 new file mode 100644
-index 00000000000..763dd3f901e
+index 00000000000..464bc2131aa
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/mipsel_sony_psx.rs
-@@ -0,0 +1,48 @@
-+use crate::spec::{
-+    FramePointer, LinkerFlavor, LldFlavor, PanicStrategy, RelocModel, Target, TargetOptions,
-+};
+@@ -0,0 +1,37 @@
++use crate::spec::{cvs, LinkerFlavor, LldFlavor, PanicStrategy, RelocModel, Target, TargetOptions};
 +
-+// These options are mostly taken from the mipsel-sony-psp and msp430-none-elf
-+// configurations with some changes specific to MIPS I.
 +pub fn target() -> Target {
 +    Target {
-+        llvm_target: "mipsel-sony-psx".to_string(),
++        llvm_target: "mipsel-sony-psx".into(),
 +        pointer_width: 32,
-+        data_layout: "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64".to_string(),
-+        arch: "mips".to_string(),
++        data_layout: "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64".into(),
++        arch: "mips".into(),
 +
 +        options: TargetOptions {
-+            c_int_width: "32".to_string(),
-+            os: "none".to_string(),
-+            env: "psx".to_string(),
-+            vendor: "sony".to_string(),
++            os: "none".into(),
++            env: "psx".into(),
++            vendor: "sony".into(),
 +            linker_flavor: LinkerFlavor::Lld(LldFlavor::Ld),
-+            cpu: "mips1".to_string(),
++            cpu: "mips1".into(),
 +            executables: true,
-+            linker: Some("rust-lld".to_owned()),
-+            linker_is_gnu: true,
++            linker: Some("rust-lld".into()),
 +            relocation_model: RelocModel::Static,
-+            frame_pointer: FramePointer::NonLeaf,
-+            dynamic_linking: false,
-+            function_sections: true,
-+            exe_suffix: ".exe".to_string(),
++            exe_suffix: ".exe".into(),
 +
 +            // PSX doesn't natively support floats.
-+            features: "+soft-float".to_string(),
++            features: "+soft-float".into(),
 +
-+            // The MIPS I in the PSX doesn't have a SYNC instruction so we have
-+            // to disable the Atomic* API.
-+            // See https://github.com/rust-lang/rust/issues/54511 for more info.
++            // This should be 16 bits, but LLVM incorrectly tries emitting MIPS-II SYNC instructions
++            // for atomic loads and stores. This crashes rustc so we have to disable the Atomic* API
++            // until this is fixed upstream. See https://reviews.llvm.org/D122427#3420144 for more
++            // info.
 +            max_atomic_width: Some(0),
 +
-+            // Taken from msp430-none-elf target configuration.
-+            panic_strategy: PanicStrategy::Abort,
-+            trap_unreachable: false,
-+
 +            // PSX does not support trap-on-condition instructions.
-+            llvm_args: vec!["-mno-check-zero-division".to_string()],
-+            link_script: None,
++            llvm_args: cvs!["-mno-check-zero-division"],
++            llvm_abiname: "o32".into(),
++            panic_strategy: PanicStrategy::Abort,
 +            ..Default::default()
 +        },
 +    }
 +}
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index ece704d7700..f47e9bca9ea 100644
+index 965a3c10983..e6864c9e1dc 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -999,6 +999,7 @@ fn $module() {
+@@ -1007,6 +1007,7 @@ fn $module() {
      ("armv7a-kmc-solid_asp3-eabihf", armv7a_kmc_solid_asp3_eabihf),
  
      ("mipsel-sony-psp", mipsel_sony_psp),

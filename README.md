@@ -1,10 +1,9 @@
 # psx-sdk-rs
 
 This is a basic SDK to run custom Rust code on a Playstation 1. You'll need to
-build the rust compiler from source with a patched version of LLVM. Building the
-compiler and LLVM is computationally expensive, so it may take quite a bit of
-time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
-for building the rust compiler and LLVM for more specifics.
+build the rust compiler from source. Building the compiler is computationally
+expensive, so it may take quite a bit of time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
+for building the rust compiler for more specifics.
 
 ## Building the compiler
 
@@ -13,7 +12,7 @@ for building the rust compiler and LLVM for more specifics.
     ```
     git clone https://github.com/rust-lang/rust.git
     cd rust
-    git checkout c12f7efd01f44b67c2c233f7f84a4584e231295a
+    git checkout 2c858a7c3f189eb11ad89d9bf9f2e87cac9d2b76
     ```
 
 2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:
@@ -28,29 +27,24 @@ for building the rust compiler and LLVM for more specifics.
     sed -i 's/#experimental-targets.*$/experimental-targets = ""/' config.toml
     ```
 
-3. Patch the rust compiler. Applying this to a different rustc commit may require some manual intervention:
+3. Patch the rust compiler. Applying these patches to a different commit may require manual intervention:
 
     ```
+    git apply /path/to/rustc_mips32.patch
     git apply /path/to/rustc_psx.patch
     ```
 
-4. Patch LLVM.
+
+3. Build the rust compiler:
 
     ```
-    git submodule update --init --progress src/llvm-project
-    cd src/llvm-project
-    git apply /path/to/llvm_mips1.patch
+    # For the initial build
+    ./x.py build -i library/std
+    # To rebuild
+    ./x.py build -i library/std --keep-stage 1
     ```
 
-5. Build the rust compiler:
-
-    ```
-    # Go to the root of rust repo
-    cd ../..
-    ./x.py build --stage 1 compiler/rustc
-    ```
-
-6. Create a new toolchain with the patched compiler:
+5. Create a new toolchain with the patched compiler:
 
     ```
     rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1
