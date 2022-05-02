@@ -6,9 +6,9 @@ use core::slice;
 /// A random number generator
 ///
 /// Use [`Self::rand`] to generate a random integer or float. Note that each
-/// call to [`Self::step`] advances the generator state to `x = x * 0x41C6_4E6D
-/// + 0x3039` and returns the lower **15 bits** of `x / 0x1_0000`. Also all
-/// `Rng` instances share a global state.
+/// call to [`Self::step`] advances the generator state to
+/// `x = x * 0x41C6_4E6D + 0x3039` and returns the lower **15 bits** of
+/// `x / 0x1_0000`. Also all `Rng` instances share a global state.
 pub struct Rng(());
 
 impl Rng {
