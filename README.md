@@ -61,8 +61,7 @@ flags and arguments. Basically this lets you just run `cargo psx run` instead of
 To install:
 
 ```
-cd cargo-psx
-cargo install --path .
+cargo install cargo-psx
 ```
 
 To uninstall:
@@ -92,9 +91,9 @@ with other emulators change the
 
 ### Program template
 
-To create a new program just use `cargo init` and add `psx = { path =
-"path/to/psx/crate" }` to `Cargo.toml` under `[dependencies]`. Then replace
-`src/main.rs` with the following template
+To create a new program just use `cargo init` and add `psx = "*"` to
+`Cargo.toml` under `[dependencies]`. Then replace `src/main.rs` with the
+following template
 
 ```rust
 #![no_std]
