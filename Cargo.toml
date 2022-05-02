@@ -1,0 +1,4 @@
+[workspace]
+
+members = [ "psx", "cargo-psx" ]
+exclude = [ "examples", "scripts" ]
