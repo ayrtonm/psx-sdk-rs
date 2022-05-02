@@ -1,11 +1,15 @@
 [package]
 name = "psx"
-version = "0.1.0"
+version = "0.1.1"
 description = "Library for developing homebrew for the Sony PS1"
 readme = "../README.md"
+repository = "https://github.com/ayrtonm/psx-sdk-rs"
 license = "MIT"
 authors = ["Ayrton Muñoz <a.munoz3327@gmail.com>"]
 edition = "2021"
+
+[package.metadata.docs.rs]
+targets = ["mipsel-unknown-linux-gnu"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
