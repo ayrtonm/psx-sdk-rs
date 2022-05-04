@@ -1,19 +1,19 @@
 // These are mostly taken from the nocash specs with type ascriptions added in
 
 // Returns a file descriptor or -1 for error
-A(00h) file_open(filename: *const u8, accessmode: u32) -> i8;
+A(00h) file_open(filename: *const i8, accessmode: u32) -> i8;
 
 // Takes a file descriptor, returns an offset or -1 for error
-A(01h) file_seek(fd: u8, offset: u32, seektype: u8) -> i32;
+A(01h) file_seek(fd: i8, offset: u32, seektype: u8) -> i32;
 
 // Returns number of bytes read or -1 for error
-A(02h) file_read(fd: u8, dst: *mut u32, length: usize) -> i32;
+A(02h) file_read(fd: i8, dst: *mut u32, length: usize) -> i32;
 
 // Returns number of bytes written or -1 for error
-A(03h) file_write(fd: u8, src: *const u32, length: usize) -> i32;
+A(03h) file_write(fd: i8, src: *const u32, length: usize) -> i32;
 
 // Returns the closed file descriptor or -1 for error
-A(04h) file_close(fd: u8) -> i8;
+A(04h) file_close(fd: i8) -> i8;
 
 //A(05h) fileioctl(fd,cmd,arg);
 A(06h) exit(exitcode: i32) -> !;
@@ -82,13 +82,13 @@ A(3Ah) system_error_exit(exitcode: i32) -> !;
 //A(3Dh) std_in_gets(dst);
 
 // Prints the specified string to stdout without resolving C-style escape codes.
-A(3Eh) std_out_puts(msg: *const u8);
+A(3Eh) std_out_puts(msg: *const i8);
 // Prints the specified format string to stdout. The string may contain C-style escape codes.
-A(3Fh) printf(msg: *const u8, ...);
+A(3Fh) printf(msg: *const i8, ...);
 
 //A(40h) systemerrorunresolvedexception();
-A(41h) load_exe_header(filename: *const u8, headerbuf: *mut u8);
-A(42h) load_exe_file(filename: *const u8, headerbuf: *mut u8);
+A(41h) load_exe_header(filename: *const i8, headerbuf: *mut u8);
+A(42h) load_exe_file(filename: *const i8, headerbuf: *mut u8);
 A(43h) do_execute(headerbuf: *mut u8, param1: u32, param2: u32);
 A(44h) flush_cache();
 //A(45h) init_a0_b0_c0_vectors;
@@ -101,7 +101,7 @@ A(4Ah) gp0_command_params(src: *const u32, num: usize);
 //A(4Ch) gpu_abort_dma();
 A(4Dh) gpu_get_status() -> u32;
 A(4Eh) gpu_sync() -> i32;
-A(51h) load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);
+A(51h) load_and_execute(filename: *const i8, stackbase: u32, stackoffset: u32);
 A(54h) cd_init();
 //A(55h) _bu_init();
 A(56h) cd_remove();
@@ -148,7 +148,7 @@ A(A0h) warm_boot() -> !;
 //A(A1h) systemerrorbootordiskfailure(type,errorcode);
 //A(A2h) enqueuecdintr()  ;with prio=0 (fixed);
 //A(A3h) dequeuecdintr()  ;does NOT work due to SysDeqIntRP bug;
-A(A4h) cd_get_lbn(filename: *const u8) -> i32;
+A(A4h) cd_get_lbn(filename: *const i8) -> i32;
 //A(A5h) cdreadsector(count,sector,buffer);
 A(A6h) cd_get_status(dst: *mut u32);
 //A(A7h) bu_callback_okay();
@@ -204,13 +204,13 @@ B(20h) undeliver_event(class: u32, spec: u16);
 //B(43h) nextfile(direntry)
 
 // Takes two paths, returns 1 for ok or 0 for error
-B(44h) file_rename(old_filename: *const u8, new_filename: *const u8) -> u8;
+B(44h) file_rename(old_filename: *const i8, new_filename: *const i8) -> bool;
 
 // Takes a path, returns 1 for ok or 0 for error
-B(45h) file_delete(filename: *const u8) -> u8;
+B(45h) file_delete(filename: *const i8) -> bool;
 
 // Takes a path, returns 1 for ok or 0 for error
-B(46h) file_undelete(filename: *const u8) -> u8;
+B(46h) file_undelete(filename: *const i8) -> bool;
 
 //B(47h) AddDevice(device_info)  ;subfunction for AddXxxDevice functions
 //B(48h) RemoveDevice(device_name_lowercase)
@@ -229,7 +229,7 @@ B(4Ch) stop_card();
 B(54h) get_last_error() -> u32;
 
 // Takes a file descriptor, returns the last error for given file descriptor
-B(55h) get_last_file_error(fd: u8) -> u32;
+B(55h) get_last_file_error(fd: i8) -> u32;
 
 //B(56h) GetC0Table
 //B(57h) GetB0Table

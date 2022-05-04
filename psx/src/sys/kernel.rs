@@ -5,15 +5,15 @@ core::arch::global_asm!(include_str!("trampoline.s"));
 
 extern "C" {
     /// Calls BIOS function [A(00h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_open(filename: *const u8, accessmode: u32) -> i8;
+    pub fn file_open(filename: *const i8, accessmode: u32) -> i8;
     /// Calls BIOS function [A(01h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_seek(fd: u8, offset: u32, seektype: u8) -> i32;
+    pub fn file_seek(fd: i8, offset: u32, seektype: u8) -> i32;
     /// Calls BIOS function [A(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_read(fd: u8, dst: *mut u32, length: usize) -> i32;
+    pub fn file_read(fd: i8, dst: *mut u32, length: usize) -> i32;
     /// Calls BIOS function [A(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_write(fd: u8, src: *const u32, length: usize) -> i32;
+    pub fn file_write(fd: i8, src: *const u32, length: usize) -> i32;
     /// Calls BIOS function [A(04h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_close(fd: u8) -> i8;
+    pub fn file_close(fd: i8) -> i8;
     /// Calls BIOS function [A(06h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn exit(exitcode: i32) -> !;
     /// Calls BIOS function [A(13h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -37,13 +37,13 @@ extern "C" {
     /// Calls BIOS function [A(3Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn system_error_exit(exitcode: i32) -> !;
     /// Calls BIOS function [A(3Eh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn std_out_puts(msg: *const u8);
+    pub fn std_out_puts(msg: *const i8);
     /// Calls BIOS function [A(3Fh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn printf(msg: *const u8, ...);
+    pub fn printf(msg: *const i8, ...);
     /// Calls BIOS function [A(41h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn load_exe_header(filename: *const u8, headerbuf: *mut u8);
+    pub fn load_exe_header(filename: *const i8, headerbuf: *mut u8);
     /// Calls BIOS function [A(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn load_exe_file(filename: *const u8, headerbuf: *mut u8);
+    pub fn load_exe_file(filename: *const i8, headerbuf: *mut u8);
     /// Calls BIOS function [A(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn do_execute(headerbuf: *mut u8, param1: u32, param2: u32);
     /// Calls BIOS function [A(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -61,7 +61,7 @@ extern "C" {
     /// Calls BIOS function [A(4Eh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn gpu_sync() -> i32;
     /// Calls BIOS function [A(51h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn load_and_execute(filename: *const u8, stackbase: u32, stackoffset: u32);
+    pub fn load_and_execute(filename: *const i8, stackbase: u32, stackoffset: u32);
     /// Calls BIOS function [A(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_init();
     /// Calls BIOS function [A(56h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -75,7 +75,7 @@ extern "C" {
     /// Calls BIOS function [A(A0h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn warm_boot() -> !;
     /// Calls BIOS function [A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn cd_get_lbn(filename: *const u8) -> i32;
+    pub fn cd_get_lbn(filename: *const i8) -> i32;
     /// Calls BIOS function [A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn cd_get_status(dst: *mut u32);
     /// Calls BIOS function [A(B4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -119,11 +119,11 @@ extern "C" {
     /// Calls BIOS function [B(20h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn undeliver_event(class: u32, spec: u16);
     /// Calls BIOS function [B(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_rename(old_filename: *const u8, new_filename: *const u8) -> u8;
+    pub fn file_rename(old_filename: *const i8, new_filename: *const i8) -> bool;
     /// Calls BIOS function [B(45h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_delete(filename: *const u8) -> u8;
+    pub fn file_delete(filename: *const i8) -> bool;
     /// Calls BIOS function [B(46h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn file_undelete(filename: *const u8) -> u8;
+    pub fn file_undelete(filename: *const i8) -> bool;
     /// Calls BIOS function [B(49h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn print_installed_devices();
     /// Calls BIOS function [B(4Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -135,7 +135,7 @@ extern "C" {
     /// Calls BIOS function [B(54h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn get_last_error() -> u32;
     /// Calls BIOS function [B(55h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
-    pub fn get_last_file_error(fd: u8) -> u32;
+    pub fn get_last_file_error(fd: i8) -> u32;
     /// Calls BIOS function [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn change_clear_pad(int: u32);
     /// Calls BIOS function [C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
