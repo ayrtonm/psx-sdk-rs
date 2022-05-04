@@ -45,6 +45,8 @@
 #![feature(never_type)]
 // For BIOS OOM messages
 #![feature(alloc_error_handler)]
+// Used in psx::hw::irq
+#![feature(variant_count)]
 // Used for crate tests
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
@@ -55,9 +57,11 @@
 #[macro_use]
 mod test;
 
+pub mod dma;
 #[doc(hidden)]
 #[cfg(feature = "heap")]
 pub mod heap;
+pub mod hw;
 mod panic;
 #[doc(hidden)]
 pub mod runtime;
@@ -77,6 +81,36 @@ pub mod constants {
     pub const DATA_CACHE: *mut u32 = 0x9F80_0000 as *mut u32;
     /// The size of the data cache.
     pub const DATA_CACHE_LEN: usize = 1 * KB;
+}
+
+/// Interrupt request types
+pub mod irq {
+    /// An interrupt request
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    pub enum IRQ {
+        /// vertical blank interrupt request (NTSC = 60Hz, PAL = 50Hz)
+        Vblank = 0,
+        /// GPU interrupt requested via the GP0(1Fh) command
+        GPU,
+        /// CDROM interrupt request
+        CDROM,
+        /// DMA interrupt request
+        DMA,
+        /// Timer 0 (dot clock or sysclock)
+        Timer0,
+        /// Timer 1 (Hblank or sysclock)
+        Timer1,
+        /// Timer 2 (sysclock or fractional sysclock)
+        Timer2,
+        /// Controller and memory card byte received
+        ControllerMemoryCard,
+        /// Serial IO port
+        SIO,
+        /// Sound processing unit
+        SPU,
+        /// Secondary controller interrupt request
+        ControllerPIO,
+    }
 }
 
 #[cfg(not(feature = "custom_oom"))]
