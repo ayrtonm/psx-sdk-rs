@@ -27,7 +27,16 @@ for building the rust compiler for more specifics.
     sed -i 's/#experimental-targets.*$/experimental-targets = ""/' config.toml
     ```
 
-3. Patch the rust compiler. Applying these patches to a different commit may require manual intervention:
+3. Optionally patch LLVM to enable the `nightlier` feature. To use this feature set `max_atomic_width: Some(0),` to `Some(16)` in `patches/rustc_psx.patch` before applying it.
+
+    ```
+    git submodule update --init --progress src/llvm-project
+    cd src/llvm-project
+    git apply /path/to/patches/llvm_atomic_fence.patch
+    ```
+
+
+4. Patch the rust compiler. Applying these patches to a different commit may require manual intervention:
 
     ```
     git apply /path/to/patches/rustc_mips32.patch
@@ -35,7 +44,7 @@ for building the rust compiler for more specifics.
     ```
 
 
-3. Build the rust compiler:
+5. Build the rust compiler:
 
     ```
     # For the initial build
@@ -44,7 +53,7 @@ for building the rust compiler for more specifics.
     ./x.py build -i library/std --keep-stage 1
     ```
 
-5. Create a new toolchain with the patched compiler:
+6. Create a new toolchain with the patched compiler:
 
     ```
     rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1

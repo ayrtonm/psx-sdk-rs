@@ -3,18 +3,22 @@
 //! # Crate features
 //!
 //! Additional features can be enabled by adding the following in `Cargo.toml`.
+//! They're all disabled by default.
 //!
-//! * `NA_region`/`EU_region`/`J_region` - Sets the region in the PS-EXE header
+//! * `NA_region`/`EU_region`/`J_region` - Sets the region string in the PS-EXE
+//!   header.
 //! * `min_panic` - Minimizes code generated for `panic!`s by removing error
-//!   messages.
-//! * `loadable_exe` - Creates a loadable executable which allows returning from
-//!   `main`.
-//! * `custom_oom` - Allows creating custom out-of-memory messages
-//! * `heap` - Enables using a heap managed by `linked_list_allocator`. This is
-//!   disabled by default to minimize dependencies in the default case.
+//!   messages. Code is still generated to ensure that the processor hangs.
+//! * `loadable_exe` - Allows returning from `main` to enable loading and
+//!   unloading executables.
+//! * `custom_oom` - Allows creating custom [allocation error handlers](https://github.com/rust-lang/rust/issues/51540)
+//! * `heap` - Enables using a heap managed by [`linked_list_allocator`](https://crates.io/crates/linked_list_allocator).
+//!   This is disabled by default to minimize dependencies for the default
+//!   build.
 //! * `nightlier` - Enables features requiring changes that aren't in upstream
 //!   LLVM yet. Using this requires building and patching LLVM as part of the
-//!   rustc build.
+//!   rustc build. Currently this enables [`Atomic*`][core::sync::atomic] up to
+//!   16-bits and [`fences`][core::sync::atomic::compiler_fence].
 
 #![no_std]
 #![forbid(missing_docs)]
