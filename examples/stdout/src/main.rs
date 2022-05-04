@@ -14,8 +14,8 @@ fn main() {
     let mut rng = Rng::new(0xdeadbeef);
 
     // The raw BIOS function can be used to print to stdout
-    // Format strings can be variables and they must be a pointer (i.e. *const u8).
-    let fmt_str = "Hello, %s! 0x%x\n\0".as_ptr();
+    // Format strings can be variables and they must be a pointer (i.e. *const i8).
+    let fmt_str = "Hello, %s! 0x%x\n\0".as_ptr() as *const i8;
     // Args formatted with `%s` must also be pointers even though it can't be enforced by the type-system.
     let str_arg = "world\0".as_ptr();
     let rand_num: u32 = rng.rand();

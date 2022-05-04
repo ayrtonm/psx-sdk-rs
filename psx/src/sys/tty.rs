@@ -46,13 +46,21 @@ pub struct TTY;
 /// be any expression implementing `AsRef<[u8]>`.
 #[macro_export]
 macro_rules! printf {
+    ($msg:expr $(,$args:expr)*) => {
+        $crate::printf_impl!($msg $(,$args)*);
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! printf_impl {
     // This is the entry point of the macro
     ($msg:expr $(,$args:expr)*) => {
         {
             use $crate::std::AsCStr;
             use $crate::sys::tty::ImplsAsCStr;
             $msg.as_cstr(|cs| {
-                printf!(@parse $($args,)*; {cs.as_ptr() as *const u8});
+                $crate::printf_impl!(@parse $($args,)*; {cs.as_ptr()});
             });
         }
     };
@@ -60,10 +68,10 @@ macro_rules! printf {
         {
             if let Some(s) = $msg.impls_as_cstr() {
                 s.as_cstr(|cs| {
-                    printf!(@parse $($args,)*; {$($acc)*, cs.as_ptr() as *const u8});
+                    $crate::printf_impl!(@parse $($args,)*; {$($acc)*, cs.as_ptr()});
                 })
             } else {
-                printf!(@parse $($args,)*; {$($acc)*,$msg});
+                $crate::printf_impl!(@parse $($args,)*; {$($acc)*,$msg});
             }
         }
     };
@@ -100,7 +108,7 @@ macro_rules! println {
             use $crate::sys::tty::TTY;
             <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($args)*)).ok();
             unsafe {
-                $crate::sys::kernel::printf("\n\0".as_ptr());
+                $crate::sys::kernel::printf(b"\n\0".as_ptr() as *const i8);
             }
         }
     };
@@ -111,7 +119,7 @@ impl fmt::Write for TTY {
         msg.as_cstr(|cstr|
             // SAFETY: The format string and string argument are both null-terminated.
             unsafe {
-                kernel::printf("%s\0".as_ptr(), cstr.as_ptr());
+                kernel::printf(b"%s\0".as_ptr() as *const i8, cstr.as_ptr());
             });
         Ok(())
     }
