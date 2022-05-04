@@ -30,8 +30,8 @@ for building the rust compiler for more specifics.
 3. Patch the rust compiler. Applying these patches to a different commit may require manual intervention:
 
     ```
-    git apply /path/to/rustc_mips32.patch
-    git apply /path/to/rustc_psx.patch
+    git apply /path/to/patches/rustc_mips32.patch
+    git apply /path/to/patches/rustc_psx.patch
     ```
 
 

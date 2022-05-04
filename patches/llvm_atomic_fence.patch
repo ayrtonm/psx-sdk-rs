@@ -1,0 +1,32 @@
+From 91d1a6d807d2405445af1906faca0fe3a9aaa24d Mon Sep 17 00:00:00 2001
+From: Spencer Alves <impiaaa@gmail.com>
+Date: Tue, 29 Mar 2022 18:01:37 -0700
+Subject: [PATCH] [MIPS] Expand ATOMIC_FENCE to libcalls on MIPS-I
+
+---
+ llvm/lib/Target/Mips/MipsSEISelLowering.cpp | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/llvm/lib/Target/Mips/MipsSEISelLowering.cpp b/llvm/lib/Target/Mips/MipsSEISelLowering.cpp
+index 346ebe9664fc..3d46981c94cb 100644
+--- a/llvm/lib/Target/Mips/MipsSEISelLowering.cpp
++++ b/llvm/lib/Target/Mips/MipsSEISelLowering.cpp
+@@ -204,7 +204,14 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
+ 
+   setOperationAction(ISD::SDIVREM, MVT::i32, Custom);
+   setOperationAction(ISD::UDIVREM, MVT::i32, Custom);
+-  setOperationAction(ISD::ATOMIC_FENCE,       MVT::Other, Custom);
++
++  // "sync" instruction only available on MIPS-II and above
++  if (Subtarget.hasMips2()) {
++    setOperationAction(ISD::ATOMIC_FENCE, MVT::Other, Custom);
++  } else {
++    setOperationAction(ISD::ATOMIC_FENCE, MVT::Other, Expand);
++  }
++
+   setOperationAction(ISD::LOAD,               MVT::i32, Custom);
+   setOperationAction(ISD::STORE,              MVT::i32, Custom);
+ 
+-- 
+2.32.0
+
