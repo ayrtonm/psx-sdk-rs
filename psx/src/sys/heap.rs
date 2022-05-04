@@ -12,11 +12,11 @@ pub struct BiosAllocator;
 
 unsafe impl GlobalAlloc for BiosAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        super::critical_section(|| kernel::malloc(layout.size()))
+        kernel::malloc(layout.size())
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        super::critical_section(|| kernel::free(ptr))
+        kernel::free(ptr)
     }
 }
 
@@ -28,12 +28,11 @@ macro_rules! sys_heap {
         extern crate alloc;
 
         #[global_allocator]
-        static _HEAP: psx::sys::heap::BiosAllocator = psx::sys::heap::BiosAllocator;
+        static _HEAP: $crate::sys::heap::BiosAllocator = $crate::sys::heap::BiosAllocator;
 
         $crate::ctor! {
-            fn heap() {
+            fn init_heap() {
                 use core::mem::size_of;
-                use $crate::sys::kernel;
 
                 // Type-check the macro argument
                 let slice: &'static mut [u32] = $mut_slice;
@@ -45,10 +44,4 @@ macro_rules! sys_heap {
             }
         }
     };
-}
-
-#[cfg(not(feature = "custom_oom"))]
-#[alloc_error_handler]
-fn on_oom(layout: core::alloc::Layout) -> ! {
-    panic!("Ran out of memory {:?}", layout);
 }

@@ -2,6 +2,7 @@
 //!
 //! This module contains wrappers for functions provided by the BIOS.
 
+pub mod fs;
 pub mod heap;
 pub mod kernel;
 pub mod rng;
