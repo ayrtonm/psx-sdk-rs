@@ -6,6 +6,7 @@ macro_rules! ctor {
     (fn $name:ident() { $($body:tt)* }) => {
         #[used]
         #[link_section = ".ctors"]
+        #[allow(non_upper_case_globals)]
         static $name: fn() = || {
             $($body)*
         };
@@ -25,13 +26,12 @@ extern "C" fn __start() -> RtReturn {
     unsafe {
         #[cfg(not(test))]
         extern "Rust" {
-            fn main() -> Result<(), &'static str>;
+            fn main();
         }
         extern "C" {
             static __ctors_start: usize;
             static __ctors_end: usize;
         }
-        let ptr_size = size_of::<usize>();
         let end = &__ctors_end as *const usize as usize;
         let start = &__ctors_start as *const usize as usize;
         let ctors_range = end - start;
@@ -39,14 +39,15 @@ extern "C" fn __start() -> RtReturn {
             (ctors_range % 4) == 0,
             ".ctors section is not 4-byte aligned"
         );
-        let num_ctors = ctors_range / ptr_size;
+        let num_ctors = ctors_range / size_of::<usize>();
         for n in 0..num_ctors {
-            let ptr = __ctors_start + (n * ptr_size);
-            let ctor = transmute::<usize, fn()>(ptr);
+            let ctor_ptr = start + (n * size_of::<usize>());
+            let fn_addr = *(ctor_ptr as *const usize);
+            let ctor = transmute::<usize, fn()>(fn_addr);
             ctor();
         }
         #[cfg(not(test))]
-        main().unwrap();
+        main();
 
         #[cfg(test)]
         crate::main();
