@@ -23,8 +23,8 @@ unsafe impl GlobalAlloc for BiosAllocator {
 /// Define a region of memory specified by a mutable slice as a heap managed by
 /// the BIOS.
 ///
-/// Note that the PlayStation BIOS `malloc`s are typically poorly implemented and tend to
-/// leak memory. For a reasonable alternative see [`heap`].
+/// Note that the PlayStation BIOS `malloc`s are typically poorly implemented
+/// and tend to leak memory. For a reasonable alternative see [`heap`].
 /// # Usage
 /// ```
 /// use core::slice;

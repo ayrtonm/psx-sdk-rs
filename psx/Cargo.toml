@@ -1,6 +1,6 @@
 [package]
 name = "psx"
-version = "0.1.3"
+version = "0.1.4"
 description = "Library for developing homebrew for the Sony PS1"
 readme = "../README.md"
 repository = "https://github.com/ayrtonm/psx-sdk-rs"
@@ -11,6 +11,7 @@ edition = "2021"
 [package.metadata.docs.rs]
 targets = ["mipsel-unknown-linux-gnu"]
 rustc-args = ["--cfg", "heap"]
+cargo-args = ["--features", "psx/heap"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
