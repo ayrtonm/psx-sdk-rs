@@ -16,3 +16,10 @@ examples/filesizes
 */*/*/target
 psx/*.zip
 compress/*.tim
+target/
+compress/
+*.json
+*.md
+*.mp4
+*old*/
+*bkp*/
