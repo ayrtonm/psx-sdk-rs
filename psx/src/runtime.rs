@@ -1,11 +1,27 @@
 use core::mem::{size_of, transmute};
 
-/// Define a constructor that runs before main.
+/// Define a constructor that runs before `main`.
 #[macro_export]
 macro_rules! ctor {
     (fn $name:ident() { $($body:tt)* }) => {
         #[used]
         #[link_section = ".ctors"]
+        #[allow(non_upper_case_globals)]
+        static $name: fn() = || {
+            $($body)*
+        };
+    };
+}
+
+/// Define a destructor that runs after `main`.
+///
+/// Since the runtime `panic!`s after `main` returns, this is mostly useful with
+/// the `loadable_exe` feature.
+#[macro_export]
+macro_rules! dtor {
+    (fn $name:ident() { $($body:tt)* }) => {
+        #[used]
+        #[link_section = ".dtors"]
         #[allow(non_upper_case_globals)]
         static $name: fn() = || {
             $($body)*
@@ -31,9 +47,11 @@ extern "C" fn __start() -> RtReturn {
         extern "C" {
             static __ctors_start: usize;
             static __ctors_end: usize;
+            static __dtors_start: usize;
+            static __dtors_end: usize;
         }
-        let end = &__ctors_end as *const usize as usize;
         let start = &__ctors_start as *const usize as usize;
+        let end = &__ctors_end as *const usize as usize;
         let ctors_range = end - start;
         assert!(
             (ctors_range % 4) == 0,
@@ -51,6 +69,21 @@ extern "C" fn __start() -> RtReturn {
 
         #[cfg(test)]
         crate::main();
+
+        let start = &__dtors_start as *const usize as usize;
+        let end = &__dtors_end as *const usize as usize;
+        let dtors_range = end - start;
+        assert!(
+        (dtors_range % 4) == 0,
+        ".dtors section is not 4-byte aligned"
+        );
+        let num_dtors = dtors_range / size_of::<usize>();
+        for n in 0..num_dtors {
+            let dtor_ptr = start + (n * size_of::<usize>());
+            let fn_addr = *(dtor_ptr as *const usize);
+            let dtor = transmute::<usize, fn()>(fn_addr);
+            dtor();
+        }
     }
     #[cfg(not(feature = "loadable_exe"))]
     panic!("`main` should not return")

@@ -45,6 +45,9 @@ SECTIONS {
         __ctors_start = .;
         *(.ctors*)
         __ctors_end = .;
+        __dtors_start = .;
+        *(.dtors*)
+        __dtors_end = .;
         *(.text*)
         __text_end = .;
     } > RAM
