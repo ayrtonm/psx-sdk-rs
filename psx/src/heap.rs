@@ -34,7 +34,20 @@ unsafe impl GlobalAlloc for Heap {
     }
 }
 
-/// Define a region of memory specified by a mutable slice as a heap.
+/// Defines a region of memory specified by a mutable slice as a heap managed by [`linked_list_allocator`](https://crates.io/crates/linked_list_allocator).
+///
+/// The specified heap will be used by `Box`, `Vector`, `String` and all the other containers in [`alloc`](https://doc.rust-lang.org/alloc/). To use an another allocator implement the [`GlobalAlloc`][core::alloc::GlobalAlloc] trait. For a dependency-free allocator see [`sys_heap`].
+/// # Usage
+/// ```
+/// use core::slice;
+/// use psx::heap;
+/// use psx::constants::*;
+///
+/// // SAFETY: This is safe since we are not using the data cache for anything else.
+/// heap!(unsafe {
+///     slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN)
+/// })
+/// ```
 #[macro_export]
 macro_rules! heap {
     ($mut_slice:expr) => {

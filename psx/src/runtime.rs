@@ -74,8 +74,8 @@ extern "C" fn __start() -> RtReturn {
         let end = &__dtors_end as *const usize as usize;
         let dtors_range = end - start;
         assert!(
-        (dtors_range % 4) == 0,
-        ".dtors section is not 4-byte aligned"
+            (dtors_range % 4) == 0,
+            ".dtors section is not 4-byte aligned"
         );
         let num_dtors = dtors_range / size_of::<usize>();
         for n in 0..num_dtors {

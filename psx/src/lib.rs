@@ -2,23 +2,28 @@
 //!
 //! # Crate features
 //!
-//! Additional features can be enabled by adding the following in `Cargo.toml`.
-//! They're all disabled by default.
+//! Additional features can be enabled by building with
+//! ```bash
+//! cargo psx run --cargo-args "features psx/$FEATURE1,psx/$FEATURE2"
+//! ```
+//! Features may also be added in `Cargo.toml`. All features are disabled by
+//! default.
 //!
-//! * `NA_region`/`EU_region`/`J_region` - Sets the region string in the PS-EXE
-//!   header.
+//! * `NA_region`/`EU_region`/`J_region` - Sets the region string in the [PS-EXE
+//!   header](http://problemkaputt.de/psx-spx.htm#cdromfileformats).
 //! * `min_panic` - Minimizes code generated for `panic!`s by removing error
 //!   messages. Code is still generated to ensure that the processor hangs.
 //! * `loadable_exe` - Allows returning from `main` to enable loading and
 //!   unloading executables.
 //! * `custom_oom` - Allows creating custom [allocation error handlers](https://github.com/rust-lang/rust/issues/51540)
-//! * `heap` - Enables using a heap managed by [`linked_list_allocator`](https://crates.io/crates/linked_list_allocator).
+//! * `heap` - Enables using [`heap!`][`heap!`] managed by [`linked_list_allocator`](https://crates.io/crates/linked_list_allocator).
 //!   This is disabled by default to minimize dependencies for the default
 //!   build.
-//! * `nightlier` - Enables features requiring changes that aren't in upstream
-//!   LLVM yet. Using this requires building and patching LLVM as part of the
-//!   rustc build. Currently this enables [`Atomic*`][core::sync::atomic] up to
-//!   16-bits and [`fences`][core::sync::atomic::compiler_fence].
+//! * `nightlier` - For when nightly rustc isn't bleeding edge enough. This
+//!   enables features requiring changes that aren't in upstream LLVM yet. Using
+//!   this requires [building and patching LLVM](https://github.com/ayrtonm/psx-sdk-rs/tree/crates.io#building-the-compiler) as part of the rustc build.
+//!   Currently this enables [`Atomic*`][core::sync::atomic] up to 16-bits and
+//!   [`fences`][core::sync::atomic::compiler_fence].
 
 #![no_std]
 #![forbid(missing_docs)]

@@ -22,6 +22,20 @@ unsafe impl GlobalAlloc for BiosAllocator {
 
 /// Define a region of memory specified by a mutable slice as a heap managed by
 /// the BIOS.
+///
+/// Note that the PlayStation BIOS `malloc`s are typically poorly implemented and tend to
+/// leak memory. For a reasonable alternative see [`heap`].
+/// # Usage
+/// ```
+/// use core::slice;
+/// use psx::sys_heap;
+/// use psx::constants::*;
+///
+/// // SAFETY: This is safe since we are not using the data cache for anything else.
+/// sys_heap!(unsafe {
+///     slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN)
+/// })
+/// ```
 #[macro_export]
 macro_rules! sys_heap {
     ($mut_slice:expr) => {

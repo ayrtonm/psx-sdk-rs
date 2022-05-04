@@ -136,7 +136,7 @@ runner = "mednafen"
 
 ## Documentation
 
-To generate documentation for the `psx` crate:
+See [docs.rs](https://docs.rs/psx/latest/psx/) for documentation. To regenerate documentation for the latest version of `psx`:
 
 ```
 cd psx
@@ -144,5 +144,3 @@ cargo doc --target mipsel-unknown-linux-gnu
 ```
 
 Then open `target/mipsel-unknown-linux-gnu/doc/psx/index.html` in a browser.
-Once things become a bit more stable I'll probably document things more
-thoroughly and link a tutorial here.
