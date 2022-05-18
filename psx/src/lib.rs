@@ -26,7 +26,7 @@
 //!   [`fences`][core::sync::atomic::compiler_fence].
 
 #![no_std]
-#![forbid(missing_docs)]
+#![deny(missing_docs)]
 // For the `AsCStr` trait
 #![feature(core_c_str)]
 // Used to make `AsCStr` efficient
@@ -58,6 +58,7 @@
 mod test;
 
 pub mod dma;
+pub mod gpu;
 #[doc(hidden)]
 #[cfg(feature = "heap")]
 pub mod heap;
