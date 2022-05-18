@@ -3,11 +3,17 @@ use crate::hw::gpu::GP0Command;
 
 /// Predefined colors
 pub mod colors;
+mod packet;
 /// GPU primitives implementing [`GP0Command`].
 pub mod primitives;
 mod vertex;
 
+pub use packet::{link_list, ordering_table};
+
 type Command = u8;
+
+/// The number of bytes in the GPU buffer.
+pub const BUFFER_SIZE: usize = 64;
 
 /// A color with components ranging from `0` to `0xFF`.
 #[repr(C)]
@@ -148,14 +154,6 @@ pub struct Packet<T> {
     size: u8,
     /// The `T` in the linked list packet.
     pub contents: T,
-}
-
-/// An error when creating [`Packet`]s.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum PacketError {
-    /// The [`Packet`] contents are larger than the GPU buffer. The [`Packet`]
-    /// may still cause an overflow if the GPU buffer is not empty.
-    Oversized,
 }
 
 /// Display environment parameters.
