@@ -12,7 +12,7 @@ for building the rust compiler for more specifics.
     ```
     git clone https://github.com/rust-lang/rust.git
     cd rust
-    git checkout 2c858a7c3f189eb11ad89d9bf9f2e87cac9d2b76
+    git checkout 4c5f6e6277b89e47d73a192078697f7a5f3dc0ac
     ```
 
 2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:
@@ -36,10 +36,9 @@ for building the rust compiler for more specifics.
     ```
 
 
-4. Patch the rust compiler. Applying these patches to a different commit may require manual intervention:
+4. Patch the rust compiler. Applying this patch to a different commit may require manual intervention:
 
     ```
-    git apply /path/to/patches/rustc_mips32.patch
     git apply /path/to/patches/rustc_psx.patch
     ```
 
