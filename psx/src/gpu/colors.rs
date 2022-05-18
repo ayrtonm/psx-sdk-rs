@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 // No need for doc comments for each color.
 
-use crate::gpu::{Color, TextureColor};
+use crate::gpu::{Color, TexColor};
 
 // This is the max value for untextured graphics. Colors for textured graphics
 // should be scaled down to a max of 0x80.
@@ -60,20 +60,20 @@ impl Color {
     }
 }
 
-impl From<TextureColor> for u32 {
-    fn from(color: TextureColor) -> u32 {
+impl From<TexColor> for u32 {
+    fn from(color: TexColor) -> u32 {
         color.red as u32 | (color.green as u32) << 8 | (color.blue as u32) << 16
     }
 }
 
 // TODO: Is this really necessary?
-//impl TextureColor {
+//impl TexColor {
 //    pub const fn new(red: u8, green: u8, blue: u8) -> Self {
-//        TextureColor { red, green, blue }
+//        TexColor { red, green, blue }
 //    }
 //
 //    pub const fn sum(&self, other: Self) -> Self {
-//        TextureColor::new(
+//        TexColor::new(
 //            self.red + other.red,
 //            self.green + other.green,
 //            self.blue + other.blue,
@@ -81,11 +81,11 @@ impl From<TextureColor> for u32 {
 //    }
 //
 //    pub const fn halve(&self) -> Self {
-//        TextureColor::new(self.red >> 1, self.green >> 1, self.blue >> 1)
+//        TexColor::new(self.red >> 1, self.green >> 1, self.blue >> 1)
 //    }
 //
 //    pub const fn double(&self) -> Self {
-//        TextureColor::new(self.red << 1, self.green << 1, self.blue << 1)
+//        TexColor::new(self.red << 1, self.green << 1, self.blue << 1)
 //    }
 //
 //    pub const fn average(&self, other: Self) -> Self {
@@ -93,9 +93,9 @@ impl From<TextureColor> for u32 {
 //    }
 //}
 
-impl From<Color> for TextureColor {
-    fn from(Color { red, green, blue }: Color) -> TextureColor {
-        TextureColor {
+impl From<Color> for TexColor {
+    fn from(Color { red, green, blue }: Color) -> TexColor {
+        TexColor {
             red: red / 2,
             green: green / 2,
             blue: blue / 2,
@@ -103,8 +103,8 @@ impl From<Color> for TextureColor {
     }
 }
 
-impl From<TextureColor> for Color {
-    fn from(TextureColor { red, green, blue }: TextureColor) -> Color {
+impl From<TexColor> for Color {
+    fn from(TexColor { red, green, blue }: TexColor) -> Color {
         Color {
             red: red * 2,
             green: green * 2,

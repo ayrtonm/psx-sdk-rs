@@ -3,6 +3,8 @@ use crate::hw::gpu::GP0Command;
 
 /// Predefined colors
 pub mod colors;
+/// GPU primitives implementing [`GP0Command`].
+pub mod primitives;
 mod vertex;
 
 type Command = u8;
@@ -20,11 +22,11 @@ pub struct Color {
 /// A color with components ranging from `0` to `0x80`.
 ///
 /// This is used for texture-blended polygons. Note that round-tripping between
-/// [`TextureColor`] and [`Color`] may not give exact results.
+/// [`TexColor`] and [`Color`] may not give exact results.
 #[repr(C)]
 #[allow(missing_docs)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct TextureColor {
+pub struct TexColor {
     pub red: u8,
     pub green: u8,
     pub blue: u8,
