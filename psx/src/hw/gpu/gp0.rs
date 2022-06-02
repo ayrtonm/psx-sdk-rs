@@ -28,8 +28,13 @@ impl GP0 {
 
     /// Sends the GP0 command `cmd` to the GPU.
     ///
+    /// # Safety
+    ///
     /// Make sure that the GPU buffer has room for the command to avoid
-    /// overflow.
+    /// overflow. `GP0Command` types larger than the GPU buffer may not be sent
+    /// without dropping some commands. This will not corrupt memory, but may
+    /// cause unintended on-screen effects.
+    // TODO: Make this unsafe
     pub fn send_command<C: GP0Command + ?Sized>(&mut self, cmd: &C) -> &mut Self {
         for &word in cmd.data() {
             self.assign(word).store();

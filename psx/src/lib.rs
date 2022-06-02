@@ -125,3 +125,4 @@ fn on_oom(layout: core::alloc::Layout) -> ! {
 }
 
 pub use framebuffer::Framebuffer;
+pub use tim::TIM;

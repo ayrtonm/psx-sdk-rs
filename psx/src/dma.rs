@@ -5,8 +5,6 @@ use crate::hw::dma::{cdrom, gpu, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
 use core::convert::TryInto;
-use core::sync::atomic;
-use core::sync::atomic::Ordering;
 
 type Result<T> = core::result::Result<T, Error>;
 /// A DMA-specific error.
@@ -149,7 +147,6 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         self.madr.set_address(addr).store();
         // If the block is too long error out
         self.bcr.set_block(block.len())?.store();
-        atomic::compiler_fence(Ordering::Release);
         // Start the DMA transfer
         self.control
             .set_mode(TransferMode::Immediate)
@@ -157,7 +154,6 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
             .store();
         let res = f();
         self.control.wait();
-        atomic::compiler_fence(Ordering::Acquire);
         Ok(res)
     }
 
@@ -190,11 +186,9 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         };
         // This will never fail
         self.bcr.set_block(block_len)?.store();
-        atomic::compiler_fence(Ordering::Release);
         self.control.start().store();
         let res = f();
         self.control.wait();
-        atomic::compiler_fence(Ordering::Acquire);
         Ok(res)
     }
 
@@ -212,14 +206,12 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
             None => return f(),
         };
         self.madr.set_address(ptr).store();
-        atomic::compiler_fence(Ordering::Release);
         self.control
             .set_mode(TransferMode::LinkedList)
             .start()
             .store();
         let res = f();
         self.control.wait();
-        atomic::compiler_fence(Ordering::Acquire);
         res
     }
 
