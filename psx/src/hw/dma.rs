@@ -2,7 +2,6 @@
 
 use crate::dma::{BlockMode, Chop, Direction, Error, Step, TransferMode};
 use crate::hw::{MemRegister, Register};
-use core::mem::align_of;
 
 type Result<T> = core::result::Result<T, Error>;
 
@@ -196,15 +195,10 @@ pub trait MemoryAddress: Register<u32> {
         (self.as_ref() & ADDRESS_MASK) as *const u32
     }
 
-    /// Sets the channel's start address. Returns `None` if the address is not
-    /// word-aligned.
-    fn set_address(&mut self, ptr: *const u32) -> Result<&mut Self> {
-        if ptr.align_offset(align_of::<u32>()) != 0 {
-            Err(Error::UnalignedAddress)
-        } else {
-            let val = ptr as u32 & ADDRESS_MASK;
-            Ok(self.assign(val))
-        }
+    /// Sets the channel's start address.
+    fn set_address(&mut self, ptr: &u32) -> &mut Self {
+        let val = (ptr as *const u32 as u32) & ADDRESS_MASK;
+        self.assign(val)
     }
 }
 
