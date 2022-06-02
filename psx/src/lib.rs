@@ -58,6 +58,7 @@
 mod test;
 
 pub mod dma;
+mod framebuffer;
 pub mod gpu;
 #[doc(hidden)]
 #[cfg(feature = "heap")]
@@ -69,6 +70,7 @@ pub mod runtime;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
+pub mod tim;
 
 /// Re-exported constants in a module for easy glob importing.
 pub mod constants {
@@ -82,6 +84,8 @@ pub mod constants {
     pub const DATA_CACHE: *mut u32 = 0x9F80_0000 as *mut u32;
     /// The size of the data cache.
     pub const DATA_CACHE_LEN: usize = 1 * KB;
+    pub use crate::gpu::colors::*;
+    pub use crate::gpu::VideoMode::*;
 }
 
 /// Interrupt request types
@@ -119,3 +123,5 @@ pub mod irq {
 fn on_oom(layout: core::alloc::Layout) -> ! {
     panic!("Ran out of memory {:?}", layout);
 }
+
+pub use framebuffer::Framebuffer;
