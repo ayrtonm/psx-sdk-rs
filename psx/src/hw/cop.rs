@@ -33,7 +33,8 @@ macro_rules! define_cop {
             fn load(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!($cop_ty, "fc", $cop, " $2, $", $reg), out("$2") self.value
+                        concat!($cop_ty, "fc", $cop, " $2, $", $reg), "nop",
+                        out("$2") self.value
                     }
                 }
                 self
