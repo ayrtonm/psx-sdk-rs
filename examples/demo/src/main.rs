@@ -4,13 +4,13 @@
 use psx::constants::*;
 use psx::gpu::primitives::Sprt;
 use psx::gpu::{TexCoord, Vertex};
-use psx::include_array;
+use psx::include_words;
 use psx::{Framebuffer, TIM};
 
 #[no_mangle]
 unsafe fn main() {
     let mut fb = Framebuffer::default();
-    let mut ferris = include_array!("../ferris.tim");
+    let mut ferris = include_words!("../ferris.tim");
     let ferris = fb.load_tim(TIM::new(&mut ferris).expect("The TIM file is invalid"));
     let mut pos = Vertex::new((0, 8));
     let mut sprt = Sprt::new();

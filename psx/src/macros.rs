@@ -11,7 +11,7 @@ macro_rules! file_size {
 /// `include_bytes`, expect that it checks the size is a multiple of 4 bytes at
 /// compile-time to allow creating a `u32` array rather than a `u8` array.
 #[macro_export]
-macro_rules! include_array {
+macro_rules! include_words {
     ($file:literal) => {{
         use $crate::file_size;
         const N: usize = file_size!($file) / 4;
