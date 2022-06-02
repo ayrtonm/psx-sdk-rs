@@ -35,6 +35,11 @@ macro_rules! vertices_fn {
             [self.v0, self.v1, self.v2]
         }
 
+        /// Gets mutable references to the primitive's vertices
+        pub fn get_vertices_mut(&mut self) -> [&mut Vertex; 3] {
+            [&mut self.v0, &mut self.v1, &mut self.v2]
+        }
+
         /// Sets the primitive's vertices.
         pub fn set_vertices(&mut self, vertices: [Vertex; 3]) -> &mut Self {
             self.v0 = vertices[0];
@@ -47,6 +52,11 @@ macro_rules! vertices_fn {
         /// Gets the primitive's vertices.
         pub fn get_vertices(&self) -> [Vertex; 4] {
             [self.v0, self.v1, self.v2, self.v3]
+        }
+
+        /// Gets mutable references to the primitive's vertices
+        pub fn get_vertices_mut(&mut self) -> [&mut Vertex; 4] {
+            [&mut self.v0, &mut self.v1, &mut self.v2, &mut self.v3]
         }
 
         /// Sets the primitive's vertices.

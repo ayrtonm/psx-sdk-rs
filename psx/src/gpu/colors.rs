@@ -66,33 +66,6 @@ impl From<TexColor> for u32 {
     }
 }
 
-// TODO: Is this really necessary?
-//impl TexColor {
-//    pub const fn new(red: u8, green: u8, blue: u8) -> Self {
-//        TexColor { red, green, blue }
-//    }
-//
-//    pub const fn sum(&self, other: Self) -> Self {
-//        TexColor::new(
-//            self.red + other.red,
-//            self.green + other.green,
-//            self.blue + other.blue,
-//        )
-//    }
-//
-//    pub const fn halve(&self) -> Self {
-//        TexColor::new(self.red >> 1, self.green >> 1, self.blue >> 1)
-//    }
-//
-//    pub const fn double(&self) -> Self {
-//        TexColor::new(self.red << 1, self.green << 1, self.blue << 1)
-//    }
-//
-//    pub const fn average(&self, other: Self) -> Self {
-//        self.halve().sum(other.halve())
-//    }
-//}
-
 impl From<Color> for TexColor {
     fn from(Color { red, green, blue }: Color) -> TexColor {
         TexColor {

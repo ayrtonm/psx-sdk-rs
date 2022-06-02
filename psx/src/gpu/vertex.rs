@@ -34,6 +34,13 @@ impl From<Vertex> for u32 {
     }
 }
 
+impl Vertex {
+    /// Creats a new `Vertex`.
+    pub const fn new((x, y): (i16, i16)) -> Self {
+        Vertex(x, y)
+    }
+}
+
 impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
     const VALIDATE_X_PLUS_Y: () = {
         if X + Y > (N * 8) {
@@ -56,6 +63,7 @@ impl<const X: usize, const Y: usize> From<PackedVertex<3, X, Y>> for u32 {
 impl<const N: usize, const X: usize, const Y: usize> TryFrom<Vertex> for PackedVertex<N, X, Y> {
     type Error = VertexError;
 
+    #[allow(path_statements)]
     fn try_from(Vertex(x, y): Vertex) -> Result<Self, VertexError> {
         // This is a compile-time check ensuring X + Y bits =< N bytes
         Self::VALIDATE_X_PLUS_Y;

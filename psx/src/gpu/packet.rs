@@ -1,5 +1,5 @@
 use crate::dma::LinkedList;
-use crate::gpu;
+use crate::gpu::GPU_BUFFER_SIZE;
 use crate::gpu::{Packet, PhysAddr};
 use crate::hw::gpu::GP0Command;
 use core::mem::{size_of, transmute};
@@ -28,7 +28,7 @@ impl Packet<()> {
 impl<T> Packet<T> {
     const SMALLER_THAN_BUFFER: () = {
         let size = size_of::<T>();
-        if size > gpu::BUFFER_SIZE {
+        if size > GPU_BUFFER_SIZE {
             panic!("Packet contents will overflow the GPU buffer. Use `Packet::new_unchecked` if this is intentional.");
         }
     };
@@ -41,6 +41,7 @@ impl<T> Packet<T> {
     };
 
     /// Creates a new packet guaranteed to fit in the GPU buffer.
+    #[allow(path_statements)]
     pub const fn new(t: T) -> Self {
         Self::SMALLER_THAN_BUFFER;
         let size = size_of::<T>() / size_of::<u32>();
@@ -52,6 +53,7 @@ impl<T> Packet<T> {
     }
 
     /// Creates a new packet which may not fit into the GPU buffer.
+    #[allow(path_statements)]
     pub const fn new_oversized(t: T) -> Self {
         Self::SMALLER_THAN_U8_MAX;
         let size = size_of::<T>() / size_of::<u32>();
@@ -108,6 +110,8 @@ impl<T> Packet<T> {
 
 /// Initializes an ordering table from a `&mut [u32]`.
 ///
+/// list\[0\] -> list\[1\] -> list\[2\] -> ... -> list\[n\]
+///
 /// Note the packets are linked from first to last.
 pub fn ordering_table<T>(list: &mut [u32]) -> &mut [Packet<()>] {
     let n = list.len();
@@ -120,6 +124,8 @@ pub fn ordering_table<T>(list: &mut [u32]) -> &mut [Packet<()>] {
 }
 
 /// Link an existing array of packets from first to last.
+///
+/// list\[0\] -> list\[1\] -> list\[2\] -> ... -> list\[n\]
 pub fn link_list<T>(list: &mut [Packet<T>]) {
     let n = list.len();
     for i in 1..n {
@@ -130,9 +136,39 @@ pub fn link_list<T>(list: &mut [Packet<T>]) {
     }
 }
 
-impl<T> LinkedList for Packet<T> where T: GP0Command {}
-impl LinkedList for Packet<()> {}
-impl<T> LinkedList for [Packet<T>] where T: GP0Command {}
-impl LinkedList for [Packet<()>] {}
-impl<const N: usize> LinkedList for [Packet<()>; N] {}
-impl<T, const N: usize> LinkedList for [Packet<T>; N] where T: GP0Command {}
+impl<T> LinkedList for Packet<T>
+where T: GP0Command
+{
+    fn address(&self) -> Option<&u32> {
+        self.contents.data().first()
+    }
+}
+impl LinkedList for Packet<()> {
+    fn address(&self) -> Option<&u32> {
+        None
+    }
+}
+impl<T> LinkedList for [Packet<T>]
+where T: GP0Command
+{
+    fn address(&self) -> Option<&u32> {
+        self.first().map(|p| p.contents.data().first()).flatten()
+    }
+}
+impl LinkedList for [Packet<()>] {
+    fn address(&self) -> Option<&u32> {
+        None
+    }
+}
+impl<const N: usize> LinkedList for [Packet<()>; N] {
+    fn address(&self) -> Option<&u32> {
+        None
+    }
+}
+impl<T, const N: usize> LinkedList for [Packet<T>; N]
+where T: GP0Command
+{
+    fn address(&self) -> Option<&u32> {
+        self.first().map(|p| p.contents.data().first()).flatten()
+    }
+}

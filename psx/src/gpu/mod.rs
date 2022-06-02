@@ -13,7 +13,7 @@ pub use packet::{link_list, ordering_table};
 type Command = u8;
 
 /// The number of bytes in the GPU buffer.
-pub const BUFFER_SIZE: usize = 64;
+pub const GPU_BUFFER_SIZE: usize = 64;
 
 /// A color with components ranging from `0` to `0xFF`.
 #[repr(C)]
@@ -75,9 +75,7 @@ pub struct PackedVertex<const N: usize, const X: usize, const Y: usize> {
 /// bits `0` to `5`: X coordinate
 ///
 /// bits `6` to `14`: Y coordinate
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Clut(PackedVertex<2, 6, 9>);
+pub type Clut = PackedVertex<2, 6, 9>;
 
 /// A coordinate within a VRAM texture page.
 #[allow(missing_docs)]
@@ -88,16 +86,14 @@ pub struct TexCoord {
     pub y: u8,
 }
 
-/// A VRAM texture page.
+/// A VRAM texture page attribute.
 ///
 /// This is represented as a two-byte packed vertex with the following layout
 ///
 /// bits `0` to `3`: texture page X base
 ///
 /// bit `4`: texture page Y base
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct TexPage(PackedVertex<2, 4, 1>);
+pub type TexPage = PackedVertex<2, 4, 1>;
 
 /// The GPU DMA direction.
 #[derive(Debug)]
@@ -120,20 +116,20 @@ pub enum VideoMode {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Depth {
     /// 15-bit high-color mode
-    B15 = 0,
+    Bits15 = 0,
     /// 24-bit true-color mode
-    B24,
+    Bits24,
 }
 
 /// Bits per pixel.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Bpp {
     /// 4 bits per pixel.
-    B4,
+    Bits4,
     /// 8 bits per pixel.
-    B8,
+    Bits8,
     /// 15 bits per pixel.
-    B15,
+    Bits15,
 }
 
 /// A physical address in memory.
@@ -156,7 +152,7 @@ pub struct Packet<T> {
     pub contents: T,
 }
 
-/// Display environment parameters.
+/// Display buffer parameters.
 pub struct DispEnv {
     pub(crate) horizontal_range: PackedVertex<3, 12, 12>,
     pub(crate) vertical_range: PackedVertex<3, 10, 10>,
@@ -164,22 +160,26 @@ pub struct DispEnv {
 }
 
 impl DispEnv {
-    //pub fn new(offset: (i16, i16), (x_size, _): (i16, i16)) -> Result<Self> {
-    //    let offset = PackedVertex::try_from(offset)?;
-    //    let ntsc_vrange = Vertex(0x88 - (240 / 2), 0x88 + (240 / 2));
-    //    let hrange = Vertex(0x260, 0x260 + (x_size * 8));
+    /// Creates a new display buffer at `offset` in VRAM with the specified
+    /// `size`.
+    pub fn new(offset: (i16, i16), size: (i16, i16)) -> Result<Self, VertexError> {
+        let offset = Vertex::new(offset);
+        let size = Vertex::new(size);
+        let offset = PackedVertex::try_from(offset)?;
+        let ntsc_vrange = Vertex(0x88 - (240 / 2), 0x88 + (240 / 2));
+        let hrange = Vertex(0x260, 0x260 + (size.0 * 8));
 
-    //    let horizontal_range = PackedVertex::try_from(hrange)?;
-    //    let vertical_range = PackedVertex::try_from(ntsc_vrange)?;
-    //    Ok(DispEnv {
-    //        horizontal_range,
-    //        vertical_range,
-    //        offset,
-    //    })
-    //}
+        let horizontal_range = PackedVertex::try_from(hrange)?;
+        let vertical_range = PackedVertex::try_from(ntsc_vrange)?;
+        Ok(DispEnv {
+            horizontal_range,
+            vertical_range,
+            offset,
+        })
+    }
 }
 
-/// Draw environment parameters.
+/// Draw buffer parameters.
 #[repr(C)]
 #[derive(Debug)]
 pub struct DrawEnv {
@@ -196,43 +196,44 @@ pub struct DrawEnv {
     offset: PackedVertex<3, 11, 11>,
     offset_cmd: Command,
 
-    bg_color: Color,
+    /// The buffer's background color.
+    pub bg_color: Color,
     bg_color_cmd: Command,
-
     bg_offset: Vertex,
     bg_size: Vertex,
 }
 
 impl DrawEnv {
-    //pub fn new(offset: Vertex, size: Vertex, bg_color: Option<Color>) ->
-    // Result<Self> {    let bg_color = bg_color.unwrap_or(BLACK);
-    //    let upper_left = PackedVertex::try_from(offset)?;
-    //    let lower_right = PackedVertex::try_from(offset + size)?;
-    //    Ok(DrawEnv {
-    //        texpage_cmd: 0xE1,
-    //        upper_left_cmd: 0xE3,
-    //        lower_right_cmd: 0xE4,
-    //        offset_cmd: 0xE5,
-    //        bg_color_cmd: 0x02,
+    /// Creates a new draw buffer at `offset` in VRAM with the specified `size`.
+    /// Background color defaults to black if `bg_color` is `None`.
+    pub fn new(
+        offset: (i16, i16), size: (i16, i16), bg_color: Option<Color>,
+    ) -> Result<Self, VertexError> {
+        let offset = Vertex::new(offset);
+        let size = Vertex::new(size);
+        let bg_color = bg_color.unwrap_or(colors::BLACK);
+        let upper_left = PackedVertex::try_from(offset)?;
+        let lower_right = PackedVertex::try_from(offset + size)?;
+        Ok(DrawEnv {
+            texpage_cmd: 0xE1,
+            upper_left_cmd: 0xE3,
+            lower_right_cmd: 0xE4,
+            offset_cmd: 0xE5,
+            bg_color_cmd: 0x02,
+            texpage: (1 << 10) | 10,
 
-    //        texpage: (1 << 10) | 10,
+            upper_left,
+            lower_right,
 
-    //        upper_left,
-    //        lower_right,
+            offset: PackedVertex::try_from(offset)?,
 
-    //        offset: PackedVertex::try_from(offset)?,
+            bg_color,
+            bg_offset: offset,
+            bg_size: size,
 
-    //        bg_color,
-    //        bg_offset: offset,
-    //        bg_size: size,
-
-    //        _pad: 0,
-    //    })
-    //}
-
-    //pub fn set_color(&mut self, color: Color) {
-    //    self.bg_color = color;
-    //}
+            _pad: 0,
+        })
+    }
 }
 
 impl GP0Command for DrawEnv {}

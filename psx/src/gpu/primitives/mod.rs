@@ -158,7 +158,7 @@ pub struct LineF2 {
 /// Flat-shaded poly-line.
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct LineF<const N: usize> {
+pub struct LineFN<const N: usize> {
     color: Color,
     cmd: Command,
     vertices: [Vertex; N],
@@ -188,7 +188,7 @@ struct ColoredVertex {
 /// Gouraud-shaded poly-line.
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct LineG<const N: usize> {
+pub struct LineGN<const N: usize> {
     colored_vertices: [ColoredVertex; N],
     term: u32,
 }
@@ -317,9 +317,9 @@ impl PolyGT4 {
     //tex_coord_fn!(4);
 }
 impl_primitive!(LineF2, 0x40);
-//impl_primitive!(LineF<N>, 0x48);
+//impl_primitive!(LineFN<N>, 0x48);
 impl_primitive!(LineG2, 0x50);
-//impl_primitive!(LineG<N>, 0x58);
+//impl_primitive!(LineGN<N>, 0x58);
 impl_primitive!(Tile, 0x60);
 impl_primitive!(Tile1, 0x68);
 impl_primitive!(Tile8, 0x70);
