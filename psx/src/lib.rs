@@ -64,6 +64,7 @@ pub mod gpu;
 #[cfg(feature = "heap")]
 pub mod heap;
 pub mod hw;
+mod macros;
 mod panic;
 #[doc(hidden)]
 pub mod runtime;
