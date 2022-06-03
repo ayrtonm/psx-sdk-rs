@@ -1,6 +1,6 @@
 use crate::gpu::{PackedVertex, Vertex, VertexError};
 use core::convert::TryFrom;
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 impl Add for Vertex {
     type Output = Self;
@@ -25,6 +25,13 @@ impl Sub for Vertex {
 impl SubAssign for Vertex {
     fn sub_assign(&mut self, other: Self) {
         *self = *self - other;
+    }
+}
+
+impl Mul<i16> for Vertex {
+    type Output = Self;
+    fn mul(self, other: i16) -> Self {
+        Self(self.0 * other, self.1 * other)
     }
 }
 

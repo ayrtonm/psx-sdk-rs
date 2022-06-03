@@ -278,17 +278,17 @@ impl_primitive!(PolyFT3, 0x24);
 impl PolyFT3 {
     vertices_fn!(3);
     color_fn!(textured);
-    //clut_fn!();
-    //tex_page_fn!();
-    //tex_coord_fn!(3);
+    clut_fn!();
+    tex_page_fn!();
+    tex_coord_fn!(3);
 }
 impl_primitive!(PolyFT4, 0x2C);
 impl PolyFT4 {
     vertices_fn!(4);
     color_fn!(textured);
-    //clut_fn!();
-    //tex_page_fn!();
-    //tex_coord_fn!(4);
+    clut_fn!();
+    tex_page_fn!();
+    tex_coord_fn!(4);
 }
 impl_primitive!(PolyG3, 0x30);
 impl PolyG3 {
@@ -304,17 +304,17 @@ impl_primitive!(PolyGT3, 0x34);
 impl PolyGT3 {
     vertices_fn!(3);
     gouraud_fn!(3, textured);
-    //clut_fn!();
-    //tex_page_fn!();
-    //tex_coord_fn!(3);
+    clut_fn!();
+    tex_page_fn!();
+    tex_coord_fn!(3);
 }
 impl_primitive!(PolyGT4, 0x3C);
 impl PolyGT4 {
     vertices_fn!(4);
     gouraud_fn!(4, textured);
-    //clut_fn!();
-    //tex_page_fn!();
-    //tex_coord_fn!(4);
+    clut_fn!();
+    tex_page_fn!();
+    tex_coord_fn!(4);
 }
 impl_primitive!(LineF2, 0x40);
 //impl_primitive!(LineFN<N>, 0x48);

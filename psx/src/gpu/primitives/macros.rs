@@ -89,6 +89,11 @@ macro_rules! color_fn {
             self.color
         }
 
+        /// Gets a mutable reference to the textured primitive's color.
+        pub fn get_color_mut(&mut self) -> &mut TexColor {
+            &mut self.color
+        }
+
         /// Sets the textured primitive's color.
         pub fn set_color(&mut self, color: TexColor) -> &mut Self {
             self.color = color;
@@ -269,7 +274,7 @@ macro_rules! tex_coord_fn {
     };
     (4) => {
         /// Gets the primitive's texcoords.
-        pub fn get_tex_coord(&self) -> [TexCoord; 4] {
+        pub fn get_tex_coords(&self) -> [TexCoord; 4] {
             [self.t0, self.t1, self.t2, self.t3]
         }
 
@@ -279,7 +284,7 @@ macro_rules! tex_coord_fn {
         }
 
         /// Sets the primitive's texcoords.
-        pub fn set_tex_coord<T>(&mut self, tex_coords: [T; 4]) -> &mut Self
+        pub fn set_tex_coords<T>(&mut self, tex_coords: [T; 4]) -> &mut Self
         where TexCoord: From<T> {
             let tex_coords = tex_coords.map(|t| TexCoord::from(t));
             self.t0 = tex_coords[0];

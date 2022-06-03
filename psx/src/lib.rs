@@ -85,6 +85,8 @@ pub mod constants {
     pub const DATA_CACHE: *mut u32 = 0x9F80_0000 as *mut u32;
     /// The size of the data cache.
     pub const DATA_CACHE_LEN: usize = 1 * KB;
+    /// The size of the BIOS in RAM.
+    pub const BIOS_LEN: usize = 64 * KB;
     pub use crate::gpu::colors::*;
     pub use crate::gpu::VideoMode::*;
 }

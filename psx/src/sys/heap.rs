@@ -53,7 +53,7 @@ macro_rules! sys_heap {
                 let ptr = slice.as_mut_ptr() as usize;
                 let len = slice.len() * size_of::<u32>();
                 unsafe {
-                    kernel::init_heap(ptr, len);
+                    $crate::sys::kernel::init_heap(ptr, len);
                 }
             }
         }
