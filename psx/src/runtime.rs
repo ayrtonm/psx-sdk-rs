@@ -53,10 +53,6 @@ extern "C" fn __start() -> RtReturn {
         let start = &__ctors_start as *const usize as usize;
         let end = &__ctors_end as *const usize as usize;
         let ctors_range = end - start;
-        assert!(
-            (ctors_range % 4) == 0,
-            ".ctors section is not 4-byte aligned"
-        );
         let num_ctors = ctors_range / size_of::<usize>();
         for n in 0..num_ctors {
             let ctor_ptr = start + (n * size_of::<usize>());
@@ -73,10 +69,6 @@ extern "C" fn __start() -> RtReturn {
         let start = &__dtors_start as *const usize as usize;
         let end = &__dtors_end as *const usize as usize;
         let dtors_range = end - start;
-        assert!(
-            (dtors_range % 4) == 0,
-            ".dtors section is not 4-byte aligned"
-        );
         let num_dtors = dtors_range / size_of::<usize>();
         for n in 0..num_dtors {
             let dtor_ptr = start + (n * size_of::<usize>());

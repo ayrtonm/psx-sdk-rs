@@ -2,12 +2,13 @@ RAM_BASE = 0x80000000;
 RAM_SIZE = 2M;
 BIOS_SIZE = 64K;
 HEADER_SIZE = 2K;
-LOAD_ADDR = RAM_BASE + BIOS_SIZE;
+LOAD_OFFSET = 0;
+LOAD_ADDR = RAM_BASE + BIOS_SIZE + LOAD_OFFSET;
 STACK_INIT = RAM_BASE + 0x001FFF00;
 
 MEMORY {
-    HEADER    : ORIGIN = RAM_BASE + BIOS_SIZE - HEADER_SIZE, LENGTH = HEADER_SIZE
-    RAM (rwx) : ORIGIN = RAM_BASE + BIOS_SIZE, LENGTH = RAM_SIZE - BIOS_SIZE
+    HEADER    : ORIGIN = LOAD_ADDR - HEADER_SIZE, LENGTH = HEADER_SIZE
+    RAM (rwx) : ORIGIN = LOAD_ADDR, LENGTH = RAM_SIZE - (LOAD_ADDR - RAM_BASE)
 }
 
 ENTRY(__start)
@@ -45,9 +46,11 @@ SECTIONS {
         __ctors_start = .;
         *(.ctors*)
         __ctors_end = .;
+        ASSERT((__ctors_end - __ctors_start) % 4 == 0, "Invalid .ctors section");
         __dtors_start = .;
         *(.dtors*)
         __dtors_end = .;
+        ASSERT((__dtors_end - __dtors_start) % 4 == 0, "Invalid .dtors section");
         *(.text*)
         __text_end = .;
     } > RAM
