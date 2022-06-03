@@ -54,6 +54,8 @@ struct Opt {
     link: Option<String>,
     #[clap(long, help = "Builds the `alloc` crate")]
     alloc: bool,
+    #[clap(long, help = "Outputs an ELF")]
+    elf: bool,
     #[clap(long, help = "Ouputs an ELF with debug info")]
     debug: bool,
     #[clap(
@@ -68,6 +70,12 @@ struct Opt {
         help = "Disables error messages in the panic handler to reduce binary size"
     )]
     min_panic: bool,
+
+    #[clap(long, help = "Adds a load offset to the executable")]
+    load_offset: Option<u32>,
+
+    #[clap(long, help = "Sets the initial stack pointer")]
+    stack_pointer: Option<u32>,
 
     #[clap(long)]
     cargo_args: Vec<String>,
@@ -116,14 +124,14 @@ fn main() {
     // burden of always doing LTO. This default is overriden when setting RUSTFLAGS
     // through an env var, but the performance of builds without this flag is
     // extremely unpredictable.
-    let default_rustflags = "-Ccodegen-units=1".to_string();
+    let default_rustflags = "-Ccodegen-units=1 -Crelocation-model=static".to_string();
     // Try getting RUSTFLAGS from env
     let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or(default_rustflags);
 
     // Set linker script if any
     let script = opt.link.unwrap_or("psexe.ld".to_string());
     rustflags.push_str(&format!(" -Clink-arg=-T{}", script));
-    if !opt.debug {
+    if !opt.debug && !opt.elf {
         // This linker arg has a space so it must be passed as two args.
         rustflags.push_str(" -Clink-arg=--oformat");
         rustflags.push_str(" -Clink-arg=binary");
@@ -173,15 +181,27 @@ fn main() {
 
     if let Some(subcmd) = opt.cargo_subcmd {
         let subcmd: &str = subcmd.into();
-        let mut build = Command::new(CARGO_CMD)
-            .arg(toolchain)
+        let mut cmd = Command::new(CARGO_CMD);
+        cmd.arg(toolchain)
             .arg(subcmd)
             .arg(build_std)
             .arg("-Zbuild-std-features=compiler-builtins-mem")
             .arg("--target")
             .arg("mipsel-sony-psx")
             .args(cargo_args)
-            .env("RUSTFLAGS", rustflags)
+            .env("RUSTFLAGS", rustflags);
+        if let Some(offset) = opt.load_offset {
+            assert!(offset % 4 == 0, "Load offset must be a multiple of 4 bytes");
+            cmd.env("PSX_LOAD_OFFSET", offset.to_string());
+        }
+        if let Some(sp) = opt.stack_pointer {
+            assert!(
+                sp % 4 == 0,
+                "Initial stack pointer must be a multiple of 4 bytes"
+            );
+            cmd.env("PSX_STACK_POINTER", sp.to_string());
+        }
+        let mut build = cmd
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
