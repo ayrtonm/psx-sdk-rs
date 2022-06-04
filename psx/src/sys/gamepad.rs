@@ -101,11 +101,22 @@ pub mod buttons {
 }
 
 impl<'a> Gamepad<'a> {
+    /// Creates a new gamepad from a reference to a static buffer.
+    ///
+    /// The buffer is included in the executable. To use a temporary buffer
+    /// (e.g. to minimize executable size) use `Gamepad::new_with_buffer`
+    /// directly.
+    pub fn new() -> Self {
+        static mut GAMEPAD_BUFFER: MaybeUninit<[u16; BUFFER_SIZE]> = MaybeUninit::uninit();
+        unsafe { Self::new_with_buffer(&mut GAMEPAD_BUFFER) }
+    }
+
     /// Creates a new gamepad from a reference to a buffer.
     ///
-    /// `Gamepad::new` can be called by passing in a mutable reference to a
-    /// `MaybeUninit::uninit()` and the buffer's size will be inferred.
-    pub fn new(buf: &'a mut MaybeUninit<[u16; BUFFER_SIZE]>) -> Self {
+    /// `Gamepad::new_with_buffer` can be called by passing in a mutable
+    /// reference to a `MaybeUninit::uninit()` and the buffer's size will be
+    /// inferred.
+    pub fn new_with_buffer(buf: &'a mut MaybeUninit<[u16; BUFFER_SIZE]>) -> Self {
         let buf1 = buf.as_mut_ptr().cast();
         let buf2 = unsafe { buf.as_mut_ptr().cast::<u16>().add(P2_OFFSET) };
         unsafe {
