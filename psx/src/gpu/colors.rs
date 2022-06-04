@@ -76,9 +76,9 @@ impl Color {
     /// Adds two `Color`s together.
     pub const fn sum(&self, other: Self) -> Self {
         Color::new(
-            self.red.saturating_add(other.red),
-            self.green.saturating_add(other.green),
-            self.blue.saturating_add(other.blue),
+            self.red + other.red,
+            self.green + other.green,
+            self.blue + other.blue,
         )
     }
 
@@ -107,9 +107,9 @@ impl TexColor {
     /// Adds two `TexColor`s together.
     pub const fn sum(&self, other: Self) -> Self {
         Self::new(
-            self.red.saturating_add(other.red),
-            self.green.saturating_add(other.green),
-            self.blue.saturating_add(other.blue),
+            self.red + other.red,
+            self.green + other.green,
+            self.blue + other.blue,
         )
     }
 }

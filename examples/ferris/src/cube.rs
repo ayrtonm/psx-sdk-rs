@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use core::ops::{Add, Div, Sub};
 use libm::{cosf, sinf};
 

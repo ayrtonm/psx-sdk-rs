@@ -14,6 +14,8 @@ fn main() {
         .args([
             "psx",
             "build",
+            "--lto",
+            "--alloc",
             "--cargo-args",
             "features psx/loadable_exe",
             "--load-offset=524288",
