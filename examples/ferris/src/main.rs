@@ -22,12 +22,12 @@ fn main() {
             .set_clut(ferris.clut.expect("The TIM file didn't have a CLUT"))
             .set_tex_coords([(0, 0), (0, 85), (128, 0), (128, 85)].map(|(x, y)| TexCoord { x, y }));
     }
-    cube[0].set_color(WHITE.into());
-    cube[1].set_color(YELLOW.into());
-    cube[2].set_color(INDIGO.into());
-    cube[3].set_color(ORANGE.into());
-    cube[4].set_color(AQUA.into());
-    cube[5].set_color(LIME.into());
+    cube[0].set_color(WHITE);
+    cube[1].set_color(YELLOW);
+    cube[2].set_color(INDIGO);
+    cube[3].set_color(ORANGE);
+    cube[4].set_color(AQUA);
+    cube[5].set_color(LIME);
 
     let position = [
         XY.sub(Z.div(2.0)),
@@ -52,9 +52,7 @@ fn main() {
         let new_position = position.map(|face| face.Rx(theta).Ry(phi).Rz(psi));
         for (n, face) in cube.iter_mut().enumerate() {
             face.set_vertices(as_vertices(new_position[n]));
-            // The API for colors could use some work...
-            let dim_indigo = INDIGO.halve().halve().halve().halve().halve();
-            face.set_color(Color::from(face.get_color()).sum(dim_indigo).into());
+            *face.get_color_mut() += INDIGO / 32;
         }
         fb.gp0.send_command(&cube[0]);
         fb.gp0.send_command(&cube[1]);
@@ -66,11 +64,11 @@ fn main() {
         fb.gp0.send_command(&cube[5]);
         fb.draw_sync();
         fb.swap();
-        delay(200000);
+        delay(20000);
     }
 }
 
-fn as_vertices(pos: F2) -> [Vertex; 4] {
+fn as_vertices(pos: Plane) -> [Vertex; 4] {
     pos.points.map(|p3| {
         Vertex::new((
             (p3.x * 64. + p3.z * 32.) as i16,
@@ -81,18 +79,18 @@ fn as_vertices(pos: F2) -> [Vertex; 4] {
 
 /// A 2D plane
 #[derive(Copy, Clone)]
-struct F2 {
-    points: [P3; 4],
+struct Plane {
+    points: [Point; 4],
 }
 
-impl F2 {
-    fn add(&self, other: P3) -> F2 {
-        F2 {
+impl Plane {
+    fn add(&self, other: Point) -> Plane {
+        Plane {
             points: self.points.map(|p| p.add(other)),
         }
     }
-    fn sub(&self, other: P3) -> F2 {
-        F2 {
+    fn sub(&self, other: Point) -> Plane {
+        Plane {
             points: self.points.map(|p| p.sub(other)),
         }
     }
@@ -113,7 +111,7 @@ impl F2 {
     }
 }
 
-const XY: F2 = F2 {
+const XY: Plane = Plane {
     points: [
         X.sub(Y).div(2.0),
         X.add(Y).div(2.0),
@@ -121,7 +119,7 @@ const XY: F2 = F2 {
         Y.sub(X).div(2.0),
     ],
 };
-const XZ: F2 = F2 {
+const XZ: Plane = Plane {
     points: [
         X.sub(Z).div(2.0),
         X.add(Z).div(2.0),
@@ -129,7 +127,7 @@ const XZ: F2 = F2 {
         Z.sub(X).div(2.0),
     ],
 };
-const YZ: F2 = F2 {
+const YZ: Plane = Plane {
     points: [
         Y.sub(Z).div(2.0),
         Y.add(Z).div(2.0),
@@ -140,29 +138,29 @@ const YZ: F2 = F2 {
 
 /// A 3D point
 #[derive(Copy, Clone)]
-struct P3 {
+struct Point {
     x: f32,
     y: f32,
     z: f32,
 }
 
-impl P3 {
-    const fn add(&self, other: P3) -> P3 {
-        P3 {
+impl Point {
+    const fn add(&self, other: Point) -> Point {
+        Point {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z,
         }
     }
-    const fn sub(&self, other: P3) -> P3 {
-        P3 {
+    const fn sub(&self, other: Point) -> Point {
+        Point {
             x: self.x - other.x,
             y: self.y - other.y,
             z: self.z - other.z,
         }
     }
     const fn div(&self, w: f32) -> Self {
-        P3 {
+        Point {
             x: self.x / w,
             y: self.y / w,
             z: self.z / w,
@@ -170,41 +168,41 @@ impl P3 {
     }
 }
 
-const ZERO: P3 = P3 {
+const ZERO: Point = Point {
     x: 0.,
     y: 0.,
     z: 0.,
 };
-const X: P3 = P3 {
+const X: Point = Point {
     x: 1.,
     y: 0.,
     z: 0.,
 };
-const Y: P3 = P3 {
+const Y: Point = Point {
     x: 0.,
     y: 1.,
     z: 0.,
 };
-const Z: P3 = P3 {
+const Z: Point = Point {
     x: 0.,
     y: 0.,
     z: 1.,
 };
 
-fn Rx(p: P3, theta: f32) -> P3 {
+fn Rx(p: Point, theta: f32) -> Point {
     let y = (cosf(theta) * p.y) - (sinf(theta) * p.z);
     let z = (sinf(theta) * p.y) + (cosf(theta) * p.z);
-    P3 { x: p.x, y, z }
+    Point { x: p.x, y, z }
 }
-fn Ry(p: P3, theta: f32) -> P3 {
+fn Ry(p: Point, theta: f32) -> Point {
     let x = (cosf(theta) * p.x) + (sinf(theta) * p.z);
     let z = (-sinf(theta) * p.x) + (cosf(theta) * p.z);
-    P3 { x, y: p.y, z }
+    Point { x, y: p.y, z }
 }
-fn Rz(p: P3, theta: f32) -> P3 {
+fn Rz(p: Point, theta: f32) -> Point {
     let x = (cosf(theta) * p.x) - (sinf(theta) * p.y);
     let y = (sinf(theta) * p.x) + (cosf(theta) * p.y);
-    P3 { x, y, z: p.z }
+    Point { x, y, z: p.z }
 }
 
 fn compute_position(pos: Vertex) -> [Vertex; 4] {

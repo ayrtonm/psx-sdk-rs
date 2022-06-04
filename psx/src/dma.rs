@@ -1,3 +1,4 @@
+// TODO: This module is a WIP
 #![allow(missing_docs)]
 //! High-level DMA channel operations and types.
 use crate::hw::dma;

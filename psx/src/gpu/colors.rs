@@ -2,6 +2,7 @@
 // No need for doc comments for each color.
 
 use crate::gpu::{Color, TexColor};
+use core::ops::{AddAssign, Div, DivAssign};
 
 // This is the max value for untextured graphics. Colors for textured graphics
 // should be scaled down to a max of 0x80.
@@ -29,6 +30,43 @@ impl From<Color> for u32 {
     }
 }
 
+impl AddAssign<Color> for Color {
+    fn add_assign(&mut self, other: Color) {
+        *self = self.sum(other);
+    }
+}
+
+impl<T: Into<TexColor>> AddAssign<T> for TexColor {
+    fn add_assign(&mut self, other: T) {
+        *self = self.sum(other.into());
+    }
+}
+
+impl Div<u8> for Color {
+    type Output = Self;
+    fn div(self, other: u8) -> Self {
+        Self::new(self.red / other, self.green / other, self.blue / other)
+    }
+}
+impl Div<u8> for TexColor {
+    type Output = Self;
+    fn div(self, other: u8) -> Self {
+        Self::new(self.red / other, self.green / other, self.blue / other)
+    }
+}
+
+impl DivAssign<u8> for Color {
+    fn div_assign(&mut self, other: u8) {
+        *self = *self / other;
+    }
+}
+
+impl DivAssign<u8> for TexColor {
+    fn div_assign(&mut self, other: u8) {
+        *self = *self / other;
+    }
+}
+
 impl Color {
     /// Creates a new `Color`.
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
@@ -38,9 +76,9 @@ impl Color {
     /// Adds two `Color`s together.
     pub const fn sum(&self, other: Self) -> Self {
         Color::new(
-            self.red + other.red,
-            self.green + other.green,
-            self.blue + other.blue,
+            self.red.saturating_add(other.red),
+            self.green.saturating_add(other.green),
+            self.blue.saturating_add(other.blue),
         )
     }
 
@@ -57,6 +95,22 @@ impl Color {
     /// Averages two `Color`s.
     pub const fn average(&self, other: Self) -> Self {
         self.halve().sum(other.halve())
+    }
+}
+
+impl TexColor {
+    /// Creates a new `TexColor`.
+    pub const fn new(red: u8, green: u8, blue: u8) -> Self {
+        Self { red, green, blue }
+    }
+
+    /// Adds two `TexColor`s together.
+    pub const fn sum(&self, other: Self) -> Self {
+        Self::new(
+            self.red.saturating_add(other.red),
+            self.green.saturating_add(other.green),
+            self.blue.saturating_add(other.blue),
+        )
     }
 }
 
