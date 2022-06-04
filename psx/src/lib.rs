@@ -27,6 +27,8 @@
 
 #![no_std]
 #![deny(missing_docs)]
+// For `Packet::insert_packet` and `Packet::insert_list`
+#![feature(bench_black_box)]
 // For the `AsCStr` trait
 #![feature(core_c_str)]
 // Used to make `AsCStr` efficient

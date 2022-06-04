@@ -5,6 +5,7 @@ use crate::hw::dma;
 use crate::hw::dma::{cdrom, gpu, mdec_in, mdec_out, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
+use core::arch::asm;
 use core::convert::TryInto;
 
 type Result<T> = core::result::Result<T, Error>;
@@ -153,8 +154,16 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
             .set_mode(TransferMode::Immediate)
             .start()
             .store();
+        // This acts like a compiler fence
+        unsafe {
+            asm!("nop");
+        }
         let res = f();
         self.control.wait();
+        // This acts like a compiler fence
+        unsafe {
+            asm!("nop");
+        }
         Ok(res)
     }
 
@@ -188,8 +197,16 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         // This will never fail
         self.bcr.set_block(block_len)?.store();
         self.control.start().store();
+        // This acts like a compiler fence
+        unsafe {
+            asm!("nop");
+        }
         let res = f();
         self.control.wait();
+        // This acts like a compiler fence
+        unsafe {
+            asm!("nop");
+        }
         Ok(res)
     }
 
@@ -208,11 +225,21 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         };
         self.madr.set_address(ptr).store();
         self.control
+            .set_direction(Direction::FromMemory)
+            .set_step(Step::Forward)
             .set_mode(TransferMode::LinkedList)
             .start()
             .store();
+        // This acts like a compiler fence
+        unsafe {
+            asm!("nop");
+        }
         let res = f();
         self.control.wait();
+        // This acts like a compiler fence
+        unsafe {
+            asm!("nop");
+        }
         res
     }
 

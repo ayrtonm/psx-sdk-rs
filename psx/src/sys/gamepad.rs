@@ -109,8 +109,9 @@ impl<'a> Gamepad<'a> {
         let buf1 = buf.as_mut_ptr().cast();
         let buf2 = unsafe { buf.as_mut_ptr().cast::<u16>().add(P2_OFFSET) };
         unsafe {
-            kernel::start_pad();
             kernel::init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
+            kernel::start_pad();
+            kernel::change_clear_pad(1);
         }
         Self {
             buf1,

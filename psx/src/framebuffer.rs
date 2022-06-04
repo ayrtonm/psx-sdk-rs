@@ -75,8 +75,8 @@ impl Framebuffer {
             .display_mode(res, VideoMode::NTSC, Depth::Bits15, false)?
             .enable_display(true);
         fb.irq_mask.enable_irq(IRQ::Vblank).store();
-        fb.wait_vblank();
-        fb.swap();
+        //fb.wait_vblank();
+        //fb.swap();
         Ok(fb)
     }
 
@@ -156,11 +156,7 @@ impl Framebuffer {
 
     /// Spins until vblank.
     pub fn wait_vblank(&mut self) {
-        self.irq_status
-            .load()
-            .ack(IRQ::Vblank)
-            .store()
-            .wait(IRQ::Vblank);
+        self.irq_status.ack(IRQ::Vblank).store().wait(IRQ::Vblank);
     }
 }
 

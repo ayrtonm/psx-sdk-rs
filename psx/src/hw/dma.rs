@@ -250,6 +250,7 @@ pub trait ChannelControl: Register<u32> {
 
     /// Wait until the DMA channel is not busy.
     fn wait(&mut self) -> &mut Self {
+        self.load();
         while self.busy() {
             self.load();
         }

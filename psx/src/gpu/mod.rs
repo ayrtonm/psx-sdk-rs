@@ -143,9 +143,16 @@ pub struct PhysAddr([u8; 3]);
 /// GP0 commands so this trait bound is not enforced. `Copy` is not implemented
 /// for this type since the physical address of [`Packet`]s is passed to the GPU
 /// DMA channel so implicitly copying this is usually not wanted behavior.
+/// [`Packet`]s may be explicitly copied by calling `.clone()`. To initialize an
+/// array of [`Packet`]s, use the `inline_const` feature
+/// ```rust
+/// #![feature(inline_const)]
+/// let array = [const { Packet::new(T::new()) }; N]
+/// ```
 #[repr(C, align(4))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Packet<T> {
+    // TODO: The first word should be a union to avoid UB
     next: PhysAddr,
     size: u8,
     /// The `T` in the linked list packet.

@@ -2,6 +2,7 @@ use crate::dma::LinkedList;
 use crate::gpu::GPU_BUFFER_SIZE;
 use crate::gpu::{Packet, PhysAddr};
 use crate::hw::gpu::GP0Command;
+use core::hint::black_box;
 use core::mem::{size_of, transmute};
 use core::slice;
 
@@ -64,6 +65,13 @@ impl<T> Packet<T> {
         }
     }
 
+    /// Gets a reference to the [`Packet`] header.
+    fn header_address(&self) -> &u32 {
+        let ptr = self.next.0.as_ptr() as *const u32;
+        // TODO: The first word should be a union or u32 to avoid UB
+        unsafe { ptr.as_ref().unwrap() }
+    }
+
     /// Gets the [`Packet`] header.
     pub fn header(&self) -> u32 {
         let res = [self.next.0[0], self.next.0[1], self.next.0[2], self.size];
@@ -78,6 +86,9 @@ impl<T> Packet<T> {
     /// Note that `self` may be the last [`Packet`] in which case `next` does
     /// not exist. Returns the `PhysAddr` `other` previously pointed to, if any.
     pub fn insert_packet<U>(&mut self, other: &mut Packet<U>) -> Option<PhysAddr> {
+        // FIXME: This is a complete hack since black_box should not be relied on for
+        // correctness.
+        let other = black_box(other);
         let res = other.next;
         other.next = self.next;
         self.next = PhysAddr::from(other);
@@ -96,6 +107,9 @@ impl<T> Packet<T> {
     /// Note that `self` may be the last [`Packet`] in which case `next` does
     /// not exist. Returns the `PhysAddr` `other` previously pointed to, if any.
     pub fn insert_list<U>(&mut self, other: &mut [Packet<U>]) -> Option<PhysAddr> {
+        // FIXME: This is a complete hack since black_box should not be relied on for
+        // correctness.
+        let other = black_box(other);
         let last = other.last_mut()?;
         let res = last.next;
         last.next = self.next;
@@ -140,35 +154,35 @@ impl<T> LinkedList for Packet<T>
 where T: GP0Command
 {
     fn address(&self) -> Option<&u32> {
-        self.contents.data().first()
+        Some(self.header_address())
     }
 }
 impl LinkedList for Packet<()> {
     fn address(&self) -> Option<&u32> {
-        None
+        Some(self.header_address())
     }
 }
 impl<T> LinkedList for [Packet<T>]
 where T: GP0Command
 {
     fn address(&self) -> Option<&u32> {
-        self.first().map(|p| p.contents.data().first()).flatten()
+        self.first().map(|p| p.header_address())
     }
 }
 impl LinkedList for [Packet<()>] {
     fn address(&self) -> Option<&u32> {
-        None
+        self.first().map(|p| p.header_address())
     }
 }
 impl<const N: usize> LinkedList for [Packet<()>; N] {
     fn address(&self) -> Option<&u32> {
-        None
+        self.first().map(|p| p.header_address())
     }
 }
 impl<T, const N: usize> LinkedList for [Packet<T>; N]
 where T: GP0Command
 {
     fn address(&self) -> Option<&u32> {
-        self.first().map(|p| p.contents.data().first()).flatten()
+        self.first().map(|p| p.header_address())
     }
 }
