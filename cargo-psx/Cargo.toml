@@ -1,6 +1,6 @@
 [package]
 name = "cargo-psx"
-version = "0.1.1"
+version = "0.1.2"
 description = "`cargo` wrapper for the Sony PS1"
 repository = "https://github.com/ayrtonm/psx-sdk-rs"
 license = "MIT"
