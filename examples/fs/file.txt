@@ -1,0 +1,1 @@
+This is in file.txt which was loaded from the CD-ROM filesystem.

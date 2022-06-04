@@ -132,9 +132,7 @@ fn main() {
     let script = opt.link.unwrap_or("psexe.ld".to_string());
     rustflags.push_str(&format!(" -Clink-arg=-T{}", script));
     if !opt.debug && !opt.elf {
-        // This linker arg has a space so it must be passed as two args.
-        rustflags.push_str(" -Clink-arg=--oformat");
-        rustflags.push_str(" -Clink-arg=binary");
+        rustflags.push_str(" -Clink-arg=--oformat=binary");
     }
 
     // Set optional RUSTFLAGS

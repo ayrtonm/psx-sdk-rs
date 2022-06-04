@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iso_project image_name="loader.bin" cue_sheet="loader.cue" no_xa="0">
+	<track type="data">
+		<identifiers
+			system			="PLAYSTATION"
+			application		="PLAYSTATION"
+		/>
+		<directory_tree>
+			<file name="SYSTEM.CNF"	type="data"	source="system.cnf"/>
+			<file name="PROGRAM.EXE"	type="data"	source="target/mipsel-sony-psx/release/loader.exe"/>
+			<file name="PROG2.EXE"	type="data"	source="../ferris/target/mipsel-sony-psx/release/ferris.exe"/>
+			<dummy sectors="1024"/>
+		</directory_tree>
+	</track>
+</iso_project>

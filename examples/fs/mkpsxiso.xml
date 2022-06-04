@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iso_project image_name="fs.bin" cue_sheet="fs.cue" no_xa="0">
+	<track type="data">
+		<identifiers
+			system			="PLAYSTATION"
+			application		="PLAYSTATION"
+		/>
+		<directory_tree>
+			<file name="SYSTEM.CNF"	type="data"	source="system.cnf"/>
+			<file name="PROGRAM.EXE"	type="data"	source="target/mipsel-sony-psx/release/fs.exe"/>
+			<file name="FILE.TXT" type="data" source="file.txt"/>
+			<dummy sectors="1024"/>
+		</directory_tree>
+	</track>
+</iso_project>

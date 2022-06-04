@@ -19,7 +19,11 @@ compress/*.tim
 target/
 compress/
 *.json
-*.md
 *.mp4
 *old*/
 *bkp*/
+*.bin
+*.cue
+*.iso
+tools/
+*.txt
