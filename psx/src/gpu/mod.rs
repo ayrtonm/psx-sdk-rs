@@ -138,14 +138,32 @@ pub enum Bpp {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhysAddr([u8; 3]);
 
-/// A GPU linked list packet for a `T`.
+/// A GPU linked list packet containing a `T` which may be sent over the
+/// [`dma::GPU` channel][`crate::dma::GPU`].
 ///
-/// Typically `T` must implement [`GP0Command`], but it may also be a series of
-/// GP0 commands so this trait bound is not enforced. `Copy` is not implemented
-/// for this type since the physical address of [`Packet`]s is passed to the GPU
-/// DMA channel so implicitly copying this is usually not wanted behavior.
-/// [`Packet`]s may be explicitly copied by calling `.clone()`. To initialize an
-/// array of [`Packet`]s, use the `inline_const` feature
+/// This is essentially a `T` with a pointer to the next packet in the linked
+/// list, if any. Newly created `Packet`s always point to the end of the list.
+/// To link an array of `Packet`s together use [`link_list`] or the [`dma::OTC`
+/// channel][`crate::dma::OTC`]. Note that linked `Packet`s don't have to be
+/// contiguous in memory and that [`Packet::insert_packet`] may be used for more
+/// fine-grained control over packet linking.
+///
+/// Typically `T` must implement [`GP0Command`] to send a linked list over DMA.
+/// However, `Packet`s may also contain a series of GP0 commands so this trait
+/// bound is not enforced when creating `Packet`s. Instead
+/// [`dma::GPU`][`crate::dma::GPU`] enforces that its input implement
+/// [`LinkedList`][`crate::dma::LinkedList`] which is automatically implemented
+/// for `Packet<T> where T: GP0Command`. To sed a linked list containg `Packet`s
+/// that don't implement `GP0Command`, `LinkedList` can be implemented manually.
+///
+/// `Copy` is intentionally not implemented for this type since the physical
+/// address of [`Packet`]s is passed to the GPU DMA channel so implicitly
+/// copying this is usually not wanted behavior. [`Packet`]s may be explicitly
+/// copied by calling `.clone()`.
+///
+/// Omitting `Copy` makes creating it more cumbersome to create `Packet` arrays,
+/// but the `inline_const` feature can simplify this as follows.
+///
 /// ```rust
 /// #![feature(inline_const)]
 /// let array = [const { Packet::new(T::new()) }; N]

@@ -103,8 +103,8 @@ pub mod buttons {
 impl<'a> Gamepad<'a> {
     /// Creates a new gamepad from a reference to a static buffer.
     ///
-    /// The buffer is included in the executable. To use a temporary buffer
-    /// (e.g. to minimize executable size) use `Gamepad::new_with_buffer`
+    /// Note that the buffer is embedded in the executable. To use a temporary
+    /// buffer (e.g. to minimize executable size) use `Gamepad::new_with_buffer`
     /// directly.
     pub fn new() -> Self {
         static mut GAMEPAD_BUFFER: MaybeUninit<[u16; BUFFER_SIZE]> = MaybeUninit::uninit();
@@ -131,8 +131,8 @@ impl<'a> Gamepad<'a> {
         }
     }
 
-    /// Poll player 1's buttons. This emits a 16-byte read which cannot be
-    /// elided.
+    /// Poll player 1's buttons. This emits a 16-byte volatile read which cannot
+    /// be elided.
     pub fn poll_p1(&mut self) -> Buttons {
         unsafe {
             Buttons {
@@ -142,20 +142,20 @@ impl<'a> Gamepad<'a> {
         }
     }
 
-    /// Poll player 1's right joystick. This emits a 16-byte read which cannot
-    /// be elided.
+    /// Poll player 1's right joystick. This emits a 16-byte volatile read which
+    /// cannot be elided.
     pub fn poll_rstick_p1(&mut self) -> JoyStick {
         unsafe { JoyStick(read_volatile(self.buf1.add(2))) }
     }
 
-    /// Poll player 1's left joystick. This emits a 16-byte read which cannot be
-    /// elided.
+    /// Poll player 1's left joystick. This emits a 16-byte volatile read which
+    /// cannot be elided.
     pub fn poll_lstick_p1(&mut self) -> JoyStick {
         unsafe { JoyStick(read_volatile(self.buf1.add(3))) }
     }
 
-    /// Poll player 2's buttons. This emits a 16-byte read which cannot be
-    /// elided.
+    /// Poll player 2's buttons. This emits a 16-byte volatile read which cannot
+    /// be elided.
     pub fn poll_p2(&mut self) -> Buttons {
         unsafe {
             Buttons {
@@ -165,14 +165,14 @@ impl<'a> Gamepad<'a> {
         }
     }
 
-    /// Poll player 2's right joystick. This emits a 16-byte read which cannot
-    /// be elided.
+    /// Poll player 2's right joystick. This emits a 16-byte volatile read which
+    /// cannot be elided.
     pub fn poll_rstick_p2(&mut self) -> JoyStick {
         unsafe { JoyStick(read_volatile(self.buf2.add(2))) }
     }
 
-    /// Poll player 2's left joystick. This emits a 16-byte read which cannot be
-    /// elided.
+    /// Poll player 2's left joystick. This emits a 16-byte volatile read which
+    /// cannot be elided.
     pub fn poll_lstick_p2(&mut self) -> JoyStick {
         unsafe { JoyStick(read_volatile(self.buf2.add(3))) }
     }

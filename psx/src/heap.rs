@@ -44,9 +44,9 @@ unsafe impl GlobalAlloc for Heap {
 /// use psx::constants::*;
 ///
 /// // SAFETY: This is safe since we are not using the data cache for anything else.
-/// heap!(unsafe {
-///     slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN)
-/// })
+/// heap! {
+///     unsafe { slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN) }
+/// }
 /// ```
 #[macro_export]
 macro_rules! heap {

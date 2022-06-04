@@ -2,7 +2,7 @@
 #![allow(missing_docs)]
 //! High-level DMA channel operations and types.
 use crate::hw::dma;
-use crate::hw::dma::{cdrom, gpu, mdec_in, mdec_out, pio, spu};
+use crate::hw::dma::{cdrom, gpu, mdec_in, mdec_out, otc, pio, spu};
 use crate::hw::dma::{BlockControl, ChannelControl, MemoryAddress};
 use crate::hw::Register;
 use core::arch::asm;
@@ -84,13 +84,15 @@ pub struct Chop {
     pub cpu_window: u32,
 }
 
-/// A marker trait for DMA linked lists.
+/// A type that can be sent through DMA as a linked list.
 pub trait LinkedList {
+    /// The address of the first [`Packet`][`crate::gpu::Packet`]'s header in
+    /// the linked list.
     fn address(&self) -> Option<&u32>;
 }
 
 /// A handle to a DMA channel represented by a triple of registers. These should
-/// be created by calling [`Self::new`] through the type aliases in the
+/// be created by calling [`Channel::new`] through the type aliases in the
 /// [`dma`][`crate::dma`] module.
 pub struct Channel<A: MemoryAddress, B: BlockControl, C: ChannelControl> {
     madr: A,
@@ -101,15 +103,17 @@ pub struct Channel<A: MemoryAddress, B: BlockControl, C: ChannelControl> {
 /// The DMA channel for GPU transfers
 pub type GPU = Channel<gpu::Address, gpu::Block, gpu::Control>;
 /// The DMA channel for transfers from RAM to the Macroblock decoder
-pub struct MDECIn(Channel<mdec_in::Address, mdec_in::Block, mdec_in::Control>);
+pub type MDECIn = Channel<mdec_in::Address, mdec_in::Block, mdec_in::Control>;
 /// The DMA channel for transfers from the Macroblock decoder to RAM
-pub struct MDECOut(Channel<mdec_out::Address, mdec_out::Block, mdec_out::Control>);
+pub type MDECOut = Channel<mdec_out::Address, mdec_out::Block, mdec_out::Control>;
 /// The DMA channel for CD-ROM transfers
-pub struct CDROM(Channel<cdrom::Address, cdrom::Block, cdrom::Control>);
+pub type CDROM = Channel<cdrom::Address, cdrom::Block, cdrom::Control>;
 /// The DMA channel for SPU transfers
-pub struct SPU(Channel<spu::Address, spu::Block, spu::Control>);
+pub type SPU = Channel<spu::Address, spu::Block, spu::Control>;
 /// The DMA channel for PIO transfers
-pub struct PIO(Channel<pio::Address, pio::Block, pio::Control>);
+pub type PIO = Channel<pio::Address, pio::Block, pio::Control>;
+/// The DMA channel for clearing ordering tables in memory
+pub type OTC = Channel<otc::Address, otc::Block, otc::Control>;
 
 impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
     /// Creates a handle to a DMA channel, initializing the channel if

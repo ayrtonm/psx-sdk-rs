@@ -73,7 +73,7 @@ pub mod runtime;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
-pub mod tim;
+mod tim;
 
 /// Re-exported constants in a module for easy glob importing.
 pub mod constants {
@@ -130,5 +130,5 @@ fn on_oom(layout: core::alloc::Layout) -> ! {
     panic!("Ran out of memory {:?}", layout);
 }
 
-pub use framebuffer::Framebuffer;
-pub use tim::TIM;
+pub use framebuffer::{Framebuffer, LoadedTIM};
+pub use tim::{Bitmap, TIMError, TIM};

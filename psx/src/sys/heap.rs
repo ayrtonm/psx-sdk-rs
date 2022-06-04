@@ -32,9 +32,9 @@ unsafe impl GlobalAlloc for BiosAllocator {
 /// use psx::constants::*;
 ///
 /// // SAFETY: This is safe since we are not using the data cache for anything else.
-/// sys_heap!(unsafe {
-///     slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN)
-/// })
+/// sys_heap! {
+///     unsafe { slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN) }
+/// }
 /// ```
 #[macro_export]
 macro_rules! sys_heap {

@@ -66,7 +66,7 @@ impl<T> Packet<T> {
     }
 
     /// Gets a reference to the [`Packet`] header.
-    fn header_address(&self) -> &u32 {
+    pub fn header_address(&self) -> &u32 {
         let ptr = self.next.0.as_ptr() as *const u32;
         // TODO: The first word should be a union or u32 to avoid UB
         unsafe { ptr.as_ref().unwrap() }
@@ -81,10 +81,12 @@ impl<T> Packet<T> {
     /// Inserts `other` between `self` and the following packet.
     ///
     /// before: `self` -> `next`
+    ///
     /// after: `self` -> `other` -> `next`
     ///
     /// Note that `self` may be the last [`Packet`] in which case `next` does
-    /// not exist. Returns the `PhysAddr` `other` previously pointed to, if any.
+    /// not exist. Returns the [`PhysAddr`] `other` previously pointed to, if
+    /// any.
     pub fn insert_packet<U>(&mut self, other: &mut Packet<U>) -> Option<PhysAddr> {
         // FIXME: This is a complete hack since black_box should not be relied on for
         // correctness.
@@ -102,10 +104,13 @@ impl<T> Packet<T> {
     /// Inserts `other` between `self` and the following packet.
     ///
     /// before: `self` -> `next`
+    ///
     /// after: `self` -> `other.first` -> ... -> `other.last` -> `next`
     ///
     /// Note that `self` may be the last [`Packet`] in which case `next` does
-    /// not exist. Returns the `PhysAddr` `other` previously pointed to, if any.
+    /// not exist. Also, this doesn't change any `Packet`s in `other` except for
+    /// the last one. Returns the [`PhysAddr`] `other.last` previously pointed
+    /// to, if any.
     pub fn insert_list<U>(&mut self, other: &mut [Packet<U>]) -> Option<PhysAddr> {
         // FIXME: This is a complete hack since black_box should not be relied on for
         // correctness.
