@@ -1,15 +1,14 @@
-use crate::dma;
 use crate::gpu::colors::WHITE;
 use crate::gpu::primitives::Sprt8;
 use crate::gpu::{Clut, Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, TexColor, TexCoord,
                  TexPage, Vertex, VertexError, VideoMode, GPU_BUFFER_SIZE};
-use crate::hw::gpu;
 use crate::hw::gpu::{GP0Command, GP0, GP1};
-use crate::hw::Register;
+use crate::hw::{gpu, irq, Register};
+use crate::irq::IRQ;
 use crate::tim::TIM;
+use crate::{dma, include_words};
 use core::fmt;
 use core::mem::size_of;
-use core::slice;
 
 fn draw_sync() {
     let mut gpu_stat = gpu::Status::new();
@@ -29,6 +28,10 @@ pub struct Framebuffer {
     pub gp1: GP1,
     /// The read-only GPU status register
     pub gpu_status: gpu::Status,
+    /// The IRQ status register
+    pub irq_mask: irq::Mask,
+    /// The IRQ mask register
+    pub irq_status: irq::Status,
     disp_envs: [DispEnv; 2],
     draw_envs: [Packet<DrawEnv>; 2],
     swapped: bool,
@@ -52,9 +55,13 @@ impl Framebuffer {
         buf0: (i16, i16), buf1: (i16, i16), res: (i16, i16), bg_color: Option<Color>,
     ) -> Result<Self, VertexError> {
         let mut fb = Framebuffer {
+            // These registers are read-only
             gp0: GP0::skip_load(),
             gp1: GP1::skip_load(),
             gpu_status: gpu::Status::new(),
+            // wait_vblank will reload this anyway
+            irq_status: irq::Status::skip_load(),
+            irq_mask: irq::Mask::new(),
             disp_envs: [DispEnv::new(buf0, res)?, DispEnv::new(buf1, res)?],
             draw_envs: [
                 Packet::new(DrawEnv::new(buf1, res, bg_color)?),
@@ -67,6 +74,8 @@ impl Framebuffer {
             .dma_mode(Some(DMAMode::GP0))
             .display_mode(res, VideoMode::NTSC, Depth::Bits15, false)?
             .enable_display(true);
+        fb.irq_mask.enable_irq(IRQ::Vblank).store();
+        fb.wait_vblank();
         fb.swap();
         Ok(fb)
     }
@@ -95,6 +104,9 @@ impl Framebuffer {
     }
 
     /// Loads a `TIM` file into VRAM.
+    ///
+    /// After loading a TIM into VRAM, the copy in memory isn't necessary so the
+    /// lifetimes of the `TIM` and `LoadedTIM` are completely disconnected.
     pub fn load_tim(&mut self, tim: TIM) -> LoadedTIM {
         // Used to avoid implementing GP0Command for any &[u32]
         // TIM::new ensures that the bitmap data is a valid GP0 command
@@ -106,16 +118,14 @@ impl Framebuffer {
             }
         }
 
+        self.draw_sync();
         self.gp0.send_command(&CopyToVRAM(tim.bmp.data));
         if let Some(clut) = &tim.clut_bmp {
+            self.draw_sync();
             self.gp0.send_command(&CopyToVRAM(clut.data));
         };
 
-        // Can't use `Option::map` with the question mark operator
-        let clut = match &tim.clut_bmp {
-            Some(clut) => Some(clut.offset),
-            None => None,
-        };
+        let clut = tim.clut_bmp.map(|clut| clut.offset);
         LoadedTIM {
             tex_page: tim.bmp.offset,
             clut,
@@ -129,15 +139,10 @@ impl Framebuffer {
     /// lifetimes so it's the user's responsibility to ensure that the font
     /// remains in VRAM while it's needed.
     pub fn load_default_font(&mut self) -> LoadedTIM {
-        // TODO: Make a better API for including a file as a [u32; N] since TIM takes
-        // &mut [u32] and this creates a [u8; N]. Currently it's not exactly safe
-        let mut tim = *include_bytes!("../font.tim");
-        // SAFETY: This currently isn't always safe
-        let tim_data = unsafe {
-            slice::from_raw_parts_mut(tim.as_mut_ptr().cast(), tim.len() / size_of::<u32>())
-        };
+        let tim = include_words!("../font.tim");
+
         // SAFETY: The default font TIM contains valid data.
-        let font = unsafe { TIM::new(tim_data).unwrap_unchecked() };
+        let font = unsafe { TIM::new(tim).unwrap_unchecked() };
         self.load_tim(font)
     }
 
@@ -148,6 +153,15 @@ impl Framebuffer {
             self.gpu_status.load();
         }
     }
+
+    /// Spins until vblank.
+    pub fn wait_vblank(&mut self) {
+        self.irq_status
+            .load()
+            .ack(IRQ::Vblank)
+            .store()
+            .wait(IRQ::Vblank);
+    }
 }
 
 impl fmt::Write for TextBox {
@@ -156,6 +170,7 @@ impl fmt::Write for TextBox {
             if c.is_ascii() {
                 self.print_char(c as u8);
             } else {
+                // Print '?' for non-ascii UTF-8
                 self.print_char(b'?');
             }
         }
@@ -240,7 +255,13 @@ impl TextBox {
             self.cursor.0 = self.initial.0;
         } else {
             let ascii_per_row = 128 / FONT_SIZE;
-            let ascii = ascii - (2 * ascii_per_row);
+            // The default font omits the first 32 characters to save on VRAM. These
+            // characters are printed as '?'
+            let ascii = if ascii < (2 * ascii_per_row) {
+                b'?'
+            } else {
+                ascii - (2 * ascii_per_row)
+            };
             let x = (ascii % ascii_per_row) * FONT_SIZE;
             let y = (ascii / ascii_per_row) * FONT_SIZE;
             if self.idx == 0 {

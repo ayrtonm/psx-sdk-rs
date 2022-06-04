@@ -16,7 +16,7 @@ use psx::{Framebuffer, TIM};
 fn main() {
     let mut fb = Framebuffer::default();
     let mut ferris = include_words!("../ferris.tim");
-    let ferris = fb.load_tim(TIM::new(&mut ferris).expect("The TIM file is invalid"));
+    let ferris = fb.load_tim(TIM::new(ferris).expect("The TIM file is invalid"));
 
     let mut cube = [PolyFT4::new(); 6];
     for face in &mut cube {
@@ -77,8 +77,8 @@ fn main() {
         fb.gp0.send_command(&cube[4]);
         fb.gp0.send_command(&cube[5]);
         fb.draw_sync();
+        fb.wait_vblank();
         fb.swap();
-        delay(20000);
     }
 }
 

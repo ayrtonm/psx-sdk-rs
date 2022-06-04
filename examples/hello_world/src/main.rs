@@ -13,6 +13,8 @@ fn main() {
     let font = fb.load_default_font();
     let mut txt = font.new_text_box(txt_offset, res);
     dprintln!(txt, "Hello, world!");
+    fb.draw_sync();
+    fb.wait_vblank();
     fb.swap();
     loop {}
 }
