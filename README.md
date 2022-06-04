@@ -1,5 +1,9 @@
 # psx-sdk-rs
 
+<p align="center">
+    <img width="320" height="240" src="demo.gif">
+</p>
+
 This is a basic SDK to run custom Rust code on a PlayStation 1. You'll need to
 build the rust compiler from source. Building the compiler is computationally
 expensive, so it may take quite a bit of time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
