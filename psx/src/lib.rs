@@ -89,6 +89,7 @@ pub mod constants {
     pub const BIOS_LEN: usize = 64 * KB;
     pub use crate::gpu::colors::*;
     pub use crate::gpu::VideoMode::*;
+    pub use crate::sys::gamepad::buttons::*;
 }
 
 /// Interrupt request types

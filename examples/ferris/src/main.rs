@@ -2,6 +2,8 @@
 #![no_main]
 #![feature(const_fn_floating_point_arithmetic)]
 
+use core::mem::MaybeUninit;
+use psx::sys::gamepad::Gamepad;
 use libm::{cosf, sinf};
 use psx::constants::*;
 use psx::gpu::primitives::PolyFT4;
@@ -41,10 +43,22 @@ fn main() {
     let mut phi = 0.0;
     let mut psi = 0.0;
 
+    let mut buf = MaybeUninit::uninit();
+    let mut pad = Gamepad::new(&mut buf);
+
     loop {
         theta += 0.1;
         phi += 0.1;
         psi += 0.1;
+        for b in pad.poll_p1() {
+            match b {
+                TRIANGLE => theta += 0.5,
+                CROSS => theta -= 0.5,
+                SQUARE => phi += 0.2,
+                CIRCLE => phi -= 0.2,
+                _ => (),
+            }
+        }
         // We want loadable executables to be able to return at some point
         if theta > 10.0 {
             return

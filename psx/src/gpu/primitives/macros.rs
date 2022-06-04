@@ -161,7 +161,9 @@ macro_rules! gouraud_fn {
 
         /// Sets the textured primitive's color.
         pub fn set_colors<T>(&mut self, colors: [T; 3]) -> &mut Self
-        where TexColor: From<T> , T: Copy {
+        where
+            TexColor: From<T>,
+            T: Copy, {
             self.color0 = TexColor::from(colors[0]);
             self.color1 = TexColor::from(colors[1]);
             self.color2 = TexColor::from(colors[2]);
@@ -186,7 +188,9 @@ macro_rules! gouraud_fn {
 
         /// Sets the textured primitive's color.
         pub fn set_colors<T>(&mut self, colors: [T; 4]) -> &mut Self
-        where TexColor: From<T> , T: Copy {
+        where
+            TexColor: From<T>,
+            T: Copy, {
             self.color0 = TexColor::from(colors[0]);
             self.color1 = TexColor::from(colors[1]);
             self.color2 = TexColor::from(colors[2]);
