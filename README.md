@@ -143,7 +143,7 @@ DuckStation works and is extremely useful for debugging, but it doesn't work
 with `cargo psx run`. The issue is that the command passes the runner a relative
 path to the executable, but DuckStation only accepts absolute paths on the
 command line. To use DuckStation, build with `cargo psx build` then open the
-executable manually.
+executable manually. To run an ISO use `duckstation-qt -fastboot /full/path/to/$ISO_FILENAME`.
 
 ## Program template
 

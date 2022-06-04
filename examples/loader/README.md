@@ -1,6 +1,8 @@
+# Build instructions
+
 ```
-# This demo's build.rs builds the ferris demo
+# This demo's build.rs builds the ferris demo as well
 cargo psx build
 mkpsxiso mkpsxiso.xml
-pcsx-redux -stdout -run -iso loader.bin
+duckstation-qt -fastboot `realpath loader.bin`
 ```
