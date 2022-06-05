@@ -12,9 +12,11 @@ fn main() {
     let mut fb = Framebuffer::new(buf0, buf1, res, None).unwrap();
     let font = fb.load_default_font();
     let mut txt = font.new_text_box(txt_offset, res);
-    dprintln!(txt, "Hello, world!");
-    fb.draw_sync();
-    fb.wait_vblank();
-    fb.swap();
-    loop {}
+    loop {
+        txt.reset();
+        dprintln!(txt, "Hello, world!");
+        fb.draw_sync();
+        fb.wait_vblank();
+        fb.swap();
+    }
 }

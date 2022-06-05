@@ -1,12 +1,14 @@
 [package]
 name = "psx"
 version = "0.1.5"
-description = "Library for developing homebrew for the Sony PS1"
+description = "Library for developing homebrew for the Sony PlayStation 1"
 readme = "../README.md"
 repository = "https://github.com/ayrtonm/psx-sdk-rs"
 license = "MIT"
 authors = ["Ayrton Muñoz <a.munoz3327@gmail.com>"]
 edition = "2021"
+keywords = ["playstation", "homebrew", "no_std"]
+categories = ["embedded", "game-development", "no-std"]
 
 [package.metadata.docs.rs]
 targets = ["mipsel-unknown-linux-gnu"]

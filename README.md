@@ -16,7 +16,7 @@ for building the rust compiler for more specifics.
     ```
     git clone https://github.com/rust-lang/rust.git
     cd rust
-    git checkout 4c5f6e6277b89e47d73a192078697f7a5f3dc0ac
+    git checkout 3a8e71385940c2f02ec4b23876c0a36fd09bdefe
     ```
 
 2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:

@@ -1,8 +1,10 @@
 #![allow(missing_docs)]
 // No need for doc comments for each color.
 
+// FIXME: This module's API is a complete mess
+
 use crate::gpu::{Color, TexColor};
-use core::ops::{AddAssign, Div, DivAssign};
+use core::ops::{Add, AddAssign, Div, DivAssign, Sub};
 
 // This is the max value for untextured graphics. Colors for textured graphics
 // should be scaled down to a max of 0x80.
@@ -30,6 +32,18 @@ impl From<Color> for u32 {
     }
 }
 
+impl Sub<Color> for Color {
+    type Output = Color;
+    fn sub(self, other: Color) -> Color {
+        self.difference(other)
+    }
+}
+impl Add<Color> for Color {
+    type Output = Color;
+    fn add(self, other: Color) -> Color {
+        self.sum(other)
+    }
+}
 impl AddAssign<Color> for Color {
     fn add_assign(&mut self, other: Color) {
         *self = self.sum(other);
@@ -79,6 +93,15 @@ impl Color {
             self.red + other.red,
             self.green + other.green,
             self.blue + other.blue,
+        )
+    }
+
+    /// Subtracts two `Color`s.
+    pub const fn difference(&self, other: Self) -> Self {
+        Color::new(
+            self.red - other.red,
+            self.green - other.green,
+            self.blue - other.blue,
         )
     }
 

@@ -1,15 +1,15 @@
 #![no_std]
 #![no_main]
-#![feature(inline_const)]
+#![feature(inline_const, array_zip)]
 
 // TODO: Change this demo from floating point to 16-bit fixed point
 
 mod cube;
-use cube::{Cube, Plane};
+use cube::{Cube, Plane, Point};
 use psx::constants::*;
 use psx::dma;
 use psx::gpu::primitives::PolyGT4;
-use psx::gpu::{link_list, Packet, TexCoord, Vertex};
+use psx::gpu::{link_list, Color, Packet, TexCoord, Vertex};
 use psx::include_words;
 use psx::sys::gamepad::Gamepad;
 use psx::{Framebuffer, TIM};
@@ -63,30 +63,17 @@ fn main() {
     let mut swapped = false;
 
     // Initialize fixed properties of the `PolyGT4`s
-    let colors = [MINT, VIOLET, INDIGO, ORANGE, AQUA, LIME];
     for n in 0..6 {
         // We can access the `Packet` contents (i.e. the `PolyGT4`) through the
         // `contents` field then use methods specific to `PolyGT4` to set its
         // properties.
         polygon_a[n]
             .contents
-            .set_colors([
-                colors[n],
-                colors[(n + 1) % 6],
-                colors[(n + 2) % 6],
-                colors[(n + 3) % 6],
-            ])
             .set_tex_page(ferris.tex_page)
             .set_clut(ferris.clut.unwrap()) // This panics if ferris.tim doesn't have a CLUT
             .set_tex_coords([(0, 0), (0, 85), (128, 0), (128, 85)].map(|(x, y)| TexCoord { x, y }));
         polygon_b[n]
             .contents
-            .set_colors([
-                colors[n],
-                colors[(n + 1) % 6],
-                colors[(n + 2) % 6],
-                colors[(n + 3) % 6],
-            ])
             .set_tex_page(ferris.tex_page)
             .set_clut(ferris.clut.unwrap()) // This panics if ferris.tim doesn't have a CLUT
             .set_tex_coords([(0, 0), (0, 85), (128, 0), (128, 85)].map(|(x, y)| TexCoord { x, y }));
@@ -106,6 +93,7 @@ fn main() {
     let mut pad = Gamepad::new();
 
     let mut iterations = 0;
+    let mut overlay_color = BLACK;
 
     loop {
         theta += dtheta;
@@ -146,9 +134,19 @@ fn main() {
         };
         // Start sending one set of polygons
         dma_gpu.send_list_and(display_cube, || {
-            // After the transfer starts, compute the positions of the other set of polygons
-            let mut new_cube = cube.faces.map(|plane| plane.rx(theta).ry(phi));
-            new_cube.sort_by_key(|plane| {
+            // After the transfer starts, compute the positions and colors of the other set
+            // of polygons
+
+            // First get the new colors of each polygon. This computes more than necessary
+            // since it checks each point's color four times, but that's fine...
+            let colors = cube
+                .clone()
+                .faces
+                .map(|plane| plane.points.map(point_color));
+            // Then rotate the unit cube to get the new positions and zip this with the
+            // colors
+            let mut new_cube = cube.faces.map(|plane| plane.rx(theta).ry(phi)).zip(colors);
+            new_cube.sort_by_key(|(plane, _)| {
                 let mut res = 0.;
                 for p in plane.points {
                     res += p.z * 10.;
@@ -157,12 +155,13 @@ fn main() {
             });
 
             // Update the vertices of the polygons not being displayed
+            overlay_color += ORANGE / 32;
             for n in 0..6 {
-                let new_vertices = project_plane(new_cube[n]);
-                draw_cube[n].contents.set_vertices(new_vertices);
-                for c in draw_cube[n].contents.get_colors_mut() {
-                    *c += ORANGE / 16;
-                }
+                let new_vertices = project_plane(new_cube[n].0);
+                draw_cube[n]
+                    .contents
+                    .set_vertices(new_vertices)
+                    .set_colors(new_cube[n].1.map(|c| c + overlay_color));
             }
         });
         fb.draw_sync();
@@ -179,4 +178,18 @@ fn project_plane(face: Plane) -> [Vertex; 4] {
 
         Vertex(x as i16, y as i16) + Vertex(160, 120)
     })
+}
+
+fn point_color(point: Point) -> Color {
+    let p = point + (Point::x() + Point::y() + Point::z()) / 2.;
+    match (p.x as i16, p.y as i16, p.z as i16) {
+        (0, 0, 0) => MINT,
+        (1, 0, 0) => VIOLET,
+        (0, 1, 0) => INDIGO,
+        (0, 0, 1) => ORANGE,
+        (1, 1, 0) => AQUA,
+        (0, 1, 1) => LIME,
+        (1, 0, 1) => YELLOW,
+        _ => PINK,
+    }
 }

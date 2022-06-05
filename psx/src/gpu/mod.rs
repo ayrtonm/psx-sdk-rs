@@ -1,7 +1,6 @@
 //! GPU types
 use crate::hw::gpu::GP0Command;
 
-// FIXME: This module's API is a complete mess
 /// Predefined colors
 pub mod colors;
 mod packet;
