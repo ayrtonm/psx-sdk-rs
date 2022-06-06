@@ -164,7 +164,7 @@ fn main() {
     if !target_json.exists() {
         let mut file = File::create(&target_json)
             .expect("Could not create target JSON in the crate's target directory");
-        file.write(include_str!("../../mipsel-sony-psx.json").as_ref())
+        file.write(include_str!("../mipsel-sony-psx.json").as_ref())
             .expect("Could not write target JSON");
     }
 

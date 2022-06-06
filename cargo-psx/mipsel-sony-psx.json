@@ -1,0 +1,26 @@
+{
+  "arch": "mips",
+  "cpu": "mips1",
+  "data-layout": "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64",
+  "env": "psx",
+  "exe-suffix": ".exe",
+  "executables": true,
+  "features": "+soft-float",
+  "linker": "rust-lld",
+  "linker-flavor": "ld.lld",
+  "llvm-abiname": "o32",
+  "llvm-args": [
+    "-mno-check-zero-division"
+  ],
+  "llvm-target": "mipsel-sony-psx",
+  "max-atomic-width": 0,
+  "panic-strategy": "abort",
+  "pre-link-args": {
+    "ld.lld": [
+      "--oformat=binary"
+    ]
+  },
+  "relocation-model": "static",
+  "target-pointer-width": "32",
+  "vendor": "sony"
+}
