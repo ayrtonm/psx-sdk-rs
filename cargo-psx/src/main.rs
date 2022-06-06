@@ -1,7 +1,7 @@
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
 use std::env;
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::io::Write;
 use std::process::{self, Command, Stdio};
 use std::str::FromStr;
@@ -81,6 +81,9 @@ struct Opt {
 
     #[clap(long)]
     cargo_args: Vec<String>,
+
+    #[clap(long, help = "Use an alternate target JSON")]
+    json: Option<String>,
 }
 
 fn main() {
@@ -159,14 +162,18 @@ fn main() {
         .exec()
         .expect("Could not parse metadata");
 
-    let mut target_json = metadata.target_directory.clone();
-    target_json.push("mipsel-sony-psx.json");
-    if !target_json.exists() {
-        let mut file = File::create(&target_json)
-            .expect("Could not create target JSON in the crate's target directory");
-        file.write(include_str!("../mipsel-sony-psx.json").as_ref())
-            .expect("Could not write target JSON");
-    }
+    let target_json = opt.json.unwrap_or_else(|| {
+        let mut target_json = metadata.target_directory.clone();
+        target_json.push("mipsel-sony-psx.json");
+        if !target_json.exists() {
+            create_dir_all(&metadata.target_directory).expect("Unable to create target directory");
+            let mut file = File::create(&target_json)
+                .expect("Could not create target JSON in the crate's target directory");
+            file.write(include_str!("../mipsel-sony-psx.json").as_ref())
+                .expect("Could not write target JSON");
+        }
+        target_json.to_string()
+    });
 
     const CARGO_CMD: &str = "cargo";
     if opt.clean {
