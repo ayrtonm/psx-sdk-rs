@@ -31,7 +31,7 @@ index 00000000000..464bc2131aa
 +            // for atomic loads and stores. This crashes rustc so we have to disable the Atomic* API
 +            // until this is fixed upstream. See https://reviews.llvm.org/D122427#3420144 for more
 +            // info.
-+            max_atomic_width: Some(0),
++            max_atomic_width: Some(16),
 +
 +            // PSX does not support trap-on-condition instructions.
 +            llvm_args: cvs!["-mno-check-zero-division"],

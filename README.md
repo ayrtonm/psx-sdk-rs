@@ -4,77 +4,25 @@
     <img width="320" height="240" src="demo.gif">
 </p>
 
-This is a basic SDK to run custom Rust code on a PlayStation 1. You'll need to
-build the rust compiler from source. Building the compiler is computationally
-expensive, so it may take quite a bit of time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
-for building the rust compiler for more specifics.
+This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
+Rust nightly version equal to or later than `2022-06-03`. Use
+[`rustup`](https://www.rust-lang.org/) to install as follows.
 
-## Building the compiler
-
-1. Clone the rust source and checkout this specific commit:
-
-    ```
-    git clone https://github.com/rust-lang/rust.git
-    cd rust
-    git checkout 3a8e71385940c2f02ec4b23876c0a36fd09bdefe
-    ```
-
-2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:
-
-    ```
-    cp config.toml.example config.toml
-    # Set lld to true
-    sed -i 's/#lld = false/lld = true/' config.toml
-    # Only build the MIPS and X86 targets
-    sed -i 's/#targets.*$/targets = "Mips;X86"/' config.toml
-    # Don't build any experimental targets
-    sed -i 's/#experimental-targets.*$/experimental-targets = ""/' config.toml
-    ```
-
-3. Optionally patch LLVM to enable the `nightlier` feature. To use this feature set `max_atomic_width: Some(0),` to `Some(16)` in `patches/rustc_psx.patch` before applying it.
-
-    ```
-    git submodule update --init --progress src/llvm-project
-    cd src/llvm-project
-    git apply /path/to/patches/llvm_atomic_fence.patch
-    ```
-
-
-4. Patch the rust compiler. Applying this patch to a different commit may require manual intervention:
-
-    ```
-    git apply /path/to/patches/rustc_psx.patch
-    ```
-
-
-5. Build the rust compiler:
-
-    ```
-    # For the initial build
-    ./x.py build -i library/std
-    # To rebuild
-    ./x.py build -i library/std --keep-stage 1
-    ```
-
-6. Create a new toolchain with the patched compiler:
-
-    ```
-    rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1
-    ```
-
-    where `psx` is the name for the new toolchain.
+```
+rustup update nightly
+```
 
 ## Installing cargo-psx
 
 `cargo-psx` is an optional wrapper for cargo that sets some commonly required
-flags and arguments. Basically this lets you just run `cargo psx run` instead of
+flags and arguments and copies the target JSON to the crate's target directory. Basically this lets you just run `cargo psx run` instead of
 
 ```
-RUSTFLAGS="-Ccodegen-units=1 -Crelocation-model=static     \
+RUSTFLAGS="-Ccodegen-units=1                               \
     -Clink-arg=-Tpsexe.ld -Clink-arg=--oformat=binary"     \
     cargo run +psx -Zbuild-std=core                        \
     -Zbuild-std-features=compiler-builtins-mem             \
-    --target mipsel-sony-psx
+    --target /path/to/mipsel-sony-psx.json
 ```
 
 which has the minimum number of flags required to create and run an exe.
@@ -159,7 +107,8 @@ Then replace `src/main.rs` with the following template
 #![no_std]
 #![no_main]
 
-// This can be any import from the `psx` crate, but there must be at least one.
+// This can be any import from the `psx` crate
+// but there must be at least one.
 use psx;
 
 #[no_mangle]
