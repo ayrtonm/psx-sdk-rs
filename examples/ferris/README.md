@@ -1,4 +1,4 @@
 # Build instructions
 ```
-cargo psx run --alloc
+cargo psx run --alloc --lto
 ```

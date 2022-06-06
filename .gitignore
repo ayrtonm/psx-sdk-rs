@@ -18,7 +18,6 @@ psx/*.zip
 compress/*.tim
 target/
 compress/
-*.json
 *.mp4
 *old*/
 *bkp*/

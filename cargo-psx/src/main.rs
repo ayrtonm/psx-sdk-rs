@@ -1,6 +1,8 @@
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use std::process::{self, Command, Stdio};
 use std::str::FromStr;
 
@@ -46,7 +48,7 @@ struct Opt {
     #[clap(name = "build|check|run|test", parse(try_from_str))]
     cargo_subcmd: Option<CargoCommand>,
 
-    #[clap(long, help = "Sets the rustup toolchain (defaults to `psx`)")]
+    #[clap(long, help = "Sets the rustup toolchain (defaults to `nightly`)")]
     toolchain: Option<String>,
     #[clap(long, help = "Sets the game region to NA, EU or J")]
     region: Option<String>,
@@ -108,7 +110,7 @@ fn main() {
     // Set toolchain if not default
     let toolchain = match opt.toolchain {
         Some(name) => format!("+{}", name),
-        None => "+psx".to_string(),
+        None => "+nightly".to_string(),
     };
 
     // Set build-std option to pass to cargo
@@ -124,15 +126,15 @@ fn main() {
     // burden of always doing LTO. This default is overriden when setting RUSTFLAGS
     // through an env var, but the performance of builds without this flag is
     // extremely unpredictable.
-    let default_rustflags = "-Ccodegen-units=1 -Crelocation-model=static".to_string();
+    let default_rustflags = "-Ccodegen-units=1".to_string();
     // Try getting RUSTFLAGS from env
     let mut rustflags = env::var("RUSTFLAGS").ok().unwrap_or(default_rustflags);
 
     // Set linker script if any
     let script = opt.link.unwrap_or("psexe.ld".to_string());
     rustflags.push_str(&format!(" -Clink-arg=-T{}", script));
-    if !opt.debug && !opt.elf {
-        rustflags.push_str(" -Clink-arg=--oformat=binary");
+    if opt.debug || opt.elf {
+        rustflags.push_str(" -Clink-arg=--oformat=elf32");
     }
 
     // Set optional RUSTFLAGS
@@ -156,6 +158,15 @@ fn main() {
     let metadata = &MetadataCommand::new()
         .exec()
         .expect("Could not parse metadata");
+
+    let mut target_json = metadata.target_directory.clone();
+    target_json.push("mipsel-sony-psx.json");
+    if !target_json.exists() {
+        let mut file = File::create(&target_json)
+            .expect("Could not create target JSON in the crate's target directory");
+        file.write(include_str!("../../mipsel-sony-psx.json").as_ref())
+            .expect("Could not write target JSON");
+    }
 
     const CARGO_CMD: &str = "cargo";
     if opt.clean {
@@ -185,7 +196,7 @@ fn main() {
             .arg(build_std)
             .arg("-Zbuild-std-features=compiler-builtins-mem")
             .arg("--target")
-            .arg("mipsel-sony-psx")
+            .arg(target_json)
             .args(cargo_args)
             .env("RUSTFLAGS", rustflags);
         if let Some(offset) = opt.load_offset {
