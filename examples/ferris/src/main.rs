@@ -15,15 +15,11 @@ use psx::sys::gamepad::Gamepad;
 use psx::{Framebuffer, TIM};
 
 // We don't really need a heap for this demo, but the `sort_by_key` function is
-// not available unless we have one (even if it doesn't use it). It seems that
-// allocations never happen since the slice we're sorting is small so we can
-// safely specify the BIOS malloc/free to avoid pulling in needless
-// dependencies.
-psx::sys_heap! {
-    unsafe {
-        core::slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN)
-    }
-}
+// in the `alloc` crate so it's unavailable unless we have a heap (even if it
+// never uses it). It seems that allocations never happen since the slice we're
+// sorting is small so we can safely specify the BIOS malloc/free to avoid
+// pulling in needless dependencies.
+psx::sys_heap!(0 bytes);
 
 #[no_mangle]
 fn main() {

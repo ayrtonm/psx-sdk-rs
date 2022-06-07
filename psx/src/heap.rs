@@ -34,22 +34,64 @@ unsafe impl GlobalAlloc for Heap {
     }
 }
 
-/// Defines a region of memory specified by a mutable slice as a heap managed by [`linked_list_allocator`](https://crates.io/crates/linked_list_allocator).
+/// Defines a region of memory as a heap managed by [`linked_list_allocator`](https://crates.io/crates/linked_list_allocator).
 ///
-/// The specified heap will be used by `Box`, `Vector`, `String` and all the other containers in [`alloc`](https://doc.rust-lang.org/alloc/). To use an another allocator implement the [`GlobalAlloc`][core::alloc::GlobalAlloc] trait. For a dependency-free allocator see [`sys_heap`].
+/// There may only be one heap per executable and it may be specified in bytes (rounded up to 4), KB or MB. The specified heap will be used by `Box`, `Vector`, `String` and all the other containers in [`alloc`](https://doc.rust-lang.org/alloc/). To use an another allocator implement the [`GlobalAlloc`][core::alloc::GlobalAlloc] trait. Enable this crate's [`heap` feature][`crate`] and build with `cargo-psx`'s `--alloc` flag to use this macro. For a dependency-free allocator see [`sys_heap!`][`crate::sys_heap!`].
+///
+/// Note that this macro places the heap in the .bss section of the executable
+/// so it doesn't take up space, but may slow down executable loaders that make
+/// sure to zero out .bss. For more fine-grained control over the heap's
+/// placement use [`core::slice::from_raw_parts_mut`] as shown below.
+///
 /// # Usage
 /// ```
-/// use core::slice;
 /// use psx::heap;
-/// use psx::constants::*;
 ///
-/// // SAFETY: This is safe since we are not using the data cache for anything else.
-/// heap! {
-///     unsafe { slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN) }
-/// }
+/// // heap!(256 bytes);
+/// heap!(128 KB);
+/// // heap!(1 MB);
+///
+/// // use psx::constants::*;
+/// // heap! {
+/// //   SAFETY: This is safe if nothing else has access to the data cache
+/// //   unsafe { core::slice::from_raw_parts_mut(DATA_CACHE, DATA_CACHE_LEN)
+/// // }
 /// ```
 #[macro_export]
 macro_rules! heap {
+    ($n:tt bytes) => {
+        $crate::heap! {
+            {
+                const HEAP_SIZE: usize = ($n + 3) / core::mem::size_of::<u32>();
+                static mut HEAP: [u32; HEAP_SIZE] = [0; HEAP_SIZE];
+                // SAFETY: This is safe because nothing else in this executable can access
+                // `HEAP`
+                unsafe { &mut HEAP }
+            }
+        }
+    };
+    ($n:tt KB) => {
+        $crate::heap! {
+            {
+                const HEAP_SIZE: usize = $n * 1024 / core::mem::size_of::<u32>();
+                static mut HEAP: [u32; HEAP_SIZE] = [0; HEAP_SIZE];
+                // SAFETY: This is safe because nothing else in this executable can access
+                // `HEAP`
+                unsafe { &mut HEAP }
+            }
+        }
+    };
+    ($n:tt MB) => {
+        $crate::heap! {
+            {
+                const HEAP_SIZE: usize = $n * 1024 * 1024 / core::mem::size_of::<u32>();
+                static mut HEAP: [u32; HEAP_SIZE] = [0; HEAP_SIZE];
+                // SAFETY: This is safe because nothing else in this executable can access
+                // `HEAP`
+                unsafe { &mut HEAP }
+            }
+        }
+    };
     ($mut_slice:expr) => {
         extern crate alloc;
 
