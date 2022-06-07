@@ -6,10 +6,11 @@
 
 This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
 Rust nightly version equal to or later than `2022-06-03`. Use
-[`rustup`](https://www.rust-lang.org/) to install as follows.
+[`rustup`](https://www.rust-lang.org/) to install the rust toolchain as follows.
 
 ```
 rustup update nightly
+rustup component add rust-src --toolchain nightly
 ```
 
 ## Installing cargo-psx
