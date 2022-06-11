@@ -1,28 +1,26 @@
-#![allow(dead_code)]
-
 use core::ops::{Add, Div, Sub};
-use libm::{cosf, sinf};
+use psx::trig::{cos, f16, sin};
 
-type Unit = f32;
-const ZERO: Unit = 0.0;
-const ONE: Unit = 1.0;
-const TWO: Unit = 2.0;
+type Unit = f16;
+const ZERO: Unit = f16(0);
+const ONE: Unit = f16(0x1_000);
+const TWO: Unit = f16(0x2_000);
 
 #[derive(Copy, Clone)]
 pub struct Cube {
     pub faces: [Plane; 6],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Plane {
     pub points: [Point; 4],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Point {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub x: Unit,
+    pub y: Unit,
+    pub z: Unit,
 }
 
 impl Point {
@@ -87,17 +85,17 @@ impl Plane {
             ],
         }
     }
-    pub fn rx(&self, theta: f32) -> Self {
+    pub fn rx(&self, theta: Unit) -> Self {
         Plane {
             points: self.points.map(|point| rx(point, theta)),
         }
     }
-    pub fn ry(&self, theta: f32) -> Self {
+    pub fn ry(&self, theta: Unit) -> Self {
         Plane {
             points: self.points.map(|point| ry(point, theta)),
         }
     }
-    pub fn rz(&self, theta: f32) -> Self {
+    pub fn rz(&self, theta: Unit) -> Self {
         Plane {
             points: self.points.map(|point| rz(point, theta)),
         }
@@ -144,9 +142,9 @@ impl Sub<Point> for Point {
     }
 }
 
-impl Div<f32> for Point {
+impl Div<Unit> for Point {
     type Output = Point;
-    fn div(self, other: f32) -> Point {
+    fn div(self, other: Unit) -> Point {
         Point {
             x: self.x / other,
             y: self.y / other,
@@ -171,18 +169,18 @@ impl Cube {
     }
 }
 
-fn rx(p: Point, theta: f32) -> Point {
-    let y = (cosf(theta) * p.y) - (sinf(theta) * p.z);
-    let z = (sinf(theta) * p.y) + (cosf(theta) * p.z);
+fn rx(p: Point, theta: Unit) -> Point {
+    let y = (cos(theta) * p.y) - (sin(theta) * p.z);
+    let z = (sin(theta) * p.y) + (cos(theta) * p.z);
     Point { x: p.x, y, z }
 }
-fn ry(p: Point, theta: f32) -> Point {
-    let x = (cosf(theta) * p.x) + (sinf(theta) * p.z);
-    let z = (-sinf(theta) * p.x) + (cosf(theta) * p.z);
+fn ry(p: Point, theta: Unit) -> Point {
+    let x = (cos(theta) * p.x) + (sin(theta) * p.z);
+    let z = (-sin(theta) * p.x) + (cos(theta) * p.z);
     Point { x, y: p.y, z }
 }
-fn rz(p: Point, theta: f32) -> Point {
-    let x = (cosf(theta) * p.x) - (sinf(theta) * p.y);
-    let y = (sinf(theta) * p.x) + (cosf(theta) * p.y);
+fn rz(p: Point, theta: Unit) -> Point {
+    let x = (cos(theta) * p.x) - (sin(theta) * p.y);
+    let y = (sin(theta) * p.x) + (cos(theta) * p.y);
     Point { x, y, z: p.z }
 }

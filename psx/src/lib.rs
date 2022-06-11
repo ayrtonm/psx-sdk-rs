@@ -74,6 +74,7 @@ pub mod runtime;
 pub mod std;
 pub mod sys;
 mod tim;
+pub mod trig;
 
 /// Re-exported constants in a module for easy glob importing.
 pub mod constants {

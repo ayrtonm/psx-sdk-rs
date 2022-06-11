@@ -2,8 +2,6 @@
 #![no_main]
 #![feature(inline_const, array_zip)]
 
-// TODO: Change this demo from floating point to 16-bit fixed point
-
 mod cube;
 use cube::{Cube, Plane, Point};
 use psx::constants::*;
@@ -12,6 +10,9 @@ use psx::gpu::primitives::PolyGT4;
 use psx::gpu::{link_list, Color, Packet, TexCoord, Vertex};
 use psx::include_words;
 use psx::sys::gamepad::Gamepad;
+use psx::trig::f16;
+use psx::trig::FRAC_PI_8;
+use psx::*;
 use psx::{Framebuffer, TIM};
 
 // We don't really need a heap for this demo, but the `sort_by_key` function is
@@ -76,13 +77,14 @@ fn main() {
     }
 
     let cube = Cube::new();
-    let mut theta = 0.0;
-    let mut phi = 0.0;
+    let mut theta = f16(0);
+    let mut phi = f16(0);
 
-    let mut dtheta = 0.0;
-    let mut dphi = 0.0;
+    let mut dtheta = f16(0);
+    let mut dphi = f16(0);
 
-    let friction = 0.1;
+    let vel = FRAC_PI_8 / f16(0x6_000);
+    let friction = vel * f16(0x800);
 
     // Create a buffer for gamepad input. This uses a static buffer that will be
     // managed by the BIOS until `pad` is dropped.
@@ -94,7 +96,7 @@ fn main() {
     loop {
         theta += dtheta;
         phi += dphi;
-        let eps = 0.07;
+        let eps = f16(0x_050);
         if dtheta > eps {
             dtheta -= friction;
         } else if dtheta < -eps {
@@ -109,10 +111,10 @@ fn main() {
         for button in pad.poll_p1() {
             // Check what button was pressed
             match button {
-                CROSS => dtheta += 0.12,
-                TRIANGLE => dtheta -= 0.12,
-                SQUARE => dphi += 0.12,
-                CIRCLE => dphi -= 0.12,
+                CROSS => dtheta += vel,
+                TRIANGLE => dtheta -= vel,
+                SQUARE => dphi += vel,
+                CIRCLE => dphi -= vel,
                 _ => (),
             }
         }
@@ -143,15 +145,15 @@ fn main() {
             // colors
             let mut new_cube = cube.faces.map(|plane| plane.rx(theta).ry(phi)).zip(colors);
             new_cube.sort_by_key(|(plane, _)| {
-                let mut res = 0.;
+                let mut res = 0;
                 for p in plane.points {
-                    res += p.z * 10.;
+                    res += p.z.0 >> 2;
                 }
-                -res as i16
+                -res
             });
 
             // Update the vertices of the polygons not being displayed
-            overlay_color += ORANGE / 32;
+            overlay_color += ORANGE / 64;
             for n in 0..6 {
                 let new_vertices = project_plane(new_cube[n].0);
                 draw_cube[n]
@@ -167,18 +169,18 @@ fn main() {
 }
 
 fn project_plane(face: Plane) -> [Vertex; 4] {
-    let scale = 180.;
+    let scale = 16;
     face.points.map(|p3| {
-        let x = scale * p3.x / (p3.z + 2.);
-        let y = scale * p3.y / (p3.z + 2.);
+        let x = p3.x / (p3.z + f16(0x3_000));
+        let y = p3.y / (p3.z + f16(0x3_000));
 
-        Vertex(x as i16, y as i16) + Vertex(160, 120)
+        Vertex(x.0 / scale, y.0 / scale) + Vertex(160, 120)
     })
 }
 
 fn point_color(point: Point) -> Color {
-    let p = point + (Point::x() + Point::y() + Point::z()) / 2.;
-    match (p.x as i16, p.y as i16, p.z as i16) {
+    let p = point + (Point::x() + Point::y() + Point::z()) / f16(0x2_000);
+    match (p.x.to_int_lossy(), p.y.to_int_lossy(), p.z.to_int_lossy()) {
         (0, 0, 0) => MINT,
         (1, 0, 0) => VIOLET,
         (0, 1, 0) => INDIGO,
