@@ -10,28 +10,38 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAss
 pub struct f16(pub i16);
 
 impl f16 {
+    /// Returns the absolute value of a number.
+    pub const fn abs(self) -> Self {
+        Self(self.0 & 0x3_FFF)
+    }
+
+    /// Converts an `i16` to fixed-point.
+    pub const fn from_int(x: i16) -> Self {
+        Self(x << 12)
+    }
+
     /// Converts to an `i16` keeping only the integral part and sign.
-    pub fn to_int_lossy(self) -> i16 {
+    pub const fn to_int_lossy(self) -> i16 {
         self.0 >> 12
     }
 
     /// Returns the integer part of a number.
-    pub fn trunc(self) -> Self {
+    pub const fn trunc(self) -> Self {
         Self(self.0 & (0xF_000u16 as i16))
     }
 
     /// Returns the fractional part of a number.
-    pub fn fract(self) -> Self {
+    pub const fn fract(self) -> Self {
         Self(self.0 & 0x0_FFF)
     }
 
     /// Raw transmutation to a `u16`.
-    pub fn to_bits(self) -> u16 {
+    pub const fn to_bits(self) -> u16 {
         self.0 as u16
     }
 
     /// Raw transmutation from a `u16`.
-    pub fn from_bits(x: u16) -> Self {
+    pub const fn from_bits(x: u16) -> Self {
         Self(x as i16)
     }
 }
@@ -108,8 +118,8 @@ impl Mul<f16> for f16 {
 impl Div<f16> for f16 {
     type Output = f16;
     fn div(self, other: f16) -> f16 {
-        let num = (self.0 as i32) << 6;
-        let den = (other.0 as i32) >> 6;
+        let num = (self.0 as i32) << 12;
+        let den = other.0 as i32;
         if den == 0 {
             return f16(0x7_FFF)
         };

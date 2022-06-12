@@ -27,6 +27,8 @@
 
 #![no_std]
 #![deny(missing_docs)]
+// For compile-time Wavefront OBJ parser
+#![feature(const_mut_refs)]
 // For `Packet::insert_packet` and `Packet::insert_list`
 #![feature(bench_black_box)]
 // For the `AsCStr` trait
@@ -60,6 +62,7 @@
 mod test;
 
 pub mod dma;
+pub mod format;
 mod framebuffer;
 pub mod gpu;
 #[doc(hidden)]
