@@ -114,26 +114,6 @@ macro_rules! println {
     };
 }
 
-/// Prints and returns the value of a given expression for quick and dirty debugging.
-#[macro_export]
-macro_rules! dbg {
-    () => {
-        $crate::println!("[{}:{}]", file!(), line!())
-    };
-    ($val:expr $(,)?) => {
-        match $val {
-            tmp => {
-                $crate::println!("[{}:{}] {} = {:#?}",
-                    file!(), line!(), stringify!($val), &tmp);
-                tmp
-            }
-        }
-    };
-    ($($val:expr),+ $(,)?) => {
-        ($($crate::dbg!($val)),+,)
-    };
-}
-
 impl fmt::Write for TTY {
     fn write_str(&mut self, msg: &str) -> fmt::Result {
         msg.as_cstr(|cstr|
