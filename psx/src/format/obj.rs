@@ -121,14 +121,14 @@ pub const fn count_vertices(data: &[u8]) -> usize {
 #[derive(Debug)]
 #[allow(missing_docs)]
 /// A reference to a Wavefront OBJ file.
-pub struct Ref<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize, const FACES: usize>
+pub struct Obj<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize, const FACES: usize>
 {
     pub faces: &'a mut Faces<QUADS, TRIS>,
     pub vertices: &'a mut [[f16; 3]; VERTICES],
 }
 
 impl<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize, const FACES: usize>
-    Ref<'a, VERTICES, QUADS, TRIS, FACES>
+    Obj<'a, VERTICES, QUADS, TRIS, FACES>
 {
     /// Creates an array by calling `f` for each face.
     pub fn for_each_face<T, F>(&self, mut f: F) -> [T; FACES]
@@ -167,14 +167,14 @@ pub struct Faces<const QUADS: usize, const TRIS: usize> {
 }
 
 /// Includes the vertices and faces in a Wavefront OBJ file as
-/// [`obj::Ref`][`crate::format::obj::Ref`].
+/// [`Obj`][`crate::format::obj::Obj`].
 ///
 /// Currently only supports vertices and faces.
 #[macro_export]
 macro_rules! include_obj {
     ($file:literal) => {{
         use $crate::format::obj::{count_faces, count_u16, count_vertices, parse_f16, parse_u16,
-                                  Faces, NumFaces, Ref};
+                                  Faces, NumFaces, Obj};
         use $crate::math::f16;
 
         const NUM_VERTICES: usize = count_vertices(include_bytes!($file));
@@ -265,7 +265,7 @@ macro_rules! include_obj {
             }
             Faces { quads, tris }
         };
-        Ref::<NUM_VERTICES, NUM_QUADS, NUM_TRIS, NUM_FACES> {
+        Obj::<NUM_VERTICES, NUM_QUADS, NUM_TRIS, NUM_FACES> {
             vertices: unsafe { &mut VERTICES },
             faces: unsafe { &mut FACES },
         }

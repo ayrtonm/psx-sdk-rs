@@ -54,6 +54,31 @@ impl<const N: usize, const X: usize, const Y: usize> PackedVertex<N, X, Y> {
             panic!("Vertex elements are larger than backing array");
         }
     };
+
+    // TODO: Remove this function when traits allow marking functions const
+    // This is hidden since it's only needed for include_tim!
+    #[doc(hidden)]
+    #[allow(path_statements)]
+    pub const fn const_try_from(Vertex(x, y): Vertex) -> Result<Self, VertexError> {
+        // This is a compile-time check ensuring X + Y bits =< N bytes
+        Self::VALIDATE_X_PLUS_Y;
+        let x = x as u16;
+        let y = y as u16;
+        if x >= 1 << X {
+            return Err(VertexError::InvalidX)
+        }
+        if y >= 1 << Y {
+            return Err(VertexError::InvalidY)
+        }
+        let mut data = [0; N];
+        let value = (x as u32 | ((y as u32) << X)).to_le_bytes();
+        let mut i = 0;
+        while i < data.len() {
+            data[i] = value[i];
+            i += 1;
+        }
+        Ok(PackedVertex { data })
+    }
 }
 impl<const X: usize, const Y: usize> From<PackedVertex<2, X, Y>> for u32 {
     fn from(vertex: PackedVertex<2, X, Y>) -> u32 {
@@ -70,24 +95,8 @@ impl<const X: usize, const Y: usize> From<PackedVertex<3, X, Y>> for u32 {
 impl<const N: usize, const X: usize, const Y: usize> TryFrom<Vertex> for PackedVertex<N, X, Y> {
     type Error = VertexError;
 
-    #[allow(path_statements)]
-    fn try_from(Vertex(x, y): Vertex) -> Result<Self, VertexError> {
-        // This is a compile-time check ensuring X + Y bits =< N bytes
-        Self::VALIDATE_X_PLUS_Y;
-        let x = x as u16;
-        let y = y as u16;
-        if x >= 1 << X {
-            return Err(VertexError::InvalidX)
-        }
-        if y >= 1 << Y {
-            return Err(VertexError::InvalidY)
-        }
-        let mut data = [0; N];
-        let value = (x as u32 | ((y as u32) << X)).to_le_bytes();
-        for i in 0..data.len() {
-            data[i] = value[i];
-        }
-        Ok(PackedVertex { data })
+    fn try_from(v: Vertex) -> Result<Self, VertexError> {
+        Self::const_try_from(v)
     }
 }
 

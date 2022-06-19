@@ -16,8 +16,6 @@ macro_rules! file_size {
 macro_rules! include_words {
     ($file:literal) => {{
         const N: usize = ($crate::file_size!($file) + 3) / 4;
-        #[used]
-        #[link_section = ".data"]
         static mut RET: [u32; N] = {
             let input_file = *include_bytes!($file);
             let mut padded_data = [0u8; N * 4];

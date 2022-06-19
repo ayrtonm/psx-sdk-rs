@@ -134,4 +134,4 @@ fn on_oom(layout: core::alloc::Layout) -> ! {
 }
 
 pub use framebuffer::{Framebuffer, LoadedTIM};
-pub use format::tim::{Bitmap, TIMError, TIM};
+//pub use format::tim::{Bitmap, TIMError, TIM};

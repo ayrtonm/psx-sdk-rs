@@ -1,12 +1,13 @@
+use crate::dma;
+use crate::format::tim::TIM;
 use crate::gpu::colors::WHITE;
 use crate::gpu::primitives::Sprt8;
 use crate::gpu::{Clut, Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, TexColor, TexCoord,
                  TexPage, Vertex, VertexError, VideoMode, GPU_BUFFER_SIZE};
 use crate::hw::gpu::{GP0Command, GP0, GP1};
 use crate::hw::{gpu, irq, Register};
+use crate::include_tim;
 use crate::irq::IRQ;
-use crate::format::tim::TIM;
-use crate::{dma, include_words};
 use core::fmt;
 use core::mem::size_of;
 
@@ -107,7 +108,7 @@ impl Framebuffer {
     ///
     /// After loading a TIM into VRAM, the copy in memory isn't necessary so the
     /// lifetimes of the `TIM` and `LoadedTIM` are completely disconnected.
-    pub fn load_tim(&mut self, tim: TIM) -> LoadedTIM {
+    pub fn load_tim<const N: usize, const M: usize>(&mut self, tim: TIM<N, M>) -> LoadedTIM {
         // Used to avoid implementing GP0Command for any &[u32]
         // TIM::new ensures that the bitmap data is a valid GP0 command
         struct CopyToVRAM<'a>(&'a [u32]);
@@ -119,13 +120,15 @@ impl Framebuffer {
         }
 
         self.draw_sync();
-        self.gp0.send_command(&CopyToVRAM(tim.bmp.data));
-        if let Some(clut) = &tim.clut_bmp {
+        self.gp0.send_command(&CopyToVRAM(&tim.bmp.data));
+        let clut = if M != 0 {
             self.draw_sync();
-            self.gp0.send_command(&CopyToVRAM(clut.data));
+            self.gp0.send_command(&CopyToVRAM(&tim.clut.data));
+            Some(tim.clut.offset)
+        } else {
+            None
         };
 
-        let clut = tim.clut_bmp.map(|clut| clut.offset);
         LoadedTIM {
             tex_page: tim.bmp.offset,
             clut,
@@ -139,10 +142,7 @@ impl Framebuffer {
     /// lifetimes so it's the user's responsibility to ensure that the font
     /// remains in VRAM while it's needed.
     pub fn load_default_font(&mut self) -> LoadedTIM {
-        let tim = include_words!("../font.tim");
-
-        // SAFETY: The default font TIM contains valid data.
-        let font = unsafe { TIM::new(tim).unwrap_unchecked() };
+        let font = include_tim!("../font.tim");
         self.load_tim(font)
     }
 
