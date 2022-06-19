@@ -1,4 +1,4 @@
-//! Fixed-point trigonometry functions.
+//! Fixed-point and trigonometry functions.
 
 use core::hint::unreachable_unchecked;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -58,6 +58,27 @@ pub const FRAC_PI_4: f16 = f16(0x2000);
 pub const FRAC_PI_6: f16 = f16(0x1555);
 /// π/8
 pub const FRAC_PI_8: f16 = f16(0x1000);
+
+/// Rotates a point by `theta` radians about the x axis.
+pub fn rotate_x([x, y, z]: [f16; 3], theta: f16) -> [f16; 3] {
+    let yp = (cos(theta) * y) - (sin(theta) * z);
+    let zp = (sin(theta) * y) + (cos(theta) * z);
+    [x, yp, zp]
+}
+
+/// Rotates a point by `theta` radians about the y axis.
+pub fn rotate_y([x, y, z]: [f16; 3], theta: f16) -> [f16; 3] {
+    let xp = (cos(theta) * x) + (sin(theta) * z);
+    let zp = (-sin(theta) * x) + (cos(theta) * z);
+    [xp, y, zp]
+}
+
+/// Rotates a point by `theta` radians about the z axis.
+pub fn rotate_z([x, y, z]: [f16; 3], theta: f16) -> [f16; 3] {
+    let xp = (cos(theta) * x) - (sin(theta) * y);
+    let yp = (sin(theta) * x) + (cos(theta) * y);
+    [xp, yp, z]
+}
 
 /// Computes sine using a lookup table.
 pub fn sin(x: f16) -> f16 {

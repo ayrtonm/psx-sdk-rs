@@ -35,7 +35,7 @@ impl<T> Packet<T> {
     };
 
     const SMALLER_THAN_U8_MAX: () = {
-        let size = size_of::<T>();
+        let size = size_of::<T>() / size_of::<u32>();
         if size > u8::MAX as usize {
             panic!("Packet contents too large to be represented by `Packet` header.");
         }
@@ -63,6 +63,13 @@ impl<T> Packet<T> {
             size: size as u8,
             contents: t,
         }
+    }
+
+    /// Resizes the packet to hold a `U`.
+    pub const fn resize<U>(&mut self) -> &mut Self {
+        // TODO: Validate the size
+        self.size = (size_of::<U>() / size_of::<u32>()) as u8;
+        self
     }
 
     /// Gets a reference to the [`Packet`] header.

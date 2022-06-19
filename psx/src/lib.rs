@@ -28,7 +28,7 @@
 #![no_std]
 #![deny(missing_docs)]
 // For compile-time Wavefront OBJ parser
-#![feature(const_mut_refs)]
+#![feature(const_mut_refs, maybe_uninit_array_assume_init)]
 // For `Packet::insert_packet` and `Packet::insert_list`
 #![feature(bench_black_box)]
 // For the `AsCStr` trait
@@ -70,6 +70,7 @@ pub mod gpu;
 pub mod heap;
 pub mod hw;
 mod macros;
+pub mod math;
 mod panic;
 #[doc(hidden)]
 pub mod runtime;
@@ -77,7 +78,6 @@ pub mod runtime;
 pub mod std;
 pub mod sys;
 mod tim;
-pub mod trig;
 
 /// Re-exported constants in a module for easy glob importing.
 pub mod constants {

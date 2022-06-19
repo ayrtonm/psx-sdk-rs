@@ -1,6 +1,7 @@
 //! Wavefront OBJ format importer
 
-use crate::trig::f16;
+use crate::math::f16;
+use core::mem::MaybeUninit;
 
 // TODO: This module is incredibly unidiomatic rust to ensure most things can be
 // const to embed the minimum amount of data necessary in executables. As more
@@ -45,11 +46,7 @@ pub const fn parse_f16(data: &[u8], idx: &mut usize) -> f16 {
     }
     *idx += 1;
     let abs_frac = (frac * 4096 / 10u64.pow(digits)) as u16;
-    let frac = if neg {
-        !abs_frac + 1
-    } else {
-        abs_frac
-    };
+    let frac = if neg { !abs_frac + 1 } else { abs_frac };
     let sign = if neg { 1 << 15 } else { 0 };
     f16::from_bits(sign | (int << 12) | frac)
 }
@@ -124,9 +121,41 @@ pub const fn count_vertices(data: &[u8]) -> usize {
 #[derive(Debug)]
 #[allow(missing_docs)]
 /// A reference to a Wavefront OBJ file.
-pub struct Ref<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize> {
+pub struct Ref<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize, const FACES: usize>
+{
     pub faces: &'a mut Faces<QUADS, TRIS>,
     pub vertices: &'a mut [[f16; 3]; VERTICES],
+}
+
+impl<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize, const FACES: usize>
+    Ref<'a, VERTICES, QUADS, TRIS, FACES>
+{
+    /// Creates an array by calling `f` for each face.
+    pub fn for_each_face<T, F>(&self, mut f: F) -> [T; FACES]
+    where F: FnMut() -> T {
+        let mut res = MaybeUninit::uninit_array();
+        for n in 0..QUADS + TRIS {
+            res[n].write(f());
+        }
+        unsafe { MaybeUninit::array_assume_init(res) }
+    }
+
+    /// Creates an array by applying `f_quad` to each quad and `f_tri` to each
+    /// tri.
+    pub fn map_faces<T, F, G>(&self, mut f_quad: F, mut f_tri: G) -> [T; FACES]
+    where
+        F: FnMut([u16; 4]) -> T,
+        G: FnMut([u16; 3]) -> T, {
+        let mut res = MaybeUninit::uninit_array();
+        for n in 0..QUADS + TRIS {
+            if n < QUADS {
+                res[n].write(f_quad(self.faces.quads[n]));
+            } else {
+                res[n].write(f_tri(self.faces.tris[n - QUADS]));
+            }
+        }
+        unsafe { MaybeUninit::array_assume_init(res) }
+    }
 }
 
 #[derive(Debug)]
@@ -146,7 +175,7 @@ macro_rules! include_obj {
     ($file:literal) => {{
         use $crate::format::obj::{count_faces, count_u16, count_vertices, parse_f16, parse_u16,
                                   Faces, NumFaces, Ref};
-        use $crate::trig::f16;
+        use $crate::math::f16;
 
         const NUM_VERTICES: usize = count_vertices(include_bytes!($file));
         static mut VERTICES: [[f16; 3]; NUM_VERTICES] = {
@@ -176,9 +205,10 @@ macro_rules! include_obj {
             }
             vertices
         };
-        const NUM_FACES: NumFaces = count_faces(include_bytes!($file));
-        const NUM_QUADS: usize = NUM_FACES.quads;
-        const NUM_TRIS: usize = NUM_FACES.tris;
+        const FACE_COUNT: NumFaces = count_faces(include_bytes!($file));
+        const NUM_QUADS: usize = FACE_COUNT.quads;
+        const NUM_TRIS: usize = FACE_COUNT.tris;
+        const NUM_FACES: usize = NUM_QUADS + NUM_TRIS;
         static mut FACES: Faces<NUM_QUADS, NUM_TRIS> = {
             let mut quads = [[0; 4]; NUM_QUADS];
             let mut tris = [[0; 3]; NUM_TRIS];
@@ -235,7 +265,7 @@ macro_rules! include_obj {
             }
             Faces { quads, tris }
         };
-        Ref::<NUM_VERTICES, NUM_QUADS, NUM_TRIS> {
+        Ref::<NUM_VERTICES, NUM_QUADS, NUM_TRIS, NUM_FACES> {
             vertices: unsafe { &mut VERTICES },
             faces: unsafe { &mut FACES },
         }

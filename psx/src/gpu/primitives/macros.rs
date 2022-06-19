@@ -4,6 +4,14 @@
 macro_rules! impl_primitive {
     ($name:ident, $cmd:expr) => {
         impl $name {
+            /// Resets a primitive's command.
+            ///
+            /// This is useful when a primitive is a variant of an untagged union which
+            /// must be set to `Self` without modifying its other fields.
+            pub const fn reset_cmd(&mut self) -> &mut Self {
+                self.cmd = $cmd;
+                self
+            }
             /// Creates a new primitive
             pub const fn new() -> Self {
                 let buf = [0u8; size_of::<Self>()];
