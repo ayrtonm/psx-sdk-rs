@@ -12,7 +12,11 @@ pub struct f16(pub i16);
 impl f16 {
     /// Returns the absolute value of a number.
     pub const fn abs(self) -> Self {
-        Self(self.0 & 0x3_FFF)
+        if self.0 & (1 << 15) == 0 {
+            self
+        } else {
+            Self(-self.0)
+        }
     }
 
     /// Converts an `i16` to fixed-point.

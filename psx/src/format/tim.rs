@@ -110,9 +110,7 @@ where VertexError: From<<T as TryFrom<Vertex>>::Error>
 mod tests {
 
     use super::{TIMError, MAGIC, TIM};
-    use aligned::{Aligned, A4};
-    use core::mem::size_of;
-    use core::slice;
+    use crate::include_words;
 
     macro_rules! tim_test {
         ($tim:expr, $err:tt) => {
@@ -148,10 +146,7 @@ mod tests {
 
     #[test_case]
     fn real_tim() {
-        let mut font = Aligned::<A4, _>(*include_bytes!("../font.tim"));
-        let tim = unsafe {
-            slice::from_raw_parts_mut(font.as_mut_ptr() as *mut u32, font.len() / size_of::<u32>())
-        };
+        let tim = include_words!("../../font.tim");
         assert!(TIM::new(tim).is_ok());
     }
 }

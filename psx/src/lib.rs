@@ -77,7 +77,6 @@ pub mod runtime;
 #[doc(hidden)]
 pub mod std;
 pub mod sys;
-mod tim;
 
 /// Re-exported constants in a module for easy glob importing.
 pub mod constants {
@@ -135,4 +134,4 @@ fn on_oom(layout: core::alloc::Layout) -> ! {
 }
 
 pub use framebuffer::{Framebuffer, LoadedTIM};
-pub use tim::{Bitmap, TIMError, TIM};
+pub use format::tim::{Bitmap, TIMError, TIM};

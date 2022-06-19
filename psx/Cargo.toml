@@ -28,7 +28,6 @@ features = ["const_mut_refs"]
 [dev-dependencies]
 num = { version = "0.4.0", default-features = false }
 const-random = "0.1.13"
-aligned = "0.4.0"
 
 [features]
 NA_region = []

@@ -5,7 +5,7 @@ use crate::gpu::{Clut, Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, TexColor
 use crate::hw::gpu::{GP0Command, GP0, GP1};
 use crate::hw::{gpu, irq, Register};
 use crate::irq::IRQ;
-use crate::tim::TIM;
+use crate::format::tim::TIM;
 use crate::{dma, include_words};
 use core::fmt;
 use core::mem::size_of;
