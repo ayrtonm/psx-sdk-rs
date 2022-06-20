@@ -70,6 +70,8 @@ macro_rules! heap {
             }
         }
     };
+    ($n:tt kb) => { $crate::heap!($n KB); };
+    ($n:tt kB) => { $crate::heap!($n KB); };
     ($n:tt KB) => {
         $crate::heap! {
             {
@@ -81,6 +83,7 @@ macro_rules! heap {
             }
         }
     };
+    ($n:tt Mb) => { $crate::heap!($n MB); };
     ($n:tt MB) => {
         $crate::heap! {
             {
