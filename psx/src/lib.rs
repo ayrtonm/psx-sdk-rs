@@ -11,8 +11,11 @@
 //!
 //! * `NA_region`/`EU_region`/`J_region` - Sets the region string in the [PS-EXE
 //!   header](http://problemkaputt.de/psx-spx.htm#cdromfileformats).
-//! * `min_panic` - Minimizes code generated for `panic!`s by removing error
-//!   messages. Code is still generated to ensure that the processor hangs.
+//! * `min_panic` - Minimizes code generated for `panic!`s by printing error
+//!   messages to stdout.
+//! * `no_panic` - Further minimizes code generated for `panic!`s by omitting
+//!   panic error messages. Code is still generated to ensure that panics hang
+//!   the processor.
 //! * `loadable_exe` - Allows returning from `main` to enable loading and
 //!   unloading executables.
 //! * `custom_oom` - Allows creating custom [allocation error handlers](https://github.com/rust-lang/rust/issues/51540)

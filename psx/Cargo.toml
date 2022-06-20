@@ -33,6 +33,7 @@ const-random = "0.1.13"
 NA_region = []
 EU_region = []
 J_region = []
+no_panic = []
 min_panic = []
 loadable_exe = []
 custom_oom = []
