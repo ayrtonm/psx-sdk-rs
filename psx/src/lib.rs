@@ -94,6 +94,7 @@ pub mod constants {
     pub const BIOS_LEN: usize = 64 * KB;
     pub use crate::gpu::colors::*;
     pub use crate::gpu::VideoMode::*;
+    pub use crate::math::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8, PI};
     pub use crate::sys::gamepad::buttons::*;
 }
 
