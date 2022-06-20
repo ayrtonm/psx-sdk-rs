@@ -145,9 +145,6 @@ impl Div<f16> for f16 {
     fn div(self, other: f16) -> f16 {
         let num = (self.0 as i32) << 12;
         let den = other.0 as i32;
-        if den == 0 {
-            return f16(0x7_FFF)
-        };
         let res = num / den;
         f16(res as i16)
     }
