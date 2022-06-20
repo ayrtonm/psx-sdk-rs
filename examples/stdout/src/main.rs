@@ -11,7 +11,7 @@ use psx::{printf, print, println};
 #[no_mangle]
 fn main() {
     // Seed the BIOS RNG to print some random numbers
-    let mut rng = Rng::new(0xdeadbeef);
+    let rng = Rng::new(0xdeadbeef);
 
     // The raw BIOS function can be used to print to stdout
     // Format strings can be variables and they must be a pointer (i.e. *const i8).

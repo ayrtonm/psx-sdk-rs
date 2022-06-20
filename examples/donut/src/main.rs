@@ -17,11 +17,12 @@ fn main() {
     let mut fb = Framebuffer::default();
     fb.set_bg_color(WHITE);
     let mut gpu_dma = dma::GPU::new();
+    let rng = Rng::new(0xdeadbeef);
 
     let donut = include_obj!("../../../psx/test_files/torus.obj");
 
     // Assign a random color to each vertex
-    let colored_vertices = donut.vertices.map(|v| (v, rand_color()));
+    let colored_vertices = donut.vertices.map(|v| (v, rng.rand_color()));
 
     // Make two sets of polygons for double-buffering
     // `for_each_face` creates an array of length `quads.len + tris.len`, but
@@ -93,15 +94,4 @@ fn project_face(face: [[f16; 3]; 4]) -> [Vertex; 4] {
         let yp = y / (z + f16(0x1_800));
         Vertex(xp.0 / scale, yp.0 / scale) + Vertex(160, 120)
     })
-}
-fn rand_color() -> Color {
-    static mut RNG: Option<Rng> = None;
-    unsafe {
-        if RNG.is_none() {
-            RNG = Some(Rng::new(0xdeadbeef));
-        };
-        RNG.as_mut()
-            .map(|rng| Color::new(rng.rand(), rng.rand(), rng.rand()))
-            .unwrap()
-    }
 }

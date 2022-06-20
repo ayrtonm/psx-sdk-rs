@@ -57,6 +57,7 @@ impl GP0Command for PolyF {}
 fn main() {
     let mut fb = Framebuffer::default();
     let mut gpu_dma = dma::GPU::new();
+    let rng = Rng::new(0xdeadbeef);
 
     // To display this correctly, we need to sort the faces before drawing just like
     // in the previous examples. This is a problem for this particular .obj since it
@@ -70,8 +71,8 @@ fn main() {
     // memory layout doesn't matter which allows us to use an enum. Also assign
     // a random color to each vertex
     let mut faces = monkey.map_faces(
-        |q| (Face::Quad(q), rand_color()),
-        |t| (Face::Tri(t), rand_color()),
+        |q| (Face::Quad(q), rng.rand_color()),
+        |t| (Face::Tri(t), rng.rand_color()),
     );
 
     // Define functions to initialize the polygons
@@ -185,15 +186,4 @@ fn project_point([x, y, z]: [f16; 3]) -> Vertex {
     let xp = x / (z + f16(0x1_800));
     let yp = y / (z + f16(0x1_800));
     Vertex(xp.0 / scale, yp.0 / scale) + Vertex(160, 120)
-}
-fn rand_color() -> Color {
-    static mut RNG: Option<Rng> = None;
-    unsafe {
-        if RNG.is_none() {
-            RNG = Some(Rng::new(0xdeadbeef));
-        };
-        RNG.as_mut()
-            .map(|rng| Color::new(rng.rand(), rng.rand(), rng.rand()))
-            .unwrap()
-    }
 }
