@@ -69,7 +69,6 @@ pub mod format;
 mod framebuffer;
 pub mod gpu;
 #[doc(hidden)]
-#[cfg(feature = "heap")]
 pub mod heap;
 pub mod hw;
 mod macros;

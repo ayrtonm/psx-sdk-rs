@@ -99,7 +99,7 @@ macro_rules! heap {
         extern crate alloc;
 
         #[global_allocator]
-        static _HEAP: $crate::heap::Heap = $crate::heap::Heap::new();
+        static _HEAP: $crate::heap::linked_list::Heap = $crate::heap::linked_list::Heap::new();
 
         $crate::ctor! {
             fn init_heap() {
