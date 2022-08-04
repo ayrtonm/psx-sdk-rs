@@ -12,9 +12,9 @@ use psx::{dma, dprintln, Framebuffer};
 // We don't really need a heap for this demo, but the `sort_by_key` function is
 // in the `alloc` crate so it's unavailable unless we have a heap (even if it
 // never uses it). It seems that allocations never happen since the slice we're
-// sorting is small so we can safely specify the BIOS malloc/free to avoid
-// pulling in needless dependencies.
-psx::sys_heap!(0 bytes);
+// sorting is small so we can safely use no_heap! to avoid pulling in needless
+// dependencies.
+psx::no_heap!();
 
 #[no_mangle]
 fn main() {
@@ -54,7 +54,7 @@ fn main() {
         ([-1, 1, 1], MINT),
         ([-1, -1, 1], PINK),
     ]
-    .map(|(v, c)| (v.map(|e| f16::from_int(e) / f16(0x2_000)), c));
+    .map(|(v, c)| (v.map(|e| f16::from_int(e) * 8), c));
     let mut faces = [
         [0, 4, 2, 6],
         [3, 2, 7, 6],
@@ -66,15 +66,15 @@ fn main() {
 
     let mut swapped = false;
 
-    let mut theta = FRAC_PI_8 * f16(0x_800);
-    let mut phi = FRAC_PI_8 * f16(0x_400);
-    let mut psi = FRAC_PI_8 * f16(0x_200);
+    let mut theta = FRAC_PI_8 / 2;
+    let mut phi = FRAC_PI_8 / 4;
+    let mut psi = FRAC_PI_8 / 8;
 
-    let vel = FRAC_PI_8 * f16(0x_060);
+    let vel = FRAC_PI_8 / 64;
 
     loop {
-        theta += vel * f16(0x2_000);
-        phi += vel * f16(0x4_000);
+        theta += vel * 2;
+        phi += vel * 4;
         psi += vel;
         txt.reset();
         dprintln!(txt, "theta: {:#x?}", theta.0);
@@ -119,9 +119,8 @@ fn main() {
 
 fn project_face(face: [[f16; 3]; 4]) -> [Vertex; 4] {
     face.map(|[x, y, z]| {
-        let scale = 16;
-        let xp = x / (z + f16(0x3_000));
-        let yp = y / (z + f16(0x3_000));
-        Vertex(xp.0 / scale, yp.0 / scale) + Vertex(160, 120)
+        let xp = x / (z + 64);
+        let yp = y / (z + 64);
+        Vertex(xp.0, yp.0) + Vertex(160, 120)
     })
 }
