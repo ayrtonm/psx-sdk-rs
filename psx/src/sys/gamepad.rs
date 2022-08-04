@@ -4,11 +4,8 @@ use core::marker::PhantomData;
 use core::mem::MaybeUninit;
 use core::ptr::read_volatile;
 
-// Buffer size in 2-byte half-words
-const BUFFER_SIZE: usize = 68 / 2;
-
-// The latter half of the buffer is used for player 2
-const P2_OFFSET: usize = BUFFER_SIZE / 2;
+// Buffer size in 4-byte words
+const BUFFER_SIZE: usize = 68 / 4;
 
 /// `Gamepad` is a reference to a gamepad buffer managed by the BIOS.
 ///
@@ -21,7 +18,7 @@ const P2_OFFSET: usize = BUFFER_SIZE / 2;
 pub struct Gamepad<'a> {
     buf1: *mut u16,
     buf2: *mut u16,
-    _original_buf: PhantomData<&'a mut [u16; BUFFER_SIZE]>,
+    _buf: PhantomData<&'a mut [u32; BUFFER_SIZE]>,
 }
 
 /// The reading from polling the gamepad buttons
@@ -107,8 +104,9 @@ impl<'a> Gamepad<'a> {
     /// buffer (e.g. to minimize executable size) use `Gamepad::new_with_buffer`
     /// directly.
     pub fn new() -> Self {
-        static mut GAMEPAD_BUFFER: MaybeUninit<[u16; BUFFER_SIZE]> = MaybeUninit::uninit();
-        unsafe { Self::new_with_buffer(&mut GAMEPAD_BUFFER) }
+        static mut BUFFER1: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
+        static mut BUFFER2: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
+        unsafe { Self::new_with_buffer(&mut BUFFER1, &mut BUFFER2) }
     }
 
     /// Creates a new gamepad from a reference to a buffer.
@@ -116,18 +114,23 @@ impl<'a> Gamepad<'a> {
     /// `Gamepad::new_with_buffer` can be called by passing in a mutable
     /// reference to a `MaybeUninit::uninit()` and the buffer's size will be
     /// inferred.
-    pub fn new_with_buffer(buf: &'a mut MaybeUninit<[u16; BUFFER_SIZE]>) -> Self {
-        let buf1 = buf.as_mut_ptr().cast();
-        let buf2 = unsafe { buf.as_mut_ptr().cast::<u16>().add(P2_OFFSET) };
+    pub fn new_with_buffer(
+        buf1: &'a mut MaybeUninit<[u32; BUFFER_SIZE]>,
+        buf2: &'a mut MaybeUninit<[u32; BUFFER_SIZE]>,
+    ) -> Self {
+        let buf1 = buf1.as_mut_ptr().cast::<u16>();
+        let buf2 = buf2.as_mut_ptr().cast::<u16>();
         unsafe {
             kernel::init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
+            buf1.cast::<u32>().write(0xFFFF_FFFF);
+            buf1.cast::<u32>().add(1).write(0xFFFF_FFFF);
             kernel::start_pad();
             kernel::change_clear_pad(1);
         }
         Self {
             buf1,
             buf2,
-            _original_buf: PhantomData,
+            _buf: PhantomData,
         }
     }
 
