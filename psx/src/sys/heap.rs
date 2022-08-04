@@ -56,8 +56,8 @@ macro_rules! sys_heap {
             }
         }
     };
-    ($n:tt kb) => { $crate::heap!($n KB); };
-    ($n:tt kB) => { $crate::heap!($n KB); };
+    ($n:tt kb) => { $crate::sys_heap!($n KB); };
+    ($n:tt kB) => { $crate::sys_heap!($n KB); };
     ($n:tt KB) => {
         $crate::sys_heap! {
             {
@@ -69,7 +69,7 @@ macro_rules! sys_heap {
             }
         }
     };
-    ($n:tt Mb) => { $crate::heap!($n MB); };
+    ($n:tt Mb) => { $crate::sys_heap!($n MB); };
     ($n:tt MB) => {
         $crate::sys_heap! {
             const HEAP_SIZE: usize = $n * 1024 * 1024 / core::mem::size_of::<u32>();
