@@ -3,13 +3,25 @@
 use core::hint::unreachable_unchecked;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-/// A signed 16-bit fixed-point number with 3-bit integral and 12-bit fractional
+/// A signed 16-bit fixed-point number with 7-bit integral and 8-bit fractional
 /// parts.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
 pub struct f16(pub i16);
 
 impl f16 {
+    /// The value 0.0 as an `f16`.
+    pub const ZERO: Self = f16(0);
+
+    /// The value 1.0 as an `f16`.
+    pub const ONE: Self = f16::from_int(1);
+
+    /// The number of integral bits.
+    pub const INT: usize = 7;
+
+    /// The number of fractional bits.
+    pub const FRAC: usize = 8;
+
     /// Returns the absolute value of a number.
     pub const fn abs(self) -> Self {
         if self.0 & (1 << 15) == 0 {
@@ -20,23 +32,23 @@ impl f16 {
     }
 
     /// Converts an `i16` to fixed-point.
-    pub const fn from_int(x: i16) -> Self {
-        Self(x << 12)
+    pub const fn from_int(x: i8) -> Self {
+        Self((x as i16) << f16::FRAC)
     }
 
     /// Converts to an `i16` keeping only the integral part and sign.
     pub const fn to_int_lossy(self) -> i16 {
-        self.0 >> 12
+        self.0 >> f16::FRAC
     }
 
     /// Returns the integer part of a number.
     pub const fn trunc(self) -> Self {
-        Self(self.0 & (0xF_000u16 as i16))
+        Self(self.0 & (0xFF_00u16 as i16))
     }
 
     /// Returns the fractional part of a number.
     pub const fn fract(self) -> Self {
-        Self(self.0 & 0x0_FFF)
+        Self(self.0 & 0x00_FF)
     }
 
     /// Raw transmutation to a `u16`.
@@ -91,17 +103,18 @@ pub fn sin(x: f16) -> f16 {
 
 /// Computes cosine using a lookup table.
 pub fn cos(x: f16) -> f16 {
-    let cycle = (x.0 as u16) / 0x4000;
-    let offset = (x.0 as u16) % 0x4000;
-    let idx = COSINE_TABLE_SIZE * (offset as usize) / 0x4000;
+    let quarter_cycle = FRAC_PI_2.0 as u16;
+    let cycle = (x.0 as u16) / quarter_cycle;
+    let offset = (x.0 as u16) % quarter_cycle;
+    let idx = COSINE_TABLE_SIZE * (offset as usize) / quarter_cycle as usize;
     let rev_idx = COSINE_TABLE_SIZE - idx - 1;
     fn cosine_table(idx: usize) -> f16 {
         if idx == 0 {
-            f16(0x1_000)
+            f16::ONE
         } else {
             // SAFETY: `idx` and `rev_idx` are always in a valid range
             let table_value = unsafe { *COSINE_TABLE.get_unchecked(idx - 1) } as u16;
-            f16((table_value << 4) as i16)
+            f16(table_value as i16)
         }
     }
 
@@ -126,31 +139,61 @@ impl Add<f16> for f16 {
         f16(self.0 + other.0)
     }
 }
+impl Add<i8> for f16 {
+    type Output = f16;
+    fn add(self, other: i8) -> f16 {
+        self + f16::from_int(other)
+    }
+}
 impl Sub<f16> for f16 {
     type Output = f16;
     fn sub(self, other: f16) -> f16 {
         f16(self.0 - other.0)
     }
 }
+impl Sub<i8> for f16 {
+    type Output = f16;
+    fn sub(self, other: i8) -> f16 {
+        self - f16::from_int(other)
+    }
+}
 impl Mul<f16> for f16 {
     type Output = f16;
-    fn mul(mut self, mut other: f16) -> f16 {
-        other.0 >>= 6;
-        self.0 >>= 6;
-        f16(self.0 * other.0)
+    fn mul(self, other: f16) -> f16 {
+        let a = self.0 as i32;
+        let b = other.0 as i32;
+        let c = a * b;
+        f16((c >> 8) as i16)
+    }
+}
+impl Mul<i8> for f16 {
+    type Output = f16;
+    fn mul(self, other: i8) -> f16 {
+        self * f16::from_int(other)
     }
 }
 impl Div<f16> for f16 {
     type Output = f16;
     fn div(self, other: f16) -> f16 {
-        let num = (self.0 as i32) << 12;
+        let num = (self.0 as i32) << 8;
         let den = other.0 as i32;
         let res = num / den;
         f16(res as i16)
     }
 }
+impl Div<i8> for f16 {
+    type Output = f16;
+    fn div(self, other: i8) -> f16 {
+        self / f16::from_int(other)
+    }
+}
 impl AddAssign<f16> for f16 {
     fn add_assign(&mut self, other: f16) {
+        *self = *self + other;
+    }
+}
+impl AddAssign<i8> for f16 {
+    fn add_assign(&mut self, other: i8) {
         *self = *self + other;
     }
 }
@@ -159,13 +202,28 @@ impl SubAssign<f16> for f16 {
         *self = *self - other;
     }
 }
+impl SubAssign<i8> for f16 {
+    fn sub_assign(&mut self, other: i8) {
+        *self = *self - other;
+    }
+}
 impl MulAssign<f16> for f16 {
     fn mul_assign(&mut self, other: f16) {
         *self = *self * other;
     }
 }
+impl MulAssign<i8> for f16 {
+    fn mul_assign(&mut self, other: i8) {
+        *self = *self * other;
+    }
+}
 impl DivAssign<f16> for f16 {
     fn div_assign(&mut self, other: f16) {
+        *self = *self / other;
+    }
+}
+impl DivAssign<i8> for f16 {
+    fn div_assign(&mut self, other: i8) {
         *self = *self / other;
     }
 }

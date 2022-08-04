@@ -31,7 +31,7 @@ pub const fn parse_f16(data: &[u8], idx: &mut usize) -> f16 {
         *idx += 1;
     }
     let abs_int = (data[*idx] - b'0') as u16;
-    assert!(abs_int < 8);
+    assert!(abs_int < 2u16.pow(f16::INT as u32));
     *idx += 1;
     assert!(data[*idx] == b'.');
     *idx += 1;
@@ -44,8 +44,8 @@ pub const fn parse_f16(data: &[u8], idx: &mut usize) -> f16 {
         *idx += 1;
     }
     *idx += 1;
-    let abs_frac = (frac * 4096 / 10u64.pow(digits)) as u16;
-    let abs_fixed = (abs_int << 12) | abs_frac;
+    let abs_frac = (frac * 2u64.pow(f16::FRAC as u32) / 10u64.pow(digits)) as u16;
+    let abs_fixed = (abs_int << f16::FRAC) | abs_frac;
     let fixed = if neg {
         -(abs_fixed as i16)
     } else {
