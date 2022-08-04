@@ -11,7 +11,7 @@ use psx::math::{f16, rotate_x, rotate_y, rotate_z};
 use psx::sys::rng::Rng;
 use psx::{dma, Framebuffer};
 
-psx::sys_heap!(0 bytes);
+psx::sys_heap!(4 kb);
 
 #[derive(Debug, Clone, Copy)]
 enum Face {
@@ -64,7 +64,14 @@ fn main() {
     // contains both tris and quads which are laid out in two separate arrays
     // `monkey.faces.tris` and `monkey.faces.quads` so we can't use sort_by_key
     // directly. To get around this we merge them into a new array below.
-    let monkey = include_obj!("../../../psx/test_files/monkey.obj");
+    let mut monkey = include_obj!("../../../psx/test_files/monkey.obj");
+
+    for [x, y, z] in monkey.vertices.into_iter() {
+        *x *= 16;
+        *y *= 16;
+        *z *= 16;
+    }
+
 
     // For each face, create a Face::Quad if it's a quad or a Face::Tri if it's a
     // tri. This array is used for sorting, and not sent to the GPU DMA so the
@@ -113,11 +120,11 @@ fn main() {
     let mut phi = f16(0);
     let mut psi = PI;
 
-    let vel = FRAC_PI_8 * f16(0x_0F0);
+    let vel = FRAC_PI_8 / 16;
 
     loop {
-        psi += vel * f16(0x4_000);
-        phi += vel * f16(0x2_000);
+        psi += vel * 4;
+        phi += vel * 2;
         theta += vel;
 
         swapped = !swapped;
@@ -182,8 +189,7 @@ fn main() {
 }
 
 fn project_point([x, y, z]: [f16; 3]) -> Vertex {
-    let scale = 32;
-    let xp = x / (z + f16(0x1_800));
-    let yp = y / (z + f16(0x1_800));
-    Vertex(xp.0 / scale, yp.0 / scale) + Vertex(160, 120)
+    let xp = x / (z + 64);
+    let yp = y / (z + 64);
+    Vertex(xp.0, yp.0) + Vertex(160, 120)
 }
