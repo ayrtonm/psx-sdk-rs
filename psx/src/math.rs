@@ -3,6 +3,7 @@
 use core::hint::unreachable_unchecked;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+// TODO: Replace the derived Debug impl with a custom human-readable one
 /// A signed 16-bit fixed-point number with 7-bit integral and 8-bit fractional
 /// parts.
 #[allow(non_camel_case_types)]
@@ -62,50 +63,110 @@ impl f16 {
     }
 }
 
+// TODO: Replace the derived Debug impl with a custom human-readable one
+/// Radians scaled by `π/0x8000`
+///
+/// This is a newtype for radians represented by a `u16` with `0x8000u16`
+/// equaling π.
+#[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
+pub struct Rad(pub u16);
+
 /// π
-pub const PI: f16 = f16(0x8000u16 as i16);
+pub const PI: Rad = Rad(0x8000);
 /// π/2
-pub const FRAC_PI_2: f16 = f16(0x4000);
+pub const FRAC_PI_2: Rad = Rad(0x4000);
 /// π/3
-pub const FRAC_PI_3: f16 = f16(0x2aaa);
+pub const FRAC_PI_3: Rad = Rad(0x2aaa);
 /// π/4
-pub const FRAC_PI_4: f16 = f16(0x2000);
+pub const FRAC_PI_4: Rad = Rad(0x2000);
 /// π/6
-pub const FRAC_PI_6: f16 = f16(0x1555);
+pub const FRAC_PI_6: Rad = Rad(0x1555);
 /// π/8
-pub const FRAC_PI_8: f16 = f16(0x1000);
+pub const FRAC_PI_8: Rad = Rad(0x1000);
+
+impl Add<Rad> for Rad {
+    type Output = Rad;
+    fn add(self, other: Rad) -> Rad {
+        Rad(self.0 + other.0)
+    }
+}
+
+impl Sub<Rad> for Rad {
+    type Output = Rad;
+    fn sub(self, other: Rad) -> Rad {
+        Rad(self.0 - other.0)
+    }
+}
+
+impl Mul<u8> for Rad {
+    type Output = Rad;
+    fn mul(self, other: u8) -> Rad {
+        Rad(self.0 * other as u16)
+    }
+}
+
+impl Div<u8> for Rad {
+    type Output = Rad;
+    fn div(self, other: u8) -> Rad {
+        Rad(self.0 / other as u16)
+    }
+}
+
+impl AddAssign<Rad> for Rad {
+    fn add_assign(&mut self, other: Rad) {
+        *self = *self + other;
+    }
+}
+
+impl SubAssign<Rad> for Rad {
+    fn sub_assign(&mut self, other: Rad) {
+        *self = *self - other;
+    }
+}
+
+impl MulAssign<u8> for Rad {
+    fn mul_assign(&mut self, other: u8) {
+        *self = *self * other;
+    }
+}
+
+impl DivAssign<u8> for Rad {
+    fn div_assign(&mut self, other: u8) {
+        *self = *self / other
+    }
+}
 
 /// Rotates a point by `theta` radians about the x axis.
-pub fn rotate_x([x, y, z]: [f16; 3], theta: f16) -> [f16; 3] {
+pub fn rotate_x([x, y, z]: [f16; 3], theta: Rad) -> [f16; 3] {
     let yp = (cos(theta) * y) - (sin(theta) * z);
     let zp = (sin(theta) * y) + (cos(theta) * z);
     [x, yp, zp]
 }
 
 /// Rotates a point by `theta` radians about the y axis.
-pub fn rotate_y([x, y, z]: [f16; 3], theta: f16) -> [f16; 3] {
+pub fn rotate_y([x, y, z]: [f16; 3], theta: Rad) -> [f16; 3] {
     let xp = (cos(theta) * x) + (sin(theta) * z);
     let zp = (-sin(theta) * x) + (cos(theta) * z);
     [xp, y, zp]
 }
 
 /// Rotates a point by `theta` radians about the z axis.
-pub fn rotate_z([x, y, z]: [f16; 3], theta: f16) -> [f16; 3] {
+pub fn rotate_z([x, y, z]: [f16; 3], theta: Rad) -> [f16; 3] {
     let xp = (cos(theta) * x) - (sin(theta) * y);
     let yp = (sin(theta) * x) + (cos(theta) * y);
     [xp, yp, z]
 }
 
 /// Computes sine using a lookup table.
-pub fn sin(x: f16) -> f16 {
+pub fn sin(x: Rad) -> f16 {
     cos(FRAC_PI_2 - x)
 }
 
 /// Computes cosine using a lookup table.
-pub fn cos(x: f16) -> f16 {
+pub fn cos(x: Rad) -> f16 {
     let quarter_cycle = FRAC_PI_2.0 as u16;
-    let cycle = (x.0 as u16) / quarter_cycle;
-    let offset = (x.0 as u16) % quarter_cycle;
+    let cycle = x.0 / quarter_cycle;
+    let offset = x.0 % quarter_cycle;
     let idx = COSINE_TABLE_SIZE * (offset as usize) / quarter_cycle as usize;
     let rev_idx = COSINE_TABLE_SIZE - idx - 1;
     fn cosine_table(idx: usize) -> f16 {
