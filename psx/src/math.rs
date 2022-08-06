@@ -10,6 +10,12 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAss
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
 pub struct f16(pub i16);
 
+impl From<i8> for f16 {
+    fn from(x: i8) -> Self {
+        Self::from_int(x)
+    }
+}
+
 impl f16 {
     /// The value 0.0 as an `f16`.
     pub const ZERO: Self = f16(0);

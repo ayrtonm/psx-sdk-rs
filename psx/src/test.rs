@@ -14,7 +14,7 @@ macro_rules! fuzz {
             use const_random::const_random;
             use crate::sys::rng::Rng;
 
-            let mut rng = Rng::new(const_random!(u32));
+            let rng = Rng::new(const_random!(u32));
             for _ in 0..crate::test::MAX_TESTS {
                 $(let $name = rng.rand::<$ty>();)*
                 $($body)*

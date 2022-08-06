@@ -2,7 +2,9 @@ use crate::{dprintln, println, Framebuffer};
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-    if cfg!(feature = "min_panic") {
+    // Print to stdout unless no_panic is set. This includes the default case since
+    // printing to the screen during a panic is not always reliable.
+    if cfg!(not(feature = "no_panic")) {
         match info.location() {
             Some(location) => {
                 println!(
@@ -19,7 +21,9 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
         if let Some(msg) = info.message() {
             println!("{}", msg)
         }
-    } else if cfg!(not(feature = "no_panic")) {
+    };
+    // In the default case print the panic message to the screen
+    if cfg!(not(any(feature = "min_panic", feature = "no_panic"))) {
         // We have no idea what state the GPU was in when the panic happened, so reset
         // it to a known state and reload the font into VRAM.
         let mut fb = Framebuffer::default();
@@ -47,7 +51,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
             fb.wait_vblank();
             fb.swap();
         }
-    }
+    };
     // Both min_panic and no_panic end execution here
     loop {}
 }

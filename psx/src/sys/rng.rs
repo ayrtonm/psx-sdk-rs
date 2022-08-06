@@ -52,7 +52,7 @@ impl Rng {
 #[test_case]
 fn rng_size() {
     fuzz!(|seed: u32| {
-        let mut rng = Rng::new(seed);
+        let rng = Rng::new(seed);
         let rand = rng.step();
         assert!(rand < (1 << 15));
     });
@@ -61,7 +61,7 @@ fn rng_size() {
 #[test_case]
 fn rng_state() {
     fuzz!(|seed: u32, steps: u8| {
-        let mut rng = Rng::new(seed);
+        let rng = Rng::new(seed);
         let mut state = seed;
         // The fuzzer steps the global rng state an unspecified number of times
         // between cases so we iterate the rng within a single fuzz case

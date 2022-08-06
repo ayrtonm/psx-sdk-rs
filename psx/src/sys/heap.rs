@@ -5,8 +5,8 @@
 //! `malloc`, `init_heap` and `free`.
 
 use crate::sys::kernel;
-use core::cell::Cell;
 use core::alloc::{GlobalAlloc, Layout};
+use core::cell::Cell;
 
 // SAFETY: We currently ignore threads and interrupts.
 unsafe impl Sync for BiosAllocator {}

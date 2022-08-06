@@ -12,14 +12,13 @@ unsafe impl GlobalAlloc for NoHeap {
     }
     unsafe fn dealloc(&self, _: *mut u8, _: Layout) {}
 }
+
 /// Defines a global allocator without a backing heap.
 ///
 /// This macros lets you use the types and methods in the `alloc` crate without
 /// a backing heap. This is useful for methods that do not allocate, such as
 /// sorting. Any attempts to allocate will instantly give an OOM error. This is
-/// a dependency-free and reliable alternative to heap!(0 bytes) (pulls in
-/// dependencies) and sys_heap!(0 bytes) (may give invalid pointers rather than
-/// OOMing).
+/// a dependency-free alternative to heap!(0 bytes).
 #[macro_export]
 macro_rules! no_heap {
     () => {

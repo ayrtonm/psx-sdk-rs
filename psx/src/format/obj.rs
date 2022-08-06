@@ -159,6 +159,16 @@ impl<'a, const VERTICES: usize, const QUADS: usize, const TRIS: usize, const FAC
         }
         unsafe { MaybeUninit::array_assume_init(res) }
     }
+
+    /// Scales vertices by `a`.
+    pub fn scale<T: Into<f16>>(&mut self, a: T) {
+        let b: f16 = a.into();
+        for [x, y, z] in self.vertices.into_iter() {
+            *x *= b;
+            *y *= b;
+            *z *= b;
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -285,7 +295,7 @@ mod tests {
         assert!(cube.vertices.len() == 8);
         for v in cube.vertices {
             for e in v {
-                assert!(e.abs() == f16(0x1_000));
+                assert!(e.abs() == f16::ONE);
             }
         }
         let cube_faces = [
@@ -305,7 +315,7 @@ mod tests {
         let cone = include_obj!("../../test_files/cone.obj");
         assert!(cone.vertices.len() == 33);
         for [_, y, _] in cone.vertices {
-            assert!(y.abs() == f16(0x1_000));
+            assert!(y.abs() == f16::ONE);
         }
         let cone_faces = [
             [1, 33, 2],
@@ -1536,7 +1546,7 @@ mod tests {
         ];
         for i in 0..torus.vertices.len() {
             if torus_vertices[i].iter().all(|&f| f != 0.0) {
-                assert!(torus.vertices[i] == torus_vertices[i].map(|f| f16((f * 4096.) as i16)));
+                assert!(torus.vertices[i] == torus_vertices[i].map(|f| f16((f * 256.) as i16)));
             }
         }
         for i in 0..torus.faces.quads.len() {
@@ -1549,7 +1559,7 @@ mod tests {
         assert!(monkey.vertices.len() == 507);
         for v in monkey.vertices {
             for e in v {
-                assert!(e.abs() < f16(0x1_800));
+                assert!(e.abs() < f16(0x1_80));
             }
         }
         let monkey_tris = [
