@@ -54,8 +54,6 @@ struct Opt {
     region: Option<String>,
     #[clap(long, help = "Specifies a custom linker script to use")]
     link: Option<String>,
-    #[clap(long, help = "Builds the `alloc` crate")]
-    alloc: bool,
     #[clap(long, help = "Outputs an ELF")]
     elf: bool,
     #[clap(long, help = "Ouputs an ELF with debug info")]
@@ -117,10 +115,7 @@ fn main() {
     };
 
     // Set build-std option to pass to cargo
-    let mut build_std = "-Zbuild-std=core".to_string();
-    if opt.alloc {
-        build_std.push_str(",alloc");
-    };
+    let mut build_std = "-Zbuild-std=core,alloc".to_string();
 
     // Rust doesn't do cross-crate inlining unless functions are marked as
     // #[inline]. Pretty much everything in the psx crate should be inlined since
