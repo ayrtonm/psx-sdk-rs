@@ -7,7 +7,7 @@ use psx::gpu::primitives::*;
 use psx::gpu::{link_list, Color, Packet, Vertex};
 use psx::hw::gpu::GP0Command;
 use psx::include_obj;
-use psx::math::{f16, rotate_x, rotate_y, rotate_z};
+use psx::math::{f16, rotate_x, rotate_y, rotate_z, Rad};
 use psx::sys::rng::Rng;
 use psx::{dma, Framebuffer};
 
@@ -72,7 +72,6 @@ fn main() {
         *z *= 16;
     }
 
-
     // For each face, create a Face::Quad if it's a quad or a Face::Tri if it's a
     // tri. This array is used for sorting, and not sent to the GPU DMA so the
     // memory layout doesn't matter which allows us to use an enum. Also assign
@@ -117,7 +116,7 @@ fn main() {
     let mut swapped = false;
 
     let mut theta = PI;
-    let mut phi = f16(0);
+    let mut phi = Rad(0);
     let mut psi = PI;
 
     let vel = FRAC_PI_8 / 16;

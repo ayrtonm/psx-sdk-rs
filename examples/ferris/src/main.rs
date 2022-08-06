@@ -6,7 +6,7 @@ use psx::constants::*;
 use psx::gpu::primitives::*;
 use psx::gpu::{link_list, Packet, TexCoord, Vertex};
 use psx::include_tim;
-use psx::math::{f16, rotate_x, rotate_y, rotate_z};
+use psx::math::{f16, rotate_x, rotate_y, rotate_z, Rad};
 use psx::{dma, dprintln, Framebuffer};
 
 // We don't really need a heap for this demo, but the `sort_by_key` function is
@@ -70,7 +70,7 @@ fn main() {
     let mut phi = FRAC_PI_8 / 4;
     let mut psi = FRAC_PI_8 / 8;
 
-    let vel = FRAC_PI_8 / 64;
+    let vel = Rad(64);
 
     loop {
         theta += vel * 2;
@@ -83,7 +83,7 @@ fn main() {
 
         // We want some way to return to the loader if this is a loadable executable
         if cfg!(feature = "loadable_exe") {
-            if psi > f16(0x7_000) {
+            if psi > PI + FRAC_PI_2 {
                 return
             }
         }

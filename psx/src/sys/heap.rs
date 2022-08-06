@@ -5,17 +5,38 @@
 //! `malloc`, `init_heap` and `free`.
 
 use crate::sys::kernel;
+use core::cell::Cell;
 use core::alloc::{GlobalAlloc, Layout};
 
+// SAFETY: We currently ignore threads and interrupts.
+unsafe impl Sync for BiosAllocator {}
+
 #[doc(hidden)]
-pub struct BiosAllocator;
+pub struct BiosAllocator {
+    /// Number of bytes in use
+    pub used: Cell<usize>,
+    /// The heap's total size in bytes
+    pub total_size: usize,
+}
 
 unsafe impl GlobalAlloc for BiosAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        kernel::malloc(layout.size())
+        // The BIOS malloc is broken and hands out random pointers even when it's
+        // out-of-memory. This check doesn't fix all its issues but it does make it
+        // easier to detect cases where `no_heap!` can be used allocations don't
+        // actually happen even though the alloc crate is used.
+        let used = self.used.get();
+        if used + layout.size() > self.total_size {
+            core::ptr::null_mut()
+        } else {
+            self.used.set(used + layout.size());
+            kernel::malloc(layout.size())
+        }
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        let used = self.used.get();
+        self.used.set(used - layout.size());
         kernel::free(ptr)
     }
 }
@@ -83,7 +104,10 @@ macro_rules! sys_heap {
         extern crate alloc;
 
         #[global_allocator]
-        static _HEAP: $crate::sys::heap::BiosAllocator = $crate::sys::heap::BiosAllocator;
+        static _HEAP: $crate::sys::heap::BiosAllocator = $crate::sys::heap::BiosAllocator {
+            used: core::cell::Cell::new(0),
+            total_size: $mut_slice.len() * core::mem::size_of::<u32>(),
+        };
 
         $crate::ctor! {
             fn init_heap() {

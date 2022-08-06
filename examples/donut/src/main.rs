@@ -10,7 +10,7 @@ use psx::math::{f16, rotate_x, rotate_y, rotate_z};
 use psx::sys::rng::Rng;
 use psx::{dma, println, Framebuffer};
 
-psx::sys_heap!(0 bytes);
+psx::sys_heap!(4 kb);
 
 #[no_mangle]
 fn main() {
@@ -20,6 +20,12 @@ fn main() {
     let rng = Rng::new(0xdeadbeef);
 
     let donut = include_obj!("../../../psx/test_files/torus.obj");
+
+    for [x, y, z] in donut.vertices.into_iter() {
+        *x *= 16;
+        *y *= 16;
+        *z *= 16;
+    }
 
     // Assign a random color to each vertex
     let colored_vertices = donut.vertices.map(|v| (v, rng.rand_color()));
@@ -39,15 +45,15 @@ fn main() {
 
     let mut swapped = false;
 
-    let mut theta = FRAC_PI_8 * f16(0x_800);
-    let mut phi = FRAC_PI_8 * f16(0x_400);
-    let mut psi = FRAC_PI_8 * f16(0x_200);
+    let mut theta = FRAC_PI_8 / 2;
+    let mut phi = FRAC_PI_8 / 4;
+    let mut psi = FRAC_PI_8 / 8;
 
-    let vel = FRAC_PI_8 * f16(0x_0F0);
+    let vel = FRAC_PI_8 / 25;
 
     loop {
-        theta += vel * f16(0x2_000);
-        phi += vel * f16(0x4_000);
+        theta += vel * 2;
+        phi += vel * 4;
         psi += vel;
 
         swapped = !swapped;
@@ -89,9 +95,8 @@ fn main() {
 
 fn project_face(face: [[f16; 3]; 4]) -> [Vertex; 4] {
     face.map(|[x, y, z]| {
-        let scale = 32;
-        let xp = x / (z + f16(0x1_800));
-        let yp = y / (z + f16(0x1_800));
-        Vertex(xp.0 / scale, yp.0 / scale) + Vertex(160, 120)
+        let xp = x / (z + 64);
+        let yp = y / (z + 64);
+        Vertex(xp.0, yp.0) + Vertex(160, 120)
     })
 }
