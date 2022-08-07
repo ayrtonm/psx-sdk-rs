@@ -1,11 +1,13 @@
 //! Gamepad polling operations
 use crate::sys::kernel;
 use core::marker::PhantomData;
+use core::mem::size_of;
 use core::mem::MaybeUninit;
 use core::ptr::read_volatile;
 
-// Buffer size in 4-byte words
-const BUFFER_SIZE: usize = 68 / 4;
+// TODO: this is off by a factor of two, but I should double check whether the
+// buffers need to be aligned before fixing this. Buffer size in 4-byte words
+const BUFFER_SIZE: usize = 68 / size_of::<u32>();
 
 /// `Gamepad` is a reference to a gamepad buffer managed by the BIOS.
 ///
@@ -98,6 +100,11 @@ pub mod buttons {
 }
 
 impl<'a> Gamepad<'a> {
+    // TODO: Calling this twice is not ok. Getting two `Gamepad`s may be ok with
+    // tweaks to its definition since there's really only one writer (i.e. the
+    // BIOS). However calling `new` twice is not ok because it will initialize the
+    // static buffers twice. I should make this function actually safe wrt this
+    // issue, by keeping track of the calls to init_pad/stop_pad.
     /// Creates a new gamepad from a reference to a static buffer.
     ///
     /// Note that the buffer is embedded in the executable. To use a temporary
@@ -106,6 +113,10 @@ impl<'a> Gamepad<'a> {
     pub fn new() -> Self {
         static mut BUFFER1: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
         static mut BUFFER2: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
+        // SAFETY: If this function's caller drops `Self` without calling its
+        // destructors the BIOS will still manage these buffers. However, they have a
+        // static lifetime and cannot be access from anywhere else so it's effectively
+        // just leaking the buffers.
         unsafe { Self::new_with_buffer(&mut BUFFER1, &mut BUFFER2) }
     }
 
@@ -114,19 +125,29 @@ impl<'a> Gamepad<'a> {
     /// `Gamepad::new_with_buffer` can be called by passing in a mutable
     /// reference to a `MaybeUninit::uninit()` and the buffer's size will be
     /// inferred.
-    pub fn new_with_buffer(
+    ///
+    /// # SAFETY
+    ///
+    /// Since the buffer passed to the BIOS may be dynamic, the BIOS must stop
+    /// modifying them when the Gamepad is dropped. This is done by calling
+    /// `stop_pad` in `Gamepad`'s destructor. Dropping `Gamepad` without running
+    /// its destructor or manuall calling `stop_pad` on the managed buffers will
+    /// lead to *undefined behavior*.
+    pub unsafe fn new_with_buffer(
         buf1: &'a mut MaybeUninit<[u32; BUFFER_SIZE]>,
         buf2: &'a mut MaybeUninit<[u32; BUFFER_SIZE]>,
     ) -> Self {
         let buf1 = buf1.as_mut_ptr().cast::<u16>();
         let buf2 = buf2.as_mut_ptr().cast::<u16>();
-        unsafe {
-            kernel::init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
-            buf1.cast::<u32>().write(0xFFFF_FFFF);
-            buf1.cast::<u32>().add(1).write(0xFFFF_FFFF);
-            kernel::start_pad();
-            kernel::change_clear_pad(1);
-        }
+        kernel::init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
+        // Set the status byte to not ok since init_pad zerofills the buffer
+        buf1.cast::<u8>().write_volatile(0xFF);
+        // Set all of player 1's buttons to not pressed
+        buf1.add(1).write_volatile(0xFFFF);
+        // Center player 1's joystick values
+        buf1.cast::<u32>().add(1).write_volatile(0x8080_8080);
+        kernel::start_pad();
+        kernel::change_clear_pad(1);
         Self {
             buf1,
             buf2,
@@ -137,11 +158,9 @@ impl<'a> Gamepad<'a> {
     /// Poll player 1's buttons. This emits a 16-byte volatile read which cannot
     /// be elided.
     pub fn poll_p1(&mut self) -> Buttons {
-        unsafe {
-            Buttons {
-                value: read_volatile(self.buf1.add(1)),
-                iter_idx: 0,
-            }
+        Buttons {
+            value: unsafe { read_volatile(self.buf1.add(1)) },
+            iter_idx: 0,
         }
     }
 
@@ -160,11 +179,9 @@ impl<'a> Gamepad<'a> {
     /// Poll player 2's buttons. This emits a 16-byte volatile read which cannot
     /// be elided.
     pub fn poll_p2(&mut self) -> Buttons {
-        unsafe {
-            Buttons {
-                value: read_volatile(self.buf2.add(1)),
-                iter_idx: 0,
-            }
+        Buttons {
+            value: unsafe { read_volatile(self.buf2.add(1)) },
+            iter_idx: 0,
         }
     }
 
