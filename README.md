@@ -5,7 +5,7 @@
 </p>
 
 This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
-Rust nightly version equal to or later than `2022-06-03`. Use
+Rust nightly version equal to or later than `2022-09-04`. Use
 [`rustup`](https://www.rust-lang.org/) to install the rust toolchain as follows.
 
 ```

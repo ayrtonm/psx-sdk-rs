@@ -34,8 +34,6 @@
 #![feature(const_mut_refs, maybe_uninit_array_assume_init)]
 // For `Packet::insert_packet` and `Packet::insert_list`
 #![feature(bench_black_box)]
-// For the `AsCStr` trait
-#![feature(core_c_str)]
 // Used to make `AsCStr` efficient
 #![feature(
     maybe_uninit_uninit_array,
