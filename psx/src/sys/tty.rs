@@ -107,8 +107,9 @@ macro_rules! println {
         {
             use $crate::sys::tty::TTY;
             <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($args)*)).ok();
+            // SAFETY: The string is null-terminated.
             unsafe {
-                $crate::sys::kernel::printf(b"\n\0".as_ptr() as *const i8);
+                $crate::sys::kernel::std_out_puts(b"\n\0".as_ptr() as *const i8);
             }
         }
     };
@@ -117,9 +118,9 @@ macro_rules! println {
 impl fmt::Write for TTY {
     fn write_str(&mut self, msg: &str) -> fmt::Result {
         msg.as_cstr(|cstr|
-            // SAFETY: The format string and string argument are both null-terminated.
+            // SAFETY: The format string is null-terminated.
             unsafe {
-                kernel::printf(b"%s\0".as_ptr() as *const i8, cstr.as_ptr());
+                kernel::std_out_puts(cstr.as_ptr());
             });
         Ok(())
     }
