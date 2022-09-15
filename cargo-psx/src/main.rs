@@ -115,7 +115,7 @@ fn main() {
     };
 
     // Set build-std option to pass to cargo
-    let mut build_std = "-Zbuild-std=core,alloc".to_string();
+    let build_std = "-Zbuild-std=core,alloc".to_string();
 
     // Rust doesn't do cross-crate inlining unless functions are marked as
     // #[inline]. Pretty much everything in the psx crate should be inlined since
