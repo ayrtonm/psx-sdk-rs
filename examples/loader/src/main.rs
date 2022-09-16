@@ -4,7 +4,7 @@
 use core::mem::size_of;
 use psx::constants::*;
 use psx::sys::fs::{File, CDROM};
-use psx::sys::kernel::{do_execute, flush_cache};
+use psx::sys::kernel::{psx_do_execute, psx_flush_cache};
 use psx::{dprintln, file_size, Framebuffer};
 
 #[no_mangle]
@@ -38,12 +38,12 @@ fn main() {
         // Read the CD file into the memory it will run from
         file.read(exe).expect("Could not read PROG2.EXE");
 
-        // SAFETY: flush_cache has no safety requirements. do_execute was given a
+        // SAFETY: flush_cache has no safety requirements. psx_do_execute was given a
         // pointer to the header of a valid executable.
         unsafe {
-            flush_cache();
+            psx_flush_cache();
             let init_pc_offset = 4;
-            do_execute(&mut exe[init_pc_offset] as *mut u32 as *mut u8, 0, 0);
+            psx_do_execute(&mut exe[init_pc_offset] as *mut u32 as *mut u8, 0, 0);
         }
 
         // Clear whatever the demo had on the screen

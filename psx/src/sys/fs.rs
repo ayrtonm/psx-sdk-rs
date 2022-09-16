@@ -11,16 +11,16 @@ use core::sync::atomic::Ordering;
 /// Initialize the filesystem
 pub fn init_filesystem() {
     unsafe {
-        kernel::set_default_exit_from_exception();
-        kernel::init_card(true);
-        kernel::start_card();
+        kernel::psx_set_default_exit_from_exception();
+        kernel::psx_init_card(true);
+        kernel::psx_start_card();
     }
 }
 
 /// Close the filesystem
 pub fn close_filesystem() {
     unsafe {
-        kernel::stop_card();
+        kernel::psx_stop_card();
     }
 }
 
@@ -107,7 +107,7 @@ impl<T: FileTy> OpenOptions<T> {
     /// [file name](http://problemkaputt.de/psx-spx.htm#memorycarddataformat).
     pub fn open<'f, P: AsRef<[u8]>>(&self, path: P) -> Result<File<T>, Error<'f, T>> {
         path.as_cstr(|path| {
-            let fd = unsafe { kernel::file_open(path.as_ptr(), self.flags()) };
+            let fd = unsafe { kernel::psx_file_open(path.as_ptr(), self.flags()) };
             match fd {
                 i8::MIN..=-2 => Err(Error::Resolved(ErrorKind::UnknownError)),
                 -1 => Err(Error::Unresolved),
@@ -219,11 +219,11 @@ impl<'f, T: FileTy> Error<'f, T> {
         match self {
             Error::Resolved(kind) => *kind,
             Error::Unresolved => {
-                let err = unsafe { kernel::get_last_error() };
+                let err = unsafe { kernel::psx_get_last_error() };
                 ErrorKind::from(err)
             },
             Error::UnresolvedFile { file, _ty } => {
-                let err = unsafe { kernel::get_last_file_error(file.fd) };
+                let err = unsafe { kernel::psx_get_last_file_error(file.fd) };
                 ErrorKind::from(err)
             },
         }
@@ -271,7 +271,7 @@ impl<T: FileTy> File<T> {
             SeekFrom::Start(offset) => (offset, 0),
             SeekFrom::Current(offset) => (offset as u32, 1),
         };
-        let res = unsafe { kernel::file_seek(self.fd, offset, seek_ty) };
+        let res = unsafe { kernel::psx_file_seek(self.fd, offset, seek_ty) };
         self.try_return_usize(res)
     }
 
@@ -281,13 +281,13 @@ impl<T: FileTy> File<T> {
     /// Memory card and CD-ROM files can only be read in increments of their
     /// respective sector sizes.
     pub fn read(&self, dst: &mut [u32]) -> Result<usize, Error<T>> {
-        let res = unsafe { kernel::file_read(self.fd, dst.as_mut_ptr(), dst.len() * 4) };
+        let res = unsafe { kernel::psx_file_read(self.fd, dst.as_mut_ptr(), dst.len() * 4) };
         self.try_return_usize(res)
     }
 
     /// Manually closes the file, possibly returning a BIOS error code.
     pub fn close<'f>(self) -> Result<i8, Error<'f, T>> {
-        let res = unsafe { kernel::file_close(self.fd) };
+        let res = unsafe { kernel::psx_file_close(self.fd) };
         forget(self);
         match res {
             i8::MIN..=-2 => Err(Error::Resolved(ErrorKind::UnknownError)),
@@ -322,13 +322,13 @@ impl File<MemCard> {
     /// Memory card files can only be written in increments of their sector
     /// size.
     pub fn write(&mut self, src: &[u32]) -> Result<usize, Error<MemCard>> {
-        let res = unsafe { kernel::file_write(self.fd, src.as_ptr(), src.len() * 4) };
+        let res = unsafe { kernel::psx_file_write(self.fd, src.as_ptr(), src.len() * 4) };
         self.try_return_usize(res)
     }
 }
 
 impl<T: FileTy> Drop for File<T> {
     fn drop(&mut self) {
-        let _res = unsafe { kernel::file_close(self.fd) };
+        let _res = unsafe { kernel::psx_file_close(self.fd) };
     }
 }

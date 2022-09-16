@@ -16,18 +16,18 @@ impl Rng {
     /// Creates a new random number generator initialized with `seed`.
     pub fn new(seed: u32) -> Self {
         // SAFETY: srand has no safety requirements.
-        unsafe { kernel::srand(seed) }
+        unsafe { kernel::psx_srand(seed) }
         Rng(())
     }
     /// Reseeds the random number generator.
     pub fn reseed(&mut self, seed: u32) {
         // SAFETY: srand has no safety requirements.
-        unsafe { kernel::srand(seed) }
+        unsafe { kernel::psx_srand(seed) }
     }
     /// Steps the rng state and returns a random **15 bit** number.
     pub fn step(&self) -> u16 {
         // SAFETY: The BIOS rng was seeded in `Rng::new`.
-        unsafe { kernel::rand() }
+        unsafe { kernel::psx_rand() }
     }
 
     /// Generates a random number with multiple calls to the BIOS.

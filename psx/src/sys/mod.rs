@@ -13,9 +13,9 @@ pub mod tty;
 /// syscalls.
 pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
     unsafe {
-        if kernel::enter_critical_section() {
+        if kernel::psx_enter_critical_section() {
             let res = f();
-            kernel::exit_critical_section();
+            kernel::psx_exit_critical_section();
             res
         } else {
             f()

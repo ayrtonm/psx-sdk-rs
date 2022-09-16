@@ -77,7 +77,7 @@ macro_rules! printf_impl {
     };
     (@parse; {$($acc:tt)*}) => {
         unsafe {
-            $crate::sys::kernel::printf($($acc)*)
+            $crate::sys::kernel::psx_printf($($acc)*)
         }
     };
 }
@@ -109,7 +109,7 @@ macro_rules! println {
             <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($args)*)).ok();
             // SAFETY: The string is null-terminated.
             unsafe {
-                $crate::sys::kernel::std_out_puts(b"\n\0".as_ptr() as *const i8);
+                $crate::sys::kernel::psx_std_out_puts(b"\n\0".as_ptr() as *const i8);
             }
         }
     };
@@ -120,7 +120,7 @@ impl fmt::Write for TTY {
         msg.as_cstr(|cstr|
             // SAFETY: The format string is null-terminated.
             unsafe {
-                kernel::std_out_puts(cstr.as_ptr());
+                kernel::psx_std_out_puts(cstr.as_ptr());
             });
         Ok(())
     }

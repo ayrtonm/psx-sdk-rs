@@ -139,15 +139,15 @@ impl<'a> Gamepad<'a> {
     ) -> Self {
         let buf1 = buf1.as_mut_ptr().cast::<u16>();
         let buf2 = buf2.as_mut_ptr().cast::<u16>();
-        kernel::init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
+        kernel::psx_init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
         // Set the status byte to not ok since init_pad zerofills the buffer
         buf1.cast::<u8>().write_volatile(0xFF);
         // Set all of player 1's buttons to not pressed
         buf1.add(1).write_volatile(0xFFFF);
         // Center player 1's joystick values
         buf1.cast::<u32>().add(1).write_volatile(0x8080_8080);
-        kernel::start_pad();
-        kernel::change_clear_pad(1);
+        kernel::psx_start_pad();
+        kernel::psx_change_clear_pad(1);
         Self {
             buf1,
             buf2,
@@ -201,7 +201,7 @@ impl<'a> Gamepad<'a> {
 impl<'a> Drop for Gamepad<'a> {
     fn drop(&mut self) {
         unsafe {
-            kernel::stop_pad();
+            kernel::psx_stop_pad();
         }
     }
 }

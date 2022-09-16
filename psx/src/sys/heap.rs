@@ -30,14 +30,14 @@ unsafe impl GlobalAlloc for BiosAllocator {
             core::ptr::null_mut()
         } else {
             self.used.set(used + layout.size());
-            kernel::malloc(layout.size())
+            kernel::psx_malloc(layout.size())
         }
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         let used = self.used.get();
         self.used.set(used - layout.size());
-        kernel::free(ptr)
+        kernel::psx_free(ptr)
     }
 }
 
@@ -118,7 +118,7 @@ macro_rules! sys_heap {
                 let ptr = slice.as_mut_ptr() as usize;
                 let len = slice.len() * size_of::<u32>();
                 unsafe {
-                    $crate::sys::kernel::init_heap(ptr, len);
+                    $crate::sys::kernel::psx_init_heap(ptr, len);
                 }
             }
         }
