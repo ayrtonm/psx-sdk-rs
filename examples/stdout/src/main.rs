@@ -21,7 +21,7 @@ fn main() {
     let rand_num: u32 = rng.rand();
     // SAFETY: Format strings and arguments formatted with '%s' are explicitly null-terminated
     unsafe {
-        kernel::printf(fmt_str, str_arg, rand_num);
+        kernel::psx_printf(fmt_str, str_arg, rand_num);
     }
 
     // The printf! macro adds null-terminators where necessary to remove the need for unsafe. This

@@ -50,7 +50,7 @@ const INDENT: &str = "    ";
 
 fn decl_bios_fn(func: &FnDesc) -> String {
     format!("{}/// Calls BIOS function [{}({}h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)\n\
-             {0}pub fn {3}\n", INDENT, func.ty, func.num, func.sig)
+             {0}pub fn psx_{3}\n", INDENT, func.ty, func.num, func.sig)
 }
 
 fn mk_bios_trampoline(func: &FnDesc) -> String {
@@ -72,9 +72,9 @@ fn mk_bios_trampoline(func: &FnDesc) -> String {
     };
     format!(
         "\n\
-             .section .text.bios.{}\n\
-             .globl {0}\n\
-             {0}:\n\
+             .section .text.bios.psx_{}\n\
+             .globl psx_{0}\n\
+             psx_{0}:\n\
                  {}{}\n\
                  {1}{3}\n",
         func.name, INDENT, stmts[0], stmts[1]
