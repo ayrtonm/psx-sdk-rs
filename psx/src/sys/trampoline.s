@@ -4,415 +4,491 @@
 .section .text.bios.psx_file_open
 .globl psx_file_open
 psx_file_open:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x00
 
 .section .text.bios.psx_file_seek
 .globl psx_file_seek
 psx_file_seek:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x01
 
 .section .text.bios.psx_file_read
 .globl psx_file_read
 psx_file_read:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x02
 
 .section .text.bios.psx_file_write
 .globl psx_file_write
 psx_file_write:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x03
 
 .section .text.bios.psx_file_close
 .globl psx_file_close
 psx_file_close:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x04
 
 .section .text.bios.psx_exit
 .globl psx_exit
 psx_exit:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x06
 
 .section .text.bios.psx_save_state
 .globl psx_save_state
 psx_save_state:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x13
 
 .section .text.bios.psx_restore_state
 .globl psx_restore_state
 psx_restore_state:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x14
 
 .section .text.bios.psx_rand
 .globl psx_rand
 psx_rand:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x2F
 
 .section .text.bios.psx_srand
 .globl psx_srand
 psx_srand:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x30
 
 .section .text.bios.psx_malloc
 .globl psx_malloc
 psx_malloc:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x33
 
 .section .text.bios.psx_free
 .globl psx_free
 psx_free:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x34
 
 .section .text.bios.psx_calloc
 .globl psx_calloc
 psx_calloc:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x37
 
 .section .text.bios.psx_realloc
 .globl psx_realloc
 psx_realloc:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x38
 
 .section .text.bios.psx_init_heap
 .globl psx_init_heap
 psx_init_heap:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x39
 
 .section .text.bios.psx_system_error_exit
 .globl psx_system_error_exit
 psx_system_error_exit:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x3A
+
+.section .text.bios.psx_std_out_putchar
+.globl psx_std_out_putchar
+psx_std_out_putchar:
+    la $8, 0xB0
+    jr $8
+    li $9, 0x3D
 
 .section .text.bios.psx_std_out_puts
 .globl psx_std_out_puts
 psx_std_out_puts:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x3E
 
 .section .text.bios.psx_printf
 .globl psx_printf
 psx_printf:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x3F
 
 .section .text.bios.psx_load_exe_header
 .globl psx_load_exe_header
 psx_load_exe_header:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x41
 
 .section .text.bios.psx_load_exe_file
 .globl psx_load_exe_file
 psx_load_exe_file:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x42
 
 .section .text.bios.psx_do_execute
 .globl psx_do_execute
 psx_do_execute:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x43
 
 .section .text.bios.psx_flush_cache
 .globl psx_flush_cache
 psx_flush_cache:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x44
 
 .section .text.bios.psx_gpu_send_dma
 .globl psx_gpu_send_dma
 psx_gpu_send_dma:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x47
 
 .section .text.bios.psx_gp1_command
 .globl psx_gp1_command
 psx_gp1_command:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x48
 
 .section .text.bios.psx_gp0_command
 .globl psx_gp0_command
 psx_gp0_command:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x49
 
 .section .text.bios.psx_gp0_command_params
 .globl psx_gp0_command_params
 psx_gp0_command_params:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x4A
 
 .section .text.bios.psx_gpu_get_status
 .globl psx_gpu_get_status
 psx_gpu_get_status:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x4D
 
 .section .text.bios.psx_gpu_sync
 .globl psx_gpu_sync
 psx_gpu_sync:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x4E
 
 .section .text.bios.psx_load_and_execute
 .globl psx_load_and_execute
 psx_load_and_execute:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x51
 
 .section .text.bios.psx_cd_init
 .globl psx_cd_init
 psx_cd_init:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x54
 
 .section .text.bios.psx_cd_remove
 .globl psx_cd_remove
 psx_cd_remove:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x56
 
 .section .text.bios.psx_cd_async_get_status
 .globl psx_cd_async_get_status
 psx_cd_async_get_status:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x7C
 
 .section .text.bios.psx_add_cdrom_device
 .globl psx_add_cdrom_device
 psx_add_cdrom_device:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x96
 
 .section .text.bios.psx_set_memsize
 .globl psx_set_memsize
 psx_set_memsize:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0x9F
 
 .section .text.bios.psx_warm_boot
 .globl psx_warm_boot
 psx_warm_boot:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0xA0
 
 .section .text.bios.psx_cd_get_lbn
 .globl psx_cd_get_lbn
 psx_cd_get_lbn:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0xA4
 
 .section .text.bios.psx_cd_get_status
 .globl psx_cd_get_status
 psx_cd_get_status:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0xA6
 
 .section .text.bios.psx_get_system_info
 .globl psx_get_system_info
 psx_get_system_info:
-    j 0xA0
+    la $8, 0xA0
+    jr $8
     li $9, 0xB4
 
 .section .text.bios.psx_get_timer
 .globl psx_get_timer
 psx_get_timer:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x03
 
 .section .text.bios.psx_enable_timer_irq
 .globl psx_enable_timer_irq
 psx_enable_timer_irq:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x04
 
 .section .text.bios.psx_disable_timer_irq
 .globl psx_disable_timer_irq
 psx_disable_timer_irq:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x05
 
 .section .text.bios.psx_restart_timer
 .globl psx_restart_timer
 psx_restart_timer:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x06
 
 .section .text.bios.psx_deliver_event
 .globl psx_deliver_event
 psx_deliver_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x07
 
 .section .text.bios.psx_open_event
 .globl psx_open_event
 psx_open_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x08
 
 .section .text.bios.psx_close_event
 .globl psx_close_event
 psx_close_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x09
 
 .section .text.bios.psx_wait_event
 .globl psx_wait_event
 psx_wait_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x0A
 
 .section .text.bios.psx_test_event
 .globl psx_test_event
 psx_test_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x0B
 
 .section .text.bios.psx_enable_event
 .globl psx_enable_event
 psx_enable_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x0C
 
 .section .text.bios.psx_disable_event
 .globl psx_disable_event
 psx_disable_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x0D
 
 .section .text.bios.psx_open_thread
 .globl psx_open_thread
 psx_open_thread:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x0E
 
 .section .text.bios.psx_close_thread
 .globl psx_close_thread
 psx_close_thread:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x0F
 
 .section .text.bios.psx_change_thread
 .globl psx_change_thread
 psx_change_thread:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x10
 
 .section .text.bios.psx_init_pad
 .globl psx_init_pad
 psx_init_pad:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x12
 
 .section .text.bios.psx_start_pad
 .globl psx_start_pad
 psx_start_pad:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x13
 
 .section .text.bios.psx_stop_pad
 .globl psx_stop_pad
 psx_stop_pad:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x14
 
 .section .text.bios.psx_set_default_exit_from_exception
 .globl psx_set_default_exit_from_exception
 psx_set_default_exit_from_exception:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x18
 
 .section .text.bios.psx_undeliver_event
 .globl psx_undeliver_event
 psx_undeliver_event:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x20
 
 .section .text.bios.psx_file_rename
 .globl psx_file_rename
 psx_file_rename:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x44
 
 .section .text.bios.psx_file_delete
 .globl psx_file_delete
 psx_file_delete:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x45
 
 .section .text.bios.psx_file_undelete
 .globl psx_file_undelete
 psx_file_undelete:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x46
 
 .section .text.bios.psx_print_installed_devices
 .globl psx_print_installed_devices
 psx_print_installed_devices:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x49
 
 .section .text.bios.psx_init_card
 .globl psx_init_card
 psx_init_card:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x4A
 
 .section .text.bios.psx_start_card
 .globl psx_start_card
 psx_start_card:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x4B
 
 .section .text.bios.psx_stop_card
 .globl psx_stop_card
 psx_stop_card:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x4C
 
 .section .text.bios.psx_get_last_error
 .globl psx_get_last_error
 psx_get_last_error:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x54
 
 .section .text.bios.psx_get_last_file_error
 .globl psx_get_last_file_error
 psx_get_last_file_error:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x55
 
 .section .text.bios.psx_change_clear_pad
 .globl psx_change_clear_pad
 psx_change_clear_pad:
-    j 0xB0
+    la $8, 0xB0
+    jr $8
     li $9, 0x5B
 
 .section .text.bios.psx_change_clear_rcnt
 .globl psx_change_clear_rcnt
 psx_change_clear_rcnt:
-    j 0xC0
+    la $8, 0xC0
+    jr $8
     li $9, 0x0A
 
 .section .text.bios.psx_flush_std_in_out_put
 .globl psx_flush_std_in_out_put
 psx_flush_std_in_out_put:
-    j 0xC0
+    la $8, 0xC0
+    jr $8
     li $9, 0x13
 
 .section .text.bios.psx_enter_critical_section

@@ -78,7 +78,11 @@ A(38h) realloc(old_buf: *const u8, new_size: usize);
 A(39h) init_heap(addr: usize, size: usize);
 A(3Ah) system_error_exit(exitcode: i32) -> !;
 //A(3Bh) std_in_getchar();
+
+// Prints the specified char to stdout.
 //A(3Ch) std_out_putchar(char);
+B(3Dh) std_out_putchar(char: u8);
+
 //A(3Dh) std_in_gets(dst);
 
 // Prints the specified string to stdout without resolving C-style escape codes.

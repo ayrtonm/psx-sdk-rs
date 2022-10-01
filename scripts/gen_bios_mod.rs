@@ -53,6 +53,19 @@ fn decl_bios_fn(func: &FnDesc) -> String {
              {0}pub fn psx_{3}\n", INDENT, func.ty, func.num, func.sig)
 }
 
+fn def_fn_info(func: &FnDesc) -> String {
+    let mut info = format!("/// The BIOS function number for {}\n\
+                            pub const {}_NUM: u8 = 0x{};\n",
+                            func.name, func.name.to_uppercase(), func.num);
+
+    if !func.is_syscall {
+        info += &format!("/// The BIOS function type for {}\n\
+                         pub const {}_TY: u8 = 0x{}0;\n",
+                         func.name, func.name.to_uppercase(), func.ty);
+    };
+    info
+}
+
 fn mk_bios_trampoline(func: &FnDesc) -> String {
     let li_stmt = &format!("li ${}, 0x{}", func.arg, func.num);
     let j_stmt = &if func.is_syscall {
@@ -63,7 +76,8 @@ fn mk_bios_trampoline(func: &FnDesc) -> String {
             INDENT
         )
     } else {
-        format!("j 0x{}0", func.ty)
+        format!("la $8, 0x{}0\n\
+                 {}jr $8", func.ty, INDENT)
     };
     let stmts = if func.is_syscall {
         [li_stmt, j_stmt]
@@ -109,6 +123,7 @@ fn main() {
     let src = bios_functions
         .iter()
         .fold(String::new(), |s, f| s + &decl_bios_fn(f));
+    let constants = bios_functions.iter().fold(String::new(), |s, f| s + &def_fn_info(f));
     fs::write(
         src_file,
         format!(
@@ -119,8 +134,9 @@ fn main() {
              core::arch::global_asm!(include_str!(\"trampoline.s\"));\n\n\
              extern \"C\" {{\n\
              {}\
-             }}\n",
-            src
+             }}\n\
+             {}",
+            src, constants
         ),
     )
     .unwrap_or_else(|_| panic!("Unable to write to {}", src_file));
