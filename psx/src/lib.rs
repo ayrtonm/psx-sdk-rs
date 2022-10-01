@@ -89,10 +89,23 @@ pub mod constants {
     pub const KSEG0_BASE: usize = 0x8000_0000;
     /// The start of main RAM in KSEG1.
     pub const KSEG1_BASE: usize = 0xA000_0000;
+
     /// The size of main RAM.
     pub const MAIN_RAM_LEN: usize = 2 * MB;
     /// The size of the BIOS in RAM.
     pub const BIOS_LEN: usize = 64 * KB;
+
+    /// The BIOS A0 function vector
+    pub const A0_VEC: usize = 0x8000_00A0;
+    /// The BIOS B0 function vector
+    pub const B0_VEC: usize = 0x8000_00B0;
+    /// The BIOS C0 function vector
+    pub const C0_VEC: usize = 0x8000_00C0;
+
+    /// The general exception vector in RAM
+    pub const RAM_EXCEPTION_VEC: usize = 0x8000_0080;
+    /// The general exception vector in ROM
+    pub const ROM_EXCEPTION_VEC: usize = 0xBFC0_0180;
 
     /// The start of the data cache.
     pub const DATA_CACHE: *mut u32 = 0x9F80_0000 as *mut u32;
