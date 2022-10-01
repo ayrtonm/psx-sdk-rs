@@ -82,16 +82,23 @@ pub mod sys;
 pub mod constants {
     const KB: usize = 1024;
     const MB: usize = 1024 * KB;
+
+    /// The start of main RAM in KUSEG.
+    pub const KUSEG_BASE: usize = 0x0000_0000;
     /// The start of main RAM in KSEG0.
-    pub const MAIN_RAM: *mut u32 = 0x8000_0000 as *mut u32;
+    pub const KSEG0_BASE: usize = 0x8000_0000;
+    /// The start of main RAM in KSEG1.
+    pub const KSEG1_BASE: usize = 0xA000_0000;
     /// The size of main RAM.
     pub const MAIN_RAM_LEN: usize = 2 * MB;
+    /// The size of the BIOS in RAM.
+    pub const BIOS_LEN: usize = 64 * KB;
+
     /// The start of the data cache.
     pub const DATA_CACHE: *mut u32 = 0x9F80_0000 as *mut u32;
     /// The size of the data cache.
     pub const DATA_CACHE_LEN: usize = 1 * KB;
-    /// The size of the BIOS in RAM.
-    pub const BIOS_LEN: usize = 64 * KB;
+
     pub use crate::gpu::colors::*;
     pub use crate::gpu::VideoMode::*;
     pub use crate::math::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_PI_8, PI};
