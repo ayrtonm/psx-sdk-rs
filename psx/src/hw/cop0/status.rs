@@ -25,6 +25,8 @@ pub const IM_HW: u32 = 10;
 pub const ISC: u32 = 16;
 // Swap cache
 pub const SWC: u32 = 17;
+// Boot (ROM) exception vector
+pub const BEV: u32 = 22;
 // COP0 enable
 pub const CU0: u32 = 28;
 // COP2 enable
@@ -82,6 +84,11 @@ impl Status {
     /// exceptions.
     pub fn interrupt_masked(&self, int_src: IntSrc) -> bool {
         !self.interrupt_unmasked(int_src)
+    }
+
+    /// Checks if the boot (ROM) exception vectors are in use.
+    pub fn using_boot_vectors(&self) -> bool {
+        self.all_set(1 << BEV)
     }
 
     /// Checks if coprocessor 0 is enabled in user-mode.
@@ -148,6 +155,15 @@ impl Status {
         self.toggle_bits(1 << SWC)
     }
 
+    /// Sets the status register to use the boot (ROM) exception vectors.
+    pub fn use_boot_vectors(&mut self, rom: bool) -> &mut Self {
+        if rom {
+            self.set_bits(1 << BEV)
+        } else {
+            self.clear_bits(1 << BEV)
+        }
+    }
+
     /// Enables coprocessor 0 in user-mode.
     pub fn enable_user_cop0(&mut self) -> &mut Self {
         self.set_bits(1 << CU0)
@@ -187,6 +203,7 @@ impl Debug for Status {
                 "sw1_interrupt_masked",
                 &self.interrupt_masked(IntSrc::Software1),
             )
+            .field("boot_vectors", &self.using_boot_vectors())
             .field("user_cop0_enabled", &self.user_cop0_enabled())
             .field("gte_enabled", &self.gte_enabled())
             .finish()
