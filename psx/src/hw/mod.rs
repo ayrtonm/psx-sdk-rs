@@ -21,63 +21,6 @@ pub mod mmio;
 
 use mmio::MemRegister;
 
-/// The four-instruction exception vector.
-pub struct ExceptionVector {
-    /// The first instruction in the exception vector.
-    pub insn_0: MemRegister<u32, 0x8000_0080>,
-    /// The second instruction in the exception vector.
-    pub insn_1: MemRegister<u32, 0x8000_0084>,
-    /// The third instruction in the exception vector.
-    pub insn_2: MemRegister<u32, 0x8000_0088>,
-    /// The fourth instruction in the exception vector.
-    pub insn_3: MemRegister<u32, 0x8000_008C>,
-}
-
-impl ExceptionVector {
-    const JAL: u32 = 3 << 26;
-    const MFC0_R26_EPC: u32 = 0x401a_7000;
-    const JR_R26: u32 = 0x0340_0008;
-    const RFE: u32 = 0x4200_0010;
-
-    /// Creates a new handle without reading any register values.
-    pub fn skip_load() -> Self {
-        Self {
-            insn_0: MemRegister::skip_load(),
-            insn_1: MemRegister::skip_load(),
-            insn_2: MemRegister::skip_load(),
-            insn_3: MemRegister::skip_load(),
-        }
-    }
-
-    /// Sets `handler` as the exception handler.
-    ///
-    /// The set exception handler is responsible for acknowledging pending
-    /// interrupts to avoid being called repeatedly. It must also restore any
-    /// caller-saved registers it uses to their original values. Failure to
-    /// restore any used registers will lead to **undefined behavior**.
-    pub fn set_handler(&mut self, handler: extern "C" fn()) {
-        fn mask_address(f: extern "C" fn()) -> u32 {
-            const MASK: u32 = (1 << 26) - 1;
-            let address = (f as u32) >> 2;
-            address & MASK
-        }
-        // Call `handler`
-        self.insn_0
-            .assign(Self::JAL | mask_address(handler))
-            .store();
-        // This is in the jump delay slot of JAL so it happens before `handler` is
-        // called. This saves the exception program counter EPC.
-        self.insn_1.assign(Self::MFC0_R26_EPC).store();
-
-        // This is executed after `handler` returns and jumps back to where the
-        // exception happened (EPC).
-        self.insn_2.assign(Self::JR_R26).store();
-        // This is in the jump delay slot of JR R26 so it happens before returning to
-        // EPC.
-        self.insn_3.assign(Self::RFE).store();
-    }
-}
-
 mod private {
     use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
     pub trait Primitive:
