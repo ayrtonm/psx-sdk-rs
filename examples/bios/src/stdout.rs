@@ -1,17 +1,16 @@
+use core::ffi::CStr;
 use core::fmt;
 use psx::sys::kernel::psx_std_out_putchar;
 
 pub struct Stdout;
 
-// TODO: core::fmt adds about 20K by itself so I should consider ufmt or other
-// fmt-free alternatives
+// TODO: core::fmt adds about 10-20K by itself so I should consider ufmt or
+// other fmt-free alternatives
 impl fmt::Write for Stdout {
     fn write_str(&mut self, msg: &str) -> fmt::Result {
         for c in msg.chars() {
             let ascii = if !c.is_ascii() { b'?' } else { c as u8 };
-            unsafe {
-                psx_std_out_putchar(ascii);
-            }
+            putchar(ascii);
         }
         Ok(())
     }
@@ -30,11 +29,48 @@ macro_rules! print {
 macro_rules! println {
     ($($args:tt)*) => {
         {
-            use $crate::stdout::Stdout;
-            <Stdout as core::fmt::Write>::write_fmt(&mut Stdout, format_args!($($args)*)).ok();
-            unsafe {
-                psx::sys::kernel::psx_std_out_putchar(b'\n');
-            }
+            $crate::print!($($args)*);
+            $crate::stdout::putchar(b'\n');
         }
     };
+}
+
+pub fn putchar(c: u8) {
+    unsafe { psx_std_out_putchar(c) }
+}
+
+pub fn printf(fmt_str: &CStr, args: [u32; 3]) -> u32 {
+    let mut va_arg = None;
+    let mut args_used = 0;
+    for &b in fmt_str.to_bytes() {
+        if b == b'%' {
+            if va_arg.is_none() {
+                va_arg = Some(args_used);
+                continue
+            } else {
+                va_arg = None;
+            }
+        }
+        match va_arg {
+            Some(idx) => {
+                args_used += 1;
+                match b {
+                    b'd' | b'i' | b'D' => print!("{}", args[idx]),
+                    b'x' => print!("{:x}", args[idx]),
+                    b'X' => print!("{:X}", args[idx]),
+                    b's' => {
+                        // SAFETY: Let's hope the user passed in a null-terminated string
+                        let str_arg = unsafe { CStr::from_ptr(args[idx] as *const i8) };
+                        for &c in str_arg.to_bytes() {
+                            putchar(c);
+                        }
+                    },
+                    _ => args_used -= 1,
+                }
+                va_arg = None;
+            },
+            None => putchar(b),
+        }
+    }
+    0
 }

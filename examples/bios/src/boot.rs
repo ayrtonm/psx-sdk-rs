@@ -26,6 +26,7 @@ unsafe extern "C" fn boot() -> ! {
 extern "C" fn start() -> ! {
     // Write handlers to the BIOS fn and general exception vectors
     init_vectors();
+    init_ram();
     main();
     // Hang if the main loop returns
     loop {}
@@ -48,4 +49,22 @@ fn init_vectors() {
         );
     }
     println!("Wrote RAM exception vector");
+}
+
+fn init_ram() {
+    extern "C" {
+        // The linker script is set up so that these refer to the load addresses
+        static __data_start: u32;
+        static __data_end: u32;
+    }
+    unsafe {
+        let start = &__data_start as *const u32 as usize;
+        let end = &__data_end as *const u32 as usize;
+        let len = end - start;
+        volatile_copy_nonoverlapping_memory(
+            (KSEG0_BASE + 0x100) as *mut u32,
+            &__data_start as *const u32,
+            len,
+        );
+    }
 }

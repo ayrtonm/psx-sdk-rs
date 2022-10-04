@@ -15,6 +15,7 @@ use psx::sys::kernel::*;
 
 mod boot;
 mod exceptions;
+mod global;
 mod misc;
 mod rand;
 mod stdout;
@@ -22,6 +23,7 @@ mod thread;
 
 use crate::misc::get_system_info;
 use crate::rand::{rand, srand};
+use crate::stdout::printf;
 use crate::thread::{change_thread, close_thread, open_thread};
 
 fn main() {
@@ -73,60 +75,18 @@ extern "C" fn fn_handler() -> u32 {
     match (fn_num, fn_ty) {
         (SRAND_NUM, SRAND_TY) => {
             reg!(let seed = "$4");
-            srand(seed);
-            0
+            srand(seed)
         },
         (RAND_NUM, RAND_TY) => rand(),
         (PRINTF_NUM, PRINTF_TY) => {
-            reg!(let fmt_str = "$4");
+            reg!(let fmt_ptr = "$4");
             reg!(let arg0 = "$5");
             reg!(let arg1 = "$6");
             reg!(let arg2 = "$7");
             let args = [arg0, arg1, arg2];
             // SAFETY: Let's hope the user passed in a null-terminated string
-            let fmt_str = unsafe { CStr::from_ptr(fmt_str as *const i8) };
-            let mut va_arg = None;
-            let mut args_used = 0;
-            for &b in fmt_str.to_bytes() {
-                if b == b'%' {
-                    if va_arg.is_none() {
-                        va_arg = Some(args_used);
-                        continue
-                    } else {
-                        va_arg = None;
-                    }
-                }
-                match va_arg {
-                    Some(idx) => {
-                        match b {
-                            b'd' | b'i' | b'D' => {
-                                print!("{}", args[idx]);
-                                args_used += 1;
-                            },
-                            b'x' => {
-                                print!("{:x}", args[idx]);
-                                args_used += 1;
-                            },
-                            b'X' => {
-                                print!("{:X}", args[idx]);
-                                args_used += 1;
-                            },
-                            b's' => {
-                                // SAFETY: Let's hope the user passed in a null-terminated string
-                                let str_arg = unsafe { CStr::from_ptr(args[idx] as *const i8) };
-                                print!("{}", str_arg.to_str().unwrap());
-                                args_used += 1;
-                            },
-                            _ => {},
-                        }
-                        va_arg = None;
-                    },
-                    None => unsafe {
-                        psx_std_out_putchar(b);
-                    },
-                }
-            }
-            0
+            let fmt_str = unsafe { CStr::from_ptr(fmt_ptr as *const i8) };
+            printf(fmt_str, args)
         },
         (GET_SYSTEM_INFO_NUM, GET_SYSTEM_INFO_TY) => {
             reg!(let idx: u8 = "$4");

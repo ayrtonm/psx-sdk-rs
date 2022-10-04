@@ -1,0 +1,2 @@
+[target.mipsel-sony-psx]
+linker = "mipsel-unknown-elf-ld"

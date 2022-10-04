@@ -14,15 +14,25 @@ SECTIONS {
         __text_end = .;
     } > ROM
 
-    .ram 0x80000000 : {
+    . = ALIGN(4);
+    __data_start = .;
+
+    /* Add an offset to the start of KSEG0 to avoid overlap an vectors */
+    .ram 0x80000100 : {
         *(.data*)
+        /* TODO: Make .bss NOLOAD */
         *(.bss*)
     } > RAM AT> ROM
+
+    . = LOADADDR(.ram) + SIZEOF(.ram);
+    . = ALIGN(4);
+    __data_end = .;
 
 
     .rom_padding : {
         . = ALIGN(512K) - 1;
-        BYTE(0x00);
+        /* du doesn't like files that end with all zeros, so let's add a non-zero byte */
+        BYTE(0xFF);
     } > ROM
 
     /DISCARD/ : {
