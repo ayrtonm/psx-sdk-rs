@@ -127,18 +127,60 @@ unsafe extern "C" fn fn_vec() {
     }
 }
 
+static mut SEED: u32 = 0;
+
+pub fn srand(seed: u32) {
+    unsafe {
+        SEED = seed;
+    }
+}
+
+pub fn rand() -> u32 {
+    unsafe {
+        SEED = SEED * 0x41C6_4E6D + 0x3039;
+        (SEED >> 16) & 0x7FFF
+    }
+}
+
 // The handler called by the three BIOS fn vectors.
 #[no_mangle]
-extern "C" fn fn_handler() {
+extern "C" fn fn_handler() -> u32 {
     reg!(let fn_ty: u8 = "$8");
     reg!(let fn_num: u8 = "$9");
-    if fn_num == STD_OUT_PUTCHAR_NUM && fn_ty == STD_OUT_PUTCHAR_TY {
-        // Emulators usually implement debug output by checking that PC reaches
-        // 0x8000_00B0 with $9 set to 0x3D so the BIOS just needs to return to the
-        // caller in this case.
-        return
+    // TODO: Consider switching to the table of function pointers approached
+    // used by other BIOS implementations
+    match (fn_num, fn_ty) {
+        (SRAND_NUM, SRAND_TY) => {
+            reg!(let seed: u32 = "$4");
+            srand(seed);
+            0
+        },
+        (RAND_NUM, RAND_TY) => rand(),
+        (GET_SYSTEM_INFO_NUM, GET_SYSTEM_INFO_TY) => {
+            reg!(let idx: u8 = "$4");
+            get_system_info(idx)
+        },
+        (STD_OUT_PUTCHAR_NUM, STD_OUT_PUTCHAR_TY) => {
+            // Emulators usually implement debug output by checking that PC reaches
+            // 0x8000_00B0 with $9 set to 0x3D so the BIOS just needs to return to the
+            // caller in this case.
+            0
+        },
+        _ => {
+            println!("Called unimplemented function {:x}({:x})", fn_ty, fn_num);
+            u32::MAX
+        },
     }
-    println!("Called unimplemented function {:x}({:x})", fn_ty, fn_num);
+}
+
+fn get_system_info(idx: u8) -> u32 {
+    match idx {
+        // Return the date in BCD
+        0 => 0x20221004,
+        // Return a pointer to the version string
+        2 => "BIOS VERSION 0.1\0".as_ptr() as u32,
+        _ => 0xFFFFFFFF,
+    }
 }
 
 #[naked]
@@ -191,6 +233,8 @@ extern "C" fn init_vectors() {
 #[no_mangle]
 extern "C" fn main_loop() {
     println!("Starting main BIOS loop");
+    println!("{:?}", psx::sys::get_system_version());
+    println!("{:x?}", psx::sys::get_system_date());
     let mut sr = cop0::Status::new();
     sr.enable_interrupts()
         .unmask_interrupt(IntSrc::Hardware)
@@ -198,5 +242,7 @@ extern "C" fn main_loop() {
         .store();
     println!("{:#x?}", sr);
     let mut mask = irq::Mask::new();
-    mask.enable_all().store();
+    loop {
+        mask.enable_all().store();
+    }
 }
