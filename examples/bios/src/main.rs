@@ -89,36 +89,41 @@ extern "C" fn fn_handler() -> u32 {
             let mut args_used = 0;
             for &b in fmt_str.to_bytes() {
                 if b == b'%' {
-                    va_arg = Some(args_used);
-                    continue
+                    if va_arg.is_none() {
+                        va_arg = Some(args_used);
+                        continue
+                    } else {
+                        va_arg = None;
+                    }
                 }
-                if let Some(idx) = va_arg {
-                    match b {
-                        b'd' | b'i' | b'D' => {
-                            print!("{}", args[idx]);
-                            args_used += 1;
-                        },
-                        b'x' => {
-                            print!("{:x}", args[idx]);
-                            args_used += 1;
-                        },
-                        b'X' => {
-                            print!("{:X}", args[idx]);
-                            args_used += 1;
-                        },
-                        b's' => {
-                            // SAFETY: Let's hope the user passed in a null-terminated string
-                            let str_arg = unsafe { CStr::from_ptr(args[idx] as *const i8) };
-                            print!("{}", str_arg.to_str().unwrap());
-                            args_used += 1;
-                        },
-                        _ => {},
-                    }
-                    va_arg = None;
-                } else {
-                    unsafe {
+                match va_arg {
+                    Some(idx) => {
+                        match b {
+                            b'd' | b'i' | b'D' => {
+                                print!("{}", args[idx]);
+                                args_used += 1;
+                            },
+                            b'x' => {
+                                print!("{:x}", args[idx]);
+                                args_used += 1;
+                            },
+                            b'X' => {
+                                print!("{:X}", args[idx]);
+                                args_used += 1;
+                            },
+                            b's' => {
+                                // SAFETY: Let's hope the user passed in a null-terminated string
+                                let str_arg = unsafe { CStr::from_ptr(args[idx] as *const i8) };
+                                print!("{}", str_arg.to_str().unwrap());
+                                args_used += 1;
+                            },
+                            _ => {},
+                        }
+                        va_arg = None;
+                    },
+                    None => unsafe {
                         psx_std_out_putchar(b);
-                    }
+                    },
                 }
             }
             0
