@@ -6,232 +6,25 @@
 #![feature(core_intrinsics)]
 
 use core::arch::asm;
-use core::intrinsics::volatile_copy_nonoverlapping_memory;
-use psx::constants::*;
+use core::ffi::CStr;
 use psx::hw::cop0;
 use psx::hw::cop0::IntSrc;
 use psx::hw::irq;
 use psx::hw::Register;
 use psx::sys::kernel::*;
 
+mod boot;
+mod exceptions;
+mod misc;
+mod rand;
 mod stdout;
+mod thread;
 
-// This is the entry point which is placed at 0xBFC0_0000 by the linker script
-// since this is the only function .text.boot. The stack pointer is
-// uninitialized so it must be a naked function.
-#[naked]
-#[no_mangle]
-#[link_section = ".text.boot"]
-unsafe extern "C" fn boot() -> ! {
-    asm! {
-        "la $sp, {init_sp}
-         j start",
-        init_sp = const(KSEG0_BASE + MAIN_RAM_LEN - 0x100),
-        options(noreturn)
-    }
-}
+use crate::misc::get_system_info;
+use crate::rand::{rand, srand};
+use crate::thread::{change_thread, close_thread, open_thread};
 
-// The stack pointer is now initialized so this doesn't have to be a naked
-// function.
-#[no_mangle]
-unsafe extern "C" fn start() -> ! {
-    // Write handlers to the BIOS fn and general exception vectors
-    init_vectors();
-    main_loop();
-    // Hang if the main loop returns
-    loop {}
-}
-
-// Bind a register's value to an identifier
-macro_rules! reg {
-    (let $var:ident = $reg:tt) => {
-        reg!(let $var: u32 = $reg);
-    };
-    (let $var:ident: $size:ty = $reg:tt) => {
-        let $var: $size;
-        unsafe {
-            asm! { "", out($reg) $var }
-        }
-    };
-}
-
-macro_rules! with_caller_saved_regs {
-    ($($body:tt)*) => {
-        let r2: u32;
-        let r3: u32;
-        let r4: u32;
-        let r5: u32;
-        let r6: u32;
-        let r7: u32;
-        let r8: u32;
-        let r9: u32;
-        let r10: u32;
-        let r11: u32;
-        let r12: u32;
-        let r13: u32;
-        let r14: u32;
-        let r15: u32;
-        let r24: u32;
-        let r25: u32;
-        unsafe {
-            asm! { "",
-                out("$2") r2,
-                out("$3") r3,
-                out("$4") r4,
-                out("$5") r5,
-                out("$6") r6,
-                out("$7") r7,
-                out("$8") r8,
-                out("$9") r9,
-                out("$10") r10,
-                out("$11") r11,
-                out("$12") r12,
-                out("$13") r13,
-                out("$14") r14,
-                out("$15") r15,
-                out("$24") r24,
-                out("$25") r25
-            }
-        }
-        $($body)*
-        unsafe {
-            asm! { "",
-                in("$2") r2,
-                in("$3") r3,
-                in("$4") r4,
-                in("$5") r5,
-                in("$6") r6,
-                in("$7") r7,
-                in("$8") r8,
-                in("$9") r9,
-                in("$10") r10,
-                in("$11") r11,
-                in("$12") r12,
-                in("$13") r13,
-                in("$14") r14,
-                in("$15") r15,
-                in("$24") r24,
-                in("$25") r25
-            }
-        }
-    };
-}
-
-// These are the four instructions that are written to the BIOS fn vectors
-#[naked]
-unsafe extern "C" fn fn_vec() {
-    asm! {
-        "la $10, fn_handler
-         jr $10",
-        options(noreturn)
-    }
-}
-
-static mut SEED: u32 = 0;
-
-pub fn srand(seed: u32) {
-    unsafe {
-        SEED = seed;
-    }
-}
-
-pub fn rand() -> u32 {
-    unsafe {
-        SEED = SEED * 0x41C6_4E6D + 0x3039;
-        (SEED >> 16) & 0x7FFF
-    }
-}
-
-// The handler called by the three BIOS fn vectors.
-#[no_mangle]
-extern "C" fn fn_handler() -> u32 {
-    reg!(let fn_ty: u8 = "$8");
-    reg!(let fn_num: u8 = "$9");
-    // TODO: Consider switching to the table of function pointers approached
-    // used by other BIOS implementations
-    match (fn_num, fn_ty) {
-        (SRAND_NUM, SRAND_TY) => {
-            reg!(let seed: u32 = "$4");
-            srand(seed);
-            0
-        },
-        (RAND_NUM, RAND_TY) => rand(),
-        (GET_SYSTEM_INFO_NUM, GET_SYSTEM_INFO_TY) => {
-            reg!(let idx: u8 = "$4");
-            get_system_info(idx)
-        },
-        (STD_OUT_PUTCHAR_NUM, STD_OUT_PUTCHAR_TY) => {
-            // Emulators usually implement debug output by checking that PC reaches
-            // 0x8000_00B0 with $9 set to 0x3D so the BIOS just needs to return to the
-            // caller in this case.
-            0
-        },
-        _ => {
-            println!("Called unimplemented function {:x}({:x})", fn_ty, fn_num);
-            u32::MAX
-        },
-    }
-}
-
-fn get_system_info(idx: u8) -> u32 {
-    match idx {
-        // Return the date in BCD
-        0 => 0x20221004,
-        // Return a pointer to the version string
-        2 => "BIOS VERSION 0.1\0".as_ptr() as u32,
-        _ => 0xFFFFFFFF,
-    }
-}
-
-#[naked]
-unsafe extern "C" fn exception_vec() {
-    asm! {
-        ".set noreorder
-         la $4, exception_handler
-         jalr $4
-         nop
-         jr $26
-         .long 0x42000010 #rfe
-         .set reorder",
-        options(noreturn)
-    }
-}
-
-#[no_mangle]
-unsafe extern "C" fn exception_handler() {
-    with_caller_saved_regs! {
-        let epc = cop0::EPC::new().to_bits();
-        asm! {
-            "move $26, $2", in("$2") epc
-        }
-
-        println!("Jumped to exception handler at {:#x?} because {:#x?}", epc, cop0::Cause::new());
-        irq::Status::new().ack_all().store();
-    };
-}
-
-#[no_mangle]
-extern "C" fn init_vectors() {
-    // Write the instructions above to the fn vectors
-    for vec in [A0_VEC, B0_VEC, C0_VEC] {
-        unsafe {
-            volatile_copy_nonoverlapping_memory(vec as *mut u32, fn_vec as *const u32, 4);
-        }
-    }
-
-    println!("Wrote BIOS fn vectors. Debug output should now work.");
-    unsafe {
-        volatile_copy_nonoverlapping_memory(
-            RAM_EXCEPTION_VEC as *mut u32,
-            exception_vec as *const u32,
-            6,
-        );
-    }
-    println!("Wrote RAM exception vector");
-}
-
-#[no_mangle]
-extern "C" fn main_loop() {
+fn main() {
     println!("Starting main BIOS loop");
     println!("{:?}", psx::sys::get_system_version());
     println!("{:x?}", psx::sys::get_system_date());
@@ -244,5 +37,119 @@ extern "C" fn main_loop() {
     let mut mask = irq::Mask::new();
     loop {
         mask.enable_all().store();
+    }
+}
+
+// These are the four instructions that are written to the BIOS fn vectors
+#[naked]
+unsafe extern "C" fn fn_vec() {
+    asm! {
+        "la $10, fn_handler
+         jr $10",
+        options(noreturn)
+    }
+}
+
+// The handler called by the three BIOS fn vectors.
+#[no_mangle]
+extern "C" fn fn_handler() -> u32 {
+    // Bind a register's value to an identifier
+    macro_rules! reg {
+        (let $var:ident = $reg:tt) => {
+            reg!(let $var: u32 = $reg);
+        };
+        (let $var:ident: $size:ty = $reg:tt) => {
+            let $var: $size;
+            unsafe {
+                asm! { "", out($reg) $var }
+            }
+        };
+    }
+
+    reg!(let fn_ty: u8 = "$8");
+    reg!(let fn_num: u8 = "$9");
+    // TODO: Consider switching to the table of function pointers approached
+    // used by other BIOS implementations
+    match (fn_num, fn_ty) {
+        (SRAND_NUM, SRAND_TY) => {
+            reg!(let seed = "$4");
+            srand(seed);
+            0
+        },
+        (RAND_NUM, RAND_TY) => rand(),
+        (PRINTF_NUM, PRINTF_TY) => {
+            reg!(let fmt_str = "$4");
+            reg!(let arg0 = "$5");
+            reg!(let arg1 = "$6");
+            reg!(let arg2 = "$7");
+            let args = [arg0, arg1, arg2];
+            // SAFETY: Let's hope the user passed in a null-terminated string
+            let fmt_str = unsafe { CStr::from_ptr(fmt_str as *const i8) };
+            let mut va_arg = None;
+            let mut args_used = 0;
+            for &b in fmt_str.to_bytes() {
+                if b == b'%' {
+                    va_arg = Some(args_used);
+                    continue
+                }
+                if let Some(idx) = va_arg {
+                    match b {
+                        b'd' | b'i' | b'D' => {
+                            print!("{}", args[idx]);
+                            args_used += 1;
+                        },
+                        b'x' => {
+                            print!("{:x}", args[idx]);
+                            args_used += 1;
+                        },
+                        b'X' => {
+                            print!("{:X}", args[idx]);
+                            args_used += 1;
+                        },
+                        b's' => {
+                            // SAFETY: Let's hope the user passed in a null-terminated string
+                            let str_arg = unsafe { CStr::from_ptr(args[idx] as *const i8) };
+                            print!("{}", str_arg.to_str().unwrap());
+                            args_used += 1;
+                        },
+                        _ => {},
+                    }
+                    va_arg = None;
+                } else {
+                    unsafe {
+                        psx_std_out_putchar(b);
+                    }
+                }
+            }
+            0
+        },
+        (GET_SYSTEM_INFO_NUM, GET_SYSTEM_INFO_TY) => {
+            reg!(let idx: u8 = "$4");
+            get_system_info(idx)
+        },
+        (OPEN_THREAD_NUM, OPEN_THREAD_TY) => {
+            reg!(let pc: u32 = "$4");
+            reg!(let sp: u32 = "$5");
+            reg!(let gp: u32 = "$6");
+            open_thread(pc, sp, gp)
+        },
+        (CHANGE_THREAD_NUM, CHANGE_THREAD_TY) => {
+            reg!(let handle: u32 = "$4");
+            change_thread(handle)
+        },
+        (CLOSE_THREAD_NUM, CLOSE_THREAD_TY) => {
+            reg!(let handle: u32 = "$4");
+            close_thread(handle)
+        },
+        (STD_OUT_PUTCHAR_NUM, STD_OUT_PUTCHAR_TY) => {
+            // Emulators usually implement debug output by checking that PC reaches
+            // 0x8000_00B0 with $9 set to 0x3D so the BIOS just needs to return to the
+            // caller in this case.
+            0
+        },
+        _ => {
+            println!("Called unimplemented function {:x}({:x})", fn_ty, fn_num);
+            u32::MAX
+        },
     }
 }
