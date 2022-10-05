@@ -27,7 +27,12 @@ use crate::stdout::printf;
 use crate::thread::{change_thread, close_thread, open_thread};
 
 fn main() {
+    // This main loop doesn't do anything useful yet, it's only used to test
+    // functionality that would be exposed to executables if the BIOS could load
+    // them
     println!("Starting main BIOS loop");
+    // It would be more efficient to avoid the function vectors for this call, but
+    // the BIOS doesn't expose a user-friendly version of get_system_info
     println!("{:?}", psx::sys::get_system_version());
     println!("{:x?}", psx::sys::get_system_date());
     let mut sr = cop0::Status::new();

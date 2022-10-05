@@ -78,7 +78,9 @@ pub fn change_thread(handle: u32) -> u32 {
         *current = new;
         Some(res)
     });
-    let (old_tcb, new_tcb) = match tcbs {
+    // TODO: This is wrong, old_tcb should be a pointer to the old TCB not a copy on
+    // the stack
+    let (mut old_tcb, new_tcb) = match tcbs {
         Some((old, new)) => (old, new),
         None => return 1,
     };
