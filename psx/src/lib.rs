@@ -32,8 +32,6 @@
 #![deny(missing_docs)]
 // For compile-time Wavefront OBJ parser
 #![feature(const_mut_refs, maybe_uninit_array_assume_init)]
-// For `Packet::insert_packet` and `Packet::insert_list`
-#![feature(bench_black_box)]
 // Used to make `AsCStr` efficient
 #![feature(
     maybe_uninit_uninit_array,

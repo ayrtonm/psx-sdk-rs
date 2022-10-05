@@ -5,7 +5,7 @@
 </p>
 
 This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
-Rust nightly version equal to or later than `2022-09-04`. Use
+Rust nightly version equal to or later than `2022-10-01`. Use
 [`rustup`](https://www.rust-lang.org/) to install the rust toolchain as follows.
 
 ```
@@ -15,8 +15,10 @@ rustup component add rust-src --toolchain nightly
 
 ## Installing cargo-psx
 
-`cargo-psx` is an optional wrapper for cargo that sets some commonly required
-flags and arguments and copies the target JSON to the crate's target directory. Basically this lets you just run `cargo psx run` instead of
+`cargo-psx` is an optional wrapper for cargo (similar to [cargo-psp](https://github.com/overdrivenpotato/rust-psp/)
+that sets commonly required flags and arguments and copies the target JSON to
+the crate's target directory. Basically this lets you just run `cargo psx run`
+instead of
 
 ```
 RUSTFLAGS="-Ccodegen-units=1                               \
