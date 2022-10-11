@@ -15,7 +15,7 @@ rustup component add rust-src --toolchain nightly
 
 ## Installing cargo-psx
 
-`cargo-psx` is an optional wrapper for cargo (similar to [cargo-psp](https://github.com/overdrivenpotato/rust-psp/)
+`cargo-psx` is an optional wrapper for cargo (similar to [cargo-psp](https://github.com/overdrivenpotato/rust-psp/))
 that sets commonly required flags and arguments and copies the target JSON to
 the crate's target directory. Basically this lets you just run `cargo psx run`
 instead of
@@ -33,7 +33,8 @@ which has the minimum number of flags required to create and run an exe.
 To install:
 
 ```
-cargo install cargo-psx
+cd cargo-psx
+cargo install --path .
 ```
 
 To uninstall:
@@ -146,6 +147,6 @@ For documentation on PlayStation internals see the
 Use the following to run the tests in the psx crate.
 
 ```
-cd psx/
+cd psx
 cargo psx test
 ```

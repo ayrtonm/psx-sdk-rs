@@ -131,9 +131,12 @@ fn main() {
     // Set linker script if any
     let script = opt.link.unwrap_or("psexe.ld".to_string());
     rustflags.push_str(&format!(" -Clink-arg=-T{}", script));
-    if opt.debug || opt.elf {
-        rustflags.push_str(" -Clink-arg=--oformat=elf32");
-    }
+    let format = if opt.debug || opt.elf {
+        "elf32"
+    } else {
+        "binary"
+    };
+    rustflags.push_str(&format!(" -Clink-arg=--oformat={}", format));
 
     // Set optional RUSTFLAGS
     if opt.debug {
