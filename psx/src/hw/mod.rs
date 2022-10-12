@@ -12,6 +12,7 @@
 #[macro_use]
 pub mod cop;
 
+pub mod cdrom;
 pub mod cop0;
 pub mod dma;
 pub mod gpu;

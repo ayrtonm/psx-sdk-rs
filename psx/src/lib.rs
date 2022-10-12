@@ -24,7 +24,7 @@
 //!   build.
 //! * `nightlier` - For when nightly rustc isn't bleeding edge enough. This
 //!   enables features requiring changes that aren't in upstream LLVM yet. Using
-//!   this requires [building and patching LLVM](https://github.com/ayrtonm/psx-sdk-rs/tree/crates.io#building-the-compiler) as part of the rustc build.
+//!   this requires [building and patching LLVM](https://github.com/ayrtonm/psx-sdk-rs/tree/master/patches#rustc-build-instructions) as part of the rustc build.
 //!   Currently this enables [`Atomic*`][core::sync::atomic] up to 16-bits and
 //!   [`fences`][core::sync::atomic::compiler_fence].
 
