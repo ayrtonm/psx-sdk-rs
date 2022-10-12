@@ -26,13 +26,15 @@ jobs:
         pushd cargo-psx
         cargo install --path .
         popd
+        # Install emulator
+        sudo apt-get install -y mednafen
     - name: Build
       run: |
         pushd psx
         # Check that library builds
         cargo psx build
         popd
-        # Check that hello world builds
-        pushd examples/hello_world
-        cargo psx build
+        # Check that BIOS builds
+        pushd examples/bios
+        cargo psx build --link bios.ld
         popd
