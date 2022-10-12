@@ -28,8 +28,8 @@ jobs:
         popd
         # Install the emulator, BFD linker and xvfb
         sudo apt-get install -y       \
-            mednafen                  \
             binutils-mipsel-linux-gnu \
+            mednafen                  \
             xvfb
     - name: Build the BIOS
       run: |
@@ -40,12 +40,17 @@ jobs:
         cp target/mipsel-sony-psx/release/bios.exe \
             ~/.mednafen/firmware/scph7001.bin
         popd
-    - name: Run stdout
+    - name: Run the BIOS
       run: |
+        # TODO: Add support for loading exes in the BIOS. This currently only runs the BIOS main
+        # loop, but mednafen requires an executable so it just uses stdout for now.
+        # TODO: The reference stdout for examples should be checked into the repo, not here
         pushd examples/stdout
         cargo psx build
-        xvfb-run mednafen             \
-            -psx.dbg_level 2          \
-            -psx.bios_jp scph7001.bin \
-            ~/work/psx-sdk-rs/psx-sdk-rs/examples/stdout/target/mipsel-sony-psx/release/stdout.exe
-        popd
+        xvfb-run mednafen                                                                          \
+            -psx.dbg_level 2                                                                       \
+            -psx.bios_jp scph7001.bin                                                              \
+            ~/work/psx-sdk-rs/psx-sdk-rs/examples/stdout/target/mipsel-sony-psx/release/stdout.exe \
+            | tee bios_stdout &
+        sleep 15
+        grep "Starting main BIOS loop" bios_stdout
