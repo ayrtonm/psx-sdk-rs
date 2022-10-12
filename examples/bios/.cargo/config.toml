@@ -1,2 +1,2 @@
 [target.mipsel-sony-psx]
-linker = "mipsel-unknown-elf-ld"
+linker = "mipsel-linux-gnu-ld"

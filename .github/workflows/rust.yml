@@ -26,8 +26,8 @@ jobs:
         pushd cargo-psx
         cargo install --path .
         popd
-        # Install emulator
-        sudo apt-get install -y mednafen
+        # Install the emulator and BIOS linker
+        sudo apt-get install -y mednafen binutils-mipsel-linux-gnu
     - name: Build
       run: |
         pushd psx
