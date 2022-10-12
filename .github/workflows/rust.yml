@@ -26,15 +26,26 @@ jobs:
         pushd cargo-psx
         cargo install --path .
         popd
-        # Install the emulator and BIOS linker
-        sudo apt-get install -y mednafen binutils-mipsel-linux-gnu
-    - name: Build
+        # Install the emulator, BFD linker and xvfb
+        sudo apt-get install -y       \
+            mednafen                  \
+            binutils-mipsel-linux-gnu \
+            xvfb
+    - name: Build the BIOS
       run: |
-        pushd psx
-        # Check that library builds
-        cargo psx build
-        popd
-        # Check that BIOS builds
+        # Build the BIOS and configure the emulator to use it
         pushd examples/bios
         cargo psx build --link bios.ld
+        mkdir -p ~/.mednafen/firmware
+        cp target/mipsel-sony-psx/release/bios.exe \
+            ~/.mednafen/firmware/scph7001.bin
+        popd
+    - name: Run stdout
+      run: |
+        pushd examples/stdout
+        cargo psx build
+        xvfb-run mednafen             \
+            -psx.dbg_level 2          \
+            -psx.bios_jp scph7001.bin \
+            ~/work/psx-sdk-rs/psx-sdk-rs/examples/stdout/target/mipsel-sony-psx/release/stdout.exe
         popd
