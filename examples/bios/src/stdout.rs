@@ -39,7 +39,8 @@ pub fn putchar(c: u8) {
     unsafe { psx_std_out_putchar(c) }
 }
 
-pub fn printf(fmt_str: &CStr, args: [u32; 3]) -> u32 {
+pub fn printf(fmt_str: &CStr, arg0: u32, arg1: u32, arg2: u32) -> u32 {
+    let args = [arg0, arg1, arg2];
     let mut va_arg = None;
     let mut args_used = 0;
     for &b in fmt_str.to_bytes() {

@@ -7,3 +7,4 @@
  - donut - Drawing more complex 3D frames with just quads
  - monkey - Drawing even more complex 3D frames consisting of quads and tris
  - loader - One option for multi-exe games
+ - bios - A minimal BIOS implementation which currently does nothing useful.

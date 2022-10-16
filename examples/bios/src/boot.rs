@@ -1,6 +1,6 @@
 use crate::exceptions::exception_vec;
 use crate::println;
-use crate::{fn_vec, main};
+use crate::{a0_fn_vec, b0_fn_vec, c0_fn_vec, main};
 use core::arch::asm;
 use core::intrinsics::volatile_copy_nonoverlapping_memory;
 use psx::constants::*;
@@ -14,6 +14,7 @@ use psx::constants::*;
 unsafe extern "C" fn boot() -> ! {
     asm! {
         "la $sp, {init_sp}
+         la $fp, {init_sp}
          j start",
         init_sp = const(KSEG0_BASE + MAIN_RAM_LEN - 0x100),
         options(noreturn)
@@ -34,10 +35,10 @@ extern "C" fn start() -> ! {
 
 fn init_vectors() {
     // Write to the fn vectors
-    for vec in [A0_VEC, B0_VEC, C0_VEC] {
-        unsafe {
-            volatile_copy_nonoverlapping_memory(vec as *mut u32, fn_vec as *const u32, 4);
-        }
+    unsafe {
+        volatile_copy_nonoverlapping_memory(A0_VEC as *mut u32, a0_fn_vec as *const u32, 4);
+        volatile_copy_nonoverlapping_memory(B0_VEC as *mut u32, b0_fn_vec as *const u32, 4);
+        volatile_copy_nonoverlapping_memory(C0_VEC as *mut u32, c0_fn_vec as *const u32, 4);
     }
 
     println!("Wrote BIOS fn vectors. Debug output should now work.");

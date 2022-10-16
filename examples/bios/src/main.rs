@@ -13,6 +13,7 @@ use psx::hw::irq;
 use psx::hw::Register;
 use psx::sys::kernel::*;
 
+mod allocator;
 mod boot;
 mod exceptions;
 mod global;
@@ -21,6 +22,7 @@ mod rand;
 mod stdout;
 mod thread;
 
+use crate::allocator::{free, init_heap, malloc};
 use crate::misc::get_system_info;
 use crate::rand::{rand, srand};
 use crate::stdout::printf;
@@ -31,10 +33,10 @@ fn main() {
     // functionality that would be exposed to executables if the BIOS could load
     // them
     println!("Starting main BIOS loop");
-    // It would be more efficient to avoid the function vectors for this call, but
-    // the BIOS doesn't expose a user-friendly version of get_system_info
-    println!("{:?}", psx::sys::get_system_version());
-    println!("{:x?}", psx::sys::get_system_date());
+    let version_str = unsafe { CStr::from_ptr(get_system_info(2) as *const i8) };
+    let bios_date = get_system_info(0);
+    println!("{:?}", version_str);
+    println!("{:x?}", bios_date);
     let mut sr = cop0::Status::new();
     sr.enable_interrupts()
         .unmask_interrupt(IntSrc::Hardware)
@@ -47,12 +49,37 @@ fn main() {
     }
 }
 
-// These are the four instructions that are written to the BIOS fn vectors
+// These sets of four instructions are written to the BIOS fn vectors
 #[naked]
-unsafe extern "C" fn fn_vec() {
+unsafe extern "C" fn a0_fn_vec() {
     asm! {
-        "la $10, fn_handler
-         jr $10",
+        ".set noreorder
+         la $10, fn_handler
+         jr $10
+         or $8, $0, 0xA0
+         .set reorder",
+        options(noreturn)
+    }
+}
+#[naked]
+unsafe extern "C" fn b0_fn_vec() {
+    asm! {
+        ".set noreorder
+         la $10, fn_handler
+         jr $10
+         or $8, $0, 0xB0
+         .set reorder",
+        options(noreturn)
+    }
+}
+#[naked]
+unsafe extern "C" fn c0_fn_vec() {
+    asm! {
+        ".set noreorder
+         la $10, fn_handler
+         jr $10
+         or $8, $0, 0xC0
+         .set reorder",
         options(noreturn)
     }
 }
@@ -78,6 +105,19 @@ extern "C" fn fn_handler() -> u32 {
     // TODO: Consider switching to the table of function pointers approached
     // used by other BIOS implementations
     match (fn_num, fn_ty) {
+        (INIT_HEAP_NUM, INIT_HEAP_TY) => {
+            reg!(let addr = "$4");
+            reg!(let len: usize = "$5");
+            init_heap(addr as *mut u8, len)
+        },
+        (MALLOC_NUM, MALLOC_TY) => {
+            reg!(let len: usize = "$4");
+            malloc(len) as u32
+        },
+        (FREE_NUM, FREE_TY) => {
+            reg!(let ptr = "$4");
+            free(ptr as *mut u8)
+        },
         (SRAND_NUM, SRAND_TY) => {
             reg!(let seed = "$4");
             srand(seed)
@@ -88,10 +128,9 @@ extern "C" fn fn_handler() -> u32 {
             reg!(let arg0 = "$5");
             reg!(let arg1 = "$6");
             reg!(let arg2 = "$7");
-            let args = [arg0, arg1, arg2];
             // SAFETY: Let's hope the user passed in a null-terminated string
             let fmt_str = unsafe { CStr::from_ptr(fmt_ptr as *const i8) };
-            printf(fmt_str, args)
+            printf(fmt_str, arg0, arg1, arg2)
         },
         (GET_SYSTEM_INFO_NUM, GET_SYSTEM_INFO_TY) => {
             reg!(let idx: u8 = "$4");
