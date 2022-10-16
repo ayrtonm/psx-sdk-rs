@@ -1,2 +1,2 @@
 [target.mipsel-sony-psx]
-runner = "mednafen"
+runner = ["mednafen", "-psx.dbg_level", "2"]
