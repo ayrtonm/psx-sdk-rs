@@ -160,19 +160,6 @@ fn main() {
         .exec()
         .expect("Could not parse metadata");
 
-    let target_json = opt.json.unwrap_or_else(|| {
-        let mut target_json = metadata.target_directory.clone();
-        target_json.push("mipsel-sony-psx.json");
-        if !target_json.exists() {
-            create_dir_all(&metadata.target_directory).expect("Unable to create target directory");
-            let mut file = File::create(&target_json)
-                .expect("Could not create target JSON in the crate's target directory");
-            file.write(include_str!("../mipsel-sony-psx.json").as_ref())
-                .expect("Could not write target JSON");
-        }
-        target_json.to_string()
-    });
-
     const CARGO_CMD: &str = "cargo";
     if opt.clean {
         for pkg in &metadata.packages {
@@ -201,7 +188,7 @@ fn main() {
             .arg(build_std)
             .arg("-Zbuild-std-features=compiler-builtins-mem")
             .arg("--target")
-            .arg(target_json)
+            .arg("mipsel-sony-psx")
             .args(cargo_args)
             .env("RUSTFLAGS", rustflags);
         if let Some(offset) = opt.load_offset {
