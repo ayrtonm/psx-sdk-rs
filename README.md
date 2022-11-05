@@ -5,7 +5,7 @@
 </p>
 
 This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
-Rust nightly version equal to or later than `2022-10-01`. Use
+Rust nightly version equal to or later than `2022-11-04`. Use
 [`rustup`](https://www.rust-lang.org/) to install the rust toolchain as follows.
 
 ```
@@ -16,16 +16,20 @@ rustup component add rust-src --toolchain nightly
 ## Installing cargo-psx
 
 `cargo-psx` is an optional wrapper for cargo (similar to [cargo-psp](https://github.com/overdrivenpotato/rust-psp/))
-that sets commonly required flags and arguments and copies the target JSON to
-the crate's target directory. Basically this lets you just run `cargo psx run`
+that sets commonly required flags and arguments. Basically this lets you just
+run
+```
+cargo psx run
+```
+
 instead of
 
 ```
-RUSTFLAGS="-Ccodegen-units=1                               \
-    -Clink-arg=-Tpsexe.ld -Clink-arg=--oformat=binary"     \
-    cargo run +psx -Zbuild-std=core                        \
-    -Zbuild-std-features=compiler-builtins-mem             \
-    --target /path/to/mipsel-sony-psx.json
+RUSTFLAGS="-Clink-arg=-Tpsexe.ld               \
+    -Clink-arg=--oformat=binary"               \
+    cargo run +nightly -Zbuild-std=core            \
+    -Zbuild-std-features=compiler-builtins-mem \
+    --target mipsel-sony-psx
 ```
 
 which has the minimum number of flags required to create and run an exe.
