@@ -162,6 +162,8 @@ impl Framebuffer {
 
 impl fmt::Write for TextBox {
     fn write_str(&mut self, msg: &str) -> fmt::Result {
+        // TODO: This may be unnecessary
+        draw_sync();
         for c in msg.chars() {
             if c.is_ascii() {
                 self.print_char(c as u8);
@@ -226,13 +228,37 @@ impl LoadedTIM {
 const FONT_SIZE: u8 = 8;
 
 impl TextBox {
-    /// Move the cursor to the beginning of the next line.
+    /// Moves the cursor to the beginning of the next line.
     pub fn newline(&mut self) {
         self.cursor = Vertex(self.initial.0, self.cursor.1 + FONT_SIZE as i16);
     }
-    /// Move the cursor to its initial position.
+    /// Moves the cursor to its initial position.
     pub fn reset(&mut self) {
         self.cursor = self.initial;
+    }
+    /// Moves the cursor up n characters.
+    pub fn move_up(&mut self, n: usize) {
+        for _ in 0..n {
+            self.cursor.1 -= FONT_SIZE as i16;
+        }
+    }
+    /// Moves the cursor down n characters.
+    pub fn move_down(&mut self, n: usize) {
+        for _ in 0..n {
+            self.cursor.1 += FONT_SIZE as i16;
+        }
+    }
+    /// Moves the cursor left n characters.
+    pub fn move_left(&mut self, n: usize) {
+        for _ in 0..n {
+            self.cursor.0 -= FONT_SIZE as i16;
+        }
+    }
+    /// Moves the cursor right n characters.
+    pub fn move_right(&mut self, n: usize) {
+        for _ in 0..n {
+            self.cursor.0 += FONT_SIZE as i16;
+        }
     }
     /// Change the font color.
     pub fn change_color(&mut self, color: Color) {
