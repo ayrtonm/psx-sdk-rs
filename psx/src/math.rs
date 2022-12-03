@@ -90,6 +90,13 @@ pub const FRAC_PI_6: Rad = Rad(0x1555);
 /// π/8
 pub const FRAC_PI_8: Rad = Rad(0x1000);
 
+impl Neg for Rad {
+    type Output = Rad;
+    fn neg(self) -> Rad {
+        Rad(-(self.0 as i16) as u16)
+    }
+}
+
 impl Add<Rad> for Rad {
     type Output = Rad;
     fn add(self, other: Rad) -> Rad {
@@ -161,6 +168,11 @@ pub fn rotate_z([x, y, z]: [f16; 3], theta: Rad) -> [f16; 3] {
     let xp = (cos(theta) * x) - (sin(theta) * y);
     let yp = (sin(theta) * x) + (cos(theta) * y);
     [xp, yp, z]
+}
+
+/// Computes the dot product of `a` and `b`.
+pub fn dot(a: [f16; 3], b: [f16; 3]) -> f16 {
+    (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2])
 }
 
 /// Computes sine using a lookup table.
