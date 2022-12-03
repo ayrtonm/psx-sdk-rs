@@ -14,7 +14,7 @@ impl Heap {
         Self(RefCell::new(linked_list_allocator::Heap::empty()))
     }
 
-    pub unsafe fn init(&self, base: usize, len: usize) {
+    pub unsafe fn init(&self, base: *mut u8, len: usize) {
         self.0.borrow_mut().borrow_mut().init(base, len)
     }
 }
@@ -107,7 +107,7 @@ macro_rules! heap {
 
                 // Type-check the macro argument
                 let slice: &'static mut [u32] = $mut_slice;
-                let ptr = slice.as_mut_ptr() as usize;
+                let ptr = slice.as_mut_ptr().cast();
                 let len = slice.len() * size_of::<u32>();
                 unsafe {
                     _HEAP.init(ptr, len);
