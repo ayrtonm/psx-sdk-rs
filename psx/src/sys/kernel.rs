@@ -122,6 +122,10 @@ extern "C" {
     pub fn psx_set_default_exit_from_exception();
     /// Calls BIOS function [B(20h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_undeliver_event(class: u32, spec: u16);
+    /// Calls BIOS function [B(42h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn psx_first_file(filename: *const i8) -> *const [u8; 40];
+    /// Calls BIOS function [B(43h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn psx_next_file() -> *const [u8; 40];
     /// Calls BIOS function [B(44h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_file_rename(old_filename: *const i8, new_filename: *const i8) -> bool;
     /// Calls BIOS function [B(45h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -383,6 +387,14 @@ pub const SET_DEFAULT_EXIT_FROM_EXCEPTION_TY: u8 = 0xB0;
 pub const UNDELIVER_EVENT_NUM: u8 = 0x20;
 /// The BIOS function type for undeliver_event
 pub const UNDELIVER_EVENT_TY: u8 = 0xB0;
+/// The BIOS function number for first_file
+pub const FIRST_FILE_NUM: u8 = 0x42;
+/// The BIOS function type for first_file
+pub const FIRST_FILE_TY: u8 = 0xB0;
+/// The BIOS function number for next_file
+pub const NEXT_FILE_NUM: u8 = 0x43;
+/// The BIOS function type for next_file
+pub const NEXT_FILE_TY: u8 = 0xB0;
 /// The BIOS function number for file_rename
 pub const FILE_RENAME_NUM: u8 = 0x44;
 /// The BIOS function type for file_rename

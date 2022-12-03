@@ -50,6 +50,8 @@
 #![feature(alloc_error_handler)]
 // Used in psx::hw::irq
 #![feature(variant_count)]
+// Used in psx::sys::fs
+#![feature(cstr_from_bytes_until_nul, pointer_is_aligned)]
 // Used for crate tests
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
@@ -78,8 +80,11 @@ pub mod sys;
 
 /// Re-exported constants in a module for easy glob importing.
 pub mod constants {
-    const KB: usize = 1024;
-    const MB: usize = 1024 * KB;
+    /// A kilobyte
+    pub const KB: usize = 1024;
+
+    /// A megabyte
+    pub const MB: usize = 1024 * KB;
 
     /// The start of main RAM in KUSEG.
     pub const KUSEG_BASE: usize = 0x0000_0000;

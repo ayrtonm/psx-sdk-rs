@@ -204,8 +204,11 @@ B(20h) undeliver_event(class: u32, spec: u16);
 
 //B(40h) chdir(name)
 //B(41h) FormatDevice(devicename)
-//B(42h) firstfile(filename,direntry)
-//B(43h) nextfile(direntry)
+
+// Returns a pointer to a DirEntry for the first file
+B(42h) first_file(filename: *const i8) -> *const [u8; 40];
+// Returns a pointer to a DirEntry for the next file
+B(43h) next_file() -> *const [u8; 40];
 
 // Takes two paths, returns 1 for ok or 0 for error
 B(44h) file_rename(old_filename: *const i8, new_filename: *const i8) -> bool;

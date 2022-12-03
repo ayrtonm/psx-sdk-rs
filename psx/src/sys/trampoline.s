@@ -407,6 +407,20 @@ psx_undeliver_event:
     jr $8
     li $9, 0x20
 
+.section .text.bios.psx_first_file
+.globl psx_first_file
+psx_first_file:
+    la $8, 0xB0
+    jr $8
+    li $9, 0x42
+
+.section .text.bios.psx_next_file
+.globl psx_next_file
+psx_next_file:
+    la $8, 0xB0
+    jr $8
+    li $9, 0x43
+
 .section .text.bios.psx_file_rename
 .globl psx_file_rename
 psx_file_rename:

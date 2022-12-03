@@ -1,6 +1,10 @@
 //! Memory card and CD-ROM filesystem operations
+#![allow(missing_docs)]
 use crate::std::AsCStr;
 use crate::sys::kernel;
+use core::ffi::CStr;
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 use core::marker::PhantomData;
 use core::mem::forget;
 #[cfg(feature = "nightlier")]
@@ -24,10 +28,60 @@ pub fn close_filesystem() {
     }
 }
 
+/// Entries returned by the `ReadDir` iterator.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct DirEntry {
+    file_name: [u8; 0x14],
+    _attribute: u32,
+    file_size: u32,
+    _unused: u32,
+    _first_sector: u32,
+    _reserved: u32,
+}
+
+impl DirEntry {
+    pub unsafe fn from_bytes(ptr: *const [u8; 40]) -> DirEntry {
+        *ptr.cast()
+    }
+}
+
+impl Debug for DirEntry {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DirEntry")
+            .field("file_name", &CStr::from_bytes_until_nul(&self.file_name))
+            .field("file_size", &self.file_size)
+            .finish()
+    }
+}
+
+// TODO: Explain why bugs make this unsafe. It would be possible to make an
+// iterator safe by making it eager but that may not be practical
+pub unsafe fn first_file<P: AsRef<[u8]>>(path: P) -> Option<DirEntry> {
+    path.as_cstr(|path| {
+        let dir_entry = kernel::psx_first_file(path.as_ptr());
+        if dir_entry.is_null() {
+            None
+        } else {
+            Some(DirEntry::from_bytes(dir_entry))
+        }
+    })
+}
+
+pub unsafe fn next_file() -> Option<DirEntry> {
+    let dir_entry = kernel::psx_next_file();
+    if dir_entry.is_null() {
+        None
+    } else {
+        Some(DirEntry::from_bytes(dir_entry))
+    }
+}
+
 /// A marker trait for the BIOS file types.
 pub trait FileTy: Default {
-    /// The number of 4-byte words in a sector associated with file operations
-    /// for the given type.
+    // TODO: Fix the demos that assumed this was in words
+    /// The number of bytes in a sector associated with operations on the given
+    /// file type.
     const SECTOR_SIZE: usize;
 }
 
@@ -36,7 +90,7 @@ pub trait FileTy: Default {
 pub struct MemCard;
 
 impl FileTy for MemCard {
-    const SECTOR_SIZE: usize = 32;
+    const SECTOR_SIZE: usize = 128;
 }
 
 /// A marker type for CD-ROM files managed by the BIOS.
@@ -44,7 +98,7 @@ impl FileTy for MemCard {
 pub struct CDROM;
 
 impl FileTy for CDROM {
-    const SECTOR_SIZE: usize = 512;
+    const SECTOR_SIZE: usize = 2048;
 }
 
 /// Options and flags which can be used to configure how a file is opened.
@@ -174,6 +228,8 @@ pub enum ErrorKind {
     NoFreeBlocks,
     /// Unknown error code
     UnknownError,
+    /// Input/Output buffer is not aligned to 4-bytes
+    UnalignedBuffer,
 }
 
 impl From<u32> for ErrorKind {
@@ -280,8 +336,11 @@ impl<T: FileTy> File<T> {
     ///
     /// Memory card and CD-ROM files can only be read in increments of their
     /// respective sector sizes.
-    pub fn read(&self, dst: &mut [u32]) -> Result<usize, Error<T>> {
-        let res = unsafe { kernel::psx_file_read(self.fd, dst.as_mut_ptr(), dst.len() * 4) };
+    pub fn read(&self, dst: &mut [u8]) -> Result<usize, Error<T>> {
+        if !dst.as_ptr().cast::<u32>().is_aligned() {
+            return Err(Error::Resolved(ErrorKind::UnalignedBuffer))
+        }
+        let res = unsafe { kernel::psx_file_read(self.fd, dst.as_mut_ptr().cast(), dst.len()) };
         self.try_return_usize(res)
     }
 
@@ -321,8 +380,11 @@ impl File<MemCard> {
     ///
     /// Memory card files can only be written in increments of their sector
     /// size.
-    pub fn write(&mut self, src: &[u32]) -> Result<usize, Error<MemCard>> {
-        let res = unsafe { kernel::psx_file_write(self.fd, src.as_ptr(), src.len() * 4) };
+    pub fn write(&mut self, src: &[u8]) -> Result<usize, Error<MemCard>> {
+        if !src.as_ptr().cast::<u32>().is_aligned() {
+            return Err(Error::Resolved(ErrorKind::UnalignedBuffer))
+        }
+        let res = unsafe { kernel::psx_file_write(self.fd, src.as_ptr().cast(), src.len()) };
         self.try_return_usize(res)
     }
 }
