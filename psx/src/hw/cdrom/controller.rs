@@ -1,4 +1,4 @@
-use crate::hw::cdrom::{Command, Parameter, Controller};
+use crate::hw::cdrom::{Command, Controller, Parameter};
 use crate::hw::Register;
 
 impl Controller {

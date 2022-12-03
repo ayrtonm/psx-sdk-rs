@@ -157,5 +157,5 @@ fn on_oom(layout: core::alloc::Layout) -> ! {
     panic!("Ran out of memory {:?}", layout);
 }
 
-pub use framebuffer::{Framebuffer, LoadedTIM};
+pub use framebuffer::{Framebuffer, LoadedTIM, TextBox};
 //pub use format::tim::{Bitmap, TIMError, TIM};
