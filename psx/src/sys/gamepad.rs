@@ -239,12 +239,12 @@ impl Buttons {
 
 impl JoyStick {
     /// Check the joystick's horizontal offset when the `Gamepad` was polled.
-    pub fn horiz(&self) -> i8 {
+    pub fn horizontal(&self) -> i8 {
         (self.0 as u8).wrapping_sub(0x80) as i8
     }
 
     /// Check the joystick's vertical offset when the `Gamepad` was polled.
-    pub fn vert(&self) -> i8 {
+    pub fn vertical(&self) -> i8 {
         ((self.0 >> 8) as u8).wrapping_sub(0x80) as i8
     }
 }
