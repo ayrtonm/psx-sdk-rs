@@ -99,7 +99,7 @@ extern "C" fn fn_handler() -> u32 {
             reg!(let pc: u32 = "$4");
             reg!(let sp: u32 = "$5");
             reg!(let gp: u32 = "$6");
-            open_thread(pc, sp, gp).0
+            open_thread(pc as *const u32, sp as *mut u32, gp as *mut u32).0
         },
         (CHANGE_THREAD_NUM, CHANGE_THREAD_TY) => {
             reg!(let handle: u32 = "$4");
@@ -107,7 +107,7 @@ extern "C" fn fn_handler() -> u32 {
         },
         (CLOSE_THREAD_NUM, CLOSE_THREAD_TY) => {
             reg!(let handle: u32 = "$4");
-            close_thread(handle)
+            close_thread(ThreadHandle(handle))
         },
         (STD_OUT_PUTCHAR_NUM, STD_OUT_PUTCHAR_TY) => {
             // Emulators usually implement debug output by checking that PC reaches

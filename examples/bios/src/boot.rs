@@ -1,9 +1,13 @@
+use crate::allocator::HEAP;
 use crate::exceptions::exception_vec;
+use crate::global::Global;
 use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
 use crate::main;
 use crate::println;
 use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
+use core::mem::size_of;
+use psx::constants::KB;
 use psx::constants::*;
 
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script
@@ -68,18 +72,28 @@ fn init_ram() {
         let dst = (KSEG0_BASE + 0x100) as *mut u32;
         let src = &__data_start as *const u32;
         println!(
-            "Copying {} words from {:p} to {:p} to init .data",
+            "Copying {} words from {:p} to {:p} to initialize .data",
             len, src, dst
         );
         volatile_copy_nonoverlapping_memory(dst, src, len);
+
         let bss_start = &__bss_start as *const u32 as usize;
         let bss_end = &__bss_end as *const u32 as usize;
         let bss_len = (bss_end - bss_start) / 4;
         let bss_dst = &mut __bss_start as *mut u32;
         println!(
-            "Zeroing out {} words from {:x} to {:x} to init .bss",
+            "Zeroing out {} words from {:x} to {:x} to initialize .bss",
             bss_len, bss_start, bss_end
         );
         volatile_set_memory(bss_dst, 0, bss_len);
+    }
+
+    const HEAP_SIZE: usize = 4 * KB / size_of::<u32>();
+    static HEAP_MEM: Global<[u32; HEAP_SIZE]> = Global::new([0; HEAP_SIZE]);
+    unsafe {
+        let ptr = HEAP_MEM.as_mut().as_mut_ptr().cast();
+        let len = HEAP_MEM.as_mut().len() * size_of::<u32>();
+        println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
+        HEAP.as_mut().init(ptr, len);
     }
 }

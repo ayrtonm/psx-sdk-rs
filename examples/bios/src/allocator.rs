@@ -7,7 +7,7 @@ use linked_list_allocator::Heap;
 use psx::hw::{cop0, Register};
 
 #[global_allocator]
-static HEAP: Global<Heap> = Global::new(Heap::empty());
+pub static HEAP: Global<Heap> = Global::new(Heap::empty());
 
 struct AllocInfo {
     layout: Layout,
@@ -75,8 +75,7 @@ trait CAlloc: GlobalAlloc {
 
 unsafe impl GlobalAlloc for Global<Heap> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let mut sr = cop0::Status::new();
-        let ptr = self.ensure_mut(&mut sr, |heap, _| heap.allocate_first_fit(layout));
+        let ptr = cop0::Status::new().critical_section(|| self.as_mut().allocate_first_fit(layout));
         match ptr {
             Ok(nonnull) => nonnull.as_ptr(),
             Err(_) => ptr::null_mut(),
@@ -88,18 +87,16 @@ unsafe impl GlobalAlloc for Global<Heap> {
             Some(ptr) => ptr,
             None => return,
         };
-        let mut sr = cop0::Status::new();
-        self.ensure_mut(&mut sr, |heap, _| heap.deallocate(ptr, layout))
+        cop0::Status::new().critical_section(|| self.as_mut().deallocate(ptr, layout))
     }
 }
 
 impl CAlloc for Global<Heap> {}
 
 pub fn init_heap(addr: *mut u8, len: usize) -> u32 {
-    let mut sr = cop0::Status::new();
-    HEAP.ensure_mut(&mut sr, |heap, _| {
+    cop0::Status::new().critical_section(|| {
         // SAFETY: Let's hope the user passed an unused region of memory
-        unsafe { heap.init(addr, len) }
+        unsafe { HEAP.as_mut().init(addr, len) }
     });
     0
 }

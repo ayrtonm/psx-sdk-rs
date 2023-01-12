@@ -1,13 +1,14 @@
 use crate::println;
-use crate::thread::{get_current_thread, set_current_thread};
+use crate::thread::{get_current_thread, set_current_thread, ThreadControlBlock};
 use core::arch::asm;
 use core::mem::size_of;
 use psx::constants::KB;
 use psx::hw::cop0;
-use psx::hw::cop0::Excode;
+use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
 use psx::hw::Register;
 use psx::irq::IRQ;
+use psx::sys::kernel::*;
 
 #[naked]
 pub unsafe extern "C" fn exception_vec() {
@@ -35,7 +36,7 @@ pub unsafe extern "C" fn exception_handler() {
          .set noat
 
          la $k1, CURRENT_THREAD
-         lw $k1, ($k1)
+         lhu $k1, ($k1)
          la $k0, THREADS
          0:
          beqz $k1, 1f
@@ -101,7 +102,7 @@ pub unsafe extern "C" fn exception_handler() {
          nop
 
          la $k0, CURRENT_THREAD
-         lw $k0, ($k0)
+         lhu $k0, ($k0)
          la $k1, THREADS
          2:
          beqz $k0, 3f
@@ -172,18 +173,18 @@ pub unsafe extern "C" fn exception_handler() {
 
 #[no_mangle]
 extern "C" fn call_handlers() {
-    let t = unsafe { get_current_thread() };
-    let excode = cop0::Cause::from_bits(t.cop0_regs[1]).excode();
+    let tcb = unsafe { get_current_thread() };
+    let excode = cop0::Cause::from_bits(*tcb.cop0_cause()).excode();
     match excode {
         Excode::Interrupt => irq_handler(),
-        Excode::Syscall => syscall_handler(),
+        Excode::Syscall => syscall_handler(tcb),
         _ => (),
     }
 }
 
 fn irq_handler() {
     let mut stat = irq::Status::new();
-    let mut mask = irq::Mask::new();
+    let mask = irq::Mask::new();
 
     for irq in mask.active_irqs(&stat) {
         if let Some(irq) = irq {
@@ -193,15 +194,25 @@ fn irq_handler() {
             }
         }
     }
-    mask.disable_all().store();
     stat.ack_all().store();
 }
 
-fn syscall_handler() {
-    let t = unsafe { get_current_thread() };
-    t.cop0_regs[2] += 4;
-    match t.regs[3] {
-        3 => unsafe { set_current_thread(t.regs[4]) },
+fn syscall_handler(tcb: &mut ThreadControlBlock) {
+    *tcb.cop0_epc() += 4;
+    match tcb.regs[3] as u8 {
+        ENTER_CRITICAL_SECTION_NUM => {
+            cop0::Status::new()
+                .disable_interrupts()
+                .mask_interrupt(IntSrc::Hardware)
+                .store();
+        },
+        EXIT_CRITICAL_SECTION_NUM => {
+            cop0::Status::new()
+                .enable_interrupts()
+                .unmask_interrupt(IntSrc::Hardware)
+                .store();
+        },
+        CHANGE_THREAD_SUB_FN_NUM => unsafe { set_current_thread(tcb.regs[4]) },
         _ => (),
     }
 }

@@ -5,11 +5,14 @@ use alloc::vec;
 use core::ffi::CStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
+use core::mem::size_of;
+use core::ptr;
+use psx::constants::KB;
 use psx::hw::{cop0, Register};
 use psx::sys::kernel::psx_change_thread_sub_fn;
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct ThreadHandle(pub u32);
 
 const MAIN_THREAD: ThreadHandle = ThreadHandle(0xFF00_0000);
@@ -17,19 +20,28 @@ const INVALID_HANDLE: ThreadHandle = ThreadHandle(0xFFFF_FFFF);
 
 #[derive(Debug)]
 pub struct Thread {
-    stack: Box<[u32]>,
+    _stack: Box<[u32]>,
     handle: ThreadHandle,
 }
 
 impl Thread {
-    pub fn new(entry_point: extern "C" fn(), stack_size: usize) -> Self {
-        let mut stack = vec![0u32; stack_size].into_boxed_slice();
+    pub fn new(entry_point: extern "C" fn() -> !) -> Option<Self> {
+        let default_stack_size = KB / size_of::<u32>();
+        Self::new_with_stack(entry_point, default_stack_size)
+    }
+
+    pub fn new_with_stack(entry_point: extern "C" fn() -> !, stack_size: usize) -> Option<Self> {
+        let mut _stack = vec![0u32; stack_size].into_boxed_slice();
         let handle = open_thread(
-            entry_point as u32,
-            &mut stack[stack_size - 1] as *mut u32 as u32,
-            0,
+            entry_point as *const u32,
+            &mut _stack[stack_size - 1],
+            ptr::null_mut(),
         );
-        Self { stack, handle }
+        if handle == INVALID_HANDLE {
+            None
+        } else {
+            Some(Self { _stack, handle })
+        }
     }
 
     pub fn resume(&mut self) {
@@ -38,6 +50,16 @@ impl Thread {
 
     pub fn resume_main() {
         change_thread(MAIN_THREAD);
+    }
+
+    pub fn close(self) {
+        // Thread closed by Drop impl
+    }
+}
+
+impl Drop for Thread {
+    fn drop(&mut self) {
+        close_thread(self.handle);
     }
 }
 
@@ -94,6 +116,13 @@ impl ThreadControlBlock {
             cop0_regs: [0; 3],
         }
     }
+
+    pub fn cop0_cause(&mut self) -> &mut u32 {
+        &mut self.cop0_regs[1]
+    }
+    pub fn cop0_epc(&mut self) -> &mut u32 {
+        &mut self.cop0_regs[2]
+    }
 }
 
 const NUM_THREADS: usize = 4;
@@ -105,31 +134,31 @@ static THREADS: Global<[ThreadControlBlock; NUM_THREADS]> =
 static IN_USE: Global<[bool; NUM_THREADS]> = Global::new([true, false, false, false]);
 
 #[no_mangle]
-static CURRENT_THREAD: Global<usize> = Global::new(0);
+static CURRENT_THREAD: Global<u16> = Global::new(0);
 
 pub unsafe fn get_current_thread<'a>() -> &'a mut ThreadControlBlock {
-    &mut THREADS.assume_mut()[*CURRENT_THREAD.as_mut()]
+    &mut THREADS.as_mut()[*CURRENT_THREAD.as_mut() as usize]
 }
 
 pub unsafe fn set_current_thread(idx: u32) {
-    *CURRENT_THREAD.as_mut() = idx as usize;
+    *CURRENT_THREAD.as_mut() = idx as u16;
 }
 
-pub fn open_thread(pc: u32, sp: u32, gp: u32) -> ThreadHandle {
-    let mut sr = cop0::Status::new();
-    THREADS.ensure_mut(&mut sr, |threads, _| {
+pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32) -> ThreadHandle {
+    cop0::Status::new().critical_section(|| {
+        let threads = unsafe { THREADS.as_mut() };
         for (i, t) in threads.iter_mut().enumerate() {
-            let in_use = unsafe { &mut IN_USE.assume_mut()[i] };
+            let in_use = unsafe { &mut IN_USE.as_mut()[i] };
             if !*in_use {
                 let mut regs = [0; 31];
                 let mut cop0_regs = [0; 3];
                 // r0 is not included, so indices are off by 1
-                regs[27] = gp;
-                regs[28] = sp;
+                regs[27] = gp as u32;
+                regs[28] = sp as u32;
                 // This is the frame pointer
-                regs[29] = sp;
+                regs[29] = sp as u32;
                 // This is the program counter after returning from an exception
-                cop0_regs[2] = pc;
+                cop0_regs[2] = pc as u32;
                 *t = ThreadControlBlock {
                     regs,
                     mul_div_regs: [0; 2],
@@ -158,7 +187,7 @@ pub fn change_thread(handle: ThreadHandle) -> u32 {
         Some(idx) => idx,
         None => return 1,
     };
-    if unsafe { IN_USE.assume_mut()[new] } {
+    if unsafe { IN_USE.as_mut()[new] } {
         unsafe { psx_change_thread_sub_fn(0, new) }
     };
     1
@@ -169,7 +198,8 @@ pub fn close_thread(handle: ThreadHandle) -> u32 {
         Some(idx) => idx,
         None => return 1,
     };
-    let mut sr = cop0::Status::new();
-    IN_USE.ensure_mut(&mut sr, |t, _| t[idx] = false);
+    cop0::Status::new().critical_section(|| unsafe {
+        IN_USE.as_mut()[idx] = false;
+    });
     1
 }

@@ -19,16 +19,11 @@ mod rand;
 mod stdout;
 mod thread;
 
-use crate::allocator::init_heap;
 use crate::misc::get_system_info;
 use crate::thread::Thread;
 use core::ffi::CStr;
-use core::mem::size_of;
-use psx::constants::KB;
-use psx::hw::cop0;
 use psx::hw::cop0::IntSrc;
-use psx::hw::irq;
-use psx::hw::Register;
+use psx::hw::{cop0, irq, Register};
 
 fn main() {
     // This main loop doesn't do anything useful yet, it's only used to test
@@ -45,24 +40,26 @@ fn main() {
         .use_boot_vectors(false)
         .store();
     irq::Status::skip_load().ack_all().store();
+    irq::Mask::new().enable_all().store();
 
-    unsafe {
-        static mut HEAP_MEM: [u32; KB / size_of::<u32>()] = [0; KB / size_of::<u32>()];
-        init_heap(
-            HEAP_MEM.as_mut_ptr().cast(),
-            HEAP_MEM.len() * size_of::<u32>(),
-        );
-    }
-
-    let mut t = Thread::new(task, KB / size_of::<u32>());
-    extern "C" fn task() {
-        loop {
-            println!("hello from task thread");
-            Thread::resume_main();
-        }
-    }
+    let mut t = Thread::new(task).unwrap();
+    let mut counter = 5;
     loop {
         println!("hello from main thread");
-        t.resume();
+        if counter != 0 {
+            counter -= 1;
+            t.resume();
+        }
+    }
+}
+
+extern "C" fn task() -> ! {
+    let mut counter = 10;
+    loop {
+        println!("hello from task thread");
+        if counter != 0 {
+            counter -= 1;
+            Thread::resume_main();
+        }
     }
 }

@@ -6,7 +6,7 @@ pub fn srand(seed: u32) -> u32 {
     // This is a random number generator so I don't really care if seed isn't set
     // correctly
     unsafe {
-        *SEED.assume_mut() = seed;
+        *SEED.as_mut() = seed;
     }
     0
 }
@@ -14,7 +14,7 @@ pub fn srand(seed: u32) -> u32 {
 pub fn rand() -> u32 {
     // This is a random number generator so I don't really care if seed isn't
     // updated correctly
-    let seed = unsafe { SEED.assume_mut() };
+    let seed = unsafe { SEED.as_mut() };
     *seed *= 0x41C6_4E6D;
     *seed += 0x3039;
     (*seed >> 16) & 0x7FFF
