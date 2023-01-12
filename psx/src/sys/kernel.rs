@@ -154,6 +154,8 @@ extern "C" {
     pub fn psx_enter_critical_section() -> bool;
     /// Calls BIOS function [SYS(02h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_exit_critical_section();
+    /// Calls BIOS function [SYS(03h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn psx_change_thread_sub_fn(_: usize, addr: usize);
 }
 /// The BIOS function number for file_open
 pub const FILE_OPEN_NUM: u8 = 0x00;
@@ -447,3 +449,5 @@ pub const FLUSH_STD_IN_OUT_PUT_TY: u8 = 0xC0;
 pub const ENTER_CRITICAL_SECTION_NUM: u8 = 0x01;
 /// The BIOS function number for exit_critical_section
 pub const EXIT_CRITICAL_SECTION_NUM: u8 = 0x02;
+/// The BIOS function number for change_thread_sub_fn
+pub const CHANGE_THREAD_SUB_FN_NUM: u8 = 0x03;

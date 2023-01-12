@@ -520,3 +520,11 @@ psx_exit_critical_section:
     syscall 0x0
     jr $ra
     nop
+
+.section .text.bios.psx_change_thread_sub_fn
+.globl psx_change_thread_sub_fn
+psx_change_thread_sub_fn:
+    li $4, 0x03
+    syscall 0x0
+    jr $ra
+    nop

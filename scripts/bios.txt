@@ -273,5 +273,5 @@ C(13h) flush_std_in_out_put();
 
 SYS(01h) enter_critical_section() -> bool;
 SYS(02h) exit_critical_section();
-//SYS(03h) ChangeThreadSubFunction(addr) ;syscall with r4=03h, r5=addr
+SYS(03h) change_thread_sub_fn(addr: usize);
 //SYS(04h..FFFFFFFFh) calls DeliverEvent(F0000010h,4000h)
