@@ -12,6 +12,7 @@
 mod allocator;
 mod boot;
 mod exceptions;
+mod gamepad;
 mod global;
 mod handlers;
 mod misc;
