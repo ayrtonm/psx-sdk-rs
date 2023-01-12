@@ -9,11 +9,11 @@ mod controller;
 mod status;
 
 #[repr(u8)]
-pub enum Port {
-    Port0 = 0,
-    Port1,
-    Port2,
-    Port3,
+pub enum Idx {
+    Idx0 = 0,
+    Idx1,
+    Idx2,
+    Idx3,
 }
 
 #[repr(u8)]

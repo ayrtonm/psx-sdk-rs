@@ -1,4 +1,4 @@
-use crate::hw::cdrom::{Port, Status};
+use crate::hw::cdrom::{Idx, Status};
 use crate::hw::Register;
 use core::hint::unreachable_unchecked;
 
@@ -11,19 +11,19 @@ const BUSYSTS: u8 = 7;
 
 // TODO: Add a better Debug impl for this
 impl Status {
-    pub fn get_port(&self) -> Port {
+    pub fn get_idx(&self) -> Idx {
         match self.to_bits() & 0b11 {
-            0 => Port::Port0,
-            1 => Port::Port1,
-            2 => Port::Port2,
-            3 => Port::Port3,
+            0 => Idx::Idx0,
+            1 => Idx::Idx1,
+            2 => Idx::Idx2,
+            3 => Idx::Idx3,
             // SAFETY: & 0b11 ensures this cannot be greater than 3
             _ => unsafe { unreachable_unchecked() },
         }
     }
 
-    pub fn set_port(&mut self, port: Port) -> &mut Self {
-        self.clear_bits(0b11).set_bits(port as u8)
+    pub fn set_idx(&mut self, idx: Idx) -> &mut Self {
+        self.clear_bits(0b11).set_bits(idx as u8)
     }
 
     pub fn xa_adpcm_empty(&self) -> bool {
