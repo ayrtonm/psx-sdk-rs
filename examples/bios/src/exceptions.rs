@@ -1,58 +1,210 @@
 use crate::println;
+use crate::thread::{get_current_thread, set_current_thread};
 use core::arch::asm;
+use psx::constants::KB;
 use psx::hw::cop0;
+use psx::hw::cop0::Excode;
 use psx::hw::irq;
 use psx::hw::Register;
-
-macro_rules! with_caller_saved_regs {
-    ($($body:tt)*) => {
-        let r2: u32; let r3: u32; let r4: u32; let r5: u32;
-        let r6: u32; let r7: u32; let r8: u32; let r9: u32;
-        let r10: u32; let r11: u32; let r12: u32; let r13: u32;
-        let r14: u32; let r15: u32; let r24: u32; let r25: u32;
-        unsafe {
-            asm! { "",
-                out("$2") r2, out("$3") r3, out("$4") r4, out("$5") r5,
-                out("$6") r6, out("$7") r7, out("$8") r8, out("$9") r9,
-                out("$10") r10, out("$11") r11, out("$12") r12, out("$13") r13,
-                out("$14") r14, out("$15") r15, out("$24") r24, out("$25") r25
-            }
-        }
-        $($body)*
-        unsafe {
-            asm! { "",
-                in("$2") r2, in("$3") r3, in("$4") r4, in("$5") r5,
-                in("$6") r6, in("$7") r7, in("$8") r8, in("$9") r9,
-                in("$10") r10, in("$11") r11, in("$12") r12, in("$13") r13,
-                in("$14") r14, in("$15") r15, in("$24") r24, in("$25") r25
-            }
-        }
-    };
-}
+use psx::irq::IRQ;
 
 #[naked]
 pub unsafe extern "C" fn exception_vec() {
     asm! {
         ".set noreorder
-         la $4, exception_handler
-         jalr $4
+         .set noat
+         la $k0, exception_handler
+         jr $k0
          nop
-         jr $26
-         .long 0x42000010 #rfe
+         .set at
          .set reorder",
         options(noreturn)
     }
 }
 
+#[naked]
 #[no_mangle]
-unsafe extern "C" fn exception_handler() {
-    with_caller_saved_regs! {
-        let epc = cop0::EPC::new().to_bits();
-        asm! {
-            "move $26, $2", in("$2") epc
-        }
+pub unsafe extern "C" fn exception_handler() {
+    const STACK_SIZE: usize = KB;
+    #[no_mangle]
+    static mut EXCEPTION_STACK: [u8; STACK_SIZE] = [0; STACK_SIZE];
 
-        println!("Jumped to exception handler at {:#x?} because {:#x?}", epc, cop0::Cause::new());
-        irq::Status::new().ack_all().store();
-    };
+    asm! {
+        ".set noreorder
+         .set noat
+
+         la $k1, CURRENT_THREAD
+         lw $k1, ($k1)
+         la $k0, THREADS
+         0:
+         beqz $k1, 1f
+         subu $k1, $k1, 1 # branch delay slot
+         addu $k0, $k0, 144
+         j 0b
+         nop
+         1:
+
+         sw $at, ($k0)
+         .set at
+
+         sw $v0, 4($k0)
+         sw $v1, 8($k0)
+
+         sw $a0, 12($k0)
+         sw $a1, 16($k0)
+         sw $a2, 20($k0)
+         sw $a3, 24($k0)
+
+         sw $t0, 28($k0)
+         sw $t1, 32($k0)
+         sw $t2, 36($k0)
+         sw $t3, 40($k0)
+         sw $t4, 44($k0)
+         sw $t5, 48($k0)
+         sw $t6, 52($k0)
+         sw $t7, 56($k0)
+
+         sw $s0, 60($k0)
+         sw $s1, 64($k0)
+         sw $s2, 68($k0)
+         sw $s3, 72($k0)
+         sw $s4, 76($k0)
+         sw $s5, 80($k0)
+         sw $s6, 84($k0)
+         sw $s7, 88($k0)
+
+         sw $t8, 92($k0)
+         sw $t9, 96($k0)
+
+         sw $k1, 104($k0)
+         sw $gp, 108($k0)
+         sw $sp, 112($k0)
+         sw $fp, 116($k0)
+         sw $ra, 120($k0)
+
+         mflo $t0
+         mfhi $t1
+         mfc0 $t2, $12
+         mfc0 $t3, $13
+         mfc0 $t4, $14
+         sw $t0, 124($k0)
+         sw $t1, 128($k0)
+         sw $t2, 132($k0)
+         sw $t3, 136($k0)
+         sw $t4, 140($k0)
+
+         la $sp, EXCEPTION_STACK
+         addiu $sp, $sp, 0x3F0
+
+         jal call_handlers
+         nop
+
+         la $k0, CURRENT_THREAD
+         lw $k0, ($k0)
+         la $k1, THREADS
+         2:
+         beqz $k0, 3f
+         subu $k0, $k0, 1 # branch delay slot
+         addu $k1, $k1, 144
+         j 2b
+         nop
+         3:
+
+         .set noat
+         lw $at, ($k1)
+
+         lw $t0, 124($k1)
+         lw $t1, 128($k1)
+         lw $t2, 132($k1)
+         lw $t3, 136($k1)
+         lw $t4, 140($k1)
+         mtlo $t0
+         mthi $t1
+         mtc0 $t2, $12
+         mtc0 $t3, $13
+         move $k0, $t4
+
+         lw $v0, 4($k1)
+         lw $v1, 8($k1)
+
+         lw $a0, 12($k1)
+         lw $a1, 16($k1)
+         lw $a2, 20($k1)
+         lw $a3, 24($k1)
+
+         lw $t0, 28($k1)
+         lw $t1, 32($k1)
+         lw $t2, 36($k1)
+         lw $t3, 40($k1)
+         lw $t4, 44($k1)
+         lw $t5, 48($k1)
+         lw $t6, 52($k1)
+         lw $t7, 56($k1)
+
+         lw $s0, 60($k1)
+         lw $s1, 64($k1)
+         lw $s2, 68($k1)
+         lw $s3, 72($k1)
+         lw $s4, 76($k1)
+         lw $s5, 80($k1)
+         lw $s6, 84($k1)
+         lw $s7, 88($k1)
+
+         lw $t8, 92($k1)
+         lw $t9, 96($k1)
+
+         lw $gp, 108($k1)
+         lw $sp, 112($k1)
+         lw $fp, 116($k1)
+         lw $ra, 120($k1)
+
+         lw $k1, 104($k1)
+
+         jr $k0
+         .long 0x42000010 #rfe
+
+         .set at
+         .set reorder",
+         options(noreturn)
+    }
+}
+
+#[no_mangle]
+extern "C" fn call_handlers() {
+    let t = unsafe { get_current_thread() };
+    let excode = cop0::Cause::from_bits(t.cop0_regs[1]).excode();
+    match excode {
+        Excode::Interrupt => irq_handler(),
+        Excode::Syscall => syscall_handler(),
+        _ => (),
+    }
+}
+
+fn irq_handler() {
+    let mut stat = irq::Status::new();
+    let mut mask = irq::Mask::new();
+
+    for irq in mask.active_irqs(&stat) {
+        if let Some(irq) = irq {
+            match irq {
+                IRQ::Vblank => vblank_handler(),
+                _ => println!("No handler installed for interrupt {:?}", irq),
+            }
+        }
+    }
+    mask.disable_all().store();
+    stat.ack_all().store();
+}
+
+fn syscall_handler() {
+    let t = unsafe { get_current_thread() };
+    t.cop0_regs[2] += 4;
+    match t.regs[3] {
+        3 => unsafe { set_current_thread(t.regs[4]) },
+        _ => (),
+    }
+}
+
+fn vblank_handler() {
+    println!("Called the vblank handler");
 }

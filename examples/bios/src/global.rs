@@ -2,6 +2,7 @@ use core::cell::UnsafeCell;
 use psx::hw::cop0::IntSrc;
 use psx::hw::{cop0, Register};
 
+#[repr(transparent)]
 pub struct Global<T>(UnsafeCell<T>);
 
 unsafe impl<T> Sync for Global<T> {}
@@ -11,13 +12,17 @@ impl<T> Global<T> {
         Self(UnsafeCell::new(t))
     }
 
+    pub const fn as_mut(&self) -> *mut T {
+        self.0.get()
+    }
+
     /// Assumes that we can mutably access the Global and returns a mutable
     /// reference to it.
     ///
     /// # SAFETY: No other reference to the Global may be created during the
     /// lifetime of the return value.
-    pub unsafe fn assume_mut(&self) -> &mut T {
-        unsafe { self.0.get().as_mut().unwrap() }
+    pub const unsafe fn assume_mut(&self) -> &mut T {
+        self.0.get().as_mut().unwrap()
     }
 
     /// Ensures that we can mutably access the Global then calls a closure with
@@ -25,8 +30,8 @@ impl<T> Global<T> {
     ///
     /// Note that any modifications to cop0r12 in the closure must be done
     /// through the closure's second argument.
-    pub fn ensure_mut<F: Fn(&mut T, &mut cop0::Status) -> R, R>(
-        &self, sr: &mut cop0::Status, f: F,
+    pub fn ensure_mut<F: FnMut(&mut T, &mut cop0::Status) -> R, R>(
+        &self, sr: &mut cop0::Status, mut f: F,
     ) -> R {
         // Check if we are already in a critical section
         let in_critical_section = sr.interrupt_masked(IntSrc::Hardware);

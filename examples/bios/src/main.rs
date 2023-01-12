@@ -4,9 +4,14 @@
 #![feature(asm_const)]
 #![feature(naked_functions)]
 #![feature(core_intrinsics)]
+#![feature(const_mut_refs)]
+#![feature(const_ptr_as_ref)]
+#![feature(const_option)]
+#![feature(inline_const)]
 
 use core::arch::asm;
 use core::ffi::CStr;
+use psx::constants::KB;
 use psx::hw::cop0;
 use psx::hw::cop0::IntSrc;
 use psx::hw::irq;
@@ -26,7 +31,7 @@ use crate::allocator::{free, init_heap, malloc};
 use crate::misc::get_system_info;
 use crate::rand::{rand, srand};
 use crate::stdout::printf;
-use crate::thread::{change_thread, close_thread, open_thread};
+use crate::thread::{change_thread, close_thread, open_thread, MAIN_THREAD};
 
 fn main() {
     // This main loop doesn't do anything useful yet, it's only used to test
@@ -42,10 +47,25 @@ fn main() {
         .unmask_interrupt(IntSrc::Hardware)
         .use_boot_vectors(false)
         .store();
-    println!("{:#x?}", sr);
+    irq::Status::skip_load().ack_all().store();
     let mut mask = irq::Mask::new();
+    println!("{:#x?}", cop0::Status::new());
+
+    static mut THREAD_STACK: [u8; KB] = [0; KB];
+    let t = open_thread(
+        task_thread as extern "C" fn() as u32,
+        unsafe { &mut THREAD_STACK[KB - 8] } as *mut u8 as u32,
+        0,
+    );
+    extern "C" fn task_thread() {
+        loop {
+            println!("hello from task thread");
+            change_thread(MAIN_THREAD);
+        }
+    }
     loop {
-        mask.enable_all().store();
+        println!("hello from main thread");
+        change_thread(t);
     }
 }
 

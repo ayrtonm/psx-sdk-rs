@@ -2,7 +2,7 @@ use crate::exceptions::exception_vec;
 use crate::println;
 use crate::{a0_fn_vec, b0_fn_vec, c0_fn_vec, main};
 use core::arch::asm;
-use core::intrinsics::volatile_copy_nonoverlapping_memory;
+use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use psx::constants::*;
 
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script
@@ -46,7 +46,7 @@ fn init_vectors() {
         volatile_copy_nonoverlapping_memory(
             RAM_EXCEPTION_VEC as *mut u32,
             exception_vec as *const u32,
-            6,
+            4,
         );
     }
     println!("Wrote RAM exception vector");
@@ -57,15 +57,28 @@ fn init_ram() {
         // The linker script is set up so that these refer to the load addresses
         static __data_start: u32;
         static __data_end: u32;
+        static mut __bss_start: u32;
+        static __bss_end: u32;
     }
     unsafe {
         let start = &__data_start as *const u32 as usize;
         let end = &__data_end as *const u32 as usize;
-        let len = end - start;
-        volatile_copy_nonoverlapping_memory(
-            (KSEG0_BASE + 0x100) as *mut u32,
-            &__data_start as *const u32,
-            len,
+        let len = (end - start) / 4;
+        let dst = (KSEG0_BASE + 0x100) as *mut u32;
+        let src = &__data_start as *const u32;
+        println!(
+            "Copying {} words from {:p} to {:p} to init .data",
+            len, src, dst
         );
+        volatile_copy_nonoverlapping_memory(dst, src, len);
+        let bss_start = &__bss_start as *const u32 as usize;
+        let bss_end = &__bss_end as *const u32 as usize;
+        let bss_len = (bss_end - bss_start) / 4;
+        let bss_dst = &mut __bss_start as *mut u32;
+        println!(
+            "Zeroing out {} words from {:x} to {:x} to init .bss",
+            bss_len, bss_start, bss_end
+        );
+        volatile_set_memory(bss_dst, 0, bss_len);
     }
 }
