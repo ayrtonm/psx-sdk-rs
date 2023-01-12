@@ -1,7 +1,7 @@
 use crate::global::Global;
+use crate::println;
 use core::mem::size_of;
 use core::ptr::NonNull;
-use psx::hw::{cop0, Register};
 
 #[repr(C)]
 struct GamepadBuffer {
@@ -12,27 +12,30 @@ struct GamepadBuffer {
     _padding: [u16; 13],
 }
 
-struct GamepadCtxt {
-    buffer1: Option<NonNull<GamepadBuffer>>,
-    buffer2: Option<NonNull<GamepadBuffer>>,
+#[repr(C)]
+pub struct GamepadCtxt {
+    buffer1: NonNull<GamepadBuffer>,
+    buffer2: NonNull<GamepadBuffer>,
 }
 
-static CTXT: Global<GamepadCtxt> = Global::new(GamepadCtxt {
-    buffer1: None,
-    buffer2: None,
-});
+pub fn init() {
+    static mut BUFFER1: [u16; 17] = [0; 17];
+    static mut BUFFER2: [u16; 17] = [0; 17];
+    unsafe {
+        init_pad(BUFFER1.as_mut_slice(), BUFFER2.as_mut_slice());
+    }
+}
 
 pub fn init_pad(buf1: &mut [u16], buf2: &mut [u16]) -> u32 {
-    if buf1.len() != size_of::<GamepadBuffer>() {
+    if buf1.len() != size_of::<GamepadBuffer>() / size_of::<u16>() {
         return 1
-    }
-    if buf2.len() != size_of::<GamepadBuffer>() {
+    };
+    if buf2.len() != size_of::<GamepadBuffer>() / size_of::<u16>() {
         return 1
-    }
-    cop0::Status::new().critical_section(|| unsafe {
-        let ctxt = CTXT.as_ref();
-        ctxt.buffer1 = NonNull::new(buf1).map(|p| p.cast());
-        ctxt.buffer2 = NonNull::new(buf2).map(|p| p.cast());
-    });
+    };
+    let ctxt = GamepadCtxt {
+        buffer1: NonNull::new(buf1).unwrap().cast(),
+        buffer2: NonNull::new(buf1).unwrap().cast(),
+    };
     0
 }

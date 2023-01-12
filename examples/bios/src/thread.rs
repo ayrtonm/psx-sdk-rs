@@ -5,8 +5,10 @@ use alloc::vec;
 use core::ffi::CStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
+use core::marker::PhantomData;
 use core::mem::{size_of, transmute};
 use core::ptr;
+use core::slice;
 use psx::constants::KB;
 use psx::hw::{cop0, Register};
 use psx::sys::kernel::psx_change_thread_sub_fn;
@@ -19,50 +21,111 @@ const MAIN_THREAD: ThreadHandle = ThreadHandle(0xFF00_0000);
 const INVALID_HANDLE: ThreadHandle = ThreadHandle(0xFFFF_FFFF);
 
 #[derive(Debug)]
-pub struct Thread<'a> {
+pub struct Thread<'a, A: Send, R: Send> {
     handle: ThreadHandle,
     // The thread's stack
     stack: &'a mut [u32],
+    _arg: PhantomData<A>,
+    _ret: PhantomData<R>,
 }
 
-impl<'a> Thread<'a> {
-    pub fn new(entry_point: extern "C" fn() -> !) -> Option<Self> {
+fn current_thread() -> ThreadHandle {
+    let idx = unsafe { (*CURRENT_THREAD.as_ptr()).offset_from(THREADS.as_ptr().cast()) };
+    ThreadHandle(MAIN_THREAD.0 | idx as u32)
+}
+pub extern "C" fn resume_main() {
+    change_thread(MAIN_THREAD);
+}
+
+impl<'a, R: Send> Thread<'a, [u32; 4], R> {
+    const RET_SIZE: () = {
+        if size_of::<R>() > size_of::<u64>() {
+            panic!("Thread return type is too large");
+        }
+    };
+
+    #[allow(path_statements)]
+    pub fn new(entry_point: extern "C" fn() -> R) -> Option<Self> {
+        Self::RET_SIZE;
         let func = unsafe { transmute(entry_point) };
         Self::new_with_args(func, [0; 4])
     }
+}
 
-    pub fn new_with_args(
-        entry_point: extern "C" fn(u32, u32, u32, u32) -> !, args: [u32; 4],
-    ) -> Option<Self> {
+impl<'a, A: Send, R: Send> Thread<'a, A, R> {
+    const ARG_SIZE: () = {
+        if size_of::<A>() > size_of::<u128>() {
+            panic!("Thread argument type is too large");
+        }
+    };
+    #[allow(path_statements)]
+    pub fn new_with_args(entry_point: extern "C" fn(A) -> R, args: A) -> Option<Self> {
+        Self::ARG_SIZE;
         let default_stack_size = KB / size_of::<u32>();
         Self::new_with_stack(entry_point, args, default_stack_size)
     }
 
     pub fn new_with_stack(
-        entry_point: extern "C" fn(u32, u32, u32, u32) -> !, args: [u32; 4], stack_size: usize,
+        entry_point: extern "C" fn(A) -> R, args: A, stack_size: usize,
     ) -> Option<Self> {
         let mut stack = vec![0u32; stack_size].into_boxed_slice();
+
+        let ra = match handle_to_idx(current_thread()).unwrap() {
+            _ => resume_main,
+        };
+
+        // args may be smaller than 128 bits so we can't just cast it's address and read
+        // it instead we have to copy it to a 128 bit array then read that
+        let mut tmp_args = [0u32; 4];
+        // args might not be 4-byte aligned so we have to copy byte by byte
+        let args_as_bytes =
+            unsafe { slice::from_raw_parts(&args as *const A as *const u8, size_of::<A>()) };
+        let tmp_as_bytes = unsafe {
+            slice::from_raw_parts_mut(tmp_args.as_mut_ptr() as *mut u8, size_of::<[u32; 4]>())
+        };
+        tmp_as_bytes[0..args_as_bytes.len()].copy_from_slice(args_as_bytes);
+
         let handle = open_thread(
             entry_point as *const u32,
             &mut stack[stack_size - 1],
             ptr::null_mut(),
-            args,
+            tmp_args,
+            ra as *const u32,
         );
         // Leak the stack to avoid freeing it if the Thread is dropped
         let stack = Box::leak(stack);
         if handle == INVALID_HANDLE {
             None
         } else {
-            Some(Self { handle, stack })
+            Some(Self {
+                handle,
+                stack,
+                _arg: PhantomData,
+                _ret: PhantomData,
+            })
         }
+    }
+
+    pub fn join(mut self) -> R {
+        self.resume();
+        let regs = cop0::Status::new().critical_section(|| unsafe {
+            let tcb = &THREADS.as_ref()[handle_to_idx(self.handle).unwrap()];
+            let v0 = tcb.regs[1] as u64;
+            let v1 = tcb.regs[2] as u64;
+            if size_of::<R>() > size_of::<u32>() {
+                v0 | (v1 << 32)
+            } else {
+                v0
+            }
+        });
+        let ptr = &regs as *const u64 as *const R;
+        let res = unsafe { ptr.read() };
+        self.close();
+        res
     }
 
     pub fn resume(&mut self) {
         change_thread(self.handle);
-    }
-
-    pub fn resume_main() {
-        change_thread(MAIN_THREAD);
     }
 
     pub fn close(self) {
@@ -137,24 +200,25 @@ impl ThreadControlBlock {
 
 const NUM_THREADS: usize = 4;
 
-#[no_mangle]
 static THREADS: Global<[ThreadControlBlock; NUM_THREADS]> =
     Global::new([const { ThreadControlBlock::new() }; NUM_THREADS]);
 
 static IN_USE: Global<[bool; NUM_THREADS]> = Global::new([true, false, false, false]);
 
 #[no_mangle]
-static CURRENT_THREAD: Global<u16> = Global::new(0);
+static CURRENT_THREAD: Global<*mut ThreadControlBlock> = Global::new(THREADS.as_ptr().cast());
 
 pub unsafe fn get_current_thread<'a>() -> &'a mut ThreadControlBlock {
-    &mut THREADS.as_ref()[*CURRENT_THREAD.as_ref() as usize]
+    CURRENT_THREAD.as_ref().as_mut().unwrap()
 }
 
-pub unsafe fn set_current_thread(idx: u32) {
-    *CURRENT_THREAD.as_ref() = idx as u16;
+pub unsafe fn set_current_thread(tcb: *mut ThreadControlBlock) {
+    *CURRENT_THREAD.as_ref() = tcb;
 }
 
-pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -> ThreadHandle {
+pub fn open_thread(
+    pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4], ra: *const u32,
+) -> ThreadHandle {
     cop0::Status::new().critical_section(|| {
         let threads = unsafe { THREADS.as_ref() };
         for (i, t) in threads.iter_mut().enumerate() {
@@ -162,15 +226,18 @@ pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -
             if !*in_use {
                 let mut regs = [0; 31];
                 let mut cop0_regs = [0; 3];
+                // r0 is not included, so indices are off by 1
                 regs[3] = args[0];
                 regs[4] = args[1];
                 regs[5] = args[2];
                 regs[6] = args[3];
-                // r0 is not included, so indices are off by 1
                 regs[27] = gp as u32;
                 regs[28] = sp as u32;
                 // This is the frame pointer
                 regs[29] = sp as u32;
+                if !ra.is_null() {
+                    regs[30] = ra as u32;
+                }
                 // This is the program counter after returning from an exception
                 cop0_regs[2] = pc as u32;
                 *t = ThreadControlBlock {
@@ -186,8 +253,8 @@ pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -
     })
 }
 
-fn handle_to_idx(handle: u32) -> Option<usize> {
-    match handle {
+fn handle_to_idx(handle: ThreadHandle) -> Option<usize> {
+    match handle.0 {
         0xFF00_0000 => Some(0),
         0xFF00_0001 => Some(1),
         0xFF00_0002 => Some(2),
@@ -197,18 +264,20 @@ fn handle_to_idx(handle: u32) -> Option<usize> {
 }
 
 pub fn change_thread(handle: ThreadHandle) -> u32 {
-    let new = match handle_to_idx(handle.0) {
+    let new = match handle_to_idx(handle) {
         Some(idx) => idx,
         None => return 1,
     };
     if unsafe { IN_USE.as_ref()[new] } {
-        unsafe { psx_change_thread_sub_fn(0, new) }
+        let unused_arg = 0;
+        let tcb = unsafe { THREADS.as_ptr().cast::<ThreadControlBlock>().add(new) };
+        unsafe { psx_change_thread_sub_fn(unused_arg, tcb as usize) }
     };
     1
 }
 
 pub fn close_thread(handle: ThreadHandle) -> u32 {
-    let idx = match handle_to_idx(handle.0) {
+    let idx = match handle_to_idx(handle) {
         Some(idx) => idx,
         None => return 1,
     };

@@ -35,16 +35,9 @@ pub unsafe extern "C" fn exception_handler() {
         ".set noreorder
          .set noat
 
-         la $k1, CURRENT_THREAD
-         lhu $k1, ($k1)
-         la $k0, THREADS
-         0:
-         beqz $k1, 1f
-         subu $k1, $k1, 1 # branch delay slot
-         addu $k0, $k0, 144
-         j 0b
-         nop
-         1:
+         la $k0, CURRENT_THREAD
+         lw $k0, ($k0)
+         nop # branch delay slot
 
          sw $at, ($k0)
          .set at
@@ -101,16 +94,9 @@ pub unsafe extern "C" fn exception_handler() {
          jal call_handlers
          nop
 
-         la $k0, CURRENT_THREAD
-         lhu $k0, ($k0)
-         la $k1, THREADS
-         2:
-         beqz $k0, 3f
-         subu $k0, $k0, 1 # branch delay slot
-         addu $k1, $k1, 144
-         j 2b
-         nop
-         3:
+         la $k1, CURRENT_THREAD
+         lw $k1, ($k1)
+         nop # branch delay slot
 
          .set noat
          lw $at, ($k1)
@@ -212,11 +198,13 @@ fn syscall_handler(tcb: &mut ThreadControlBlock) {
                 .unmask_interrupt(IntSrc::Hardware)
                 .store();
         },
-        CHANGE_THREAD_SUB_FN_NUM => unsafe { set_current_thread(tcb.regs[4]) },
+        CHANGE_THREAD_SUB_FN_NUM => unsafe {
+            set_current_thread(tcb.regs[4] as *mut ThreadControlBlock)
+        },
         _ => (),
     }
 }
 
 fn vblank_handler() {
-    //println!("Called the vblank handler");
+    println!("Called the vblank handler");
 }
