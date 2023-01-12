@@ -19,9 +19,8 @@ mod rand;
 mod stdout;
 mod thread;
 
-use crate::misc::get_system_info;
+use crate::misc::{get_system_date, get_system_version};
 use crate::thread::Thread;
-use core::ffi::CStr;
 use psx::hw::cop0::IntSrc;
 use psx::hw::{cop0, irq, Register};
 
@@ -30,8 +29,8 @@ fn main() {
     // functionality that would be exposed to executables if the BIOS could load
     // them
     println!("Starting main BIOS loop");
-    let version_str = unsafe { CStr::from_ptr(get_system_info(2) as *const i8) };
-    let bios_date = get_system_info(0);
+    let version_str = get_system_version();
+    let bios_date = get_system_date();
     println!("{:?}", version_str);
     println!("{:x?}", bios_date);
     cop0::Status::new()
@@ -43,23 +42,16 @@ fn main() {
     irq::Mask::new().enable_all().store();
 
     let mut t = Thread::new(task).unwrap();
-    let mut counter = 5;
-    loop {
-        println!("hello from main thread");
-        if counter != 0 {
-            counter -= 1;
-            t.resume();
-        }
-    }
+    println!("hello from main thread");
+    t.resume();
+    // Close the Thread to free its stack
+    t.close();
+    loop {}
 }
 
 extern "C" fn task() -> ! {
-    let mut counter = 10;
     loop {
         println!("hello from task thread");
-        if counter != 0 {
-            counter -= 1;
-            Thread::resume_main();
-        }
+        Thread::resume_main();
     }
 }

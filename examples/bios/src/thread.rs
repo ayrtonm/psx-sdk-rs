@@ -5,7 +5,7 @@ use alloc::vec;
 use core::ffi::CStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
-use core::mem::size_of;
+use core::mem::{size_of, transmute};
 use core::ptr;
 use psx::constants::KB;
 use psx::hw::{cop0, Register};
@@ -19,28 +19,41 @@ const MAIN_THREAD: ThreadHandle = ThreadHandle(0xFF00_0000);
 const INVALID_HANDLE: ThreadHandle = ThreadHandle(0xFFFF_FFFF);
 
 #[derive(Debug)]
-pub struct Thread {
-    _stack: Box<[u32]>,
+pub struct Thread<'a> {
     handle: ThreadHandle,
+    // The thread's stack
+    stack: &'a mut [u32],
 }
 
-impl Thread {
+impl<'a> Thread<'a> {
     pub fn new(entry_point: extern "C" fn() -> !) -> Option<Self> {
-        let default_stack_size = KB / size_of::<u32>();
-        Self::new_with_stack(entry_point, default_stack_size)
+        let func = unsafe { transmute(entry_point) };
+        Self::new_with_args(func, [0; 4])
     }
 
-    pub fn new_with_stack(entry_point: extern "C" fn() -> !, stack_size: usize) -> Option<Self> {
-        let mut _stack = vec![0u32; stack_size].into_boxed_slice();
+    pub fn new_with_args(
+        entry_point: extern "C" fn(u32, u32, u32, u32) -> !, args: [u32; 4],
+    ) -> Option<Self> {
+        let default_stack_size = KB / size_of::<u32>();
+        Self::new_with_stack(entry_point, args, default_stack_size)
+    }
+
+    pub fn new_with_stack(
+        entry_point: extern "C" fn(u32, u32, u32, u32) -> !, args: [u32; 4], stack_size: usize,
+    ) -> Option<Self> {
+        let mut stack = vec![0u32; stack_size].into_boxed_slice();
         let handle = open_thread(
             entry_point as *const u32,
-            &mut _stack[stack_size - 1],
+            &mut stack[stack_size - 1],
             ptr::null_mut(),
+            args,
         );
+        // Leak the stack to avoid freeing it if the Thread is dropped
+        let stack = Box::leak(stack);
         if handle == INVALID_HANDLE {
             None
         } else {
-            Some(Self { _stack, handle })
+            Some(Self { handle, stack })
         }
     }
 
@@ -53,13 +66,10 @@ impl Thread {
     }
 
     pub fn close(self) {
-        // Thread closed by Drop impl
-    }
-}
-
-impl Drop for Thread {
-    fn drop(&mut self) {
         close_thread(self.handle);
+        // If the Thread is manually closed, free its stack memory
+        let stack = unsafe { Box::from_raw(self.stack) };
+        drop(stack);
     }
 }
 
@@ -144,7 +154,7 @@ pub unsafe fn set_current_thread(idx: u32) {
     *CURRENT_THREAD.as_mut() = idx as u16;
 }
 
-pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32) -> ThreadHandle {
+pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -> ThreadHandle {
     cop0::Status::new().critical_section(|| {
         let threads = unsafe { THREADS.as_mut() };
         for (i, t) in threads.iter_mut().enumerate() {
@@ -152,6 +162,10 @@ pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32) -> ThreadHandle {
             if !*in_use {
                 let mut regs = [0; 31];
                 let mut cop0_regs = [0; 3];
+                regs[3] = args[0];
+                regs[4] = args[1];
+                regs[5] = args[2];
+                regs[6] = args[3];
                 // r0 is not included, so indices are off by 1
                 regs[27] = gp as u32;
                 regs[28] = sp as u32;

@@ -218,5 +218,5 @@ fn syscall_handler(tcb: &mut ThreadControlBlock) {
 }
 
 fn vblank_handler() {
-    println!("Called the vblank handler");
+    //println!("Called the vblank handler");
 }
