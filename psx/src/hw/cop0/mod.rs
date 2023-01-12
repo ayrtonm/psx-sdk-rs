@@ -30,6 +30,17 @@ pub enum IntSrc {
     Hardware = IM_HW,
 }
 
+/// The exception cause code in cop0 r13
+#[derive(Debug)]
+pub enum Excode {
+    /// Exception was caused by an interrupt
+    Interrupt,
+    /// Exception was caused by a syscall
+    Syscall,
+    /// Exception was caused by something else
+    Other,
+}
+
 define_cop! {
     /// Breakpoint on execute register
     BPC<u32>; COP: 0; R: 3,

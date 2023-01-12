@@ -1,6 +1,6 @@
 //! Interrupt request and acknowledge
 use crate::hw::{MemRegister, Register};
-use crate::irq::IRQ;
+use crate::irq::{ALL_IRQS, IRQ};
 use core::mem::variant_count;
 
 /// Interrupt status register
@@ -8,7 +8,8 @@ pub type Status = MemRegister<u16, 0x1F80_1070>;
 /// Interrupt mask register
 pub type Mask = MemRegister<u16, 0x1F80_1074>;
 
-const ALL_IRQS: u16 = (1 << variant_count::<IRQ>()) - 1;
+const NUM_IRQS: usize = variant_count::<IRQ>();
+const ALL_IRQS_BITS: u16 = (1 << NUM_IRQS) - 1;
 
 impl Status {
     /// Requests an interrupt in the interrupt status register.
@@ -23,7 +24,7 @@ impl Status {
 
     /// Acknowledges all interrupts in the interrupt status register.
     pub fn ack_all(&mut self) -> &mut Self {
-        self.clear_bits(ALL_IRQS)
+        self.clear_bits(ALL_IRQS_BITS)
     }
 
     /// Waits for an interrupt to be requested in the interrupt status register.
@@ -60,11 +61,26 @@ impl Mask {
 
     /// Enables all interrupts in the interrupt request mask register.
     pub fn enable_all(&mut self) -> &mut Self {
-        self.set_bits(ALL_IRQS)
+        self.set_bits(ALL_IRQS_BITS)
     }
 
     /// Disables all interrupts in the interrupt request mask register.
     pub fn disable_all(&mut self) -> &mut Self {
-        self.clear_bits(ALL_IRQS)
+        self.clear_bits(ALL_IRQS_BITS)
+    }
+
+    /// Returns an array of IRQs that are both enabled and requested.
+    ///
+    /// This returns an array to avoid dynamic allocation. Elements that are
+    /// `None` may be ignored.
+    pub fn active_irqs(&self, stat: &Status) -> [Option<IRQ>; NUM_IRQS] {
+        let active_irqs = self.to_bits() & stat.to_bits();
+        let mut res = [None; NUM_IRQS];
+        for i in 0..NUM_IRQS {
+            if active_irqs & (1 << i) != 0 {
+                res[i] = Some(ALL_IRQS[i]);
+            }
+        }
+        res
     }
 }

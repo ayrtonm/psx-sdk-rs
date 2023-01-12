@@ -124,7 +124,7 @@ pub mod constants {
 /// Interrupt request types
 pub mod irq {
     /// An interrupt request
-    #[derive(Clone, Copy, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum IRQ {
         /// vertical blank interrupt request (NTSC = 60Hz, PAL = 50Hz)
         Vblank = 0,
@@ -149,6 +149,21 @@ pub mod irq {
         /// Secondary controller interrupt request
         ControllerPIO,
     }
+
+    /// All the interrupt requests from the lowest bit to the highest
+    pub const ALL_IRQS: [IRQ; 11] = [
+        IRQ::Vblank,
+        IRQ::GPU,
+        IRQ::CDROM,
+        IRQ::DMA,
+        IRQ::Timer0,
+        IRQ::Timer1,
+        IRQ::Timer2,
+        IRQ::ControllerMemoryCard,
+        IRQ::SIO,
+        IRQ::SPU,
+        IRQ::ControllerPIO,
+    ];
 }
 
 #[cfg(not(feature = "custom_oom"))]

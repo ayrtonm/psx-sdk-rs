@@ -1,12 +1,21 @@
 //! Memory-mapped IO definitions
 use crate::hw::private::Primitive;
 use crate::hw::Register;
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 use core::ptr::{read_volatile, write_volatile};
 
 /// A memory register.
-#[derive(Debug)]
 pub struct MemRegister<T: Primitive, const ADDRESS: u32> {
     value: T,
+}
+
+impl<T: Primitive, const ADDRESS: u32> Debug for MemRegister<T, ADDRESS> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MemRegister")
+            .field("bits", &self.to_bits())
+            .finish()
+    }
 }
 
 impl<T: Primitive, const ADDRESS: u32> AsRef<T> for MemRegister<T, ADDRESS> {

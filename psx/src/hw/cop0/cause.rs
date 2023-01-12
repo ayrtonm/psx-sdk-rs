@@ -1,7 +1,10 @@
-use crate::hw::cop0::{Cause, IntSrc};
+use crate::hw::cop0::{Cause, Excode, IntSrc};
 use crate::hw::Register;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
+
+const EXCODE: usize = 2;
+const BD: usize = 31;
 
 impl Cause {
     /// Set an interrupt as pending in the coprocessor 0. This is only useful
@@ -14,6 +17,20 @@ impl Cause {
     pub fn ack(&mut self, int_src: IntSrc) -> &mut Self {
         self.clear_bits(1 << (int_src as u32))
     }
+
+    /// Checks if the last interrupt occurred in a branch delay slot
+    pub fn branch_delay_slot(&self) -> bool {
+        self.all_set(1 << BD)
+    }
+
+    /// Checks the exception cause code
+    pub fn excode(&self) -> Excode {
+        match (self.to_bits() >> EXCODE) & 0x1F {
+            0x00 => Excode::Interrupt,
+            0x08 => Excode::Syscall,
+            _ => Excode::Other,
+        }
+    }
 }
 
 impl Debug for Cause {
@@ -23,6 +40,7 @@ impl Debug for Cause {
             .field("hw_interrupt_pending", &self.pending(IntSrc::Hardware))
             .field("sw0_interrupt_pending", &self.pending(IntSrc::Software0))
             .field("sw1_interrupt_pending", &self.pending(IntSrc::Software1))
+            .field("branch_delay_slot", &self.branch_delay_slot())
             .finish()
     }
 }

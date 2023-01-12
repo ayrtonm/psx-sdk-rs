@@ -23,9 +23,11 @@ pub mod mmio;
 use mmio::MemRegister;
 
 mod private {
+    use core::fmt::Debug;
     use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
     pub trait Primitive:
         Copy
+        + Debug
         + PartialEq
         + Not<Output = Self>
         + BitAnd<Output = Self>
@@ -75,6 +77,12 @@ pub trait Register<T: private::Primitive>: Sized + AsRef<T> + AsMut<T> {
     /// This does a single volatile write.
     fn store(&mut self) -> &mut Self;
 
+    /// Creates a new handle with the cached value set to the specified value.
+    fn from_bits(bits: T) -> Self {
+        let mut reg = Self::skip_load();
+        reg.assign(bits);
+        reg
+    }
     /// Gets the cached value.
     fn to_bits(&self) -> T {
         *self.as_ref()
