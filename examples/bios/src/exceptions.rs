@@ -1,6 +1,7 @@
 use crate::println;
 use crate::thread::{get_current_thread, set_current_thread};
 use core::arch::asm;
+use core::mem::size_of;
 use psx::constants::KB;
 use psx::hw::cop0;
 use psx::hw::cop0::Excode;
@@ -25,9 +26,9 @@ pub unsafe extern "C" fn exception_vec() {
 #[naked]
 #[no_mangle]
 pub unsafe extern "C" fn exception_handler() {
-    const STACK_SIZE: usize = KB;
+    const STACK_SIZE: usize = KB / size_of::<u32>();
     #[no_mangle]
-    static mut EXCEPTION_STACK: [u8; STACK_SIZE] = [0; STACK_SIZE];
+    static mut EXCEPTION_STACK: [u32; STACK_SIZE] = [0; STACK_SIZE];
 
     asm! {
         ".set noreorder

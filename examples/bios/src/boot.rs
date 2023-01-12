@@ -1,6 +1,7 @@
 use crate::exceptions::exception_vec;
+use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
+use crate::main;
 use crate::println;
-use crate::{a0_fn_vec, b0_fn_vec, c0_fn_vec, main};
 use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use psx::constants::*;

@@ -1,11 +1,45 @@
+extern crate alloc;
 use crate::global::Global;
+use alloc::boxed::Box;
+use alloc::vec;
+use core::ffi::CStr;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
-use core::mem::transmute;
 use psx::hw::{cop0, Register};
 use psx::sys::kernel::psx_change_thread_sub_fn;
 
-pub const MAIN_THREAD: u32 = 0xFF00_0000;
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct ThreadHandle(pub u32);
+
+const MAIN_THREAD: ThreadHandle = ThreadHandle(0xFF00_0000);
+const INVALID_HANDLE: ThreadHandle = ThreadHandle(0xFFFF_FFFF);
+
+#[derive(Debug)]
+pub struct Thread {
+    stack: Box<[u32]>,
+    handle: ThreadHandle,
+}
+
+impl Thread {
+    pub fn new(entry_point: extern "C" fn(), stack_size: usize) -> Self {
+        let mut stack = vec![0u32; stack_size].into_boxed_slice();
+        let handle = open_thread(
+            entry_point as u32,
+            &mut stack[stack_size - 1] as *mut u32 as u32,
+            0,
+        );
+        Self { stack, handle }
+    }
+
+    pub fn resume(&mut self) {
+        change_thread(self.handle);
+    }
+
+    pub fn resume_main() {
+        change_thread(MAIN_THREAD);
+    }
+}
 
 #[repr(C)]
 #[derive(Clone)]
@@ -21,25 +55,26 @@ pub struct ThreadControlBlock {
 impl Debug for ThreadControlBlock {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut dbg_s = f.debug_struct("ThreadControlBlock");
-        let mut reg_name = *b"R0 ";
-        let mut ones_place = 1;
-        let tens_place = 1;
-        for gpr in self.regs {
-            if reg_name[ones_place] == b'9' {
-                if ones_place == 1 {
-                    reg_name[tens_place] = b'1';
-                    ones_place += 1;
-                } else {
-                    reg_name[tens_place] += 1;
-                }
-                reg_name[ones_place] = b'0';
+
+        let mut reg_name_arr = [0; 4];
+        reg_name_arr[0] = b'R';
+        for (n, &gpr) in self.regs.iter().enumerate() {
+            let n = n as u8;
+            if n < 10 {
+                reg_name_arr[1] = n + b'0';
+            } else if n < 20 {
+                reg_name_arr[1] = b'1';
+                reg_name_arr[2] = n - 10 + b'0';
+            } else if n < 30 {
+                reg_name_arr[1] = b'2';
+                reg_name_arr[2] = n - 20 + b'0';
             } else {
-                reg_name[ones_place] += 1;
+                reg_name_arr[1] = b'3';
+                reg_name_arr[2] = n - 30 + b'0';
             }
-            dbg_s.field(
-                unsafe { transmute(reg_name[0..ones_place + 1].as_ref()) },
-                &gpr,
-            );
+            let reg_name_cstr = unsafe { CStr::from_ptr(reg_name_arr.as_ptr().cast()) };
+            let reg_name = reg_name_cstr.to_str().unwrap();
+            dbg_s.field(reg_name, &gpr);
         }
         dbg_s
             .field("lo", &self.mul_div_regs[0])
@@ -80,7 +115,7 @@ pub unsafe fn set_current_thread(idx: u32) {
     *CURRENT_THREAD.as_mut() = idx as usize;
 }
 
-pub fn open_thread(pc: u32, sp: u32, gp: u32) -> u32 {
+pub fn open_thread(pc: u32, sp: u32, gp: u32) -> ThreadHandle {
     let mut sr = cop0::Status::new();
     THREADS.ensure_mut(&mut sr, |threads, _| {
         for (i, t) in threads.iter_mut().enumerate() {
@@ -101,10 +136,10 @@ pub fn open_thread(pc: u32, sp: u32, gp: u32) -> u32 {
                     cop0_regs,
                 };
                 *in_use = true;
-                return MAIN_THREAD | (i as u32)
+                return ThreadHandle(MAIN_THREAD.0 | (i as u32))
             }
         }
-        0xFFFF_FFFF
+        INVALID_HANDLE
     })
 }
 
@@ -118,8 +153,8 @@ fn handle_to_idx(handle: u32) -> Option<usize> {
     }
 }
 
-pub fn change_thread(handle: u32) -> u32 {
-    let new = match handle_to_idx(handle) {
+pub fn change_thread(handle: ThreadHandle) -> u32 {
+    let new = match handle_to_idx(handle.0) {
         Some(idx) => idx,
         None => return 1,
     };
@@ -129,8 +164,8 @@ pub fn change_thread(handle: u32) -> u32 {
     1
 }
 
-pub fn close_thread(handle: u32) -> u32 {
-    let idx = match handle_to_idx(handle) {
+pub fn close_thread(handle: ThreadHandle) -> u32 {
+    let idx = match handle_to_idx(handle.0) {
         Some(idx) => idx,
         None => return 1,
     };
