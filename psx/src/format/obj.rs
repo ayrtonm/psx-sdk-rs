@@ -24,37 +24,6 @@ pub const fn parse_u16(data: &[u8], idx: &mut usize) -> u16 {
     res
 }
 
-/// Parse an `f16` from a byte slice starting at `idx`.
-#[doc(hidden)]
-pub const fn parse_f16(data: &[u8], idx: &mut usize) -> f16 {
-    let neg = data[*idx] == b'-';
-    if neg {
-        *idx += 1;
-    }
-    let abs_int = (data[*idx] - b'0') as u16;
-    assert!(abs_int < 2u16.pow(f16::INT as u32));
-    *idx += 1;
-    assert!(data[*idx] == b'.');
-    *idx += 1;
-    let mut frac = 0;
-    let mut digits = 0;
-    while data[*idx] != b' ' && data[*idx] != b'\n' {
-        frac *= 10;
-        frac += (data[*idx] - b'0') as u64;
-        digits += 1;
-        *idx += 1;
-    }
-    *idx += 1;
-    let abs_frac = (frac * 2u64.pow(f16::FRAC as u32) / 10u64.pow(digits)) as u16;
-    let abs_fixed = (abs_int << f16::FRAC) | abs_frac;
-    let fixed = if neg {
-        -(abs_fixed as i16)
-    } else {
-        abs_fixed as i16
-    };
-    f16(fixed)
-}
-
 /// Count the number of u16s in a face
 #[doc(hidden)]
 pub const fn count_u16(data: &[u8], offset: usize) -> usize {
@@ -141,6 +110,25 @@ pub const fn count_normals(data: &[u8]) -> usize {
     count
 }
 
+/// Count the number of lines starting with `usemtl`.
+#[doc(hidden)]
+pub const fn count_usemtls(data: &[u8]) -> usize {
+    let mut i = 0;
+    let mut count = 0;
+    while i < data.len() {
+        if data[i] == b'u' && data[i + 1] == b's' && data[i + 2] == b'e' {
+            count += 1;
+        }
+        while data[i] != b'\n' {
+            i += 1;
+        }
+        if data[i] == b'\n' {
+            i += 1;
+        }
+    }
+    count
+}
+
 #[derive(Debug)]
 #[allow(missing_docs)]
 /// A reference to a Wavefront OBJ file.
@@ -151,6 +139,7 @@ pub struct Obj<
     const QUADS: usize,
     const TRIS: usize,
     const FACES: usize,
+    const MTLS: usize,
 > {
     pub quads: &'a mut [[u16; 4]; QUADS],
     pub tris: &'a mut [[u16; 3]; TRIS],
@@ -159,6 +148,8 @@ pub struct Obj<
     pub tri_norms: &'a mut [u16; TRIS],
     pub vertices: &'a mut [[f16; 3]; VERTICES],
     pub normals: &'a mut [[f16; 3]; NORMALS],
+
+    pub mtls: &'a mut [u16; MTLS],
 }
 
 #[derive(Debug)]
@@ -178,7 +169,8 @@ impl<
         const QUADS: usize,
         const TRIS: usize,
         const FACES: usize,
-    > Obj<'a, VERTICES, NORMALS, QUADS, TRIS, FACES>
+        const MTLS: usize,
+    > Obj<'a, VERTICES, NORMALS, QUADS, TRIS, FACES, MTLS>
 {
     /// Creates an array by calling `f` for each face.
     pub fn for_each_face<T, F>(&self, mut f: F) -> [T; FACES]
@@ -226,12 +218,50 @@ impl<
 #[macro_export]
 macro_rules! include_obj {
     ($file:literal) => {{
-        use $crate::format::obj::{count_faces, count_normals, count_u16, count_vertices,
-                                  parse_f16, parse_u16, NumFaces, Obj};
+        use $crate::format::obj::{count_faces, count_normals, count_u16, count_usemtls,
+                                  count_vertices, parse_u16, NumFaces, Obj};
+        use $crate::format::parse_f16;
         use $crate::math::f16;
 
         const NUM_VERTICES: usize = count_vertices(include_bytes!($file));
         const NUM_NORMALS: usize = count_normals(include_bytes!($file));
+        const NUM_MTLS: usize = count_usemtls(include_bytes!($file));
+        static mut MTLS: [u16; NUM_MTLS] = {
+            let mut mtls = [0; NUM_MTLS];
+            let mut n = 0;
+            let mut nt = 0;
+            let mut nq = 0;
+            let mut i = 0;
+            let obj = include_bytes!($file);
+            while i < obj.len() {
+                if obj[i] == b'u' && obj[i + 1] == b's' && obj[i + 2] == b'e' {
+                    if n != 0 {
+                        mtls[n - 1] = nt;
+                    }
+                    //mtls[1][n] = nq;
+                    n += 1;
+                    i += 1;
+                } else if obj[i] == b'f' && obj[i + 1] == b' ' {
+                    if count_u16(obj, i) == 4 {
+                        nq += 1;
+                    } else if count_u16(obj, i) == 3 {
+                        nt += 1;
+                    }
+                    i += 1;
+                } else {
+                    while i < obj.len() && obj[i] != b'\n' {
+                        i += 1;
+                    }
+                    if i == obj.len() {
+                        break
+                    }
+                    if obj[i] == b'\n' {
+                        i += 1;
+                    }
+                }
+            }
+            mtls
+        };
         static mut VERTICES: [[f16; 3]; NUM_VERTICES] = {
             let mut vertices = [[f16(0); 3]; NUM_VERTICES];
             let mut n = 0;
@@ -378,13 +408,14 @@ macro_rules! include_obj {
                 tri_norms,
             }
         };
-        Obj::<NUM_VERTICES, NUM_NORMALS, NUM_QUADS, NUM_TRIS, NUM_FACES> {
+        Obj::<NUM_VERTICES, NUM_NORMALS, NUM_QUADS, NUM_TRIS, NUM_FACES, NUM_MTLS> {
             vertices: unsafe { &mut VERTICES },
             normals: unsafe { &mut NORMALS },
             tris: unsafe { &mut FACES.tris },
             quads: unsafe { &mut FACES.quads },
             tri_norms: unsafe { &mut FACES.tri_norms },
             quad_norms: unsafe { &mut FACES.quad_norms },
+            mtls: unsafe { &mut MTLS },
         }
     }};
 }
