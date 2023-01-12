@@ -38,6 +38,11 @@ impl Status {
         self.all_set(1 << IEC)
     }
 
+    /// Checks if interrupts are not allowed to cause exceptions.
+    pub fn interrupts_disabled(&self) -> bool {
+        self.all_clear(1 << IEC)
+    }
+
     /// Checks the privilege mode.
     pub fn get_mode(&self) -> Mode {
         if self.all_set(1 << KUC) {
@@ -182,6 +187,25 @@ impl Status {
     /// Disables the GTE.
     pub fn disable_gte(&mut self) -> &mut Self {
         self.clear_bits(1 << CU2)
+    }
+
+    /// Run a closure in an interrupt-free context
+    pub fn critical_section<F: FnMut() -> R, R>(&mut self, mut f: F) -> R {
+        let in_critical_section =
+            self.interrupt_masked(IntSrc::Hardware) && self.interrupts_disabled();
+
+        if !in_critical_section {
+            self.mask_interrupt(IntSrc::Hardware)
+                .disable_interrupts()
+                .store();
+        }
+        let res = f();
+        if !in_critical_section {
+            self.unmask_interrupt(IntSrc::Hardware)
+                .enable_interrupts()
+                .store();
+        }
+        res
     }
 }
 

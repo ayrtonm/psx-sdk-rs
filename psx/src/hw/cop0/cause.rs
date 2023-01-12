@@ -41,6 +41,7 @@ impl Debug for Cause {
             .field("sw0_interrupt_pending", &self.pending(IntSrc::Software0))
             .field("sw1_interrupt_pending", &self.pending(IntSrc::Software1))
             .field("branch_delay_slot", &self.branch_delay_slot())
+            .field("exception_code", &self.excode())
             .finish()
     }
 }
