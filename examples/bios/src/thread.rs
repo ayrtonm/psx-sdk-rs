@@ -147,18 +147,18 @@ static IN_USE: Global<[bool; NUM_THREADS]> = Global::new([true, false, false, fa
 static CURRENT_THREAD: Global<u16> = Global::new(0);
 
 pub unsafe fn get_current_thread<'a>() -> &'a mut ThreadControlBlock {
-    &mut THREADS.as_mut()[*CURRENT_THREAD.as_mut() as usize]
+    &mut THREADS.as_ref()[*CURRENT_THREAD.as_ref() as usize]
 }
 
 pub unsafe fn set_current_thread(idx: u32) {
-    *CURRENT_THREAD.as_mut() = idx as u16;
+    *CURRENT_THREAD.as_ref() = idx as u16;
 }
 
 pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -> ThreadHandle {
     cop0::Status::new().critical_section(|| {
-        let threads = unsafe { THREADS.as_mut() };
+        let threads = unsafe { THREADS.as_ref() };
         for (i, t) in threads.iter_mut().enumerate() {
-            let in_use = unsafe { &mut IN_USE.as_mut()[i] };
+            let in_use = unsafe { &mut IN_USE.as_ref()[i] };
             if !*in_use {
                 let mut regs = [0; 31];
                 let mut cop0_regs = [0; 3];
@@ -201,7 +201,7 @@ pub fn change_thread(handle: ThreadHandle) -> u32 {
         Some(idx) => idx,
         None => return 1,
     };
-    if unsafe { IN_USE.as_mut()[new] } {
+    if unsafe { IN_USE.as_ref()[new] } {
         unsafe { psx_change_thread_sub_fn(0, new) }
     };
     1
@@ -213,7 +213,7 @@ pub fn close_thread(handle: ThreadHandle) -> u32 {
         None => return 1,
     };
     cop0::Status::new().critical_section(|| unsafe {
-        IN_USE.as_mut()[idx] = false;
+        IN_USE.as_ref()[idx] = false;
     });
     1
 }

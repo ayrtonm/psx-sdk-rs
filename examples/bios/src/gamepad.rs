@@ -1,6 +1,7 @@
 use crate::global::Global;
 use core::mem::size_of;
 use core::ptr::NonNull;
+use psx::hw::{cop0, Register};
 
 #[repr(C)]
 struct GamepadBuffer {
@@ -28,9 +29,10 @@ pub fn init_pad(buf1: &mut [u16], buf2: &mut [u16]) -> u32 {
     if buf2.len() != size_of::<GamepadBuffer>() {
         return 1
     }
-    unsafe {
-        CTXT.as_mut().buffer1 = NonNull::new(buf1).map(|p| p.cast());
-        CTXT.as_mut().buffer2 = NonNull::new(buf2).map(|p| p.cast());
-    }
+    cop0::Status::new().critical_section(|| unsafe {
+        let ctxt = CTXT.as_ref();
+        ctxt.buffer1 = NonNull::new(buf1).map(|p| p.cast());
+        ctxt.buffer2 = NonNull::new(buf2).map(|p| p.cast());
+    });
     0
 }
