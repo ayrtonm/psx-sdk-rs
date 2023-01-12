@@ -75,7 +75,7 @@ trait CAlloc: GlobalAlloc {
 
 unsafe impl GlobalAlloc for Global<Heap> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let ptr = cop0::Status::new().critical_section(|| self.as_mut().allocate_first_fit(layout));
+        let ptr = cop0::Status::new().critical_section(|| self.as_ref().allocate_first_fit(layout));
         match ptr {
             Ok(nonnull) => nonnull.as_ptr(),
             Err(_) => ptr::null_mut(),
@@ -87,7 +87,7 @@ unsafe impl GlobalAlloc for Global<Heap> {
             Some(ptr) => ptr,
             None => return,
         };
-        cop0::Status::new().critical_section(|| self.as_mut().deallocate(ptr, layout))
+        cop0::Status::new().critical_section(|| self.as_ref().deallocate(ptr, layout))
     }
 }
 
@@ -96,7 +96,7 @@ impl CAlloc for Global<Heap> {}
 pub fn init_heap(addr: *mut u8, len: usize) -> u32 {
     cop0::Status::new().critical_section(|| {
         // SAFETY: Let's hope the user passed an unused region of memory
-        unsafe { HEAP.as_mut().init(addr, len) }
+        unsafe { HEAP.as_ref().init(addr, len) }
     });
     0
 }

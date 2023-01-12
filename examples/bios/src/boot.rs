@@ -91,9 +91,9 @@ fn init_ram() {
     const HEAP_SIZE: usize = 4 * KB / size_of::<u32>();
     static HEAP_MEM: Global<[u32; HEAP_SIZE]> = Global::new([0; HEAP_SIZE]);
     unsafe {
-        let ptr = HEAP_MEM.as_mut().as_mut_ptr().cast();
-        let len = HEAP_MEM.as_mut().len() * size_of::<u32>();
+        let ptr = HEAP_MEM.as_ptr().cast();
+        let len = HEAP_MEM.as_ref().len() * size_of::<u32>();
         println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
-        HEAP.as_mut().init(ptr, len);
+        HEAP.as_ref().init(ptr, len);
     }
 }
