@@ -34,6 +34,9 @@ fn main() {
     let bios_date = get_system_date();
     println!("{:?}", version_str);
     println!("{:x?}", bios_date);
+
+    gamepad::init();
+
     cop0::Status::new()
         .enable_interrupts()
         .unmask_interrupt(IntSrc::Hardware)
@@ -43,16 +46,16 @@ fn main() {
     irq::Mask::new().enable_all().store();
 
     let mut t = Thread::new(task).unwrap();
-    println!("hello from main thread");
-    t.resume();
-    // Close the Thread to free its stack
-    t.close();
-    loop {}
+    loop {
+        println!("hello from main thread");
+        t.resume();
+    }
+    println!("Returned from task thread");
 }
 
-extern "C" fn task() -> ! {
+extern "C" fn task() {
     loop {
         println!("hello from task thread");
-        Thread::resume_main();
+        thread::resume_main();
     }
 }
