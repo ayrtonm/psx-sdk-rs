@@ -6,8 +6,7 @@ use crate::println;
 use crate::thread::init_threads;
 use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
-use core::mem::size_of;
-use psx::constants::KB;
+use core::mem::{size_of, transmute};
 use psx::constants::*;
 
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script
@@ -21,7 +20,7 @@ unsafe extern "C" fn boot() -> ! {
         "la $sp, {init_sp}
          la $fp, {init_sp}
          j start",
-        init_sp = const(KSEG0_BASE + MAIN_RAM_LEN - 0x100),
+        init_sp = const(KSEG0 + MAIN_RAM_LEN - 0x100),
         options(noreturn)
     }
 }
@@ -35,7 +34,13 @@ extern "C" fn start() -> ! {
     init_ram();
     init_threads();
     main();
-    // Hang if the main loop returns
+
+    // TODO: Add a proper executable loader
+    // Hack for mednafen fastboot
+    let patch_addr = POST_BOOT_ENTRYPOINT - KSEG0 + 0x1000;
+    let load_exe: extern "C" fn() = unsafe { transmute(patch_addr) };
+    load_exe();
+    // Hang if the executable returns
     loop {}
 }
 
@@ -48,6 +53,7 @@ fn init_vectors() {
     }
 
     println!("Wrote BIOS fn vectors. Debug output should now work.");
+
     unsafe {
         volatile_copy_nonoverlapping_memory(
             RAM_EXCEPTION_VEC as *mut u32,
@@ -70,7 +76,7 @@ fn init_ram() {
         let start = &__data_start as *const u32 as usize;
         let end = &__data_end as *const u32 as usize;
         let len = (end - start) / 4;
-        let dst = (KSEG0_BASE + 0x100) as *mut u32;
+        let dst = (KSEG0 + 0x100) as *mut u32;
         let src = &__data_start as *const u32;
         println!(
             "Copying {} words from {:p} to {:p} to initialize .data",
