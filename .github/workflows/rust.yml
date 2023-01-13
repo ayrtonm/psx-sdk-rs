@@ -35,7 +35,7 @@ jobs:
       run: |
         # Build the BIOS and configure the emulator to use it
         pushd examples/bios
-        cargo psx build --link bios.ld
+        cargo psx build --link bios.ld --lto
         mkdir -p ~/.mednafen/firmware
         cp target/mipsel-sony-psx/release/bios.exe \
             ~/.mednafen/firmware/scph7001.bin
@@ -46,7 +46,7 @@ jobs:
         # TODO: Simplify this. runner=echo is a dumb way to get the test exe.
         # Ideally I'd just run cargo psx test with xvfb-run
         TEST_EXE=$(CARGO_TARGET_MIPSEL_SONY_PSX_RUNNER=echo cargo psx test)
-        xvfb-run mednafen -psx.dbg_level 2 -psx.bios_jp scph7001.bin $TEST_EXE
+        xvfb-run mednafen -psx.dbg_level 2 -psx.bios_jp scph7001.bin $TEST_EXE \
             | tee bios_stdout &
         sleep 15
         grep "test result: ok. [0-9]* passed; 0 failed" bios_stdout
