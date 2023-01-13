@@ -87,11 +87,11 @@ pub mod constants {
     pub const MB: usize = 1024 * KB;
 
     /// The start of main RAM in KUSEG.
-    pub const KUSEG_BASE: usize = 0x0000_0000;
+    pub const KUSEG: usize = 0x0000_0000;
     /// The start of main RAM in KSEG0.
-    pub const KSEG0_BASE: usize = 0x8000_0000;
+    pub const KSEG0: usize = 0x8000_0000;
     /// The start of main RAM in KSEG1.
-    pub const KSEG1_BASE: usize = 0xA000_0000;
+    pub const KSEG1: usize = 0xA000_0000;
 
     /// The size of main RAM.
     pub const MAIN_RAM_LEN: usize = 2 * MB;
@@ -111,9 +111,14 @@ pub mod constants {
     pub const ROM_EXCEPTION_VEC: usize = 0xBFC0_0180;
 
     /// The start of the data cache.
-    pub const DATA_CACHE: *mut u32 = 0x9F80_0000 as *mut u32;
+    pub const DATA_CACHE: usize = 0x9F80_0000;
     /// The size of the data cache.
     pub const DATA_CACHE_LEN: usize = 1 * KB;
+
+    /// The entrypoint of the post-boot function.
+    pub const POST_BOOT_ENTRYPOINT: usize = 0x9F00_0000;
+    /// The entrypoint of the pre-boot function.
+    pub const PRE_BOOT_ENTRYPOINT: usize = 0x9F00_0080;
 
     pub use crate::gpu::colors::*;
     pub use crate::gpu::VideoMode::*;
