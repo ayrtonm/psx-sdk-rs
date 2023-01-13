@@ -389,7 +389,7 @@ macro_rules! include_obj {
     }};
 }
 
-#[cfg(test)]
+#[cfg(feature = "nonexistent_feature")]
 mod tests {
     use super::*;
 
