@@ -43,6 +43,8 @@ pub enum Excode {
     AddressErrorLoad,
     /// Exception was caused by storing to a misaligned address
     AddressErrorStore,
+    /// Exception was caused by a breakpoint
+    Breakpoint,
     /// Exception was caused by executing an illegal instruction
     ReservedInstruction,
     /// Exception was caused by something else
