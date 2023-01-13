@@ -90,6 +90,7 @@ pub unsafe extern "C" fn exception_handler() {
 
          la $sp, EXCEPTION_STACK
          addiu $sp, $sp, 0x3F0
+         move $fp, $sp
 
          jal call_handlers
          nop
@@ -165,7 +166,13 @@ extern "C" fn call_handlers() {
     match excode {
         Excode::Interrupt => irq_handler(),
         Excode::Syscall => syscall_handler(tcb),
-        _ => println!("No handler installed for exception code {excode:?}"),
+        Excode::Breakpoint => {
+            println!("{:#x?}", tcb);
+            *tcb.cop0_epc() += 4;
+        },
+        _ => {
+            println!("No handler installed for exception code {excode:?}");
+        },
     }
 }
 
