@@ -5,6 +5,8 @@
 
 use crate::hw::cop0::status::{IM_HW, IM_SW0, IM_SW1};
 use crate::hw::Register;
+use core::fmt;
+use core::fmt::{Debug, Formatter};
 
 mod cause;
 mod epc;
@@ -37,6 +39,12 @@ pub enum Excode {
     Interrupt,
     /// Exception was caused by a syscall
     Syscall,
+    /// Exception was caused by loading from a misaligned address
+    AddressErrorLoad,
+    /// Exception was caused by storing to a misaligned address
+    AddressErrorStore,
+    /// Exception was caused by executing an illegal instruction
+    ReservedInstruction,
     /// Exception was caused by something else
     Other,
 }
@@ -62,4 +70,12 @@ define_cop! {
     EPC<u32>; COP: 0; R: 14,
     /// Processor ID register
     PRID<u32>; COP: 0; R: 15,
+}
+
+impl Debug for BadVaddr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("cop0::BadVaddr")
+            .field("bits", &self.to_bits())
+            .finish()
+    }
 }
