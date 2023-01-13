@@ -1,12 +1,10 @@
-use crate::global::Global;
-
-static SEED: Global<u32> = Global::new(0);
+static mut SEED: u32 = 0;
 
 pub fn srand(seed: u32) -> u32 {
     // This is a random number generator so I don't really care if seed isn't set
     // correctly
     unsafe {
-        *SEED.as_ptr() = seed;
+        SEED = seed;
     }
     0
 }
@@ -14,10 +12,8 @@ pub fn srand(seed: u32) -> u32 {
 pub fn rand() -> u32 {
     // This is a random number generator so I don't really care if seed isn't
     // updated correctly
-    let seed = SEED.as_ptr();
-    unsafe {
-        *seed *= 0x41C6_4E6D;
-        *seed += 0x3039;
-        (*seed >> 16) & 0x7FFF
-    }
+    let seed = unsafe { &mut SEED };
+    *seed *= 0x41C6_4E6D;
+    *seed += 0x3039;
+    (*seed >> 16) & 0x7FFF
 }

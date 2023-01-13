@@ -1,5 +1,5 @@
-use crate::global::Global;
 use crate::println;
+use crate::thread::Thread;
 use core::mem::size_of;
 use core::ptr::NonNull;
 
@@ -11,6 +11,8 @@ struct GamepadBuffer {
     left_joystick: u16,
     _padding: [u16; 13],
 }
+
+unsafe impl Send for GamepadCtxt {}
 
 #[repr(C)]
 pub struct GamepadCtxt {
@@ -37,5 +39,13 @@ pub fn init_pad(buf1: &mut [u16], buf2: &mut [u16]) -> u32 {
         buffer1: NonNull::new(buf1).unwrap().cast(),
         buffer2: NonNull::new(buf1).unwrap().cast(),
     };
+    let mut t = Thread::create_with_arg(gamepad_thread, ctxt).unwrap();
+    t.unpark();
     0
+}
+
+extern "C" fn gamepad_thread(_ctxt: GamepadCtxt) {
+    loop {
+        println!("Running gamepad thread");
+    }
 }

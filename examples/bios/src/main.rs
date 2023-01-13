@@ -35,8 +35,6 @@ fn main() {
     println!("{:?}", version_str);
     println!("{:x?}", bios_date);
 
-    gamepad::init();
-
     cop0::Status::new()
         .enable_interrupts()
         .unmask_interrupt(IntSrc::Hardware)
@@ -45,17 +43,27 @@ fn main() {
     irq::Status::skip_load().ack_all().store();
     irq::Mask::new().enable_all().store();
 
-    let mut t = Thread::new(task).unwrap();
+    gamepad::init();
+
+    let mut t = Thread::create(task).unwrap();
+    t.resume();
+    let mut x = 0;
     loop {
+        x += 1;
+        if x > 2000 {
+            t.unpark();
+        }
         println!("hello from main thread");
-        t.resume();
     }
-    println!("Returned from task thread");
 }
 
 extern "C" fn task() {
+    let mut x = 0;
     loop {
-        println!("hello from task thread");
-        thread::resume_main();
+        x += 1;
+        if x > 1000 {
+            thread::park();
+        }
+        println!("hello from task");
     }
 }
