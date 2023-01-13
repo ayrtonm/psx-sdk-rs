@@ -1,9 +1,9 @@
 use crate::allocator::HEAP;
 use crate::exceptions::exception_vec;
-use crate::global::Global;
 use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
 use crate::main;
 use crate::println;
+use crate::thread::init_threads;
 use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use core::mem::size_of;
@@ -33,6 +33,7 @@ extern "C" fn start() -> ! {
     // Write handlers to the BIOS fn and general exception vectors
     init_vectors();
     init_ram();
+    init_threads();
     main();
     // Hang if the main loop returns
     loop {}
@@ -88,11 +89,11 @@ fn init_ram() {
         volatile_set_memory(bss_dst, 0, bss_len);
     }
 
-    const HEAP_SIZE: usize = 4 * KB / size_of::<u32>();
-    static HEAP_MEM: Global<[u32; HEAP_SIZE]> = Global::new([0; HEAP_SIZE]);
+    const HEAP_SIZE: usize = 8 * KB / size_of::<u32>();
+    static mut HEAP_MEM: [u32; HEAP_SIZE] = [0; HEAP_SIZE];
     unsafe {
-        let ptr = HEAP_MEM.as_ptr().cast();
-        let len = HEAP_MEM.as_ref().len() * size_of::<u32>();
+        let ptr = HEAP_MEM.as_mut_ptr().cast();
+        let len = HEAP_MEM.len() * size_of::<u32>();
         println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
         HEAP.as_ref().init(ptr, len);
     }

@@ -1,5 +1,5 @@
 use crate::println;
-use crate::thread::{get_current_thread, set_current_thread, ThreadControlBlock};
+use crate::thread::{get_current_thread, reschedule_threads, set_current_thread, ThreadControlBlock};
 use core::arch::asm;
 use core::mem::size_of;
 use psx::constants::KB;
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn exception_vec() {
 #[naked]
 #[no_mangle]
 pub unsafe extern "C" fn exception_handler() {
-    const STACK_SIZE: usize = KB / size_of::<u32>();
+    const STACK_SIZE: usize = 2 * KB / size_of::<u32>();
     #[no_mangle]
     static mut EXCEPTION_STACK: [u32; STACK_SIZE] = [0; STACK_SIZE];
 
@@ -159,12 +159,13 @@ pub unsafe extern "C" fn exception_handler() {
 
 #[no_mangle]
 extern "C" fn call_handlers() {
+    // SAFETY: This is safe to call in the exception handler
     let tcb = unsafe { get_current_thread() };
     let excode = cop0::Cause::from_bits(*tcb.cop0_cause()).excode();
     match excode {
         Excode::Interrupt => irq_handler(),
         Excode::Syscall => syscall_handler(tcb),
-        _ => (),
+        _ => println!("No handler installed for exception code {excode:?}"),
     }
 }
 
@@ -176,7 +177,7 @@ fn irq_handler() {
         if let Some(irq) = irq {
             match irq {
                 IRQ::Vblank => vblank_handler(),
-                _ => println!("No handler installed for interrupt {:?}", irq),
+                _ => println!("No handler installed for interrupt {irq:?}"),
             }
         }
     }
@@ -198,13 +199,18 @@ fn syscall_handler(tcb: &mut ThreadControlBlock) {
                 .unmask_interrupt(IntSrc::Hardware)
                 .store();
         },
-        CHANGE_THREAD_SUB_FN_NUM => unsafe {
-            set_current_thread(tcb.regs[4] as *mut ThreadControlBlock)
+        CHANGE_THREAD_SUB_FN_NUM => {
+            // SAFETY: This is safe to call in the exception handler
+            unsafe { set_current_thread(tcb.regs[4] as *mut ThreadControlBlock) }
         },
         _ => (),
     }
 }
 
+// A vblank handler repurposed to schedule threads
 fn vblank_handler() {
-    println!("Called the vblank handler");
+    // SAFETY: This is safe to call in the exception handler
+    unsafe {
+        reschedule_threads();
+    }
 }
