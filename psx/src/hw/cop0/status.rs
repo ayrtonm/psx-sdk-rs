@@ -57,6 +57,11 @@ impl Status {
         self.all_set(1 << IEP)
     }
 
+    /// Checks if interrupts were disabled before the current exception.
+    pub fn previous_interrupt_disabled(&self) -> bool {
+        self.all_clear(1 << IEP)
+    }
+
     /// Checks the privilege mode before the current exception.
     pub fn previous_mode(&self) -> Mode {
         if self.all_set(1 << KUP) {
@@ -114,6 +119,16 @@ impl Status {
     /// Forbids interrupts from causing exceptions.
     pub fn disable_interrupts(&mut self) -> &mut Self {
         self.clear_bits(1 << IEC)
+    }
+
+    /// Set interrupts previously enabled flag.
+    pub fn previous_interrupt_enable(&mut self) -> &mut Self {
+        self.set_bits(1 << IEP)
+    }
+
+    /// Clear interrupts previously enabled flag.
+    pub fn previous_interrupt_disable(&mut self) -> &mut Self {
+        self.clear_bits(1 << IEP)
     }
 
     /// Sets the privilege mode.

@@ -27,7 +27,10 @@ impl Cause {
     pub fn excode(&self) -> Excode {
         match (self.to_bits() >> EXCODE) & 0x1F {
             0x00 => Excode::Interrupt,
+            0x04 => Excode::AddressErrorLoad,
+            0x05 => Excode::AddressErrorStore,
             0x08 => Excode::Syscall,
+            0x0A => Excode::ReservedInstruction,
             _ => Excode::Other,
         }
     }
