@@ -112,6 +112,7 @@ impl<A: Send, R: Send> Thread<A, R> {
         entry_point: extern "C" fn(A) -> R, arg: A, stack_size: usize,
     ) -> Option<Self> {
         let mut stack = vec![0u32; stack_size].into_boxed_slice();
+        let stack_end = stack.as_mut_ptr();
 
         // arg may be smaller than 128 bits so we can't just cast it's address and read
         // it instead we have to copy it to a 128 bit array then read that
@@ -130,6 +131,7 @@ impl<A: Send, R: Send> Thread<A, R> {
             &mut stack[stack_size - 1],
             ptr::null_mut(),
             tmp_arg,
+            stack_end,
         );
         // Leak the stack to avoid freeing it if the Thread is dropped
         let stack = Box::leak(stack);
@@ -212,6 +214,7 @@ pub struct ThreadControlBlock {
     in_use: bool,
     running: bool,
     parked: bool,
+    stack: *mut u32,
 }
 
 impl Debug for ThreadControlBlock {
@@ -262,7 +265,12 @@ impl ThreadControlBlock {
             in_use: false,
             running: false,
             parked: true,
+            stack: ptr::null_mut(),
         }
+    }
+
+    pub fn sp(&self) -> u32 {
+        self.regs[28]
     }
 
     pub fn cop0_cause(&mut self) -> &mut u32 {
@@ -280,6 +288,11 @@ pub unsafe fn reschedule_threads() {
     // If there's only one unparked thread then there's no scheduling to do
     if unparked_threads().count() == 1 {
         return
+    }
+
+    let running_thread = THREADS.iter().filter(|tcb| tcb.running).next().unwrap();
+    if running_thread.sp() < running_thread.stack as u32 {
+        panic!("Thread overflowed its stack");
     }
 
     let mut next_thread = 0;
@@ -334,9 +347,12 @@ static mut THREADS: [ThreadControlBlock; 4] = {
     tcbs
 };
 
-pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -> ThreadHandle {
+pub fn open_thread(
+    pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4], stack: *mut u32,
+) -> ThreadHandle {
     let mut sr = cop0::Status::new();
     let old_sr = sr.to_bits();
+    let old_cause = cop0::Cause::new().to_bits();
     sr.critical_section(|| {
         // SAFETY: static mut access in a critical section
         let threads = unsafe { THREADS.as_mut() };
@@ -357,6 +373,7 @@ pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -
                     .previous_interrupt_enable()
                     .disable_interrupts()
                     .to_bits();
+                cop0_regs[1] = old_cause;
                 // This is the program counter after returning from an exception
                 cop0_regs[2] = pc as u32;
                 *tcb = ThreadControlBlock {
@@ -366,6 +383,7 @@ pub fn open_thread(pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4]) -
                     in_use: true,
                     running: false,
                     parked: true,
+                    stack,
                 };
                 return ThreadHandle::new(i)
             }

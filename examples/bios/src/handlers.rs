@@ -8,6 +8,7 @@ use crate::thread::{change_thread, close_thread, open_thread, ThreadHandle};
 use core::arch::asm;
 use core::ffi::CStr;
 use core::mem::size_of;
+use core::ptr;
 use core::slice;
 use psx::sys::kernel::*;
 
@@ -102,7 +103,7 @@ extern "C" fn fn_handler() -> u32 {
             reg!(let pc: *const u32 = "$4");
             reg!(let sp: *mut u32 = "$5");
             reg!(let gp: *mut u32 = "$6");
-            open_thread(pc, sp, gp, [0; 4]).0 as u32
+            open_thread(pc, sp, gp, [0; 4], ptr::null_mut()).0 as u32
         },
         (CHANGE_THREAD_NUM, CHANGE_THREAD_TY) => {
             reg!(let handle: usize = "$4");
