@@ -30,6 +30,7 @@ impl Cause {
             0x04 => Excode::AddressErrorLoad,
             0x05 => Excode::AddressErrorStore,
             0x08 => Excode::Syscall,
+            0x09 => Excode::Breakpoint,
             0x0A => Excode::ReservedInstruction,
             _ => Excode::Other,
         }
