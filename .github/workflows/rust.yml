@@ -40,17 +40,13 @@ jobs:
         cp target/mipsel-sony-psx/release/bios.exe \
             ~/.mednafen/firmware/scph7001.bin
         popd
-    - name: Run the BIOS
+    - name: Run psx crate tests
       run: |
-        # TODO: Add support for loading exes in the BIOS. This currently only runs the BIOS main
-        # loop, but mednafen requires an executable so it just uses stdout for now.
-        # TODO: The reference stdout for examples should be checked into the repo, not here
-        pushd examples/stdout
-        cargo psx build
-        xvfb-run mednafen                                                                          \
-            -psx.dbg_level 2                                                                       \
-            -psx.bios_jp scph7001.bin                                                              \
-            ~/work/psx-sdk-rs/psx-sdk-rs/examples/stdout/target/mipsel-sony-psx/release/stdout.exe \
+        pushd psx
+        # TODO: Simplify this. runner=echo is a dumb way to get the test exe.
+        # Ideally I'd just run cargo psx test with xvfb-run
+        TEST_EXE=$(CARGO_TARGET_MIPSEL_SONY_PSX_RUNNER=echo cargo psx test)
+        xvfb-run mednafen -psx.dbg_level 2 -psx.bios_jp scph7001.bin $TEST_EXE
             | tee bios_stdout &
         sleep 15
-        grep "Starting main BIOS loop" bios_stdout
+        grep "test result: ok. [0-9]* passed; 0 failed" bios_stdout
