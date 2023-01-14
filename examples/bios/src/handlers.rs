@@ -58,7 +58,7 @@ extern "C" fn fn_handler() -> u32 {
         (let $var:ident: $size:ty = $reg:tt) => {
             let $var: $size;
             unsafe {
-                asm! { "", out($reg) $var }
+                asm! { "", out($reg) $var, options(nomem, nostack) }
             }
         };
     }
