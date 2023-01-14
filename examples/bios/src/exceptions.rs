@@ -12,10 +12,11 @@ use psx::sys::kernel::*;
 pub unsafe extern "C" fn exception_vec() {
     asm! {
         ".set noreorder
-         la $k1, CURRENT_THREAD
-         lw $k0, ($k1)
-         j exception_handler
+         .set noat
+         la $k0, exception_handler
+         jr $k0
          nop
+         .set at
          .set reorder",
         options(noreturn)
     }
@@ -23,12 +24,14 @@ pub unsafe extern "C" fn exception_vec() {
 
 #[naked]
 #[no_mangle]
-#[link_section = ".ram.text"]
 pub unsafe extern "C" fn exception_handler() {
     asm! {
         ".set noreorder
          .set noat
-         # The exception vector loaded CURRENT_THREAD into k0
+         la $k0, CURRENT_THREAD
+         lw $k0, ($k0)
+         nop
+
          sw $at, ($k0)
 
          sw $v0, 4($k0)
@@ -58,11 +61,11 @@ pub unsafe extern "C" fn exception_handler() {
          mfc0 $t2, $12
          mfc0 $t3, $13
          mfc0 $t4, $14
+         sw $t0, 124($k0)
+         sw $t1, 128($k0)
          sw $t2, 132($k0)
          sw $t3, 136($k0)
          sw $t4, 140($k0)
-         sw $t0, 124($k0)
-         sw $t1, 128($k0)
 
          # call_handlers is in ROM so we need jalr
          la $k1, call_handlers
@@ -146,11 +149,11 @@ pub unsafe extern "C" fn exception_handler() {
 }
 
 #[no_mangle]
-extern "C" fn call_handlers() -> bool {
+extern "C" fn call_handlers() -> u32 {
     // SAFETY: This is safe to call in the exception handler
     let tcb = unsafe { get_current_thread() };
     let excode = cop0::Cause::from_bits(*tcb.cop0_cause()).excode();
-    match excode {
+    let switched = match excode {
         Excode::Interrupt => irq_handler(),
         Excode::Syscall => syscall_handler(tcb),
         Excode::Breakpoint => {
@@ -162,12 +165,13 @@ extern "C" fn call_handlers() -> bool {
             println!("No handler installed for exception code {excode:?}");
             false
         },
-    }
+    };
+    switched as u32
 }
 
 fn irq_handler() -> bool {
     let mut stat = irq::Status::new();
-    let mut mask = irq::Mask::new();
+    let mask = irq::Mask::new();
 
     let mut changed_threads = false;
     for irq in mask.active_irqs(&stat) {

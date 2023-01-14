@@ -309,7 +309,6 @@ pub unsafe fn reschedule_threads() -> bool {
     //    panic!("Thread overflowed its stack");
     //}
 
-
     let mut next_thread = 0;
     let mut set_next_thread = false;
     for (i, tcb) in unparked_threads().enumerate() {
