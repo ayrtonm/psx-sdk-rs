@@ -33,8 +33,11 @@ macro_rules! define_cop {
             fn load(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!($cop_ty, "fc", $cop, " $2, $", $reg), "nop",
-                        out("$2") self.value
+                        ".set noat",
+                        concat!($cop_ty, "fc", $cop, " {}, $", $reg),
+                        ".set at",
+                        out(reg) self.value,
+                        options(nomem, nostack)
                     }
                 }
                 self
@@ -43,7 +46,11 @@ macro_rules! define_cop {
             fn store(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        concat!($cop_ty, "tc", $cop, " $2, $", $reg), in("$2") self.value
+                        ".set noat",
+                        concat!($cop_ty, "tc", $cop, " {}, $", $reg),
+                        ".set at",
+                        in(reg) self.value,
+                        options(nomem, nostack)
                     }
                 }
                 self
