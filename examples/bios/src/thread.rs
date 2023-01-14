@@ -215,6 +215,8 @@ pub struct ThreadControlBlock {
     running: bool,
     parked: bool,
     stack: *mut u32,
+    time_remaining: u8,
+    allocated_time: u8,
 }
 
 impl Debug for ThreadControlBlock {
@@ -257,15 +259,17 @@ impl Debug for ThreadControlBlock {
 }
 
 impl ThreadControlBlock {
-    pub const fn new() -> Self {
+    pub const fn new(regs: [u32; 31], cop0_regs: [u32; 3]) -> Self {
         Self {
-            regs: [0; 31],
+            regs,
             mul_div_regs: [0; 2],
-            cop0_regs: [0; 3],
+            cop0_regs,
             in_use: false,
             running: false,
             parked: true,
             stack: ptr::null_mut(),
+            time_remaining: 1,
+            allocated_time: 1,
         }
     }
 
@@ -282,18 +286,29 @@ impl ThreadControlBlock {
 }
 
 // SAFETY: This may only be used in the exception handler
-pub unsafe fn reschedule_threads() {
+pub unsafe fn reschedule_threads() -> bool {
     let unparked_threads = || THREADS.iter_mut().filter(|tcb| tcb.in_use && !tcb.parked);
 
     // If there's only one unparked thread then there's no scheduling to do
     if unparked_threads().count() == 1 {
-        return
+        return false
     }
 
-    let running_thread = THREADS.iter().filter(|tcb| tcb.running).next().unwrap();
-    if running_thread.sp() < running_thread.stack as u32 {
-        panic!("Thread overflowed its stack");
+    let running_thread = THREADS.iter_mut().filter(|tcb| tcb.running).next().unwrap();
+    // If the running thread still has time then don't switch
+    running_thread.time_remaining -= 1;
+    if running_thread.time_remaining != 0 {
+        return false
     }
+    // Reset the thread's time for next time it's selected
+    running_thread.time_remaining = running_thread.allocated_time;
+
+    // This is too unreliable...
+    // Check for stack overflow
+    //if running_thread.sp() < running_thread.stack as u32 {
+    //    panic!("Thread overflowed its stack");
+    //}
+
 
     let mut next_thread = 0;
     let mut set_next_thread = false;
@@ -318,6 +333,7 @@ pub unsafe fn reschedule_threads() {
     unsafe {
         set_current_thread(next_tcb);
     }
+    true
 }
 
 pub fn init_threads() {
@@ -340,10 +356,12 @@ pub unsafe fn set_current_thread(tcb: *mut ThreadControlBlock) {
 static CURRENT_THREAD: Global<*mut ThreadControlBlock> = Global::new(ptr::null_mut());
 
 static mut THREADS: [ThreadControlBlock; 4] = {
-    let mut tcbs = [const { ThreadControlBlock::new() }; 4];
+    let mut tcbs = [const { ThreadControlBlock::new([0; 31], [0; 3]) }; 4];
     tcbs[0].in_use = true;
     tcbs[0].running = true;
     tcbs[0].parked = false;
+    tcbs[0].allocated_time = 128;
+    tcbs[0].time_remaining = tcbs[0].allocated_time;
     tcbs
 };
 
@@ -376,15 +394,9 @@ pub fn open_thread(
                 cop0_regs[1] = old_cause;
                 // This is the program counter after returning from an exception
                 cop0_regs[2] = pc as u32;
-                *tcb = ThreadControlBlock {
-                    regs,
-                    mul_div_regs: [0; 2],
-                    cop0_regs,
-                    in_use: true,
-                    running: false,
-                    parked: true,
-                    stack,
-                };
+                *tcb = ThreadControlBlock::new(regs, cop0_regs);
+                tcb.in_use = true;
+                tcb.stack = stack;
                 return ThreadHandle::new(i)
             }
         }

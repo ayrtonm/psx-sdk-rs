@@ -58,7 +58,7 @@ fn init_vectors() {
         volatile_copy_nonoverlapping_memory(
             RAM_EXCEPTION_VEC as *mut u32,
             exception_vec as *const u32,
-            4,
+            5,
         );
     }
     println!("Wrote RAM exception vector");
@@ -79,8 +79,10 @@ fn init_ram() {
         let dst = (KSEG0 + 0x100) as *mut u32;
         let src = &__data_start as *const u32;
         println!(
-            "Copying {} words from {:p} to {:p} to initialize .data",
-            len, src, dst
+            "Copying {} bytes from {:p} to {:p} to initialize .data",
+            len * 4,
+            src,
+            dst
         );
         volatile_copy_nonoverlapping_memory(dst, src, len);
 
@@ -89,8 +91,10 @@ fn init_ram() {
         let bss_len = (bss_end - bss_start) / 4;
         let bss_dst = &mut __bss_start as *mut u32;
         println!(
-            "Zeroing out {} words from {:x} to {:x} to initialize .bss",
-            bss_len, bss_start, bss_end
+            "Zeroing out {} bytes from {:x} to {:x} to initialize .bss",
+            bss_len * 4,
+            bss_start,
+            bss_end
         );
         volatile_set_memory(bss_dst, 0, bss_len);
     }

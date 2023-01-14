@@ -1,8 +1,6 @@
 use crate::println;
 use crate::thread::{get_current_thread, reschedule_threads, set_current_thread, ThreadControlBlock};
 use core::arch::asm;
-use core::mem::size_of;
-use psx::constants::KB;
 use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
@@ -14,11 +12,10 @@ use psx::sys::kernel::*;
 pub unsafe extern "C" fn exception_vec() {
     asm! {
         ".set noreorder
-         .set noat
-         la $k0, exception_handler
-         jr $k0
+         la $k1, CURRENT_THREAD
+         lw $k0, ($k1)
+         j exception_handler
          nop
-         .set at
          .set reorder",
         options(noreturn)
     }
@@ -26,21 +23,13 @@ pub unsafe extern "C" fn exception_vec() {
 
 #[naked]
 #[no_mangle]
+#[link_section = ".ram.text"]
 pub unsafe extern "C" fn exception_handler() {
-    const STACK_SIZE: usize = 2 * KB / size_of::<u32>();
-    #[no_mangle]
-    static mut EXCEPTION_STACK: [u32; STACK_SIZE] = [0; STACK_SIZE];
-
     asm! {
         ".set noreorder
          .set noat
-
-         la $k0, CURRENT_THREAD
-         lw $k0, ($k0)
-         nop # branch delay slot
-
+         # The exception vector loaded CURRENT_THREAD into k0
          sw $at, ($k0)
-         .set at
 
          sw $v0, 4($k0)
          sw $v1, 8($k0)
@@ -59,6 +48,33 @@ pub unsafe extern "C" fn exception_handler() {
          sw $t6, 52($k0)
          sw $t7, 56($k0)
 
+         sw $t8, 92($k0)
+         sw $t9, 96($k0)
+
+         sw $ra, 120($k0)
+
+         mflo $t0
+         mfhi $t1
+         mfc0 $t2, $12
+         mfc0 $t3, $13
+         mfc0 $t4, $14
+         sw $t2, 132($k0)
+         sw $t3, 136($k0)
+         sw $t4, 140($k0)
+         sw $t0, 124($k0)
+         sw $t1, 128($k0)
+
+         # call_handlers is in ROM so we need jalr
+         la $k1, call_handlers
+         jalr $k1
+         nop
+
+         # Check if we switched threads
+         beqz $v0, 2f
+         # Get the new TCB pointer
+         la $k1, CURRENT_THREAD
+         lw $k1, ($k1)
+
          sw $s0, 60($k0)
          sw $s1, 64($k0)
          sw $s2, 68($k0)
@@ -67,39 +83,25 @@ pub unsafe extern "C" fn exception_handler() {
          sw $s5, 80($k0)
          sw $s6, 84($k0)
          sw $s7, 88($k0)
-
-         sw $t8, 92($k0)
-         sw $t9, 96($k0)
-
-         sw $k1, 104($k0)
-         sw $gp, 108($k0)
          sw $sp, 112($k0)
          sw $fp, 116($k0)
-         sw $ra, 120($k0)
 
-         mflo $t0
-         mfhi $t1
-         mfc0 $t2, $12
-         mfc0 $t3, $13
-         mfc0 $t4, $14
-         sw $t0, 124($k0)
-         sw $t1, 128($k0)
-         sw $t2, 132($k0)
-         sw $t3, 136($k0)
-         sw $t4, 140($k0)
+         lw $s0, 60($k1)
+         lw $s1, 64($k1)
+         lw $s2, 68($k1)
+         lw $s3, 72($k1)
+         lw $s4, 76($k1)
+         lw $s5, 80($k1)
+         lw $s6, 84($k1)
+         lw $s7, 88($k1)
+         lw $sp, 112($k1)
+         j 3f
+         lw $fp, 116($k1) # jump delay slot
 
-         la $sp, EXCEPTION_STACK
-         addiu $sp, $sp, 0x3F0
-         move $fp, $sp
+         2:
+         move $k1, $k0
+         3:
 
-         jal call_handlers
-         nop
-
-         la $k1, CURRENT_THREAD
-         lw $k1, ($k1)
-         nop # branch delay slot
-
-         .set noat
          lw $at, ($k1)
 
          lw $t0, 124($k1)
@@ -130,28 +132,13 @@ pub unsafe extern "C" fn exception_handler() {
          lw $t6, 52($k1)
          lw $t7, 56($k1)
 
-         lw $s0, 60($k1)
-         lw $s1, 64($k1)
-         lw $s2, 68($k1)
-         lw $s3, 72($k1)
-         lw $s4, 76($k1)
-         lw $s5, 80($k1)
-         lw $s6, 84($k1)
-         lw $s7, 88($k1)
-
          lw $t8, 92($k1)
          lw $t9, 96($k1)
 
-         lw $gp, 108($k1)
-         lw $sp, 112($k1)
-         lw $fp, 116($k1)
          lw $ra, 120($k1)
-
-         lw $k1, 104($k1)
 
          jr $k0
          .long 0x42000010 #rfe
-
          .set at
          .set reorder",
          options(noreturn)
@@ -159,7 +146,7 @@ pub unsafe extern "C" fn exception_handler() {
 }
 
 #[no_mangle]
-extern "C" fn call_handlers() {
+extern "C" fn call_handlers() -> bool {
     // SAFETY: This is safe to call in the exception handler
     let tcb = unsafe { get_current_thread() };
     let excode = cop0::Cause::from_bits(*tcb.cop0_cause()).excode();
@@ -169,29 +156,37 @@ extern "C" fn call_handlers() {
         Excode::Breakpoint => {
             println!("{:#x?}", tcb);
             *tcb.cop0_epc() += 4;
+            false
         },
         _ => {
             println!("No handler installed for exception code {excode:?}");
+            false
         },
     }
 }
 
-fn irq_handler() {
+fn irq_handler() -> bool {
     let mut stat = irq::Status::new();
-    let mask = irq::Mask::new();
+    let mut mask = irq::Mask::new();
 
+    let mut changed_threads = false;
     for irq in mask.active_irqs(&stat) {
         if let Some(irq) = irq {
             match irq {
-                IRQ::Vblank => vblank_handler(),
-                _ => println!("No handler installed for interrupt {irq:?}"),
+                IRQ::Vblank => {
+                    changed_threads = vblank_handler();
+                },
+                _ => {
+                    println!("No handler installed for interrupt {irq:?}");
+                },
             }
         }
     }
     stat.ack_all().store();
+    changed_threads
 }
 
-fn syscall_handler(tcb: &mut ThreadControlBlock) {
+fn syscall_handler(tcb: &mut ThreadControlBlock) -> bool {
     *tcb.cop0_epc() += 4;
     match tcb.regs[3] as u8 {
         ENTER_CRITICAL_SECTION_NUM => {
@@ -208,16 +203,18 @@ fn syscall_handler(tcb: &mut ThreadControlBlock) {
         },
         CHANGE_THREAD_SUB_FN_NUM => {
             // SAFETY: This is safe to call in the exception handler
-            unsafe { set_current_thread(tcb.regs[4] as *mut ThreadControlBlock) }
+            unsafe { set_current_thread(tcb.regs[4] as *mut ThreadControlBlock) };
+            return true
         },
         _ => (),
-    }
+    };
+    false
 }
 
 // A vblank handler repurposed to schedule threads
-fn vblank_handler() {
-    // SAFETY: This is safe to call in the exception handler
+fn vblank_handler() -> bool {
     unsafe {
-        reschedule_threads();
+        // SAFETY: This is safe to call in the exception handler
+        reschedule_threads()
     }
 }
