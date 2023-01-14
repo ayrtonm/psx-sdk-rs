@@ -58,7 +58,7 @@ fn init_vectors() {
         volatile_copy_nonoverlapping_memory(
             RAM_EXCEPTION_VEC as *mut u32,
             exception_vec as *const u32,
-            5,
+            4,
         );
     }
     println!("Wrote RAM exception vector");
