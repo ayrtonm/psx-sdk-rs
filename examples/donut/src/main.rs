@@ -68,7 +68,7 @@ fn main() {
                 .map(|(v, c)| (rotate_z(rotate_x(rotate_y(v, theta), phi), psi), c));
 
             // Sort the donut faces by the average z of their rotated vertices
-            donut.faces.quads.sort_by_key(|face| {
+            donut.quads.sort_by_key(|face| {
                 let points = face.map(|i| rotated_vertices[i as usize].0);
                 let mut res = 0;
                 for [_, _, z] in points {
@@ -79,12 +79,12 @@ fn main() {
             for n in 0..draw_poly.len() {
                 // Project the vertices onto the screen
                 let projected_vertices =
-                    project_face(donut.faces.quads[n].map(|i| rotated_vertices[i as usize].0));
+                    project_face(donut.quads[n].map(|i| rotated_vertices[i as usize].0));
                 // Update the vertices and colors of each polygon in the draw list
                 draw_poly[n]
                     .contents
                     .set_vertices(projected_vertices)
-                    .set_colors(donut.faces.quads[n].map(|i| rotated_vertices[i as usize].1));
+                    .set_colors(donut.quads[n].map(|i| rotated_vertices[i as usize].1));
             }
         });
         fb.draw_sync();
