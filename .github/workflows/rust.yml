@@ -50,3 +50,11 @@ jobs:
             | tee bios_stdout &
         sleep 15
         grep "test result: ok. [0-9]* passed; 0 failed" bios_stdout
+        popd
+     - name: Test examples
+       run: |
+        pushd examples/stdout
+        xvfb-run cargo psx run | tee stdout &
+        sleep 15
+        grep "Hello, world! 0x41c63901"
+        popd
