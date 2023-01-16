@@ -15,9 +15,8 @@ fn main() {
             "psx",
             "build",
             "--lto",
-            "--alloc",
-            "--cargo-args",
-            "features psx/loadable_exe",
+            "--features",
+            "psx/loadable_exe,psx/heap",
             "--load-offset=524288",
             "--stack-pointer=0",
         ])

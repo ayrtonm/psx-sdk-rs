@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use core::mem::size_of;
 use psx::constants::*;
 use psx::sys::fs::{File, CDROM};
 use psx::sys::kernel::{psx_do_execute, psx_flush_cache};
@@ -23,17 +22,15 @@ fn main() {
         const EXE_SIZE: usize =
             file_size!("../../ferris/target/mipsel-sony-psx/release/ferris.exe");
 
-        // Add the executable load offset to the end of the BIOS region (i.e. MAIN_RAM +
+        // Add the executable load offset to the end of the BIOS region (i.e. KSEG0 +
         // BIOS_LEN). The load offset refers to start of the executable without the
         // header so we have to subtract 2KB to get the actual load address.
-        let load_addr = 524288 + MAIN_RAM as usize + BIOS_LEN - 2048;
+        let load_addr = 524288 + KSEG0 + BIOS_LEN - 2048;
 
         // Create a mutable reference to the memory where the executable will be loaded
         // SAFETY: No references to this memory overlap the lifetime of this slice in
         // this executable.
-        let exe = unsafe {
-            core::slice::from_raw_parts_mut(load_addr as *mut u32, EXE_SIZE / size_of::<u32>())
-        };
+        let exe = unsafe { core::slice::from_raw_parts_mut(load_addr as *mut u8, EXE_SIZE) };
 
         // Read the CD file into the memory it will run from
         file.read(exe).expect("Could not read PROG2.EXE");
@@ -42,8 +39,8 @@ fn main() {
         // pointer to the header of a valid executable.
         unsafe {
             psx_flush_cache();
-            let init_pc_offset = 4;
-            psx_do_execute(&mut exe[init_pc_offset] as *mut u32 as *mut u8, 0, 0);
+            let init_pc_offset = 16;
+            psx_do_execute(&mut exe[init_pc_offset], 0, 0);
         }
 
         // Clear whatever the demo had on the screen
