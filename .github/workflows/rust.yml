@@ -50,3 +50,15 @@ jobs:
             | tee bios_stdout &
         sleep 15
         grep "test result: ok. [0-9]* passed; 0 failed" bios_stdout
+        popd
+    - name: Build examples
+      run: |
+        pushd examples
+        for d in */; do
+            if [ $d != "bios/" ]; then
+                pushd $d
+                cargo psx build
+                popd
+            fi
+        done
+        popd
