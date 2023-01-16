@@ -4,7 +4,7 @@
 //!
 //! Additional features can be enabled by building with
 //! ```bash
-//! cargo psx run --cargo-args "features psx/$FEATURE1,psx/$FEATURE2"
+//! cargo psx run --features psx/$FEATURE1,psx/$FEATURE2
 //! ```
 //! Features may also be added in `Cargo.toml`. All features are disabled by
 //! default.
