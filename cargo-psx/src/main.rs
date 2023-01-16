@@ -1,8 +1,6 @@
 use cargo_metadata::MetadataCommand;
 use clap::Parser;
 use std::env;
-use std::fs::{create_dir_all, File};
-use std::io::Write;
 use std::process::{self, Command, Stdio};
 use std::str::FromStr;
 
