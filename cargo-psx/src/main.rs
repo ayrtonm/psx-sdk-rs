@@ -71,11 +71,8 @@ struct Opt {
     #[clap(long)]
     cargo_args: Vec<String>,
 
-    #[clap(long)]
+    #[clap(long, help = "Enables the listed features")]
     features: Option<String>,
-
-    #[clap(long, help = "Use an alternate target JSON")]
-    json: Option<String>,
 }
 
 fn main() {
