@@ -56,5 +56,5 @@ jobs:
         pushd examples/stdout
         xvfb-run cargo psx run | tee stdout &
         sleep 15
-        grep "Hello, world! 0x41c63901"
+        grep "Hello, world! 0x41c63901" stdout
         popd
