@@ -48,8 +48,6 @@ struct Opt {
 
     #[clap(long, help = "Sets the rustup toolchain (defaults to `nightly`)")]
     toolchain: Option<String>,
-    #[clap(long, help = "Sets the game region to NA, EU or J")]
-    region: Option<String>,
     #[clap(long, help = "Specifies a custom linker script to use")]
     link: Option<String>,
     #[clap(long, help = "Outputs an ELF")]
@@ -96,13 +94,6 @@ fn main() {
 
     // Always compile in release mode
     cargo_args.push("--release".to_string());
-
-    // Set specified region
-    let region = opt.region.map(|s| format!("psx/{}_region", s));
-    if let Some(region) = region {
-        cargo_args.push("--features".to_string());
-        cargo_args.push(region);
-    }
 
     // Set toolchain if not default
     let toolchain = match opt.toolchain {
