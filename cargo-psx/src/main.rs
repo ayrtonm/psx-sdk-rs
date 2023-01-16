@@ -80,6 +80,9 @@ struct Opt {
     #[clap(long)]
     cargo_args: Vec<String>,
 
+    #[clap(long)]
+    features: Option<String>,
+
     #[clap(long, help = "Use an alternate target JSON")]
     json: Option<String>,
 }
@@ -191,6 +194,9 @@ fn main() {
             .arg("mipsel-sony-psx")
             .args(cargo_args)
             .env("RUSTFLAGS", rustflags);
+        if let Some(features) = opt.features {
+            cmd.arg("--features").arg(features);
+        }
         if let Some(offset) = opt.load_offset {
             assert!(offset % 4 == 0, "Load offset must be a multiple of 4 bytes");
             cmd.env("PSX_LOAD_OFFSET", offset.to_string());
