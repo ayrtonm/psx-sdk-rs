@@ -1,6 +1,6 @@
-use crate::global::Global;
 use crate::allocator::HEAP;
 use crate::exceptions::exception_vec;
+use crate::global::Global;
 use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
 use crate::main;
 use crate::println;
@@ -41,7 +41,7 @@ extern "C" fn start() -> ! {
 
     // TODO: Add a proper executable loader
     // Hack for mednafen fastboot
-    let patch_addr = POST_BOOT_ENTRYPOINT - KSEG0 + 0x1000;
+    let patch_addr = POST_BOOT_ENTRYPOINT + 0x1000;
     let load_exe: extern "C" fn() = unsafe { transmute(patch_addr) };
     load_exe();
     // Hang if the executable returns
@@ -50,10 +50,13 @@ extern "C" fn start() -> ! {
 
 fn init_vectors() {
     // Write to the fn vectors
+    let a0_vec = A0_VEC + KSEG0;
+    let b0_vec = B0_VEC + KSEG0;
+    let c0_vec = C0_VEC + KSEG0;
     unsafe {
-        volatile_copy_nonoverlapping_memory(A0_VEC as *mut u32, a0_fn_vec as *const u32, 4);
-        volatile_copy_nonoverlapping_memory(B0_VEC as *mut u32, b0_fn_vec as *const u32, 4);
-        volatile_copy_nonoverlapping_memory(C0_VEC as *mut u32, c0_fn_vec as *const u32, 4);
+        volatile_copy_nonoverlapping_memory(a0_vec as *mut u32, a0_fn_vec as *const u32, 4);
+        volatile_copy_nonoverlapping_memory(b0_vec as *mut u32, b0_fn_vec as *const u32, 4);
+        volatile_copy_nonoverlapping_memory(c0_vec as *mut u32, c0_fn_vec as *const u32, 4);
     }
 
     println!("Wrote BIOS fn vectors. Debug output should now work.");

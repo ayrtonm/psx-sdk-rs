@@ -99,11 +99,11 @@ pub mod constants {
     pub const BIOS_LEN: usize = 64 * KB;
 
     /// The BIOS A0 function vector
-    pub const A0_VEC: usize = 0x8000_00A0;
+    pub const A0_VEC: usize = 0x0000_00A0;
     /// The BIOS B0 function vector
-    pub const B0_VEC: usize = 0x8000_00B0;
+    pub const B0_VEC: usize = 0x0000_00B0;
     /// The BIOS C0 function vector
-    pub const C0_VEC: usize = 0x8000_00C0;
+    pub const C0_VEC: usize = 0x0000_00C0;
 
     /// The general exception vector in RAM
     pub const RAM_EXCEPTION_VEC: usize = 0x8000_0080;
@@ -111,14 +111,14 @@ pub mod constants {
     pub const ROM_EXCEPTION_VEC: usize = 0xBFC0_0180;
 
     /// The start of the data cache.
-    pub const DATA_CACHE: usize = 0x9F80_0000;
+    pub const DATA_CACHE: usize = 0x1F80_0000;
     /// The size of the data cache.
     pub const DATA_CACHE_LEN: usize = 1 * KB;
 
     /// The entrypoint of the post-boot function.
-    pub const POST_BOOT_ENTRYPOINT: usize = 0x9F00_0000;
+    pub const POST_BOOT_ENTRYPOINT: usize = 0x1F00_0000;
     /// The entrypoint of the pre-boot function.
-    pub const PRE_BOOT_ENTRYPOINT: usize = 0x9F00_0080;
+    pub const PRE_BOOT_ENTRYPOINT: usize = 0x1F00_0080;
 
     pub use crate::gpu::colors::*;
     pub use crate::gpu::VideoMode::*;
