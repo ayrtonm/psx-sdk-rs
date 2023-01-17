@@ -15,6 +15,7 @@ use core::slice;
 use psx::constants::KB;
 use psx::hw::{cop0, Register};
 use psx::sys::kernel::psx_change_thread_sub_fn;
+use psx::CriticalSection;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -70,8 +71,8 @@ pub fn resume_main() {
 }
 
 pub fn park() {
-    cop0::Status::new().critical_section(|| {
-        let threads = unsafe { THREADS.as_mut() };
+    cop0::Status::new().critical_section(|cs| {
+        let threads = THREADS.borrow(cs);
         let idx = threads.iter().position(|tcb| tcb.running).unwrap();
         let mut current_tcb = &mut threads[idx];
         current_tcb.parked = true;
@@ -151,18 +152,17 @@ impl<A: Send, R: Send> Thread<A, R> {
     }
 
     pub fn unpark(&mut self) {
-        cop0::Status::new().critical_section(|| {
-            // SAFETY: static mut access in a critical section
-            let tcb = unsafe { &mut THREADS.as_mut()[self.handle.get_idx()] };
+        cop0::Status::new().critical_section(|cs| {
+            let tcb = &mut THREADS.borrow(cs)[self.handle.get_idx()];
             tcb.parked = false;
         });
     }
 
     pub fn join(mut self) -> R {
         self.resume();
-        let regs = cop0::Status::new().critical_section(|| {
+        let regs = cop0::Status::new().critical_section(|cs| {
             // SAFETY: static mut access in a critical section
-            let threads = unsafe { &mut THREADS };
+            let threads = THREADS.borrow(cs);
             let tcb = &threads[self.handle.get_idx()];
             let v0 = tcb.regs[1] as u64;
             let v1 = tcb.regs[2] as u64;
@@ -285,16 +285,16 @@ impl ThreadControlBlock {
     }
 }
 
-// SAFETY: This may only be used in the exception handler
-pub unsafe fn reschedule_threads() -> bool {
-    let unparked_threads = || THREADS.iter_mut().filter(|tcb| tcb.in_use && !tcb.parked);
+pub fn reschedule_threads(cs: &mut CriticalSection) -> bool {
+    let threads = THREADS.borrow(cs);
+    let unparked = |tcb: &&mut ThreadControlBlock| tcb.in_use && !tcb.parked;
 
     // If there's only one unparked thread then there's no scheduling to do
-    if unparked_threads().count() == 1 {
+    if threads.iter_mut().filter(unparked).count() == 1 {
         return false
     }
 
-    let running_thread = THREADS.iter_mut().filter(|tcb| tcb.running).next().unwrap();
+    let running_thread = threads.iter_mut().filter(|tcb| tcb.running).next().unwrap();
     // If the running thread still has time then don't switch
     running_thread.time_remaining -= 1;
     if running_thread.time_remaining != 0 {
@@ -311,7 +311,7 @@ pub unsafe fn reschedule_threads() -> bool {
 
     let mut next_thread = 0;
     let mut set_next_thread = false;
-    for (i, tcb) in unparked_threads().enumerate() {
+    for (i, tcb) in threads.iter_mut().filter(unparked).enumerate() {
         if set_next_thread {
             next_thread = i;
             // If we found the next TCB, then we're done iterating
@@ -325,43 +325,42 @@ pub unsafe fn reschedule_threads() -> bool {
             tcb.running = false;
         }
     }
-    let next_tcb = unparked_threads().nth(next_thread).unwrap();
+    let next_tcb = threads
+        .iter_mut()
+        .filter(unparked)
+        .nth(next_thread)
+        .unwrap();
     // Mark the next TCB as running
     next_tcb.running = true;
-    // SAFETY: This is safe to call in the exception handler
-    unsafe {
-        set_current_thread(next_tcb);
-    }
+    set_current_thread(next_tcb, cs);
     true
 }
 
-pub fn init_threads() {
-    unsafe {
-        set_current_thread(THREADS.as_mut_ptr());
-    }
+pub fn init_threads(cs: &mut CriticalSection) {
+    set_current_thread(THREADS.borrow(cs).as_mut_ptr(), cs);
 }
 
-// SAFETY: This may only be used in the exception handler
-pub unsafe fn get_current_thread<'a>() -> &'a mut ThreadControlBlock {
-    CURRENT_THREAD.as_ref().as_mut().unwrap()
+pub fn get_current_thread<'a>(cs: &mut CriticalSection) -> &'a mut ThreadControlBlock {
+    let ptr = CURRENT_THREAD.borrow(cs);
+    let tcb_ref = unsafe { ptr.as_mut() };
+    tcb_ref.unwrap()
 }
 
-// SAFETY: This may only be used in the exception handler
-pub unsafe fn set_current_thread(tcb: *mut ThreadControlBlock) {
-    *CURRENT_THREAD.as_ptr() = tcb;
+pub fn set_current_thread(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) {
+    *CURRENT_THREAD.borrow(cs) = tcb;
 }
 
 #[no_mangle]
 static CURRENT_THREAD: Global<*mut ThreadControlBlock> = Global::new(ptr::null_mut());
 
-static mut THREADS: [ThreadControlBlock; 4] = {
+static THREADS: Global<[ThreadControlBlock; 4]> = {
     let mut tcbs = [const { ThreadControlBlock::new([0; 31], [0; 3]) }; 4];
     tcbs[0].in_use = true;
     tcbs[0].running = true;
     tcbs[0].parked = false;
     tcbs[0].allocated_time = 128;
     tcbs[0].time_remaining = tcbs[0].allocated_time;
-    tcbs
+    Global::new(tcbs)
 };
 
 pub fn open_thread(
@@ -370,9 +369,8 @@ pub fn open_thread(
     let mut sr = cop0::Status::new();
     let old_sr = sr.to_bits();
     let old_cause = cop0::Cause::new().to_bits();
-    sr.critical_section(|| {
-        // SAFETY: static mut access in a critical section
-        let threads = unsafe { THREADS.as_mut() };
+    sr.critical_section(|cs| {
+        let threads = THREADS.borrow(cs);
         for (i, tcb) in threads.iter_mut().enumerate() {
             if !tcb.in_use {
                 let mut regs = [0; 31];
@@ -405,9 +403,8 @@ pub fn open_thread(
 
 pub fn change_thread(handle: ThreadHandle, set_ra: bool) -> u32 {
     let new = handle.get_idx();
-    cop0::Status::new().critical_section(|| {
-        // SAFETY: static mut access in a critical section
-        let threads = unsafe { THREADS.as_mut() };
+    cop0::Status::new().critical_section(|cs| {
+        let threads = THREADS.borrow(cs);
         if threads[new].in_use {
             let old = threads.iter().position(|tcb| tcb.running).unwrap();
             threads[old].running = false;
@@ -429,9 +426,8 @@ pub fn change_thread(handle: ThreadHandle, set_ra: bool) -> u32 {
 
 pub fn close_thread(handle: ThreadHandle) -> u32 {
     let idx = handle.get_idx();
-    cop0::Status::new().critical_section(|| {
-        // SAFETY: static mut access in a critical section
-        let mut thread = unsafe { &mut THREADS[idx] };
+    cop0::Status::new().critical_section(|cs| {
+        let mut thread = &mut THREADS.borrow(cs)[idx];
         thread.in_use = false;
         thread.running = false;
         thread.parked = true;

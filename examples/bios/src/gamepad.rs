@@ -48,6 +48,7 @@ pub fn init_pad(buf1: &mut [u16], buf2: &mut [u16]) -> u32 {
 extern "C" fn gamepad_thread(_ctxt: GamepadCtxt) {
     println!("Started gamepad thread");
     loop {
+        println!("In gamepad thread");
         thread::resume_main();
     }
 }

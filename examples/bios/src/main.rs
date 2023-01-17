@@ -4,9 +4,6 @@
 #![feature(asm_const)]
 #![feature(naked_functions)]
 #![feature(core_intrinsics)]
-#![feature(const_mut_refs)]
-#![feature(const_ptr_as_ref)]
-#![feature(const_option)]
 #![feature(inline_const)]
 
 mod allocator;

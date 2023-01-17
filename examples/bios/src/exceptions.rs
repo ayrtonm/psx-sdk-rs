@@ -7,6 +7,7 @@ use psx::hw::irq;
 use psx::hw::Register;
 use psx::irq::IRQ;
 use psx::sys::kernel::*;
+use psx::CriticalSection;
 
 #[naked]
 pub unsafe extern "C" fn exception_vec() {
@@ -150,12 +151,13 @@ pub unsafe extern "C" fn exception_handler() {
 
 #[no_mangle]
 extern "C" fn call_handlers() -> u32 {
-    // SAFETY: This is safe to call in the exception handler
-    let tcb = unsafe { get_current_thread() };
+    let mut cs = unsafe { CriticalSection::new() };
+    let cs = &mut cs;
+    let tcb = get_current_thread(cs);
     let excode = cop0::Cause::from_bits(*tcb.cop0_cause()).excode();
     let switched = match excode {
-        Excode::Interrupt => irq_handler(),
-        Excode::Syscall => syscall_handler(tcb),
+        Excode::Interrupt => irq_handler(cs),
+        Excode::Syscall => syscall_handler(tcb, cs),
         Excode::Breakpoint => {
             println!("{:#x?}", tcb);
             *tcb.cop0_epc() += 4;
@@ -169,7 +171,7 @@ extern "C" fn call_handlers() -> u32 {
     switched as u32
 }
 
-fn irq_handler() -> bool {
+fn irq_handler(cs: &mut CriticalSection) -> bool {
     let mut stat = irq::Status::new();
     let mask = irq::Mask::new();
 
@@ -178,7 +180,7 @@ fn irq_handler() -> bool {
         if let Some(irq) = irq {
             match irq {
                 IRQ::Vblank => {
-                    changed_threads = vblank_handler();
+                    changed_threads = vblank_handler(cs);
                 },
                 _ => {
                     println!("No handler installed for interrupt {irq:?}");
@@ -190,7 +192,7 @@ fn irq_handler() -> bool {
     changed_threads
 }
 
-fn syscall_handler(tcb: &mut ThreadControlBlock) -> bool {
+fn syscall_handler(tcb: &mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
     *tcb.cop0_epc() += 4;
     match tcb.regs[3] as u8 {
         ENTER_CRITICAL_SECTION_NUM => {
@@ -207,7 +209,7 @@ fn syscall_handler(tcb: &mut ThreadControlBlock) -> bool {
         },
         CHANGE_THREAD_SUB_FN_NUM => {
             // SAFETY: This is safe to call in the exception handler
-            unsafe { set_current_thread(tcb.regs[4] as *mut ThreadControlBlock) };
+            set_current_thread(tcb.regs[4] as *mut ThreadControlBlock, cs);
             return true
         },
         _ => (),
@@ -216,9 +218,6 @@ fn syscall_handler(tcb: &mut ThreadControlBlock) -> bool {
 }
 
 // A vblank handler repurposed to schedule threads
-fn vblank_handler() -> bool {
-    unsafe {
-        // SAFETY: This is safe to call in the exception handler
-        reschedule_threads()
-    }
+fn vblank_handler(cs: &mut CriticalSection) -> bool {
+    reschedule_threads(cs)
 }

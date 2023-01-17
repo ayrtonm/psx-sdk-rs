@@ -8,6 +8,7 @@ use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use core::mem::{size_of, transmute};
 use psx::constants::*;
+use psx::CriticalSection;
 
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script
 // since this is the only function .text.boot. The stack pointer is
@@ -29,10 +30,12 @@ unsafe extern "C" fn boot() -> ! {
 // function.
 #[no_mangle]
 extern "C" fn start() -> ! {
+    let mut cs = unsafe { CriticalSection::new() };
+    let cs = &mut cs;
     // Write handlers to the BIOS fn and general exception vectors
     init_vectors();
-    init_ram();
-    init_threads();
+    init_ram(cs);
+    init_threads(cs);
     main();
 
     // TODO: Add a proper executable loader
@@ -64,7 +67,7 @@ fn init_vectors() {
     println!("Wrote RAM exception vector");
 }
 
-fn init_ram() {
+fn init_ram(cs: &mut CriticalSection) {
     extern "C" {
         // The linker script is set up so that these refer to the load addresses
         static __data_start: u32;
@@ -101,10 +104,11 @@ fn init_ram() {
 
     const HEAP_SIZE: usize = 8 * KB / size_of::<u32>();
     static mut HEAP_MEM: [u32; HEAP_SIZE] = [0; HEAP_SIZE];
+    let heap = HEAP.borrow(cs);
     unsafe {
         let ptr = HEAP_MEM.as_mut_ptr().cast();
         let len = HEAP_MEM.len() * size_of::<u32>();
         println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
-        HEAP.as_ref().init(ptr, len);
+        heap.init(ptr, len);
     }
 }
