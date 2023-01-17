@@ -47,11 +47,7 @@ To uninstall:
 cargo uninstall cargo-psx
 ```
 
-For more options:
-
-```
-cargo psx --help
-```
+For more options see the its [README](https://github.com/ayrtonm/psx-sdk-rs/blob/master/cargo-psx/README.md).
     
 ## Usage
 

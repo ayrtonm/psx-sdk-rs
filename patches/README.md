@@ -1,8 +1,8 @@
 # Rustc build instructions
 
-The `nightlier` feature enables 8 and 16-bit atomics, but requires patching LLVM
-and the rust compiler. Building the compiler is computationally expensive, so it
-may take quite a bit of time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
+The `nightlier` feature enables 8 and 16-bit atomics, but requires patching LLVM.
+Building the compiler is computationally expensive, so it may take quite a bit
+of time. See the [system requirements](https://rustc-dev-guide.rust-lang.org/getting-started.html#system-requirements)
 for building the rust compiler for more specifics.
 
 ## Building the compiler
@@ -36,14 +36,7 @@ for building the rust compiler for more specifics.
     ```
 
 
-4. Patch the rust compiler. Applying this patch to a different commit may require manual intervention:
-
-    ```
-    git apply /path/to/patches/rustc_psx.patch
-    ```
-
-
-5. Build the rust compiler:
+4. Build the rust compiler:
 
     ```
     # For the initial build
@@ -52,7 +45,7 @@ for building the rust compiler for more specifics.
     ./x.py build -i library/std --keep-stage 1
     ```
 
-6. Create a new toolchain with the patched compiler:
+5. Create a new toolchain with the patched compiler:
 
     ```
     rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1
@@ -61,7 +54,7 @@ for building the rust compiler for more specifics.
     where `psx` is the name for the new toolchain.
 
 
-7. When using `cargo-psx`, make sure to set the toolchain argument to `psx`.
+6. When using `cargo-psx`, make sure to set the toolchain argument to `psx`.
 
     ```
     cargo psx run --toolchain psx
