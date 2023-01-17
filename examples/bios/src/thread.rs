@@ -286,11 +286,13 @@ impl ThreadControlBlock {
 }
 
 #[inline(always)]
-pub fn reschedule_threads(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
+pub fn reschedule_threads(
+    tcb: *mut ThreadControlBlock, cs: &mut CriticalSection,
+) -> *mut ThreadControlBlock {
     unsafe {
         (*tcb).time_remaining -= 1;
         if (*tcb).time_remaining != 0 {
-            return false
+            return ptr::null_mut()
         }
         (*tcb).time_remaining = (*tcb).allocated_time;
     }
@@ -300,7 +302,7 @@ pub fn reschedule_threads(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection
 
     // If there's only one unparked thread then there's no scheduling to do
     if threads.iter_mut().filter(unparked).count() == 1 {
-        return false
+        return ptr::null_mut()
     }
 
     let mut next_thread = 0;
@@ -319,17 +321,17 @@ pub fn reschedule_threads(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection
             tcb.running = false;
         }
     }
-    unsafe {
-        let next_tcb = threads
+    let next_tcb = unsafe {
+        threads
             .iter_mut()
             .filter(unparked)
             .nth(next_thread)
-            .unwrap_unchecked();
-        // Mark the next TCB as running
-        next_tcb.running = true;
-        *CURRENT_THREAD.borrow(cs) = next_tcb;
-    }
-    true
+            .unwrap_unchecked()
+    };
+    // Mark the next TCB as running
+    next_tcb.running = true;
+    *CURRENT_THREAD.borrow(cs) = next_tcb;
+    next_tcb
 }
 
 #[cold]

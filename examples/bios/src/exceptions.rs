@@ -1,3 +1,4 @@
+use core::ptr;
 use crate::println;
 use crate::thread::{reschedule_threads, ThreadControlBlock, CURRENT_THREAD};
 use core::arch::asm;
@@ -73,15 +74,12 @@ pub unsafe extern "C" fn exception_handler() {
          move $a3, $k0
 
          # call_handlers is in ROM so we need jalr
-         la $k1, call_handlers
-         jalr $k1
+         jal call_handlers
          nop
 
-         # Check if we switched threads
+         # Check if there's a new TCB
          beqz $v0, 2f
-         # Get the new TCB pointer
-         la $k1, CURRENT_THREAD
-         lw $k1, ($k1)
+         nop
 
          sw $s0, 60($k0)
          sw $s1, 64($k0)
@@ -94,58 +92,55 @@ pub unsafe extern "C" fn exception_handler() {
          sw $sp, 112($k0)
          sw $fp, 116($k0)
 
-         lw $s0, 60($k1)
-         lw $s1, 64($k1)
-         lw $s2, 68($k1)
-         lw $s3, 72($k1)
-         lw $s4, 76($k1)
-         lw $s5, 80($k1)
-         lw $s6, 84($k1)
-         lw $s7, 88($k1)
-         lw $sp, 112($k1)
-         j 3f
-         lw $fp, 116($k1) # jump delay slot
+         lw $s0, 60($v0)
+         lw $s1, 64($v0)
+         lw $s2, 68($v0)
+         lw $s3, 72($v0)
+         lw $s4, 76($v0)
+         lw $s5, 80($v0)
+         lw $s6, 84($v0)
+         lw $s7, 88($v0)
+         lw $sp, 112($v0)
+         lw $fp, 116($v0)
+         move $k0, $v0
 
          2:
-         move $k1, $k0
-         3:
+         lw $at, ($k0)
 
-         lw $at, ($k1)
-
-         lw $t0, 124($k1)
-         lw $t1, 128($k1)
-         lw $t2, 132($k1)
-         lw $t3, 136($k1)
-         lw $t4, 140($k1)
+         lw $t0, 124($k0)
+         lw $t1, 128($k0)
+         lw $t2, 132($k0)
+         lw $t3, 136($k0)
+         lw $t4, 140($k0)
          mtlo $t0
          mthi $t1
          mtc0 $t2, $12
          mtc0 $t3, $13
-         move $k0, $t4
+         move $k1, $t4
 
-         lw $v0, 4($k1)
-         lw $v1, 8($k1)
+         lw $v0, 4($k0)
+         lw $v1, 8($k0)
 
-         lw $a0, 12($k1)
-         lw $a1, 16($k1)
-         lw $a2, 20($k1)
-         lw $a3, 24($k1)
+         lw $a0, 12($k0)
+         lw $a1, 16($k0)
+         lw $a2, 20($k0)
+         lw $a3, 24($k0)
 
-         lw $t0, 28($k1)
-         lw $t1, 32($k1)
-         lw $t2, 36($k1)
-         lw $t3, 40($k1)
-         lw $t4, 44($k1)
-         lw $t5, 48($k1)
-         lw $t6, 52($k1)
-         lw $t7, 56($k1)
+         lw $t0, 28($k0)
+         lw $t1, 32($k0)
+         lw $t2, 36($k0)
+         lw $t3, 40($k0)
+         lw $t4, 44($k0)
+         lw $t5, 48($k0)
+         lw $t6, 52($k0)
+         lw $t7, 56($k0)
 
-         lw $t8, 92($k1)
-         lw $t9, 96($k1)
+         lw $t8, 92($k0)
+         lw $t9, 96($k0)
 
-         lw $ra, 120($k1)
+         lw $ra, 120($k0)
 
-         jr $k0
+         jr $k1
          .long 0x42000010 #rfe
          .set at
          .set reorder",
@@ -166,7 +161,7 @@ extern "C" fn call_handlers(
         Excode::Breakpoint => {
             println!("{:#x?}", tcb);
             *tcb.cop0_epc() += 4;
-            false
+            ptr::null_mut()
         },
         _ => unsafe { core::hint::unreachable_unchecked() },
     };
@@ -174,11 +169,11 @@ extern "C" fn call_handlers(
 }
 
 #[inline(always)]
-fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
+fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> *mut ThreadControlBlock {
     let mut stat = irq::Status::new();
     let mask = irq::Mask::new();
 
-    let mut changed_threads = false;
+    let mut changed_threads = ptr::null_mut();
     for irq in mask.active_irqs(&stat) {
         if let Some(irq) = irq {
             match irq {
@@ -198,7 +193,7 @@ fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
 #[inline(always)]
 fn syscall_handler(
     tcb: &mut ThreadControlBlock, cs: &mut CriticalSection, r4: u32, r5: u32,
-) -> bool {
+) -> *mut ThreadControlBlock {
     *tcb.cop0_epc() += 4;
     if r4 == ENTER_CRITICAL_SECTION_NUM as u32 {
         cop0::Status::new()
@@ -212,16 +207,17 @@ fn syscall_handler(
             .store();
     } else if r4 == CHANGE_THREAD_SUB_FN_NUM as u32 {
         // SAFETY: This is safe to call in the exception handler
-        *CURRENT_THREAD.borrow(cs) = r5 as *mut ThreadControlBlock;
-        return true
+        let new_tcb = r5 as *mut ThreadControlBlock;
+        *CURRENT_THREAD.borrow(cs) = new_tcb;
+        return new_tcb
     } else {
         unsafe { core::hint::unreachable_unchecked() }
     }
-    false
+    ptr::null_mut()
 }
 
 // A vblank handler repurposed to schedule threads
 #[inline(always)]
-fn vblank_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
+fn vblank_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> *mut ThreadControlBlock {
     reschedule_threads(tcb, cs)
 }
