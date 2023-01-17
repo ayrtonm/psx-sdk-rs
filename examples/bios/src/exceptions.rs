@@ -1,7 +1,7 @@
-use core::ptr;
 use crate::println;
 use crate::thread::{reschedule_threads, ThreadControlBlock, CURRENT_THREAD};
 use core::arch::asm;
+use core::ptr;
 use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
@@ -60,15 +60,12 @@ pub unsafe extern "C" fn exception_handler() {
 
          mflo $t0
          mfhi $t1
-         mfc0 $t2, $12
          # Set call_handlers 3rd argument
          mfc0 $a2, $13
-         mfc0 $t4, $14
+         mfc0 $k1, $14
          sw $t0, 124($k0)
          sw $t1, 128($k0)
-         sw $t2, 132($k0)
          sw $a2, 136($k0)
-         sw $t4, 140($k0)
 
          # Set call_handlers 4th argument
          move $a3, $k0
@@ -91,6 +88,9 @@ pub unsafe extern "C" fn exception_handler() {
          sw $s7, 88($k0)
          sw $sp, 112($k0)
          sw $fp, 116($k0)
+         mfc0 $t2, $12
+         sw $k1, 140($k0)
+         sw $t2, 132($k0)
 
          lw $s0, 60($v0)
          lw $s1, 64($v0)
@@ -102,21 +102,20 @@ pub unsafe extern "C" fn exception_handler() {
          lw $s7, 88($v0)
          lw $sp, 112($v0)
          lw $fp, 116($v0)
+         lw $k1, 140($v0)
+         lw $t2, 132($k0)
          move $k0, $v0
+         mtc0 $t2, $12
 
          2:
          lw $at, ($k0)
 
          lw $t0, 124($k0)
          lw $t1, 128($k0)
-         lw $t2, 132($k0)
          lw $t3, 136($k0)
-         lw $t4, 140($k0)
          mtlo $t0
          mthi $t1
-         mtc0 $t2, $12
          mtc0 $t3, $13
-         move $k1, $t4
 
          lw $v0, 4($k0)
          lw $v1, 8($k0)
@@ -151,21 +150,26 @@ pub unsafe extern "C" fn exception_handler() {
 #[no_mangle]
 #[inline(always)]
 extern "C" fn call_handlers(
-    r4: u32, r5: u32, cause: cop0::Cause, tcb: &mut ThreadControlBlock,
-) -> u32 {
+    r4: u32, r5: u32, cause: cop0::Cause, tcb: *mut ThreadControlBlock,
+) -> *mut ThreadControlBlock {
     let mut cs = unsafe { CriticalSection::new() };
     let cs = &mut cs;
-    let switched = match cause.excode() {
+    let new_tcb = match cause.excode() {
         Excode::Interrupt => irq_handler(tcb, cs),
-        Excode::Syscall => syscall_handler(tcb, cs, r4, r5),
-        Excode::Breakpoint => {
-            println!("{:#x?}", tcb);
-            *tcb.cop0_epc() += 4;
-            ptr::null_mut()
+        Excode::Syscall | Excode::Breakpoint => {
+            unsafe {
+                asm!("addiu $k1, 4");
+            }
+            if cause.excode() == Excode::Syscall {
+                syscall_handler(cs, r4, r5)
+            } else {
+                println!("{:#x?}", tcb);
+                ptr::null_mut()
+            }
         },
         _ => unsafe { core::hint::unreachable_unchecked() },
     };
-    switched as u32
+    new_tcb
 }
 
 #[inline(always)]
@@ -173,12 +177,12 @@ fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> *mut T
     let mut stat = irq::Status::new();
     let mask = irq::Mask::new();
 
-    let mut changed_threads = ptr::null_mut();
+    let mut new_tcb = ptr::null_mut();
     for irq in mask.active_irqs(&stat) {
         if let Some(irq) = irq {
             match irq {
                 IRQ::Vblank => {
-                    changed_threads = vblank_handler(tcb, cs);
+                    new_tcb = vblank_handler(tcb, cs);
                 },
                 _ => {
                     println!("No handler installed for interrupt {irq:?}");
@@ -187,14 +191,11 @@ fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> *mut T
         }
     }
     stat.ack_all().store();
-    changed_threads
+    new_tcb
 }
 
 #[inline(always)]
-fn syscall_handler(
-    tcb: &mut ThreadControlBlock, cs: &mut CriticalSection, r4: u32, r5: u32,
-) -> *mut ThreadControlBlock {
-    *tcb.cop0_epc() += 4;
+fn syscall_handler(cs: &mut CriticalSection, r4: u32, r5: u32) -> *mut ThreadControlBlock {
     if r4 == ENTER_CRITICAL_SECTION_NUM as u32 {
         cop0::Status::new()
             .disable_interrupts()
@@ -218,6 +219,8 @@ fn syscall_handler(
 
 // A vblank handler repurposed to schedule threads
 #[inline(always)]
-fn vblank_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> *mut ThreadControlBlock {
+fn vblank_handler(
+    tcb: *mut ThreadControlBlock, cs: &mut CriticalSection,
+) -> *mut ThreadControlBlock {
     reschedule_threads(tcb, cs)
 }
