@@ -33,7 +33,7 @@ pub enum IntSrc {
 }
 
 /// The exception cause code in cop0 r13
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Excode {
     /// Exception was caused by an interrupt
     Interrupt,
