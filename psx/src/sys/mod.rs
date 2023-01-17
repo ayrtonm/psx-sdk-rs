@@ -2,6 +2,7 @@
 //!
 //! This module contains wrappers for functions provided by the BIOS.
 
+use crate::CriticalSection;
 use core::ffi::CStr;
 
 pub mod fs;
@@ -13,16 +14,17 @@ pub mod tty;
 
 /// Calls the given function in an interrupt-free critical section using BIOS
 /// syscalls.
-pub fn critical_section<F: FnOnce() -> R, R>(f: F) -> R {
-    unsafe {
-        if kernel::psx_enter_critical_section() {
-            let res = f();
+pub fn critical_section<F: FnMut(&mut CriticalSection) -> R, R>(mut f: F) -> R {
+    let changed_state = unsafe { kernel::psx_enter_critical_section() };
+    // SAFETY: We are in a critical section so we can create this
+    let mut cs = unsafe { CriticalSection::new() };
+    let res = f(&mut cs);
+    if changed_state {
+        unsafe {
             kernel::psx_exit_critical_section();
-            res
-        } else {
-            f()
         }
-    }
+    };
+    res
 }
 
 /// Returns the kernel's version string.

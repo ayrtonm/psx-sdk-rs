@@ -1,5 +1,6 @@
 use crate::hw::cop0::{IntSrc, Mode, Status};
 use crate::hw::Register;
+use crate::CriticalSection;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
 
@@ -205,7 +206,7 @@ impl Status {
     }
 
     /// Run a closure in an interrupt-free context
-    pub fn critical_section<F: FnMut() -> R, R>(&mut self, mut f: F) -> R {
+    pub fn critical_section<F: FnMut(&mut CriticalSection) -> R, R>(&mut self, mut f: F) -> R {
         let in_critical_section =
             self.interrupt_masked(IntSrc::Hardware) && self.interrupts_disabled();
 
@@ -214,7 +215,9 @@ impl Status {
                 .disable_interrupts()
                 .store();
         }
-        let res = f();
+        // SAFETY: We are in a critical section so we can create this
+        let mut cs = unsafe { CriticalSection::new() };
+        let res = f(&mut cs);
         if !in_critical_section {
             self.unmask_interrupt(IntSrc::Hardware)
                 .enable_interrupts()

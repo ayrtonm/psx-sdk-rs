@@ -179,3 +179,17 @@ fn on_oom(layout: core::alloc::Layout) -> ! {
 
 pub use framebuffer::{Framebuffer, LoadedTIM, TextBox};
 //pub use format::tim::{Bitmap, TIMError, TIM};
+
+/// A token ensuring that code is being executed in a critical section.
+pub struct CriticalSection(());
+
+impl CriticalSection {
+    /// Creates a new critical section token
+    ///
+    /// # SAFETY: Since owning a CriticalSection means we are in a critical
+    /// section, this is only safe to create if we are actually in a critical
+    /// section.
+    pub unsafe fn new() -> Self {
+        Self(())
+    }
+}
