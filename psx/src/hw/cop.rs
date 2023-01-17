@@ -2,6 +2,7 @@
 use crate::hw::private::Primitive;
 
 /// A coprocessor register
+#[repr(C)]
 pub struct CopRegister<T: Primitive, const COP: u32, const REG: u32> {
     pub(super) value: T,
 }

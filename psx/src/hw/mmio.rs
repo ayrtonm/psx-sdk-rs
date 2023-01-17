@@ -6,6 +6,7 @@ use core::fmt::{Debug, Formatter};
 use core::ptr::{read_volatile, write_volatile};
 
 /// A memory register.
+#[repr(C)]
 pub struct MemRegister<T: Primitive, const ADDRESS: u32> {
     value: T,
 }
