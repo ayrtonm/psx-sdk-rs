@@ -24,6 +24,6 @@ impl<T> Global<T> {
     pub fn borrow(&self, _: &mut CriticalSection) -> &mut T {
         let ptr = self.as_ptr();
         let opt_ref = unsafe { ptr.as_mut() };
-        opt_ref.unwrap()
+        unsafe { opt_ref.unwrap_unchecked() }
     }
 }

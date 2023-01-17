@@ -1,5 +1,5 @@
 use crate::println;
-use crate::thread::{get_current_thread, reschedule_threads, set_current_thread, ThreadControlBlock};
+use crate::thread::{reschedule_threads, ThreadControlBlock, CURRENT_THREAD};
 use core::arch::asm;
 use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
@@ -60,13 +60,17 @@ pub unsafe extern "C" fn exception_handler() {
          mflo $t0
          mfhi $t1
          mfc0 $t2, $12
-         mfc0 $t3, $13
+         # Set call_handlers 3rd argument
+         mfc0 $a2, $13
          mfc0 $t4, $14
          sw $t0, 124($k0)
          sw $t1, 128($k0)
          sw $t2, 132($k0)
-         sw $t3, 136($k0)
+         sw $a2, 136($k0)
          sw $t4, 140($k0)
+
+         # Set call_handlers 4th argument
+         move $a3, $k0
 
          # call_handlers is in ROM so we need jalr
          la $k1, call_handlers
@@ -150,28 +154,27 @@ pub unsafe extern "C" fn exception_handler() {
 }
 
 #[no_mangle]
-extern "C" fn call_handlers() -> u32 {
+#[inline(always)]
+extern "C" fn call_handlers(
+    r4: u32, r5: u32, cause: cop0::Cause, tcb: &mut ThreadControlBlock,
+) -> u32 {
     let mut cs = unsafe { CriticalSection::new() };
     let cs = &mut cs;
-    let tcb = get_current_thread(cs);
-    let excode = cop0::Cause::from_bits(*tcb.cop0_cause()).excode();
-    let switched = match excode {
-        Excode::Interrupt => irq_handler(cs),
-        Excode::Syscall => syscall_handler(tcb, cs),
+    let switched = match cause.excode() {
+        Excode::Interrupt => irq_handler(tcb, cs),
+        Excode::Syscall => syscall_handler(tcb, cs, r4, r5),
         Excode::Breakpoint => {
             println!("{:#x?}", tcb);
             *tcb.cop0_epc() += 4;
             false
         },
-        _ => {
-            println!("No handler installed for exception code {excode:?}");
-            false
-        },
+        _ => unsafe { core::hint::unreachable_unchecked() },
     };
     switched as u32
 }
 
-fn irq_handler(cs: &mut CriticalSection) -> bool {
+#[inline(always)]
+fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
     let mut stat = irq::Status::new();
     let mask = irq::Mask::new();
 
@@ -180,7 +183,7 @@ fn irq_handler(cs: &mut CriticalSection) -> bool {
         if let Some(irq) = irq {
             match irq {
                 IRQ::Vblank => {
-                    changed_threads = vblank_handler(cs);
+                    changed_threads = vblank_handler(tcb, cs);
                 },
                 _ => {
                     println!("No handler installed for interrupt {irq:?}");
@@ -192,32 +195,33 @@ fn irq_handler(cs: &mut CriticalSection) -> bool {
     changed_threads
 }
 
-fn syscall_handler(tcb: &mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
+#[inline(always)]
+fn syscall_handler(
+    tcb: &mut ThreadControlBlock, cs: &mut CriticalSection, r4: u32, r5: u32,
+) -> bool {
     *tcb.cop0_epc() += 4;
-    match tcb.regs[3] as u8 {
-        ENTER_CRITICAL_SECTION_NUM => {
-            cop0::Status::new()
-                .disable_interrupts()
-                .mask_interrupt(IntSrc::Hardware)
-                .store();
-        },
-        EXIT_CRITICAL_SECTION_NUM => {
-            cop0::Status::new()
-                .enable_interrupts()
-                .unmask_interrupt(IntSrc::Hardware)
-                .store();
-        },
-        CHANGE_THREAD_SUB_FN_NUM => {
-            // SAFETY: This is safe to call in the exception handler
-            set_current_thread(tcb.regs[4] as *mut ThreadControlBlock, cs);
-            return true
-        },
-        _ => (),
-    };
+    if r4 == ENTER_CRITICAL_SECTION_NUM as u32 {
+        cop0::Status::new()
+            .disable_interrupts()
+            .mask_interrupt(IntSrc::Hardware)
+            .store();
+    } else if r4 == EXIT_CRITICAL_SECTION_NUM as u32 {
+        cop0::Status::new()
+            .enable_interrupts()
+            .unmask_interrupt(IntSrc::Hardware)
+            .store();
+    } else if r4 == CHANGE_THREAD_SUB_FN_NUM as u32 {
+        // SAFETY: This is safe to call in the exception handler
+        *CURRENT_THREAD.borrow(cs) = r5 as *mut ThreadControlBlock;
+        return true
+    } else {
+        unsafe { core::hint::unreachable_unchecked() }
+    }
     false
 }
 
 // A vblank handler repurposed to schedule threads
-fn vblank_handler(cs: &mut CriticalSection) -> bool {
-    reschedule_threads(cs)
+#[inline(always)]
+fn vblank_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
+    reschedule_threads(tcb, cs)
 }

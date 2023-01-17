@@ -285,7 +285,16 @@ impl ThreadControlBlock {
     }
 }
 
-pub fn reschedule_threads(cs: &mut CriticalSection) -> bool {
+#[inline(always)]
+pub fn reschedule_threads(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> bool {
+    unsafe {
+        (*tcb).time_remaining -= 1;
+        if (*tcb).time_remaining != 0 {
+            return false
+        }
+        (*tcb).time_remaining = (*tcb).allocated_time;
+    }
+
     let threads = THREADS.borrow(cs);
     let unparked = |tcb: &&mut ThreadControlBlock| tcb.in_use && !tcb.parked;
 
@@ -293,21 +302,6 @@ pub fn reschedule_threads(cs: &mut CriticalSection) -> bool {
     if threads.iter_mut().filter(unparked).count() == 1 {
         return false
     }
-
-    let running_thread = threads.iter_mut().filter(|tcb| tcb.running).next().unwrap();
-    // If the running thread still has time then don't switch
-    running_thread.time_remaining -= 1;
-    if running_thread.time_remaining != 0 {
-        return false
-    }
-    // Reset the thread's time for next time it's selected
-    running_thread.time_remaining = running_thread.allocated_time;
-
-    // This is too unreliable...
-    // Check for stack overflow
-    //if running_thread.sp() < running_thread.stack as u32 {
-    //    panic!("Thread overflowed its stack");
-    //}
 
     let mut next_thread = 0;
     let mut set_next_thread = false;
@@ -325,33 +319,26 @@ pub fn reschedule_threads(cs: &mut CriticalSection) -> bool {
             tcb.running = false;
         }
     }
-    let next_tcb = threads
-        .iter_mut()
-        .filter(unparked)
-        .nth(next_thread)
-        .unwrap();
-    // Mark the next TCB as running
-    next_tcb.running = true;
-    set_current_thread(next_tcb, cs);
+    unsafe {
+        let next_tcb = threads
+            .iter_mut()
+            .filter(unparked)
+            .nth(next_thread)
+            .unwrap_unchecked();
+        // Mark the next TCB as running
+        next_tcb.running = true;
+        *CURRENT_THREAD.borrow(cs) = next_tcb;
+    }
     true
 }
 
+#[cold]
 pub fn init_threads(cs: &mut CriticalSection) {
-    set_current_thread(THREADS.borrow(cs).as_mut_ptr(), cs);
-}
-
-pub fn get_current_thread<'a>(cs: &mut CriticalSection) -> &'a mut ThreadControlBlock {
-    let ptr = CURRENT_THREAD.borrow(cs);
-    let tcb_ref = unsafe { ptr.as_mut() };
-    tcb_ref.unwrap()
-}
-
-pub fn set_current_thread(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) {
-    *CURRENT_THREAD.borrow(cs) = tcb;
+    *CURRENT_THREAD.borrow(cs) = THREADS.borrow(cs).as_mut_ptr();
 }
 
 #[no_mangle]
-static CURRENT_THREAD: Global<*mut ThreadControlBlock> = Global::new(ptr::null_mut());
+pub static CURRENT_THREAD: Global<*mut ThreadControlBlock> = Global::new(ptr::null_mut());
 
 static THREADS: Global<[ThreadControlBlock; 4]> = {
     let mut tcbs = [const { ThreadControlBlock::new([0; 31], [0; 3]) }; 4];
