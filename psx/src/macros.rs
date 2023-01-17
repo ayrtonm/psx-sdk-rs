@@ -9,7 +9,7 @@ macro_rules! file_size {
 
 /// Includes the specified file as a `&mut [u32; N]`.
 ///
-/// This is exactly like `include_bytes`, expect that it pads the size to a
+/// This is exactly like `include_bytes`, except that it pads the size to a
 /// multiple of 4 bytes to allow creating a mutable `u32` slice rather than a
 /// `u8` slice.
 #[macro_export]
