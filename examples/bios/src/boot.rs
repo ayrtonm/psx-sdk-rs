@@ -1,3 +1,4 @@
+use crate::global::Global;
 use crate::allocator::HEAP;
 use crate::exceptions::exception_vec;
 use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
@@ -103,12 +104,12 @@ fn init_ram(cs: &mut CriticalSection) {
     }
 
     const HEAP_SIZE: usize = 8 * KB / size_of::<u32>();
-    static mut HEAP_MEM: [u32; HEAP_SIZE] = [0; HEAP_SIZE];
+    static HEAP_MEM: Global<[u32; HEAP_SIZE]> = Global::new([0; HEAP_SIZE]);
     let heap = HEAP.borrow(cs);
+    let ptr = HEAP_MEM.borrow(cs).as_mut_ptr().cast();
+    let len = HEAP_MEM.borrow(cs).len() * size_of::<u32>();
+    println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
     unsafe {
-        let ptr = HEAP_MEM.as_mut_ptr().cast();
-        let len = HEAP_MEM.len() * size_of::<u32>();
-        println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
         heap.init(ptr, len);
     }
 }
