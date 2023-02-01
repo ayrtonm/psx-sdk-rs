@@ -32,7 +32,7 @@ pub unsafe extern "C" fn exception_handler() {
          .set noat
          la $k0, CURRENT_THREAD
          lw $k0, ($k0)
-         nop
+         mfc0 $k1, $14
 
          sw $at, ($k0)
 
@@ -62,7 +62,6 @@ pub unsafe extern "C" fn exception_handler() {
          mfhi $t1
          # Set call_handlers 3rd argument
          mfc0 $a2, $13
-         mfc0 $k1, $14
          sw $t0, 124($k0)
          sw $t1, 128($k0)
          sw $a2, 136($k0)
