@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 extern crate alloc;
+use crate::exceptions::{enqueue_handler, IRQCtxt};
 use crate::global::Global;
 use alloc::boxed::Box;
 use alloc::vec;
@@ -337,6 +338,12 @@ pub fn reschedule_threads(
 #[cold]
 pub fn init_threads(cs: &mut CriticalSection) {
     *CURRENT_THREAD.borrow(cs) = THREADS.borrow(cs).as_mut_ptr();
+
+    fn switch_threads(ctxt: IRQCtxt) -> *mut ThreadControlBlock {
+        reschedule_threads(ctxt.tcb, ctxt.cs)
+    }
+
+    enqueue_handler(switch_threads, cs);
 }
 
 #[no_mangle]

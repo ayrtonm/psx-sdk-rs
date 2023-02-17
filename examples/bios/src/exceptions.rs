@@ -1,12 +1,17 @@
+#![allow(dead_code)]
+
+extern crate alloc;
+use crate::global::Global;
 use crate::println;
-use crate::thread::{reschedule_threads, ThreadControlBlock, CURRENT_THREAD};
+use crate::thread::{ThreadControlBlock, CURRENT_THREAD};
+use alloc::boxed::Box;
 use core::arch::asm;
 use core::ptr;
 use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
 use psx::hw::Register;
-use psx::irq::IRQ;
+use psx::irq::{IRQ, NUM_IRQS};
 use psx::sys::kernel::*;
 use psx::CriticalSection;
 
@@ -154,7 +159,7 @@ extern "C" fn call_handlers(
     let mut cs = unsafe { CriticalSection::new() };
     let cs = &mut cs;
     let new_tcb = match cause.excode() {
-        Excode::Interrupt => irq_handler(tcb, cs),
+        Excode::Interrupt => call_irq_handlers(tcb, cs),
         Excode::Syscall | Excode::Breakpoint => {
             unsafe {
                 asm!("addiu $k1, 4");
@@ -171,25 +176,98 @@ extern "C" fn call_handlers(
     new_tcb
 }
 
+pub struct IRQCtxt<'a> {
+    pub tcb: *mut ThreadControlBlock,
+    pub stat: &'a mut irq::Status,
+    pub mask: &'a mut irq::Mask,
+    pub active_irqs: [Option<IRQ>; NUM_IRQS],
+    pub cs: &'a mut CriticalSection,
+}
+
+// It would've been nice to make this generic over the return type for handlers
+// that don't switch threads, but the handler chain is a linked list so it
+// would've either required `dyn IRQHandlerFn` or been all one type
+pub type IRQHandlerFn = fn(IRQCtxt) -> *mut ThreadControlBlock;
+
+pub struct IRQHandler {
+    func: IRQHandlerFn,
+    next: Option<Box<IRQHandler>>,
+}
+
+static HANDLER_CHAIN: Global<Option<IRQHandler>> = Global::new(None);
+
+// This inserts the new handler at the end so it's really more of a stack...
+pub fn enqueue_handler(func: IRQHandlerFn, cs: &mut CriticalSection) {
+    let chain = HANDLER_CHAIN.borrow(cs);
+    let handler = IRQHandler { func, next: None };
+    match chain {
+        None => *chain = Some(handler),
+        Some(root) => {
+            let mut next_handler = &mut root.next;
+            while let Some(ref mut after_next) = next_handler {
+                next_handler = &mut after_next.next;
+            }
+            *next_handler = Some(Box::new(handler));
+        },
+    }
+}
+
+pub fn dequeue_handler(cs: &mut CriticalSection) {
+    let chain = HANDLER_CHAIN.borrow(cs);
+    if let Some(root) = chain {
+        match &mut root.next {
+            None => *chain = None,
+            Some(_) => {
+                let mut next_handler = &mut root.next;
+                while let Some(ref mut after_next) = next_handler {
+                    next_handler = &mut after_next.next;
+                }
+                *next_handler = None;
+            },
+        }
+    };
+}
+
+static AUTO_ACK: Global<bool> = Global::new(true);
+
+pub fn irq_auto_ack(ack: bool, cs: &mut CriticalSection) {
+    *AUTO_ACK.borrow(cs) = ack;
+}
+
 #[inline(always)]
-fn irq_handler(tcb: *mut ThreadControlBlock, cs: &mut CriticalSection) -> *mut ThreadControlBlock {
+fn call_irq_handlers(
+    tcb: *mut ThreadControlBlock, cs: &mut CriticalSection,
+) -> *mut ThreadControlBlock {
     let mut stat = irq::Status::new();
-    let mask = irq::Mask::new();
+    let mut mask = irq::Mask::new();
 
     let mut new_tcb = ptr::null_mut();
-    for irq in mask.active_irqs(&stat) {
-        if let Some(irq) = irq {
-            match irq {
-                IRQ::Vblank => {
-                    new_tcb = vblank_handler(tcb, cs);
-                },
-                _ => {
-                    println!("No handler installed for interrupt {irq:?}");
-                },
-            }
+    if let Some(root) = HANDLER_CHAIN.borrow(cs) {
+        let active_irqs = mask.active_irqs(&stat);
+        let ctxt = IRQCtxt {
+            tcb,
+            stat: &mut stat,
+            mask: &mut mask,
+            active_irqs,
+            cs,
+        };
+        new_tcb = (root.func)(ctxt);
+        let mut next_handler = &root.next;
+        while let Some(next) = next_handler {
+            let ctxt = IRQCtxt {
+                tcb: new_tcb,
+                stat: &mut stat,
+                mask: &mut mask,
+                active_irqs,
+                cs,
+            };
+            new_tcb = (next.func)(ctxt);
+            next_handler = &next.next;
         }
+    };
+    if *AUTO_ACK.borrow(cs) {
+        stat.ack_all().store();
     }
-    stat.ack_all().store();
     new_tcb
 }
 
@@ -214,12 +292,4 @@ fn syscall_handler(cs: &mut CriticalSection, r4: u32, r5: u32) -> *mut ThreadCon
         unsafe { core::hint::unreachable_unchecked() }
     }
     ptr::null_mut()
-}
-
-// A vblank handler repurposed to schedule threads
-#[inline(always)]
-fn vblank_handler(
-    tcb: *mut ThreadControlBlock, cs: &mut CriticalSection,
-) -> *mut ThreadControlBlock {
-    reschedule_threads(tcb, cs)
 }
