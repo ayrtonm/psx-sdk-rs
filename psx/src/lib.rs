@@ -128,7 +128,13 @@ pub mod constants {
 
 /// Interrupt request types
 pub mod irq {
+    use core::mem::variant_count;
+
+    /// The number of different interrupt requests
+    pub const NUM_IRQS: usize = variant_count::<IRQ>();
+
     /// An interrupt request
+    #[repr(u16)]
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum IRQ {
         /// vertical blank interrupt request (NTSC = 60Hz, PAL = 50Hz)

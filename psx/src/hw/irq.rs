@@ -1,14 +1,12 @@
 //! Interrupt request and acknowledge
 use crate::hw::{MemRegister, Register};
-use crate::irq::{ALL_IRQS, IRQ};
-use core::mem::variant_count;
+use crate::irq::{ALL_IRQS, IRQ, NUM_IRQS};
 
 /// Interrupt status register
 pub type Status = MemRegister<u16, 0x1F80_1070>;
 /// Interrupt mask register
 pub type Mask = MemRegister<u16, 0x1F80_1074>;
 
-const NUM_IRQS: usize = variant_count::<IRQ>();
 const ALL_IRQS_BITS: u16 = (1 << NUM_IRQS) - 1;
 
 impl Status {
