@@ -53,7 +53,9 @@ pub type Status = MemRegister<u16, 0x1F80_1070>;
 /// Interrupt mask register
 pub type Mask = MemRegister<u16, 0x1F80_1074>;
 
-/// A bitmask for the currently requested interrupts
+/// A bitmask of interrupts that are enabled and requested
+///
+/// Modifying this value does not affect MMIO registers.
 #[derive(Clone, Copy, Debug)]
 pub struct Requested(u16);
 
@@ -62,11 +64,11 @@ impl Requested {
     pub const fn new(value: u16) -> Self {
         Self(value)
     }
-    /// Set the interrupt requested bit for the given IRQ
+    /// Set the bitmask's interrupt requested bit
     pub fn set(&mut self, irq: IRQ) {
         self.0 |= 1 << (irq as u16);
     }
-    /// Clear the interrupt requested bit for the given IRQ
+    /// Clear the bitmask's interrupt requested bit
     pub fn clear(&mut self, irq: IRQ) {
         self.0 &= !(1 << (irq as u16));
     }
@@ -163,11 +165,8 @@ impl Mask {
         self.clear_bits(ALL_IRQS_BITS)
     }
 
-    /// Returns an array of IRQs that are both enabled and requested.
-    ///
-    /// This returns an array to avoid dynamic allocation. Elements that are
-    /// `None` may be ignored.
-    pub fn active_irqs(&self, stat: &Status) -> Requested {
+    /// Returns a bitmask of interrupts that are enabled and requested.
+    pub fn get_requested(&self, stat: &Status) -> Requested {
         Requested(self.to_bits() & stat.to_bits())
     }
 }

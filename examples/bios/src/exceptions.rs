@@ -181,7 +181,7 @@ pub struct IRQCtxt<'a> {
     pub tcb: *mut ThreadControlBlock,
     pub stat: &'a mut irq::Status,
     pub mask: &'a mut irq::Mask,
-    pub active_irqs: irq::Requested,
+    pub initial_irqs: irq::Requested,
     pub cs: &'a mut CriticalSection,
 }
 
@@ -224,12 +224,12 @@ fn call_irq_handlers(
 
     let mut new_tcb = ptr::null_mut();
     for handler in HANDLER_CHAIN.borrow(cs) {
-        let active_irqs = mask.active_irqs(&stat);
+        let initial_irqs = mask.get_requested(&stat);
         let ctxt = IRQCtxt {
             tcb,
             stat: &mut stat,
             mask: &mut mask,
-            active_irqs,
+            initial_irqs,
             cs,
         };
         if let Some(tcb) = NonNull::new(handler(ctxt)) {
