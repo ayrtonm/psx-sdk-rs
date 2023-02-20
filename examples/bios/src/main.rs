@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(linked_list_remove)]
 #![feature(asm_experimental_arch)]
 #![feature(asm_const)]
 #![feature(naked_functions)]

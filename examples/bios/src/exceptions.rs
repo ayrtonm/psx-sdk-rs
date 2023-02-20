@@ -4,7 +4,7 @@ extern crate alloc;
 use crate::global::Global;
 use crate::println;
 use crate::thread::{ThreadControlBlock, CURRENT_THREAD};
-use alloc::boxed::Box;
+use alloc::collections::LinkedList;
 use core::arch::asm;
 use core::ptr;
 use core::ptr::NonNull;
@@ -187,46 +187,21 @@ pub struct IRQCtxt<'a> {
 
 // It would've been nice to make this generic over the return type for handlers
 // that don't switch threads, but the handler chain is a linked list so it
-// would've either required `dyn IRQHandlerFn` or been all one type
-pub type IRQHandlerFn = fn(IRQCtxt) -> *mut ThreadControlBlock;
+// would've either required `dyn IRQHandler` or been all one type
+pub type IRQHandler = fn(IRQCtxt) -> *mut ThreadControlBlock;
 
-pub struct IRQHandler {
-    func: IRQHandlerFn,
-    next: Option<Box<IRQHandler>>,
+static HANDLER_CHAIN: Global<LinkedList<IRQHandler>> = Global::new(LinkedList::new());
+
+// Inserts a handler that calls func at the beginning of the chain
+pub fn enqueue_handler(func: IRQHandler, cs: &mut CriticalSection) {
+    HANDLER_CHAIN.borrow(cs).push_front(func);
 }
 
-static HANDLER_CHAIN: Global<Option<IRQHandler>> = Global::new(None);
-
-// This inserts the new handler at the end so it's really more of a stack...
-pub fn enqueue_handler(func: IRQHandlerFn, cs: &mut CriticalSection) {
+pub fn dequeue_handler(func: IRQHandler, cs: &mut CriticalSection) {
     let chain = HANDLER_CHAIN.borrow(cs);
-    let handler = IRQHandler { func, next: None };
-    match chain {
-        None => *chain = Some(handler),
-        Some(root) => {
-            let mut next_handler = &mut root.next;
-            while let Some(ref mut after_next) = next_handler {
-                next_handler = &mut after_next.next;
-            }
-            *next_handler = Some(Box::new(handler));
-        },
+    if let Some(n) = chain.iter().position(|&h| h as usize == func as usize) {
+        chain.remove(n);
     }
-}
-
-pub fn dequeue_handler(cs: &mut CriticalSection) {
-    let chain = HANDLER_CHAIN.borrow(cs);
-    if let Some(root) = chain {
-        match &mut root.next {
-            None => *chain = None,
-            Some(_) => {
-                let mut next_handler = &mut root.next;
-                while let Some(ref mut after_next) = next_handler {
-                    next_handler = &mut after_next.next;
-                }
-                *next_handler = None;
-            },
-        }
-    };
 }
 
 static AUTO_ACK: Global<irq::Requested> = Global::new(irq::Requested::new(0));
@@ -248,7 +223,7 @@ fn call_irq_handlers(
     let mut mask = irq::Mask::new();
 
     let mut new_tcb = ptr::null_mut();
-    if let Some(root) = HANDLER_CHAIN.borrow(cs) {
+    for handler in HANDLER_CHAIN.borrow(cs) {
         let active_irqs = mask.active_irqs(&stat);
         let ctxt = IRQCtxt {
             tcb,
@@ -257,24 +232,10 @@ fn call_irq_handlers(
             active_irqs,
             cs,
         };
-        if let Some(tcb) = NonNull::new((root.func)(ctxt)) {
+        if let Some(tcb) = NonNull::new(handler(ctxt)) {
             new_tcb = tcb.as_ptr();
-        };
-        let mut next_handler = &root.next;
-        while let Some(next) = next_handler {
-            let ctxt = IRQCtxt {
-                tcb: new_tcb,
-                stat: &mut stat,
-                mask: &mut mask,
-                active_irqs,
-                cs,
-            };
-            if let Some(tcb) = NonNull::new((next.func)(ctxt)) {
-                new_tcb = tcb.as_ptr();
-            };
-            next_handler = &next.next;
         }
-    };
+    }
     let mut auto_ack = false;
     for irq in AUTO_ACK.borrow(cs).iter() {
         stat.ack(irq);
