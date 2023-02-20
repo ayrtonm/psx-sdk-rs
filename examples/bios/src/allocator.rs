@@ -4,7 +4,7 @@ use core::mem::size_of;
 use core::ptr;
 use core::ptr::NonNull;
 use linked_list_allocator::Heap;
-use psx::hw::{cop0, Register};
+use psx::sys;
 
 #[global_allocator]
 pub static HEAP: Global<Heap> = Global::new(Heap::empty());
@@ -75,8 +75,7 @@ trait CAlloc: GlobalAlloc {
 
 unsafe impl GlobalAlloc for Global<Heap> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let ptr =
-            cop0::Status::new().critical_section(|cs| self.borrow(cs).allocate_first_fit(layout));
+        let ptr = sys::critical_section(|cs| self.borrow(cs).allocate_first_fit(layout));
         match ptr {
             Ok(nonnull) => nonnull.as_ptr(),
             Err(_) => ptr::null_mut(),
@@ -88,14 +87,14 @@ unsafe impl GlobalAlloc for Global<Heap> {
             Some(ptr) => ptr,
             None => return,
         };
-        cop0::Status::new().critical_section(|cs| self.borrow(cs).deallocate(ptr, layout))
+        sys::critical_section(|cs| self.borrow(cs).deallocate(ptr, layout))
     }
 }
 
 impl CAlloc for Global<Heap> {}
 
 pub fn init_heap(addr: *mut u8, len: usize) -> u32 {
-    cop0::Status::new().critical_section(|cs| {
+    sys::critical_section(|cs| {
         let heap = HEAP.borrow(cs);
         // SAFETY: Let's hope the user passed an unused region of memory
         unsafe { heap.init(addr, len) }
