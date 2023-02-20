@@ -80,6 +80,11 @@ impl Requested {
             iter_idx: 0,
         }
     }
+
+    /// Checks if the given IRQ is in the requested bitmask
+    pub fn contains(&self, irq: IRQ) -> bool {
+        self.0 & 1 << (irq as u16) != 0
+    }
 }
 
 /// An iterator over requested interrupt bits in a bitmask
