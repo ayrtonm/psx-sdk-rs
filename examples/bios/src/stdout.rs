@@ -56,9 +56,13 @@ pub fn printf(fmt_str: &CStr, arg0: u32, arg1: u32, arg2: u32) -> u32 {
             Some(idx) => {
                 args_used += 1;
                 match b {
-                    b'd' | b'i' | b'D' => print!("{}", args[idx]),
+                    b'c' => print!("{}", args[idx] as u8 as char),
+                    b'd' | b'i' => print!("{}", args[idx] as i32),
+                    b'u' => print!("{}", args[idx]),
                     b'x' => print!("{:x}", args[idx]),
                     b'X' => print!("{:X}", args[idx]),
+                    b'p' => print!("{:p}", args[idx] as *const ()),
+                    b'f' => print!("{}", args[idx] as f32),
                     b's' => {
                         // SAFETY: Let's hope the user passed in a null-terminated string
                         let str_arg = unsafe { CStr::from_ptr(args[idx] as *const i8) };
