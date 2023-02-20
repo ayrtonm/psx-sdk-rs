@@ -9,7 +9,7 @@ use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use core::mem::{size_of, transmute};
 use psx::constants::*;
-use psx::irq::IRQ;
+use psx::hw::irq::IRQ;
 use psx::CriticalSection;
 
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script

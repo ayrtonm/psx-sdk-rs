@@ -11,8 +11,8 @@ use core::ptr::NonNull;
 use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
+use psx::hw::irq::IRQ;
 use psx::hw::Register;
-use psx::irq::IRQ;
 use psx::sys::kernel::*;
 use psx::CriticalSection;
 

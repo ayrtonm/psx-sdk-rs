@@ -3,7 +3,7 @@ use crate::hw::gpu::{GP0Command, GP0};
 use crate::hw::Register;
 
 impl GP0 {
-    ///  Requests interrupt [`IRQ::GPU`][crate::irq::IRQ::GPU].
+    ///  Requests interrupt [`IRQ::GPU`][crate::hw::irq::IRQ::GPU].
     pub fn interrupt_request(&mut self) -> &mut Self {
         self.assign(0x1F << 24).store();
         self

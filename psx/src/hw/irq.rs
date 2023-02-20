@@ -1,6 +1,52 @@
 //! Interrupt request and acknowledge
 use crate::hw::{MemRegister, Register};
-use crate::irq::{ALL_IRQS, IRQ, NUM_IRQS};
+use core::mem::variant_count;
+
+/// The number of different interrupt requests
+pub const NUM_IRQS: usize = variant_count::<IRQ>();
+
+/// An interrupt request
+#[repr(u16)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IRQ {
+    /// vertical blank interrupt request (NTSC = 60Hz, PAL = 50Hz)
+    Vblank = 0,
+    /// GPU interrupt requested via the GP0(1Fh) command
+    GPU,
+    /// CDROM interrupt request
+    CDROM,
+    /// DMA interrupt request
+    DMA,
+    /// Timer 0 (dot clock or sysclock)
+    Timer0,
+    /// Timer 1 (Hblank or sysclock)
+    Timer1,
+    /// Timer 2 (sysclock or fractional sysclock)
+    Timer2,
+    /// Controller and memory card byte received
+    ControllerMemoryCard,
+    /// Serial IO port
+    SIO,
+    /// Sound processing unit
+    SPU,
+    /// Secondary controller interrupt request
+    ControllerPIO,
+}
+
+/// All the interrupt requests from the lowest bit to the highest
+pub const ALL_IRQS: [IRQ; 11] = [
+    IRQ::Vblank,
+    IRQ::GPU,
+    IRQ::CDROM,
+    IRQ::DMA,
+    IRQ::Timer0,
+    IRQ::Timer1,
+    IRQ::Timer2,
+    IRQ::ControllerMemoryCard,
+    IRQ::SIO,
+    IRQ::SPU,
+    IRQ::ControllerPIO,
+];
 
 /// Interrupt status register
 pub type Status = MemRegister<u16, 0x1F80_1070>;

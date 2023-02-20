@@ -5,9 +5,9 @@ use crate::gpu::primitives::Sprt8;
 use crate::gpu::{Clut, Color, DMAMode, Depth, DispEnv, DrawEnv, Packet, TexColor, TexCoord,
                  TexPage, Vertex, VertexError, VideoMode, GPU_BUFFER_SIZE};
 use crate::hw::gpu::{GP0Command, GP0, GP1};
+use crate::hw::irq::IRQ;
 use crate::hw::{gpu, irq, Register};
 use crate::include_tim;
-use crate::irq::IRQ;
 use core::fmt;
 use core::mem::size_of;
 
