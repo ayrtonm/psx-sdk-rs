@@ -7,6 +7,7 @@ use crate::thread::{ThreadControlBlock, CURRENT_THREAD};
 use alloc::boxed::Box;
 use core::arch::asm;
 use core::ptr;
+use core::ptr::NonNull;
 use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
@@ -256,7 +257,9 @@ fn call_irq_handlers(
             active_irqs,
             cs,
         };
-        new_tcb = (root.func)(ctxt);
+        if let Some(tcb) = NonNull::new((root.func)(ctxt)) {
+            new_tcb = tcb.as_ptr();
+        };
         let mut next_handler = &root.next;
         while let Some(next) = next_handler {
             let ctxt = IRQCtxt {
@@ -266,7 +269,9 @@ fn call_irq_handlers(
                 active_irqs,
                 cs,
             };
-            new_tcb = (next.func)(ctxt);
+            if let Some(tcb) = NonNull::new((next.func)(ctxt)) {
+                new_tcb = tcb.as_ptr();
+            };
             next_handler = &next.next;
         }
     };
