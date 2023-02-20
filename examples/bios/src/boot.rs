@@ -30,7 +30,6 @@ unsafe extern "C" fn boot() -> ! {
 
 // The stack pointer is now initialized so this doesn't have to be a naked
 // function.
-#[cold]
 #[no_mangle]
 extern "C" fn start() -> ! {
     let mut cs = unsafe { CriticalSection::new() };
@@ -51,7 +50,6 @@ extern "C" fn start() -> ! {
     loop {}
 }
 
-#[cold]
 fn init_vectors() {
     // Write to the fn vectors
     let a0_vec = A0_VEC + KSEG0;
@@ -75,7 +73,6 @@ fn init_vectors() {
     println!("Wrote RAM exception vector");
 }
 
-#[cold]
 fn init_ram(cs: &mut CriticalSection) {
     extern "C" {
         // The linker script is set up so that these refer to the load addresses

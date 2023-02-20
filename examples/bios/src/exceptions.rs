@@ -280,6 +280,7 @@ fn call_irq_handlers(
         stat.ack(irq);
         auto_ack = true;
     }
+    // This volatile write only needs to happen if there was an auto ack
     if auto_ack {
         stat.store();
     }

@@ -335,7 +335,6 @@ pub fn reschedule_threads(
     next_tcb
 }
 
-#[cold]
 pub fn init_threads(cs: &mut CriticalSection) {
     *CURRENT_THREAD.borrow(cs) = THREADS.borrow(cs).as_mut_ptr();
 
