@@ -39,6 +39,7 @@ extern "C" fn start() -> ! {
     init_ram(cs);
     init_threads(cs);
     irq_auto_ack(IRQ::Vblank, true, cs);
+    irq_auto_ack(IRQ::GPU, true, cs);
     main();
 
     // TODO: Add a proper executable loader
