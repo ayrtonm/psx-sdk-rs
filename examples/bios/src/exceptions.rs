@@ -11,7 +11,7 @@ use psx::hw::cop0;
 use psx::hw::cop0::{Excode, IntSrc};
 use psx::hw::irq;
 use psx::hw::Register;
-use psx::irq::{IRQ, NUM_IRQS};
+use psx::irq::IRQ;
 use psx::sys::kernel::*;
 use psx::CriticalSection;
 
@@ -180,7 +180,7 @@ pub struct IRQCtxt<'a> {
     pub tcb: *mut ThreadControlBlock,
     pub stat: &'a mut irq::Status,
     pub mask: &'a mut irq::Mask,
-    pub active_irqs: [Option<IRQ>; NUM_IRQS],
+    pub active_irqs: irq::Requested,
     pub cs: &'a mut CriticalSection,
 }
 
@@ -228,10 +228,15 @@ pub fn dequeue_handler(cs: &mut CriticalSection) {
     };
 }
 
-static AUTO_ACK: Global<bool> = Global::new(true);
+static AUTO_ACK: Global<irq::Requested> = Global::new(irq::Requested::new(0));
 
-pub fn irq_auto_ack(ack: bool, cs: &mut CriticalSection) {
-    *AUTO_ACK.borrow(cs) = ack;
+pub fn irq_auto_ack(irq: IRQ, auto_ack: bool, cs: &mut CriticalSection) {
+    let irqs = AUTO_ACK.borrow(cs);
+    if auto_ack {
+        irqs.set(irq);
+    } else {
+        irqs.clear(irq);
+    }
 }
 
 #[inline(always)]
@@ -265,8 +270,13 @@ fn call_irq_handlers(
             next_handler = &next.next;
         }
     };
-    if *AUTO_ACK.borrow(cs) {
-        stat.ack_all().store();
+    let mut auto_ack = false;
+    for irq in AUTO_ACK.borrow(cs).iter() {
+        stat.ack(irq);
+        auto_ack = true;
+    }
+    if auto_ack {
+        stat.store();
     }
     new_tcb
 }

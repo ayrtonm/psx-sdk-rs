@@ -1,5 +1,5 @@
 use crate::allocator::HEAP;
-use crate::exceptions::exception_vec;
+use crate::exceptions::{exception_vec, irq_auto_ack};
 use crate::global::Global;
 use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
 use crate::main;
@@ -9,6 +9,7 @@ use core::arch::asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use core::mem::{size_of, transmute};
 use psx::constants::*;
+use psx::irq::IRQ;
 use psx::CriticalSection;
 
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script
@@ -38,6 +39,7 @@ extern "C" fn start() -> ! {
     init_vectors();
     init_ram(cs);
     init_threads(cs);
+    irq_auto_ack(IRQ::Vblank, true, cs);
     main();
 
     // TODO: Add a proper executable loader
