@@ -26,8 +26,8 @@ fn main() {
     println!("Starting main BIOS function");
     let version_str = get_system_version();
     let bios_date = get_system_date();
-    println!("{:?}", version_str);
-    println!("{:x?}", bios_date);
+    println!("{version_str:?}");
+    println!("{bios_date:x?}");
 
     cop0::Status::new()
         .enable_interrupts()

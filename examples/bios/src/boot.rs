@@ -89,10 +89,8 @@ fn init_ram(cs: &mut CriticalSection) {
         let dst = (KSEG0 + 0x100) as *mut u32;
         let src = &__data_start as *const u32;
         println!(
-            "Copying {} bytes from {:p} to {:p} to initialize .data",
+            "Copying {} bytes from {src:p} to {dst:p} to initialize .data",
             len * 4,
-            src,
-            dst
         );
         volatile_copy_nonoverlapping_memory(dst, src, len);
 
@@ -101,10 +99,8 @@ fn init_ram(cs: &mut CriticalSection) {
         let bss_len = (bss_end - bss_start) / 4;
         let bss_dst = &mut __bss_start as *mut u32;
         println!(
-            "Zeroing out {} bytes from {:x} to {:x} to initialize .bss",
+            "Zeroing out {} bytes from {bss_start:x} to {bss_end:x} to initialize .bss",
             bss_len * 4,
-            bss_start,
-            bss_end
         );
         volatile_set_memory(bss_dst, 0, bss_len);
     }
@@ -114,7 +110,7 @@ fn init_ram(cs: &mut CriticalSection) {
     let heap = HEAP.borrow(cs);
     let ptr = HEAP_MEM.borrow(cs).as_mut_ptr().cast();
     let len = HEAP_MEM.borrow(cs).len() * size_of::<u32>();
-    println!("Initializing the heap at {:p} ({} bytes)", ptr, len);
+    println!("Initializing the heap at {ptr:p} ({len} bytes)");
     unsafe {
         heap.init(ptr, len);
     }
