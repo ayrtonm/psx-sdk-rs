@@ -41,7 +41,7 @@ pub struct Framebuffer {
 impl Default for Framebuffer {
     fn default() -> Self {
         // SAFETY: The framebuffer parameters are valid.
-        unsafe { Self::new((0, 0), (0, 240), (320, 240), None).unwrap_unchecked() }
+        unsafe { Self::new((0, 0), (0, 240), (320, 240), VideoMode::NTSC, None).unwrap_unchecked() }
     }
 }
 
@@ -53,7 +53,8 @@ impl Framebuffer {
     /// `None`). Also resets the GPU, enables DMA to GP0 on the GPU-side and
     /// enables the display.
     pub fn new(
-        buf0: (i16, i16), buf1: (i16, i16), res: (i16, i16), bg_color: Option<Color>,
+        buf0: (i16, i16), buf1: (i16, i16), res: (i16, i16), video_mode: VideoMode,
+        bg_color: Option<Color>,
     ) -> Result<Self, VertexError> {
         let mut fb = Framebuffer {
             // These registers are read-only
@@ -63,7 +64,10 @@ impl Framebuffer {
             // wait_vblank will reload this anyway
             irq_status: irq::Status::skip_load(),
             irq_mask: irq::Mask::new(),
-            disp_envs: [DispEnv::new(buf0, res)?, DispEnv::new(buf1, res)?],
+            disp_envs: [
+                DispEnv::new(buf0, res, video_mode)?,
+                DispEnv::new(buf1, res, video_mode)?,
+            ],
             draw_envs: [
                 Packet::new(DrawEnv::new(buf1, res, bg_color)?),
                 Packet::new(DrawEnv::new(buf0, res, bg_color)?),
@@ -73,7 +77,7 @@ impl Framebuffer {
         GP1::skip_load()
             .reset_gpu()
             .dma_mode(Some(DMAMode::GP0))
-            .display_mode(res, VideoMode::NTSC, Depth::Bits15, false)?
+            .display_mode(res, video_mode, Depth::Bits15, false)?
             .enable_display(true);
         fb.irq_mask.enable_irq(IRQ::Vblank).store();
         //fb.wait_vblank();

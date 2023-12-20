@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+use psx::gpu::VideoMode;
 use psx::{dprintln, Framebuffer};
 
 #[no_mangle]
@@ -9,7 +10,7 @@ fn main() {
     let buf1 = (0, 240);
     let res = (320, 240);
     let txt_offset = (0, 8);
-    let mut fb = Framebuffer::new(buf0, buf1, res, None).unwrap();
+    let mut fb = Framebuffer::new(buf0, buf1, res, VideoMode::NTSC, None).unwrap();
     let font = fb.load_default_font();
     let mut txt = font.new_text_box(txt_offset, res);
     loop {

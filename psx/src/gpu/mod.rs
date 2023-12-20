@@ -187,11 +187,18 @@ pub struct DispEnv {
 impl DispEnv {
     /// Creates a new display buffer at `offset` in VRAM with the specified
     /// `size`.
-    pub fn new(offset: (i16, i16), size: (i16, i16)) -> Result<Self, VertexError> {
+    pub fn new(
+        offset: (i16, i16), size: (i16, i16), video_mode: VideoMode,
+    ) -> Result<Self, VertexError> {
         let offset = Vertex::new(offset);
         let size = Vertex::new(size);
         let offset = PackedVertex::try_from(offset)?;
-        let ntsc_vrange = Vertex(0x88 - (240 / 2), 0x88 + (240 / 2));
+        let (center, range) = if video_mode == VideoMode::NTSC {
+            (0x88, 0x240)
+        } else {
+            (0xA3, 0x256)
+        };
+        let ntsc_vrange = Vertex(center - (range / 2), center + (range / 2));
         let hrange = Vertex(0x260, 0x260 + (size.0 * 8));
 
         let horizontal_range = PackedVertex::try_from(hrange)?;
