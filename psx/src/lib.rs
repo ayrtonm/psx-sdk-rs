@@ -51,7 +51,7 @@
 // Used in psx::hw::irq
 #![feature(variant_count)]
 // Used in psx::sys::fs
-#![feature(cstr_from_bytes_until_nul, pointer_is_aligned)]
+#![feature(pointer_is_aligned)]
 // Used for crate tests
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test::runner)]
