@@ -172,7 +172,7 @@ extern "C" fn call_handlers(
                 ptr::null_mut()
             }
         },
-        _ => unsafe { core::hint::unreachable_unchecked() },
+        _ => unreachable!(""),
     };
     new_tcb
 }
@@ -266,7 +266,7 @@ fn syscall_handler(cs: &mut CriticalSection, r4: u32, r5: u32) -> *mut ThreadCon
         *CURRENT_THREAD.borrow(cs) = new_tcb;
         return new_tcb
     } else {
-        unsafe { core::hint::unreachable_unchecked() }
+        unreachable!("")
     }
     ptr::null_mut()
 }
