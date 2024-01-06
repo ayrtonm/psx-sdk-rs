@@ -194,9 +194,9 @@ impl DispEnv {
         let size = Vertex::new(size);
         let offset = PackedVertex::try_from(offset)?;
         let (center, range) = if video_mode == VideoMode::NTSC {
-            (0x88, 0x240)
+            (0x88, 240)
         } else {
-            (0xA3, 0x256)
+            (0xA3, 256)
         };
         let ntsc_vrange = Vertex(center - (range / 2), center + (range / 2));
         let hrange = Vertex(0x260, 0x260 + (size.0 * 8));
