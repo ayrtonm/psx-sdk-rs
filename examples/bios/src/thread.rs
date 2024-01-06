@@ -15,7 +15,6 @@ use core::ptr;
 use core::slice;
 use psx::constants::KB;
 use psx::hw::{cop0, Register};
-use psx::sys;
 use psx::sys::kernel::psx_change_thread_sub_fn;
 use psx::CriticalSection;
 
@@ -73,7 +72,7 @@ pub fn resume_main() {
 }
 
 pub fn park() {
-    sys::critical_section(|cs| {
+    cop0::Status::new().critical_section(|cs| {
         let threads = THREADS.borrow(cs);
         let idx = threads.iter().position(|tcb| tcb.running).unwrap();
         let mut current_tcb = &mut threads[idx];
@@ -154,7 +153,7 @@ impl<A: Send, R: Send> Thread<A, R> {
     }
 
     pub fn unpark(&mut self) {
-        sys::critical_section(|cs| {
+        cop0::Status::new().critical_section(|cs| {
             let tcb = &mut THREADS.borrow(cs)[self.handle.get_idx()];
             tcb.parked = false;
         });
@@ -162,7 +161,7 @@ impl<A: Send, R: Send> Thread<A, R> {
 
     pub fn join(mut self) -> R {
         self.resume();
-        let regs = sys::critical_section(|cs| {
+        let regs = cop0::Status::new().critical_section(|cs| {
             // SAFETY: static mut access in a critical section
             let threads = THREADS.borrow(cs);
             let tcb = &threads[self.handle.get_idx()];
@@ -362,9 +361,10 @@ static THREADS: Global<[ThreadControlBlock; 4]> = {
 pub fn open_thread(
     pc: *const u32, sp: *mut u32, gp: *mut u32, args: [u32; 4], stack: *mut u32,
 ) -> ThreadHandle {
-    let old_sr = cop0::Status::new().to_bits();
+    let mut sr = cop0::Status::new();
+    let old_sr = sr.to_bits();
     let old_cause = cop0::Cause::new().to_bits();
-    sys::critical_section(|cs| {
+    sr.critical_section(|cs| {
         let threads = THREADS.borrow(cs);
         for (i, tcb) in threads.iter_mut().enumerate() {
             if !tcb.in_use {
@@ -398,7 +398,7 @@ pub fn open_thread(
 
 pub fn change_thread(handle: ThreadHandle, set_ra: bool) -> u32 {
     let new = handle.get_idx();
-    sys::critical_section(|cs| {
+    cop0::Status::new().critical_section(|cs| {
         let threads = THREADS.borrow(cs);
         if threads[new].in_use {
             let old = threads.iter().position(|tcb| tcb.running).unwrap();
@@ -421,7 +421,7 @@ pub fn change_thread(handle: ThreadHandle, set_ra: bool) -> u32 {
 
 pub fn close_thread(handle: ThreadHandle) -> u32 {
     let idx = handle.get_idx();
-    sys::critical_section(|cs| {
+    cop0::Status::new().critical_section(|cs| {
         let mut thread = &mut THREADS.borrow(cs)[idx];
         thread.in_use = false;
         thread.running = false;
