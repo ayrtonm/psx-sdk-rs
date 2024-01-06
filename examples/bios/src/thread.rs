@@ -75,7 +75,7 @@ pub fn park() {
     cop0::Status::new().critical_section(|cs| {
         let threads = THREADS.borrow(cs);
         let idx = threads.iter().position(|tcb| tcb.running).unwrap();
-        let mut current_tcb = &mut threads[idx];
+        let current_tcb = &mut threads[idx];
         current_tcb.parked = true;
     });
 }
@@ -420,7 +420,7 @@ pub fn change_thread(handle: ThreadHandle, set_ra: bool) -> u32 {
 pub fn close_thread(handle: ThreadHandle) -> u32 {
     let idx = handle.get_idx();
     cop0::Status::new().critical_section(|cs| {
-        let mut thread = &mut THREADS.borrow(cs)[idx];
+        let thread = &mut THREADS.borrow(cs)[idx];
         thread.in_use = false;
         thread.running = false;
         thread.parked = true;
