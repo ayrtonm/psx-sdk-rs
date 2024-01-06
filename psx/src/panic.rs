@@ -1,7 +1,28 @@
+use crate::sys;
 use crate::{dprintln, println, Framebuffer};
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
+    // SAFETY: This should not return so we don't care about handling nested
+    // exceptions properly
+    unsafe {
+        sys::critical_section(|_| {
+            // SAFETY: We're in a critical section so no other threads can get a
+            // mutable reference. The previous (nested) call to panic, if any,
+            // that accesses IN_PANIC won't hold onto a reference since we drop
+            // them before calling display_panic.
+            static mut IN_PANIC: bool = false;
+            if IN_PANIC {
+                println!("Panicked in panic!");
+                loop {}
+            }
+            IN_PANIC = true;
+            display_panic(info)
+        })
+    }
+}
+
+fn display_panic(info: &core::panic::PanicInfo) -> ! {
     // Print to stdout unless no_panic is set. This includes the default case since
     // printing to the screen during a panic is not always reliable.
     #[cfg(not(feature = "no_panic"))]
