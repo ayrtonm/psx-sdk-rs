@@ -322,13 +322,11 @@ pub fn reschedule_threads(
             tcb.running = false;
         }
     }
-    let next_tcb = unsafe {
-        threads
-            .iter_mut()
-            .filter(unparked)
-            .nth(next_thread)
-            .unwrap_unchecked()
-    };
+    let next_tcb = threads
+        .iter_mut()
+        .filter(unparked)
+        .nth(next_thread)
+        .unwrap();
     // Mark the next TCB as running
     next_tcb.running = true;
     *CURRENT_THREAD.borrow(cs) = next_tcb;
