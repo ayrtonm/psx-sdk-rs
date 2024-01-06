@@ -14,7 +14,12 @@ pub mod tty;
 
 /// Calls the given function in an interrupt-free critical section using BIOS
 /// syscalls.
-pub fn critical_section<F: FnMut(&mut CriticalSection) -> R, R>(mut f: F) -> R {
+///
+/// # Safety
+///
+/// Exception handlers might not support nested exceptions so make sure to not
+/// call this from a critical section.
+pub unsafe fn critical_section<F: FnMut(&mut CriticalSection) -> R, R>(mut f: F) -> R {
     let changed_state = unsafe { kernel::psx_enter_critical_section() };
     // SAFETY: We are in a critical section so we can create this
     let mut cs = unsafe { CriticalSection::new() };
