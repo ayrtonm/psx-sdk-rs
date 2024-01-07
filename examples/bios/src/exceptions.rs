@@ -162,8 +162,10 @@ extern "C" fn call_handlers(
     let new_tcb = match cause.excode() {
         Excode::Interrupt => call_irq_handlers(tcb, cs),
         Excode::Syscall | Excode::Breakpoint => {
-            unsafe {
-                asm!("addiu $k1, 4");
+            if cause.branch_delay_slot() {
+                unsafe {
+                    asm!("addiu $k1, 4");
+                }
             }
             if cause.excode() == Excode::Syscall {
                 syscall_handler(cs, r4, r5)
