@@ -38,7 +38,7 @@ pub fn init_pad(buf1: &mut [u16], buf2: &mut [u16]) -> u32 {
     };
     let ctxt = GamepadCtxt {
         buffer1: NonNull::new(buf1).unwrap().cast(),
-        buffer2: NonNull::new(buf1).unwrap().cast(),
+        buffer2: NonNull::new(buf2).unwrap().cast(),
     };
     let mut t = Thread::create_with_arg(gamepad_thread, ctxt).unwrap();
     t.unpark();
