@@ -334,8 +334,6 @@ pub fn reschedule_threads(
 }
 
 pub fn init_threads(cs: &mut CriticalSection) {
-    *CURRENT_THREAD.borrow(cs) = THREADS.borrow(cs).as_mut_ptr();
-
     fn switch_threads(ctxt: IRQCtxt) -> *mut ThreadControlBlock {
         reschedule_threads(ctxt.tcb, ctxt.cs)
     }
@@ -344,7 +342,8 @@ pub fn init_threads(cs: &mut CriticalSection) {
 }
 
 #[no_mangle]
-pub static CURRENT_THREAD: Global<*mut ThreadControlBlock> = Global::new(ptr::null_mut());
+pub static CURRENT_THREAD: Global<*mut ThreadControlBlock> =
+    Global::new(THREADS.as_ptr() as *mut _);
 
 static THREADS: Global<[ThreadControlBlock; 4]> = {
     let mut tcbs = [const { ThreadControlBlock::new([0; 31], [0; 3]) }; 4];
