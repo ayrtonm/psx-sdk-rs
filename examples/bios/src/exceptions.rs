@@ -161,19 +161,19 @@ extern "C" fn call_handlers(
     let cs = &mut cs;
     let new_tcb = match cause.excode() {
         Excode::Interrupt => call_irq_handlers(tcb, cs),
-        Excode::Syscall | Excode::Breakpoint => {
-            if cause.branch_delay_slot() {
-                unsafe {
-                    asm!("addiu $k1, 4");
-                }
+        Excode::Breakpoint => {
+            // SAFETY: Return to EPC+4 to avoid reexecuting the break instruction
+            unsafe {
+                asm!("addiu $k1, 4");
             }
-            if cause.excode() == Excode::Syscall {
-                syscall_handler(cs, r4, r5)
-            } else {
-                println!("{:#x?}", tcb);
-                ptr::null_mut()
+            // SAFETY: tcb passed in by exception handler comes from CURRENT_THREAD which is
+            // always safe to dereference
+            unsafe {
+                println!("{:#x?}", *tcb);
             }
+            ptr::null_mut()
         },
+        Excode::Syscall => syscall_handler(cs, r4, r5),
         _ => unreachable!(""),
     };
     new_tcb
