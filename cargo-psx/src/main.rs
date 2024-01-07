@@ -116,7 +116,7 @@ fn main() {
     let script = opt.link.unwrap_or("psexe.ld".to_string());
     rustflags.push_str(&format!(" -Clink-arg=-T{}", script));
     let format = if opt.debug || opt.elf {
-        "elf32"
+        "elf32-tradlittlemips"
     } else {
         "binary"
     };
