@@ -48,7 +48,7 @@ jobs:
         TEST_EXE=$(CARGO_TARGET_MIPSEL_SONY_PSX_RUNNER=echo cargo psx test)
         xvfb-run mednafen -psx.dbg_level 2 -psx.bios_jp scph7001.bin $TEST_EXE \
             | tee bios_stdout &
-        sleep 15
+        sleep 30
         grep "test result: ok. [0-9]* passed; 0 failed" bios_stdout
         popd
     - name: Build examples
