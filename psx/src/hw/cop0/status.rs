@@ -208,7 +208,7 @@ impl Status {
     /// Run a closure in an interrupt-free context
     pub fn critical_section<F: FnMut(&mut CriticalSection) -> R, R>(&mut self, mut f: F) -> R {
         let in_critical_section =
-            self.interrupt_masked(IntSrc::Hardware) && self.interrupts_disabled();
+            self.interrupt_masked(IntSrc::Hardware) || self.interrupts_disabled();
 
         if !in_critical_section {
             self.mask_interrupt(IntSrc::Hardware)
