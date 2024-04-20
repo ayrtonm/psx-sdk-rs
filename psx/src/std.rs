@@ -34,7 +34,7 @@ impl<T: AsRef<[u8]>> AsCStr for T {
                 let mut uninitialized = MaybeUninit::uninit_array::<MAX_LEN>();
                 // Initialize the CStr with the input string
                 let initialized_part = &mut uninitialized[0..slice.len() + 1];
-                MaybeUninit::write_slice(&mut initialized_part[0..slice.len()], slice);
+                MaybeUninit::copy_from_slice(&mut initialized_part[0..slice.len()], slice);
                 // Add a null-terminator to the CStr
                 initialized_part[slice.len()].write(0);
                 // SAFETY: The initialized portion of the CStr on the stack was explicitly
