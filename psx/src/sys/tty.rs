@@ -107,7 +107,9 @@ macro_rules! println {
         {
             use $crate::sys::tty::TTY;
             <TTY as core::fmt::Write>::write_fmt(&mut TTY, format_args!($($args)*)).ok();
-            // SAFETY: The string is null-terminated.
+            // SAFETY: The string is null-terminated. The attribute avoids warnings for nested
+            // unsafe blocks
+            #[allow(unused_unsafe)]
             unsafe {
                 $crate::sys::kernel::psx_printf(b"\n\0".as_ptr() as *const i8);
             }
