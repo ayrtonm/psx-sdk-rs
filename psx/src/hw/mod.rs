@@ -19,6 +19,7 @@ pub mod gpu;
 pub mod gte;
 pub mod irq;
 pub mod mmio;
+pub mod pad;
 
 use mmio::MemRegister;
 
