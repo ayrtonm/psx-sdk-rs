@@ -44,9 +44,6 @@ fn min_panic(info: &core::panic::PanicInfo) {
             println!("Panicked at unknown location")
         },
     }
-    if let Some(msg) = info.message() {
-        println!("{}", msg)
-    }
 }
 
 fn normal_panic(info: &core::panic::PanicInfo) {
@@ -69,9 +66,6 @@ fn normal_panic(info: &core::panic::PanicInfo) {
             None => {
                 dprintln!(txt, "Panicked at unknown location");
             },
-        }
-        if let Some(msg) = info.message() {
-            dprintln!(txt, "{}", msg);
         }
         fb.draw_sync();
         fb.wait_vblank();
