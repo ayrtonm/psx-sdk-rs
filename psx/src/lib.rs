@@ -40,8 +40,6 @@
 )]
 // Used to implement `ImplsAsCStr` trait
 #![feature(min_specialization)]
-// For the panic handler
-#![feature(panic_info_message)]
 // For global_asm! on MIPS
 #![feature(asm_experimental_arch)]
 // For `__start`'s return type
