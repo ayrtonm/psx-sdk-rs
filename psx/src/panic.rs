@@ -44,6 +44,7 @@ fn min_panic(info: &core::panic::PanicInfo) {
             println!("Panicked at unknown location")
         },
     }
+    println!("{}", info.message());
 }
 
 fn normal_panic(info: &core::panic::PanicInfo) {
@@ -67,6 +68,7 @@ fn normal_panic(info: &core::panic::PanicInfo) {
                 dprintln!(txt, "Panicked at unknown location");
             },
         }
+        dprintln!(txt, "{}", info.message());
         fb.draw_sync();
         fb.wait_vblank();
         fb.swap();
