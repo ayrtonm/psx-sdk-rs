@@ -59,8 +59,9 @@ impl GP1 {
         self
     }
 
-    /// The x resolution is restricted to 256, 320, 512, 640 or 368. The y
-    /// resolution is restricted to 240 or 480.
+    /// The x resolution is restricted to 256, 320, 512, 640 or 368.
+    /// The y resolution is restricted to 240 or 480 for NTSC,
+    /// 256 or 512 for PAL.
     pub fn display_mode(
         &mut self, res: (i16, i16), mode: VideoMode, depth: Depth, interlace: bool,
     ) -> Result<&mut Self, VertexError> {
@@ -72,9 +73,9 @@ impl GP1 {
             368 => 1 << 6,
             _ => return Err(VertexError::InvalidX),
         };
-        let vres = match res.1 {
-            240 => 0,
-            480 => 1,
+        let vres = match (mode, res.1) {
+            (VideoMode::NTSC, 240) | (VideoMode::PAL, 256) => 0,
+            (VideoMode::NTSC, 480) | (VideoMode::PAL, 512) => 1,
             _ => return Err(VertexError::InvalidY),
         };
         let settings =
