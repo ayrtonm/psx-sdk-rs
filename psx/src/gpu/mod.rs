@@ -191,7 +191,6 @@ impl DispEnv {
         offset: (i16, i16), size: (i16, i16), video_mode: VideoMode,
     ) -> Result<Self, VertexError> {
         let offset = Vertex::new(offset);
-        let size = Vertex::new(size);
         let offset = PackedVertex::try_from(offset)?;
         let (center, range) = if video_mode == VideoMode::NTSC {
             (0x88, 240)
@@ -199,7 +198,7 @@ impl DispEnv {
             (0xA3, 256)
         };
         let ntsc_vrange = Vertex(center - (range / 2), center + (range / 2));
-        let hrange = Vertex(0x260, 0x260 + (size.0 * 8));
+        let hrange = Vertex(0x260, 0x260 + (320 * 8));
 
         let horizontal_range = PackedVertex::try_from(hrange)?;
         let vertical_range = PackedVertex::try_from(ntsc_vrange)?;
