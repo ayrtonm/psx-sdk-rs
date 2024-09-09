@@ -244,7 +244,7 @@ impl DrawEnv {
         let size = Vertex::new(size);
         let bg_color = bg_color.unwrap_or(colors::BLACK);
         let upper_left = PackedVertex::try_from(offset)?;
-        let lower_right = PackedVertex::try_from(offset + size)?;
+        let lower_right = PackedVertex::try_from(offset + size - Vertex::new((1, 1)))?;
         Ok(DrawEnv {
             texpage_cmd: 0xE1,
             upper_left_cmd: 0xE3,
