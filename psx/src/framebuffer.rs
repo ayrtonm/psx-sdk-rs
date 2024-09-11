@@ -74,10 +74,14 @@ impl Framebuffer {
             ],
             swapped: false,
         };
+        let interlace = match res.1 {
+            480 | 512 => true,
+            _ => false
+        };
         GP1::skip_load()
             .reset_gpu()
             .dma_mode(Some(DMAMode::GP0))
-            .display_mode(res, video_mode, Depth::Bits15, false)?
+            .display_mode(res, video_mode, Depth::Bits15, interlace)?
             .enable_display(true);
         fb.irq_mask.enable_irq(IRQ::Vblank).store();
         //fb.wait_vblank();
