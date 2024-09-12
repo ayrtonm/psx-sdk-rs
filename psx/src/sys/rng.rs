@@ -58,6 +58,7 @@ fn rng_size() {
     });
 }
 
+/// Checks that the rng state evolves as expected.
 #[test_case]
 fn rng_state() {
     fuzz!(|seed: u32, steps: u8| {
