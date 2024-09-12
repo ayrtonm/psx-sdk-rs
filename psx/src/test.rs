@@ -7,6 +7,10 @@ use num::integer::gcd;
 
 pub const MAX_TESTS: usize = 1_000;
 
+/// Executes `$body` `MAX_TESTS` times with one or more variables specified by
+///`$name` set to random values of type `$ty`. Note the rng is seeded at
+/// compile-time so `cargo psx test` runs will produce different results but
+/// each test binary should have deterministic results.
 #[macro_export]
 macro_rules! fuzz {
     (|$($name:ident: $ty:ty),+| { $($body:tt)* }) => {
@@ -23,6 +27,8 @@ macro_rules! fuzz {
     };
 }
 
+/// Executes `$body` `MAX_TESTS` times with a slice `$name` of type `$ty` with
+/// a random size and values.
 #[macro_export]
 macro_rules! fuzz_data {
     (|$name:ident: &[$ty:ty]| { $($body:tt)* }) => {
