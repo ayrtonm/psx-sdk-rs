@@ -1,7 +1,7 @@
 # psx-sdk-rs
 
 <p align="center">
-    <img width="320" height="240" src="demo.gif">
+    <img width="320" height="240" src="https://github.com/ayrtonm/psx-sdk-rs/blob/main/demo.gif">
 </p>
 
 This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
