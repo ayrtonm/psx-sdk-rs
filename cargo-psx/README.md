@@ -1,5 +1,8 @@
+# cargo-psx 
+
+A `cargo build` wrapper for creating PlayStation 1 executables.
+
 ```
-cargo-psx 
 
 USAGE:
     cargo-psx [build|check|run|test] [OPTIONS]
