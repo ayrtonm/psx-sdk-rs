@@ -5,7 +5,7 @@ use crate::handlers::{a0_fn_vec, b0_fn_vec, c0_fn_vec};
 use crate::main;
 use crate::println;
 use crate::thread::init_threads;
-use core::arch::asm;
+use core::arch::naked_asm;
 use core::intrinsics::{volatile_copy_nonoverlapping_memory, volatile_set_memory};
 use core::mem::{size_of, transmute};
 use psx::constants::*;
@@ -19,12 +19,11 @@ use psx::CriticalSection;
 #[no_mangle]
 #[link_section = ".text.boot"]
 unsafe extern "C" fn boot() -> ! {
-    asm! {
+    naked_asm! {
         "la $sp, {init_sp}
          la $fp, {init_sp}
          j start",
         init_sp = const(KSEG0 + MAIN_RAM_LEN - 0x100),
-        options(noreturn)
     }
 }
 

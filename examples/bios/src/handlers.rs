@@ -5,7 +5,7 @@ use crate::println;
 use crate::rand::{rand, srand};
 use crate::stdout::printf;
 use crate::thread::{change_thread, close_thread, open_thread, ThreadHandle};
-use core::arch::asm;
+use core::arch::{asm, naked_asm};
 use core::ffi::CStr;
 use core::mem::size_of;
 use core::ptr;
@@ -15,35 +15,32 @@ use psx::sys::kernel::*;
 // These sets of four instructions are written to the BIOS fn vectors
 #[naked]
 pub unsafe extern "C" fn a0_fn_vec() {
-    asm! {
+    naked_asm! {
         ".set noreorder
          la $10, fn_handler
          jr $10
          or $8, $0, 0xA0
-         .set reorder",
-        options(noreturn)
+         .set reorder"
     }
 }
 #[naked]
 pub unsafe extern "C" fn b0_fn_vec() {
-    asm! {
+    naked_asm! {
         ".set noreorder
          la $10, fn_handler
          jr $10
          or $8, $0, 0xB0
-         .set reorder",
-        options(noreturn)
+         .set reorder"
     }
 }
 #[naked]
 pub unsafe extern "C" fn c0_fn_vec() {
-    asm! {
+    naked_asm! {
         ".set noreorder
          la $10, fn_handler
          jr $10
          or $8, $0, 0xC0
-         .set reorder",
-        options(noreturn)
+         .set reorder"
     }
 }
 

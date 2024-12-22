@@ -39,7 +39,6 @@ SECTIONS {
 
     .rom_padding : {
         . = ALIGN(512K) - 1;
-        /* du doesn't like files that end with all zeros, so let's add a non-zero byte */
         BYTE(0xFF);
     } > ROM
 

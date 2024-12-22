@@ -5,7 +5,7 @@ use crate::global::Global;
 use crate::println;
 use crate::thread::{ThreadControlBlock, CURRENT_THREAD};
 use alloc::collections::LinkedList;
-use core::arch::asm;
+use core::arch::{asm, naked_asm};
 use core::ptr;
 use core::ptr::NonNull;
 use psx::hw::cop0;
@@ -18,22 +18,21 @@ use psx::CriticalSection;
 
 #[naked]
 pub unsafe extern "C" fn exception_vec() {
-    asm! {
+    naked_asm! {
         ".set noreorder
          .set noat
          la $k0, exception_handler
          jr $k0
          nop
          .set at
-         .set reorder",
-        options(noreturn)
+         .set reorder"
     }
 }
 
 #[naked]
 #[no_mangle]
 pub unsafe extern "C" fn exception_handler() {
-    asm! {
+    naked_asm! {
         ".set noreorder
          .set noat
          la $k0, CURRENT_THREAD
@@ -147,8 +146,7 @@ pub unsafe extern "C" fn exception_handler() {
          jr $k1
          .long 0x42000010 #rfe
          .set at
-         .set reorder",
-         options(noreturn)
+         .set reorder"
     }
 }
 
