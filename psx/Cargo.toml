@@ -1,6 +1,6 @@
 [package]
 name = "psx"
-version = "0.1.6"
+version = "0.1.7"
 description = "Library for developing homebrew for the Sony PlayStation 1"
 readme = "../README.md"
 repository = "https://github.com/ayrtonm/psx-sdk-rs"
