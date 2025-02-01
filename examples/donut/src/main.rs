@@ -10,7 +10,7 @@ use psx::math::{f16, rotate_x, rotate_y, rotate_z};
 use psx::sys::rng::Rng;
 use psx::{dma, println, Framebuffer};
 
-psx::sys_heap!(4 kb);
+psx::sys_heap!(5 KB);
 
 #[no_mangle]
 fn main() {
