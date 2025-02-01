@@ -11,7 +11,7 @@ use psx::math::{f16, rotate_x, rotate_y, rotate_z, Rad};
 use psx::sys::rng::Rng;
 use psx::{dma, Framebuffer};
 
-psx::sys_heap!(4 kb);
+psx::sys_heap!(7 KB);
 
 #[derive(Debug, Clone, Copy)]
 enum Face {
