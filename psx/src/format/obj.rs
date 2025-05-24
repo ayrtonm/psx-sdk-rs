@@ -183,27 +183,33 @@ impl<
     /// Creates an array by calling `f` for each face.
     pub fn for_each_face<T, F>(&self, mut f: F) -> [T; FACES]
     where F: FnMut() -> T {
-        let mut res = MaybeUninit::uninit_array();
-        for n in 0..QUADS + TRIS {
-            res[n].write(f());
-        }
+        let mut res = [const { MaybeUninit::uninit() }; FACES];
+
+        res[..QUADS + TRIS].write_with(|_| f());
+
+        // TODO: FACES must equal QUADS + TRIS for the below to be safe.
+        // Should this be asserted, or compile-time enforced?
+
         unsafe { MaybeUninit::array_assume_init(res) }
     }
 
     /// Creates an array by applying `f_quad` to each quad and `f_tri` to each
     /// tri.
-    pub fn map_faces<T, F, G>(&self, mut f_quad: F, mut f_tri: G) -> [T; FACES]
+    pub fn map_faces<T, F, G>(&self, f_quad: F, f_tri: G) -> [T; FACES]
     where
         F: FnMut([u16; 4]) -> T,
         G: FnMut([u16; 3]) -> T, {
-        let mut res = MaybeUninit::uninit_array();
-        for n in 0..QUADS + TRIS {
-            if n < QUADS {
-                res[n].write(f_quad(self.quads[n]));
-            } else {
-                res[n].write(f_tri(self.tris[n - QUADS]));
-            }
-        }
+        let mut res = [const { MaybeUninit::uninit() }; FACES];
+
+        let quads = self.quads.iter().copied().map(f_quad);
+        let tris = self.tris.iter().copied().map(f_tri);
+
+        let (_init, uninit) = res.write_iter(quads);
+        let (_init, _uninit) = uninit.write_iter(tris);
+
+        // TODO: _uninit must be empty for the below to be safe.
+        // Should this be asserted, or compile-time enforced?
+
         unsafe { MaybeUninit::array_assume_init(res) }
     }
 

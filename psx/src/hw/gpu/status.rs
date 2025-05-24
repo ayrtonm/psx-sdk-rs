@@ -118,3 +118,9 @@ impl Debug for Status {
             .finish()
     }
 }
+
+impl Default for Status {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -23,7 +23,7 @@ impl<const N: usize> ImplsAsCStr for [u8; N] {
 }
 impl ImplsAsCStr for &[u8] {
     fn impls_as_cstr(&self) -> Option<&[u8]> {
-        Some(self.as_ref())
+        Some(self)
     }
 }
 impl ImplsAsCStr for &str {
@@ -122,7 +122,7 @@ impl fmt::Write for TTY {
         msg.as_cstr(|cstr|
             // SAFETY: The format string and string argument are both null-terminated.
             unsafe {
-                kernel::psx_printf(b"%s\0".as_ptr() as *const i8, cstr.as_ptr());
+                kernel::psx_printf(c"%s".as_ptr(), cstr.as_ptr());
             });
         Ok(())
     }

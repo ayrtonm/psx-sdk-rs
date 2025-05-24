@@ -110,6 +110,10 @@ impl<'a> Gamepad<'a> {
     /// Note that the buffer is embedded in the executable. To use a temporary
     /// buffer (e.g. to minimize executable size) use `Gamepad::new_with_buffer`
     /// directly.
+    #[expect(
+        clippy::new_without_default,
+        reason = "new implementation not currently safe, Default would encourage it's use"
+    )]
     pub fn new() -> Self {
         static mut BUFFER1: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
         static mut BUFFER2: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
@@ -117,7 +121,7 @@ impl<'a> Gamepad<'a> {
         // destructors the BIOS will still manage these buffers. However, they have a
         // static lifetime and cannot be access from anywhere else so it's effectively
         // just leaking the buffers.
-        unsafe { Self::new_with_buffer(&mut BUFFER1, &mut BUFFER2) }
+        unsafe { Self::new_with_buffer_ptr(&raw mut BUFFER1, &raw mut BUFFER2) }
     }
 
     /// Creates a new gamepad from a reference to a buffer.
@@ -137,8 +141,25 @@ impl<'a> Gamepad<'a> {
         buf1: &'a mut MaybeUninit<[u32; BUFFER_SIZE]>,
         buf2: &'a mut MaybeUninit<[u32; BUFFER_SIZE]>,
     ) -> Self {
-        let buf1 = buf1.as_mut_ptr().cast::<u16>();
-        let buf2 = buf2.as_mut_ptr().cast::<u16>();
+        // SAFETY: Provided buffers have 'a lifetime.
+        Self::new_with_buffer_ptr(buf1, buf2)
+    }
+
+    /// Creates a new gamepad from a pointer to a buffer.
+    ///
+    /// # SAFETY
+    ///
+    /// The provided buffers must be valid for the entire lifetime 'a.
+    /// Since the buffer passed to the BIOS may be dynamic, the BIOS must stop
+    /// modifying them when the Gamepad is dropped. This is done by calling
+    /// `stop_pad` in `Gamepad`'s destructor. Dropping `Gamepad` without running
+    /// its destructor or manuall calling `stop_pad` on the managed buffers will
+    /// lead to *undefined behavior*.
+    unsafe fn new_with_buffer_ptr(
+        buf1: *mut MaybeUninit<[u32; BUFFER_SIZE]>, buf2: *mut MaybeUninit<[u32; BUFFER_SIZE]>,
+    ) -> Self {
+        let buf1 = buf1.cast::<u16>();
+        let buf2 = buf2.cast::<u16>();
         kernel::psx_init_pad(buf1 as *mut u8, 0x22, buf2 as *mut u8, 0x22);
         // Set the status byte to not ok since init_pad zerofills the buffer
         buf1.cast::<u8>().write_volatile(0xFF);
@@ -213,7 +234,7 @@ impl Iterator for Buttons {
             return None
         }
         let this_bit = self.iter_idx;
-        let bit_value = (self.value >> (this_bit as u16)) & 1;
+        let bit_value = (self.value >> this_bit) & 1;
         self.iter_idx += 1;
         if bit_value == 0 {
             Button::from_bit(this_bit)

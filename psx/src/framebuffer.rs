@@ -74,10 +74,7 @@ impl Framebuffer {
             ],
             swapped: false,
         };
-        let interlace = match res.1 {
-            480 | 512 => true,
-            _ => false
-        };
+        let interlace = matches!(res.1, 480 | 512);
         GP1::skip_load()
             .reset_gpu()
             .dma_mode(Some(DMAMode::GP0))

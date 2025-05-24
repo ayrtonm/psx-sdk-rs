@@ -5,7 +5,7 @@
 </p>
 
 This is a basic SDK to run custom Rust code on a PlayStation 1. It works with
-Rust nightly version equal to `2024-12-21`. Newer nightly versions may or may
+Rust nightly version equal to `2025-05-23`. Newer nightly versions may or may
 not work depending on changes to unstable features. The
 [github repo](https://github.com/ayrtonm/psx-sdk-rs) may be more up-to-date
 with unstable feature usage so consider using a
@@ -14,7 +14,7 @@ to use the newest nightly versions. Use [`rustup`](https://www.rust-lang.org/)
 to install the rust toolchain as follows.
 
 ```
-rustup update nightly-2024-12-21
+rustup update nightly-2025-05-23
 rustup component add rust-src --toolchain nightly
 ```
 

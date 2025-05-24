@@ -103,9 +103,7 @@ impl<const N: usize, const X: usize, const Y: usize> TryFrom<Vertex> for PackedV
 impl<const N: usize, const X: usize, const Y: usize> From<PackedVertex<N, X, Y>> for Vertex {
     fn from(packed: PackedVertex<N, X, Y>) -> Vertex {
         let mut ar = [0; 4];
-        for i in 0..packed.data.len() {
-            ar[i] = packed.data[i];
-        }
+        ar[..packed.data.len()].copy_from_slice(&packed.data[..]);
         let data = u32::from_le_bytes(ar);
         let x_mask = (1 << X) - 1;
         let y_mask = (1 << Y) - 1;

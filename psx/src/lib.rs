@@ -31,13 +31,9 @@
 #![no_std]
 #![deny(missing_docs)]
 // For compile-time Wavefront OBJ parser
-#![feature(const_mut_refs, maybe_uninit_array_assume_init)]
+#![feature(maybe_uninit_array_assume_init)]
 // Used to make `AsCStr` efficient
-#![feature(
-    maybe_uninit_uninit_array,
-    maybe_uninit_slice,
-    maybe_uninit_write_slice
-)]
+#![feature(maybe_uninit_slice, maybe_uninit_write_slice)]
 // Used to implement `ImplsAsCStr` trait
 #![feature(min_specialization)]
 // For global_asm! on MIPS
@@ -50,6 +46,8 @@
 #![feature(variant_count)]
 // Used for crate tests
 #![feature(custom_test_frameworks)]
+// Used for ergonomic uninit array initialization
+#![feature(maybe_uninit_fill)]
 #![test_runner(crate::test::runner)]
 #![reexport_test_harness_main = "main"]
 #![cfg_attr(test, no_main)]
@@ -109,6 +107,7 @@ pub mod constants {
     /// The start of the data cache.
     pub const DATA_CACHE: usize = 0x1F80_0000;
     /// The size of the data cache.
+    #[expect(clippy::identity_op, reason = "KB used as a unit for clarity")]
     pub const DATA_CACHE_LEN: usize = 1 * KB;
 
     /// The entrypoint of the post-boot function.
@@ -137,7 +136,9 @@ pub struct CriticalSection(());
 impl CriticalSection {
     /// Creates a new critical section token
     ///
-    /// # SAFETY: Since owning a CriticalSection means we are in a critical
+    /// # SAFETY
+    ///
+    /// Since owning a CriticalSection means we are in a critical
     /// section, this is only safe to create if we are actually in a critical
     /// section.
     pub unsafe fn new() -> Self {

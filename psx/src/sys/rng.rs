@@ -35,8 +35,8 @@ impl Rng {
         let mut res = T::from(0);
         let ptr = &mut res as *mut T as *mut u8;
         let slice = unsafe { slice::from_raw_parts_mut(ptr, size_of::<T>()) };
-        for n in 0..slice.len() {
-            slice[n] = self.step() as u8;
+        for item in slice {
+            *item = self.step() as u8;
         }
         res
     }

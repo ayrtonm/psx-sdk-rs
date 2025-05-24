@@ -164,7 +164,6 @@ pub struct PhysAddr([u8; 3]);
 /// but the `inline_const` feature can simplify this as follows.
 ///
 /// ```rust
-/// #![feature(inline_const)]
 /// let array = [const { Packet::new(T::new()) }; N]
 /// ```
 #[repr(C, align(4))]
@@ -187,6 +186,7 @@ pub struct DispEnv {
 impl DispEnv {
     /// Creates a new display buffer at `offset` in VRAM with the specified
     /// `size`.
+    #[expect(unused_variables)]
     pub fn new(
         offset: (i16, i16), size: (i16, i16), video_mode: VideoMode,
     ) -> Result<Self, VertexError> {

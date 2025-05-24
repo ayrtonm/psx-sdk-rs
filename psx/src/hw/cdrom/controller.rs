@@ -9,6 +9,6 @@ impl Controller {
 
 impl Parameter {
     pub fn set_param(&mut self, param: u8) -> &mut Self {
-        self.assign(param as u8)
+        self.assign(param)
     }
 }

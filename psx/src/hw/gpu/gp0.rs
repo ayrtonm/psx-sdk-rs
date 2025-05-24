@@ -35,7 +35,7 @@ impl GP0 {
     /// without dropping some commands. This will not corrupt memory, but may
     /// cause unintended on-screen effects.
     // TODO: Make this unsafe
-    pub fn send_command<C: GP0Command + ?Sized>(&mut self, cmd: &C) -> &mut Self {
+    pub fn send_command<C: GP0Command>(&mut self, cmd: &C) -> &mut Self {
         for &word in cmd.data() {
             self.assign(word).store();
         }

@@ -31,16 +31,15 @@ impl<T: AsRef<[u8]>> AsCStr for T {
                     );
                 }
                 // Create an uninitialized array of up to 128 bytes on the stack
-                let mut uninitialized = MaybeUninit::uninit_array::<MAX_LEN>();
+                let mut uninitialized = [const { MaybeUninit::uninit() }; MAX_LEN];
                 // Initialize the CStr with the input string
                 let initialized_part = &mut uninitialized[0..slice.len() + 1];
-                MaybeUninit::copy_from_slice(&mut initialized_part[0..slice.len()], slice);
+                initialized_part[0..slice.len()].write_copy_of_slice(slice);
                 // Add a null-terminator to the CStr
                 initialized_part[slice.len()].write(0);
                 // SAFETY: The initialized portion of the CStr on the stack was explicitly
                 // initialized and null-terminated
-                let terminated_slice =
-                    unsafe { MaybeUninit::slice_assume_init_ref(initialized_part) };
+                let terminated_slice = unsafe { initialized_part.assume_init_ref() };
                 // SAFETY: We null-terminated the initialized part of slice
                 let cstr = unsafe { CStr::from_bytes_with_nul_unchecked(terminated_slice) };
                 f(cstr)

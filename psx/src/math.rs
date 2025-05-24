@@ -182,7 +182,7 @@ pub fn sin(x: Rad) -> f16 {
 
 /// Computes cosine using a lookup table.
 pub fn cos(x: Rad) -> f16 {
-    let quarter_cycle = FRAC_PI_2.0 as u16;
+    let quarter_cycle = FRAC_PI_2.0;
     let cycle = x.0 / quarter_cycle;
     let offset = x.0 % quarter_cycle;
     let idx = COSINE_TABLE_SIZE * (offset as usize) / quarter_cycle as usize;

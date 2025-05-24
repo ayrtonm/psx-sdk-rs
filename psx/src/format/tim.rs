@@ -13,7 +13,7 @@ macro_rules! include_tim {
         use $crate::format::tim::{Bitmap, MAGIC, TIM};
         use $crate::gpu::{Bpp, Clut, TexPage, Vertex};
 
-        const TIM_SIZE: usize = (file_size!($file) + 3) / 4;
+        const TIM_SIZE: usize = (file_size!($file)).div_ceil(4);
         const TIM_DATA: [u32; TIM_SIZE] = {
             let data = *include_bytes!($file);
             if data.len() % 4 != 0 {
@@ -106,7 +106,9 @@ macro_rules! include_tim {
         };
         TIM::<BMP_LEN, CLUT_LEN> {
             bpp: BPP,
+            #[expect(static_mut_refs)]
             bmp: unsafe { &mut BMP },
+            #[expect(static_mut_refs)]
             clut: unsafe { &mut CLUT },
         }
     }};

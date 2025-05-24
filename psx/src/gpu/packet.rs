@@ -140,10 +140,16 @@ impl<T> Packet<T> {
 ///
 /// Note the packets are linked from first to last.
 pub fn ordering_table<T>(list: &mut [u32]) -> &mut [Packet<()>] {
-    let n = list.len();
+    // Compile-time check to ensure the below transmute is valid
+    const _: () = {
+        if size_of::<u32>() != size_of::<Packet<()>>() {
+            panic!()
+        }
+    };
+
     let packets = unsafe { transmute::<&mut [u32], &mut [Packet<()>]>(list) };
-    for i in 0..n {
-        packets[i].size = 0;
+    for packet in packets {
+        packet.size = 0;
     }
     link_list(packets);
     unsafe { slice::from_raw_parts_mut(list.as_mut_ptr() as *mut Packet<()>, n) }

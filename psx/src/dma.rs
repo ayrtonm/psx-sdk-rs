@@ -251,3 +251,9 @@ impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Channel<A, B, C> {
         self.send_list_and(list, || ())
     }
 }
+
+impl<A: MemoryAddress, B: BlockControl, C: ChannelControl> Default for Channel<A, B, C> {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -41,7 +41,12 @@ pub struct DirEntry {
 }
 
 impl DirEntry {
-    pub unsafe fn from_bytes(ptr: *const [u8; 40]) -> DirEntry {
+    /// Create a [`DirEntry`] from the provided byte array.
+    ///
+    /// # Safety
+    ///
+    /// The provided bytes must represent a valid [`DirEntry`].
+    pub unsafe fn from_bytes(ptr: *const [u8; size_of::<Self>()]) -> Self {
         *ptr.cast()
     }
 }
@@ -57,6 +62,10 @@ impl Debug for DirEntry {
 
 // TODO: Explain why bugs make this unsafe. It would be possible to make an
 // iterator safe by making it eager but that may not be practical
+#[expect(
+    clippy::missing_safety_doc,
+    reason = "TODO: Explain why bugs make this unsafe. It would be possible to make an iterator safe by making it eager but that may not be practical"
+)]
 pub unsafe fn first_file<P: AsRef<[u8]>>(path: P) -> Option<DirEntry> {
     path.as_cstr(|path| {
         let dir_entry = kernel::psx_first_file(path.as_ptr());
@@ -68,6 +77,7 @@ pub unsafe fn first_file<P: AsRef<[u8]>>(path: P) -> Option<DirEntry> {
     })
 }
 
+#[expect(clippy::missing_safety_doc, reason = "TODO: add documentation")]
 pub unsafe fn next_file() -> Option<DirEntry> {
     let dir_entry = kernel::psx_next_file();
     if dir_entry.is_null() {

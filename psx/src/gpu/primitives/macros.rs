@@ -15,12 +15,17 @@ macro_rules! impl_primitive {
             /// Creates a new primitive
             pub const fn new() -> Self {
                 let buf = [0u8; size_of::<Self>()];
-                let mut primitive = unsafe { transmute::<_, Self>(buf) };
+                let mut primitive = unsafe { transmute::<[u8; size_of::<Self>()], Self>(buf) };
                 primitive.cmd = $cmd;
                 primitive
             }
         }
         impl GP0Command for $name {}
+        impl Default for $name {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
     };
     ($name:ident < N > , $cmd:expr) => {
         impl<const N: usize> $name<N> {
