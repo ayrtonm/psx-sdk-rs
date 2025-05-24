@@ -4,7 +4,6 @@ use crate::gpu::{Packet, PhysAddr};
 use crate::hw::gpu::GP0Command;
 use core::hint::black_box;
 use core::mem::{size_of, transmute};
-use core::slice;
 
 impl<'a, T> From<&'a mut T> for PhysAddr {
     fn from(t: &'a mut T) -> PhysAddr {
@@ -148,11 +147,11 @@ pub fn ordering_table<T>(list: &mut [u32]) -> &mut [Packet<()>] {
     };
 
     let packets = unsafe { transmute::<&mut [u32], &mut [Packet<()>]>(list) };
-    for packet in packets {
+    for packet in &mut *packets {
         packet.size = 0;
     }
-    link_list(packets);
-    unsafe { slice::from_raw_parts_mut(list.as_mut_ptr() as *mut Packet<()>, n) }
+    link_list(&mut *packets);
+    packets
 }
 
 /// Link an existing array of packets from first to last.
