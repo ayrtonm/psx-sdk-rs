@@ -54,6 +54,8 @@
 #[macro_use]
 mod test;
 
+#[cfg(feature = "critical-section")]
+mod critical_section_impl;
 pub mod dma;
 pub mod format;
 mod framebuffer;

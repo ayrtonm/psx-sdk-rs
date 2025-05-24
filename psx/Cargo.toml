@@ -18,6 +18,7 @@ cargo-args = ["--features", "psx/heap"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+critical-section = { version = "1", features = ["restore-state-bool"], optional = true }
 
 [dependencies.linked_list_allocator]
 version = "0.10.3"
@@ -39,6 +40,8 @@ loadable_exe = []
 custom_oom = []
 heap = ["dep:linked_list_allocator"]
 nightlier = []
+# Provides a `critical-section` implementation using BIOS sys-calls.
+critical-section = ["dep:critical-section"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
