@@ -8,10 +8,10 @@ Subject: [PATCH] [MIPS] Expand ATOMIC_FENCE to libcalls on MIPS-I
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/llvm/lib/Target/Mips/MipsSEISelLowering.cpp b/llvm/lib/Target/Mips/MipsSEISelLowering.cpp
-index 346ebe9664fc..3d46981c94cb 100644
+index 71a70d9c2dd4..7acf6f90621f 100644
 --- a/llvm/lib/Target/Mips/MipsSEISelLowering.cpp
 +++ b/llvm/lib/Target/Mips/MipsSEISelLowering.cpp
-@@ -204,7 +204,14 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
+@@ -235,7 +235,14 @@ MipsSETargetLowering::MipsSETargetLowering(const MipsTargetMachine &TM,
  
    setOperationAction(ISD::SDIVREM, MVT::i32, Custom);
    setOperationAction(ISD::UDIVREM, MVT::i32, Custom);
@@ -24,8 +24,9 @@ index 346ebe9664fc..3d46981c94cb 100644
 +    setOperationAction(ISD::ATOMIC_FENCE, MVT::Other, Expand);
 +  }
 +
-   setOperationAction(ISD::LOAD,               MVT::i32, Custom);
-   setOperationAction(ISD::STORE,              MVT::i32, Custom);
+   if (Subtarget.hasMips32r6()) {
+     setOperationAction(ISD::LOAD,               MVT::i32, Legal);
+     setOperationAction(ISD::STORE,              MVT::i32, Legal);
  
 -- 
 2.32.0

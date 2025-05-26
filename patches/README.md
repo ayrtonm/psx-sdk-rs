@@ -9,36 +9,48 @@ for building the rust compiler for more specifics.
 
 1. Clone the rust source and checkout this specific commit:
 
-    ```
+    ```sh
     git clone https://github.com/rust-lang/rust.git
     cd rust
-    git checkout 3a8e71385940c2f02ec4b23876c0a36fd09bdefe
+    git checkout 163cb4ea3f0ae3bc7921cc259a08a7bf92e73ee6
     ```
 
-2. Configure the build script to use `rust-lld` and optionally remove unnecessary targets to speed up the LLVM build:
+    Note that this particular commit has been chosen to match
+    `nightly-2025-05-23`, and work with the required LLVM patch.
 
+2. Configure the build script `bootstrap.toml` to use `rust-lld`.
+
+    ```sh
+    ./configure --enable-lld
     ```
-    cp config.toml.example config.toml
-    # Set lld to true
-    sed -i 's/#lld = false/lld = true/' config.toml
-    # Only build the MIPS and X86 targets
-    sed -i 's/#targets.*$/targets = "Mips;X86"/' config.toml
-    # Don't build any experimental targets
-    sed -i 's/#experimental-targets.*$/experimental-targets = ""/' config.toml
+
+    Optionally remove unnecessary targets to speed up the LLVM build by editing
+    the generated `bootstrap.toml`:
+
+    ```toml
+    profile = 'dist'
+
+    [llvm]
+    targets = "Mips;X86"
+
+    [build]
+    configure-args = ['--enable-lld']
+
+    [rust]
+    lld = true
     ```
 
 3. Patch LLVM.
 
-    ```
+    ```sh
     git submodule update --init --progress src/llvm-project
     cd src/llvm-project
     git apply /path/to/patches/llvm_atomic_fence.patch
     ```
 
+4. Build the rust compiler. See `INSTALL.md` for further details.
 
-4. Build the rust compiler:
-
-    ```
+    ```sh
     # For the initial build
     ./x.py build -i library/std
     # To rebuild
@@ -47,15 +59,14 @@ for building the rust compiler for more specifics.
 
 5. Create a new toolchain with the patched compiler:
 
-    ```
+    ```sh
     rustup toolchain link psx build/x86_64-unknown-linux-gnu/stage1
     ```
 
     where `psx` is the name for the new toolchain.
 
-
 6. When using `cargo-psx`, make sure to set the toolchain argument to `psx`.
 
-    ```
+    ```sh
     cargo psx run --toolchain psx
     ```
