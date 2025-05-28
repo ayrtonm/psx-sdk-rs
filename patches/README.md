@@ -48,7 +48,7 @@ for building the rust compiler for more specifics.
     git apply /path/to/patches/llvm_atomic_fence.patch
     ```
 
-4. Build the rust compiler. See `INSTALL.md` for further details.
+4. Build the Rust compiler. See `INSTALL.md` in the Rust repository for further details.
 
     ```sh
     # For the initial build
