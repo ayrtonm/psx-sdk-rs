@@ -27,6 +27,8 @@
 //!   this requires [building and patching LLVM](https://github.com/ayrtonm/psx-sdk-rs/tree/master/patches#rustc-build-instructions) as part of the rustc build.
 //!   Currently this enables [`Atomic*`][core::sync::atomic] up to 16-bits and
 //!   [`fences`][core::sync::atomic::compiler_fence].
+//! * `critical-section` - Provides a [`critical-section`](https://crates.io/crates/critical-section)
+//!   implementation using BIOS sys-calls.
 
 #![no_std]
 #![deny(missing_docs)]

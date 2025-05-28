@@ -40,7 +40,6 @@ loadable_exe = []
 custom_oom = []
 heap = ["dep:linked_list_allocator"]
 nightlier = []
-# Provides a `critical-section` implementation using BIOS sys-calls.
 critical-section = ["dep:critical-section"]
 
 [lints.rust]
