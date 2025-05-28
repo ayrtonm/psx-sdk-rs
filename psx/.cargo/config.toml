@@ -3,8 +3,3 @@ target = ["mipsel-sony-psx"]
 
 [target.mipsel-sony-psx]
 runner = "mednafen"
-rustflags = ["-Clink-arg=-Tpsexe.ld", "-Clink-arg=--oformat=binary"]
-
-[unstable]
-build-std = ["core", "alloc"]
-build-std-features = ["compiler-builtins-mem"]
