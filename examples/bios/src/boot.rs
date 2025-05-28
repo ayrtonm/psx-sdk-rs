@@ -15,7 +15,7 @@ use psx::CriticalSection;
 // This is the entry point which is placed at 0xBFC0_0000 by the linker script
 // since this is the only function .text.boot. The stack pointer is
 // uninitialized so it must be a naked function.
-#[naked]
+#[unsafe(naked)]
 #[no_mangle]
 #[link_section = ".text.boot"]
 unsafe extern "C" fn boot() -> ! {

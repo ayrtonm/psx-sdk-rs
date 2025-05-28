@@ -16,7 +16,7 @@ use psx::hw::Register;
 use psx::sys::kernel::*;
 use psx::CriticalSection;
 
-#[naked]
+#[unsafe(naked)]
 pub unsafe extern "C" fn exception_vec() {
     naked_asm! {
         ".set noreorder
@@ -29,7 +29,7 @@ pub unsafe extern "C" fn exception_vec() {
     }
 }
 
-#[naked]
+#[unsafe(naked)]
 #[no_mangle]
 pub unsafe extern "C" fn exception_handler() {
     naked_asm! {
@@ -151,7 +151,6 @@ pub unsafe extern "C" fn exception_handler() {
 }
 
 #[no_mangle]
-#[inline(always)]
 extern "C" fn call_handlers(
     r4: u32, r5: u32, cause: cop0::Cause, tcb: *mut ThreadControlBlock,
 ) -> *mut ThreadControlBlock {

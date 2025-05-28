@@ -3,10 +3,7 @@
 #![allow(internal_features)]
 #![feature(linked_list_remove)]
 #![feature(asm_experimental_arch)]
-#![feature(asm_const)]
-#![feature(naked_functions)]
 #![feature(core_intrinsics)]
-#![feature(inline_const)]
 
 mod allocator;
 mod boot;

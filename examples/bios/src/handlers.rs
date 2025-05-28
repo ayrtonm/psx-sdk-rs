@@ -13,7 +13,7 @@ use core::slice;
 use psx::sys::kernel::*;
 
 // These sets of four instructions are written to the BIOS fn vectors
-#[naked]
+#[unsafe(naked)]
 pub unsafe extern "C" fn a0_fn_vec() {
     naked_asm! {
         ".set noreorder
@@ -23,7 +23,7 @@ pub unsafe extern "C" fn a0_fn_vec() {
          .set reorder"
     }
 }
-#[naked]
+#[unsafe(naked)]
 pub unsafe extern "C" fn b0_fn_vec() {
     naked_asm! {
         ".set noreorder
@@ -33,7 +33,7 @@ pub unsafe extern "C" fn b0_fn_vec() {
          .set reorder"
     }
 }
-#[naked]
+#[unsafe(naked)]
 pub unsafe extern "C" fn c0_fn_vec() {
     naked_asm! {
         ".set noreorder
