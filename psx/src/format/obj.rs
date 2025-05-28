@@ -184,8 +184,10 @@ impl<
     pub fn for_each_face<T, F>(&self, mut f: F) -> [T; FACES]
     where F: FnMut() -> T {
         let mut res = [const { MaybeUninit::uninit() }; FACES];
-
-        res[..QUADS + TRIS].write_with(|_| f());
+        
+        for face in &mut res[..QUADS + TRIS] {
+            face.write(f());
+        }
 
         // TODO: FACES must equal QUADS + TRIS for the below to be safe.
         // Should this be asserted, or compile-time enforced?
@@ -204,8 +206,9 @@ impl<
         let quads = self.quads.iter().copied().map(f_quad);
         let tris = self.tris.iter().copied().map(f_tri);
 
-        let (_init, uninit) = res.write_iter(quads);
-        let (_init, _uninit) = uninit.write_iter(tris);
+        for (out, face) in res.iter_mut().zip(quads.chain(tris)) {
+            out.write(face);
+        }
 
         // TODO: _uninit must be empty for the below to be safe.
         // Should this be asserted, or compile-time enforced?

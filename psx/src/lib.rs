@@ -46,8 +46,6 @@
 #![feature(variant_count)]
 // Used for crate tests
 #![feature(custom_test_frameworks)]
-// Used for ergonomic uninit array initialization
-#![feature(maybe_uninit_fill)]
 #![test_runner(crate::test::runner)]
 #![reexport_test_harness_main = "main"]
 #![cfg_attr(test, no_main)]
