@@ -184,7 +184,7 @@ impl<
     pub fn for_each_face<T, F>(&self, mut f: F) -> [T; FACES]
     where F: FnMut() -> T {
         let mut res = [const { MaybeUninit::uninit() }; FACES];
-        
+
         for face in &mut res[..QUADS + TRIS] {
             face.write(f());
         }
