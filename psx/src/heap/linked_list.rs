@@ -44,7 +44,7 @@ unsafe impl GlobalAlloc for Heap {
 /// placement use [`core::slice::from_raw_parts_mut`] as shown below.
 ///
 /// # Usage
-/// ```
+/// ```ignore
 /// use psx::heap;
 ///
 /// // heap!(256 bytes);

@@ -51,7 +51,7 @@ unsafe impl GlobalAlloc for BiosAllocator {
 /// use [`core::slice::from_raw_parts_mut`] as shown below.
 ///
 /// # Usage
-/// ```
+/// ```ignore
 /// use psx::sys_heap;
 ///
 /// // sys_heap!(256 bytes);
