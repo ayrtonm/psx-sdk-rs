@@ -163,8 +163,16 @@ pub struct PhysAddr([u8; 3]);
 /// Omitting `Copy` makes creating it more cumbersome to create `Packet` arrays,
 /// but the `inline_const` feature can simplify this as follows.
 ///
-/// ```rust
+/// ```
+/// # use psx::gpu::Packet;
+/// # struct T;
+/// # impl T {
+/// #   const fn new() -> Self { T }
+/// # }
+/// # fn _syntax_check<const N: usize>() {
 /// let array = [const { Packet::new(T::new()) }; N]
+/// # }
+/// #
 /// ```
 #[repr(C, align(4))]
 #[derive(Debug, Clone, PartialEq, Eq)]
