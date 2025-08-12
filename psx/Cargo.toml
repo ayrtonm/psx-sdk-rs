@@ -44,3 +44,6 @@ nightlier = []
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(feature,values("nonexistent_feature"))',
 ] }
+
+[lib]
+doctest = false
