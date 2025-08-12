@@ -170,7 +170,7 @@ pub struct PhysAddr([u8; 3]);
 /// #   const fn new() -> Self { T }
 /// # }
 /// # fn _syntax_check<const N: usize>() {
-/// let array = [const { Packet::new(T::new()) }; N]
+/// let array = [const { Packet::new(T::new()) }; N];
 /// # }
 /// #
 /// ```

@@ -112,7 +112,7 @@ impl<'a> Gamepad<'a> {
     /// directly.
     #[expect(
         clippy::new_without_default,
-        reason = "new implementation not currently safe, Default would encourage it's use"
+        reason = "new implementation not currently safe, Default would encourage its use"
     )]
     pub fn new() -> Self {
         static mut BUFFER1: MaybeUninit<[u32; BUFFER_SIZE]> = MaybeUninit::uninit();
