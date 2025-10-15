@@ -31,13 +31,9 @@
 #![no_std]
 #![deny(missing_docs)]
 // For compile-time Wavefront OBJ parser
-#![feature(const_mut_refs, maybe_uninit_array_assume_init)]
+#![feature(maybe_uninit_array_assume_init)]
 // Used to make `AsCStr` efficient
-#![feature(
-    maybe_uninit_uninit_array,
-    maybe_uninit_slice,
-    maybe_uninit_write_slice
-)]
+#![feature(maybe_uninit_fill, maybe_uninit_slice, maybe_uninit_write_slice)]
 // Used to implement `ImplsAsCStr` trait
 #![feature(min_specialization)]
 // For global_asm! on MIPS
