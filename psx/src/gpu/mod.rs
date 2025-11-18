@@ -88,12 +88,45 @@ pub struct TexCoord {
 
 /// A VRAM texture page attribute.
 ///
-/// This is represented as a two-byte packed vertex with the following layout
+/// This is represented as a two-byte struct with the following layout
 ///
-/// bits `0` to `3`: texture page X base
-///
-/// bit `4`: texture page Y base
-pub type TexPage = PackedVertex<2, 4, 1>;
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct TexPage {
+    /// The first 8 bits of a TexPage Attribute
+    /// bits `0` to `3`: texture page X base
+    /// bit  `4`: texture page Y base
+    /// bits `5` to `6`: semi-transparency (0=B/2+F/2, 1=B+F, 2=B-F, 3=B+F/4)
+    /// bits `7` to `8`: Bpp
+    pub texpage: u8,
+    _pad: u8,
+}
+
+
+impl TexPage {
+    /// Creates a new TexPage from an Offset vertex and bit depth, Bpp
+    /// TODO: implement transparency / blending
+    pub const fn new(
+        offset: Vertex,
+        bpp: Bpp,
+        blend: Option<Blend>,
+    ) -> Result<Self, VertexError> {
+        let offset: PackedVertex<2, 4, 1> = match PackedVertex::const_try_from(offset) {
+            Ok(res) => res,
+            Err(_) => panic!("Invalid TexPage offset"),
+        };
+        let blend = 0;
+        let bpp = match bpp {
+            Bpp::Bits4 => 0,
+            Bpp::Bits8 => 1,
+            Bpp::Bits15 => 2,
+        };
+        Ok(TexPage {
+            _pad: 0,
+            texpage: offset.data[0] | (offset.data[1] << 4) | (blend << 5) | (bpp << 7),
+        })
+    }
+}
 
 /// The GPU DMA direction.
 #[derive(Debug)]
@@ -130,6 +163,19 @@ pub enum Bpp {
     Bits8,
     /// 15 bits per pixel.
     Bits15,
+}
+
+/// Texture Blend mode.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Blend {
+    /// 0=B/2+F/2.
+    Mix,
+    /// 1=B+F.
+    Add,
+    /// 2=B-F.
+    Sub,
+    /// 3=B+F/4
+    Inc,
 }
 
 /// A physical address in memory.

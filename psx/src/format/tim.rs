@@ -80,7 +80,7 @@ macro_rules! include_tim {
             let offset = TIM_DATA[3 + CLUT_LEN];
             let x = offset as u16 as i16 / 64;
             let y = (offset >> 16) as u16 as i16 / 256;
-            let tex_page = match TexPage::const_try_from(Vertex(x, y)) {
+            let tex_page = match TexPage::new(Vertex(x, y), BPP, None) {
                 Ok(res) => res,
                 Err(_) => panic!("TIM has invalid bitmap TexPage"),
             };
