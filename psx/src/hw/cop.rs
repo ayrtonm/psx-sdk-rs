@@ -21,7 +21,7 @@ impl<T: Primitive, const COP: u32, const REG: u32> AsMut<T> for CopRegister<T, C
 
 macro_rules! define_cop {
     ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(,)?) => {
-        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; "m");
+        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; "0");
     };
     ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr; $cop_ty:literal $(,)?) => {
         $(#[$($meta)*])*
@@ -34,9 +34,8 @@ macro_rules! define_cop {
             fn load(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        ".set noat",
-                        concat!($cop_ty, "fc", $cop, " {}, $", $reg),
-                        ".set at",
+                        //concat!($cop_ty, "fc", $cop, " {}, $", $reg),
+                        concat!(".long 1<<30 | ", $cop, "<<26 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11 # {}"),
                         out(reg) self.value,
                         options(nomem, nostack)
                     }
@@ -47,9 +46,8 @@ macro_rules! define_cop {
             fn store(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        ".set noat",
-                        concat!($cop_ty, "tc", $cop, " {}, $", $reg),
-                        ".set at",
+                        //concat!($cop_ty, "tc", $cop, " {}, $", $reg),
+                        concat!(".long 1<<30 | ", $cop, "<<26 | 1<<23 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11 # {}"),
                         in(reg) self.value,
                         options(nomem, nostack)
                     }

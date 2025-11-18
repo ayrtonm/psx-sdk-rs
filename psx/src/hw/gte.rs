@@ -36,39 +36,43 @@ define_cop! {
     /// Leading zeros count result
     LZCR<u32>; COP: 2; R: 31,
 
-    /*
-    TODO: LLVM doesn't support these coprocessor instructions yet (#7).
+    // TODO: LLVM doesn't support these coprocessor instructions yet (#7).
     /// Rotation matrix entries RT11 and RT12
     RT11_12<u32>; COP: 2; R: 32; "c",
+
     /// Rotation matrix entries RT13 and RT21
-    RT13_21<u32>; COP: 2; R: 33,
+    RT13_21<u32>; COP: 2; R: 33; "c",
     /// Rotation matrix entries RT22 and RT23
-    RT22_23<u32>; COP: 2; R: 34,
+    RT22_23<u32>; COP: 2; R: 34; "c",
     /// Rotation matrix entries RT31 and RT32
-    RT31_32<u32>; COP: 2; R: 35,
+    RT31_32<u32>; COP: 2; R: 35; "c",
     /// Rotation matrix entry RT33
-    RT33<i16>;    COP: 2; R: 36,
+    RT33<i16>;    COP: 2; R: 36; "c",
 
     /// Light matrix entries L11 and L12
-    L11_12<u32>; COP: 2; R: 40,
+    L11_12<u32>; COP: 2; R: 40; "c",
     /// Light matrix entries L13 and L21
-    L13_21<u32>; COP: 2; R: 41,
+    L13_21<u32>; COP: 2; R: 41; "c",
     /// Light matrix entries L22 and L23
-    L22_23<u32>; COP: 2; R: 42,
+    L22_23<u32>; COP: 2; R: 42; "c",
     /// Light matrix entries L31 and L32
-    L31_32<u32>; COP: 2; R: 43,
+    L31_32<u32>; COP: 2; R: 43; "c",
     /// Light matrix entry L33
-    L33<i16>;    COP: 2; R: 44,
+    L33<i16>;    COP: 2; R: 44; "c",
 
     /// Light color matrix entries LR11 and LR12
-    LR11_12<u32>; COP: 2; R: 48,
+    LR11_12<u32>; COP: 2; R: 48; "c",
     /// Light color matrix entries LR13 and LR21
-    LR13_21<u32>; COP: 2; R: 49,
+    LR13_21<u32>; COP: 2; R: 49; "c",
     /// Light color matrix entries LR22 and LR23
-    LR22_23<u32>; COP: 2; R: 50,
+    LR22_23<u32>; COP: 2; R: 50; "c",
     /// Light color matrix entries LR31 and LR32
-    LR31_32<u32>; COP: 2; R: 51,
+    LR31_32<u32>; COP: 2; R: 51; "c",
     /// Light color matrix entry LR33
-    LR33<i16>; COP: 2; R: 52,
-    */
+    LR33<i16>;    COP: 2; R: 52; "c",
+
+    /// Screen Offset and Distance X
+    OFX<u32>; COP: 2; R: 56; "c",
+    /// Screen Offset and Distance Y
+    OFY<u32>; COP: 2; R: 57; "c",
 }
