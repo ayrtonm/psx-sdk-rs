@@ -37,6 +37,7 @@ macro_rules! define_cop {
                         //concat!($cop_ty, "fc", $cop, " {}, $", $reg),
                         ".set noat",
                         concat!(".long 1<<30 | ", $cop, "<<26 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11"),
+                        "nop",
                         "addiu {}, $at, 0",
                         ".set at",
                         out(reg) self.value,

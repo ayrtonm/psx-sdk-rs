@@ -71,8 +71,14 @@ define_cop! {
     /// Light color matrix entry LR33
     LR33<i16>;    COP: 2; R: 52; "c",
 
+
     /// Screen Offset and Distance X
     OFX<u32>; COP: 2; R: 56; "c",
     /// Screen Offset and Distance Y
     OFY<u32>; COP: 2; R: 57; "c",
+    /// Projection plane distance
+    H<i16>;   COP: 2; R: 58; "c",
+
+    /// Error code status
+    FLAG<u32>; COP: 2; R: 63; "c",
 }
