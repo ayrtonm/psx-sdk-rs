@@ -21,6 +21,15 @@ define_cop! {
     /// Ordering table average Z value
     OTZ<u16>;  COP: 2; R: 7,
 
+    /// Intermediate value 0
+    IR0<i32>; COP: 2; R: 8,
+    /// Intermediate value 1
+    IR1<i32>; COP: 2; R: 9,
+    /// Intermediate value 2
+    IR2<i32>; COP: 2; R: 10,
+    /// Intermediate value 3
+    IR3<i32>; COP: 2; R: 11,
+
     /// Scalar math accumulator
     MAC0<i32>; COP: 2; R: 24,
 
