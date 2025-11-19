@@ -35,7 +35,10 @@ macro_rules! define_cop {
                 unsafe {
                     core::arch::asm! {
                         //concat!($cop_ty, "fc", $cop, " {}, $", $reg),
-                        concat!(".long 1<<30 | ", $cop, "<<26 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11 # {}"),
+                        ".set noat",
+                        concat!(".long 1<<30 | ", $cop, "<<26 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11"),
+                        "addiu {}, $at, 0",
+                        ".set at",
                         out(reg) self.value,
                         options(nomem, nostack)
                     }
@@ -47,7 +50,10 @@ macro_rules! define_cop {
                 unsafe {
                     core::arch::asm! {
                         //concat!($cop_ty, "tc", $cop, " {}, $", $reg),
-                        concat!(".long 1<<30 | ", $cop, "<<26 | 1<<23 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11 # {}"),
+                        ".set noat",
+                        "addiu $at, {}, 0",
+                        concat!(".long 1<<30 | ", $cop, "<<26 | 1<<23 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11"),
+                        ".set at",
                         in(reg) self.value,
                         options(nomem, nostack)
                     }
