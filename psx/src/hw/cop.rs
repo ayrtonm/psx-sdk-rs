@@ -19,11 +19,40 @@ impl<T: Primitive, const COP: u32, const REG: u32> AsMut<T> for CopRegister<T, C
     }
 }
 
+macro_rules! cop_move {
+    ("m", from, $cop:expr, $reg:expr) => {
+        concat!(
+            "mfc", $cop, " {}, $", $reg, "\n",
+            "nop"  // required to ensure value is in out(reg)
+        )
+    };
+    ("m", to, $cop:expr, $reg:expr) => {
+        concat!("mtc", $cop, " {}, $", $reg)
+    };
+    ("c", from, $cop:expr, $reg:expr) => {
+        //concat!("cfc", $cop, " {}, $", $reg) # Not currently supported by LLVM
+        concat!(
+            //       cop      n             CF      rt=$at   rd=$reg - 32
+            ".long 1<<30 | ", $cop, "<<26 | 2<<21 | 1<<16 | (", $reg, "-32)<<11 # cfc", $cop, "\n",
+            "nop\n",
+            "addiu {}, $at, 0"
+        )
+    };
+    ("c", to, $cop:expr, $reg:expr) => {
+        //concat!("ctc", $cop, " {}, $", $reg) # Not currently supported by LLVM
+        concat!(
+            "addiu $at, {}, 0\n",
+            //       cop      n             CT      rt=$at   rd=$reg - 32
+            ".long 1<<30 | ", $cop, "<<26 | 6<<21 | 1<<16 | (", $reg, "-32)<<11 # ctc", $cop
+        )
+    };
+}
+
 macro_rules! define_cop {
     ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(,)?) => {
-        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; "0");
+        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; "m");
     };
-    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr; $cop_ty:literal $(,)?) => {
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr; $cop_ty:tt $(,)?) => {
         $(#[$($meta)*])*
         pub type $name = crate::hw::cop::CopRegister<$ty, $cop, $reg>;
 
@@ -34,11 +63,8 @@ macro_rules! define_cop {
             fn load(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        //concat!($cop_ty, "fc", $cop, " {}, $", $reg),
                         ".set noat",
-                        concat!(".long 1<<30 | ", $cop, "<<26 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11"),
-                        "nop",
-                        "addiu {}, $at, 0",
+                        cop_move!($cop_ty, from, $cop, $reg),
                         ".set at",
                         out(reg) self.value,
                         options(nomem, nostack)
@@ -50,10 +76,8 @@ macro_rules! define_cop {
             fn store(&mut self) -> &mut Self {
                 unsafe {
                     core::arch::asm! {
-                        //concat!($cop_ty, "tc", $cop, " {}, $", $reg),
                         ".set noat",
-                        "addiu $at, {}, 0",
-                        concat!(".long 1<<30 | ", $cop, "<<26 | 1<<23 | (0x", $cop_ty, "/6)<<21 | 1 << 16 | (", $reg, " - 0x", $cop_ty, "/12*32) << 11"),
+                        cop_move!($cop_ty, to, $cop, $reg),
                         ".set at",
                         in(reg) self.value,
                         options(nomem, nostack)
@@ -63,7 +87,7 @@ macro_rules! define_cop {
             }
         }
     };
-    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(;$cop_ty:literal)?, $($others:tt)*) => {
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(;$cop_ty:tt)?, $($others:tt)*) => {
         define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg $(;$cop_ty)*);
         define_cop!($($others)*);
     };

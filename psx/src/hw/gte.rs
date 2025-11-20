@@ -45,7 +45,6 @@ define_cop! {
     /// Leading zeros count result
     LZCR<u32>; COP: 2; R: 31,
 
-    // TODO: LLVM doesn't support these coprocessor instructions yet (#7).
     /// Rotation matrix entries RT11 and RT12
     RT11_12<u32>; COP: 2; R: 32; "c",
 
