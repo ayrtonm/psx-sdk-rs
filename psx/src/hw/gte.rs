@@ -149,7 +149,7 @@ define_cop! {
     /// Z3 average scale factor (normally 1/3)
     ZSF3<u32>; COP: 2; R: 61; "c",
     /// Z4 average scale factor (normally 1/4)
-    ZSF3<u32>; COP: 2; R: 62; "c",
+    ZSF4<u32>; COP: 2; R: 62; "c",
 
     /// Error code status
     FLAG<u32>; COP: 2; R: 63; "c",
