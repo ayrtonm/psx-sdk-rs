@@ -146,7 +146,7 @@ mod tests {
         assert!(font.bpp == Bpp::Bits4);
         assert!(font.clut.offset == Clut::try_from(Vertex(0, 480)).unwrap());
         assert!(font.clut.size == Vertex(16, 1));
-        assert!(font.bmp.offset == TexPage::try_from(Vertex(10, 0)).unwrap());
+        assert!(font.bmp.offset == TexPage::new(Vertex(10, 0), Bpp::Bits4, None).unwrap());
         assert!(font.bmp.size == Vertex(32, 48));
     }
 }
