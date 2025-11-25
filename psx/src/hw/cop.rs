@@ -23,17 +23,22 @@ macro_rules! cop_move {
     ("m", from, $cop:expr, $reg:expr) => {
         concat!(
             "mfc", $cop, " {}, $", $reg, "\n",
-            "nop"  // required to ensure value is in out(reg)
+            "nop\n",
+            "nop", // 2 delay slots required to ensure value is in out(reg)
         )
     };
     ("m", to, $cop:expr, $reg:expr) => {
-        concat!("mtc", $cop, " {}, $", $reg)
+        concat!("mtc", $cop, " {}, $", $reg, "\n",
+            "nop\n",
+            "nop"
+        )
     };
     ("c", from, $cop:expr, $reg:expr) => {
         //concat!("cfc", $cop, " {}, $", $reg) # Not currently supported by LLVM
         concat!(
             //       cop      n             CF      rt=$at   rd=$reg - 32
             ".long 1<<30 | ", $cop, "<<26 | 2<<21 | 1<<16 | (", $reg, "-32)<<11 # cfc", $cop, "\n",
+            "nop\n",
             "nop\n",
             "addiu {}, $at, 0"
         )
@@ -43,7 +48,9 @@ macro_rules! cop_move {
         concat!(
             "addiu $at, {}, 0\n",
             //       cop      n             CT      rt=$at   rd=$reg - 32
-            ".long 1<<30 | ", $cop, "<<26 | 6<<21 | 1<<16 | (", $reg, "-32)<<11 # ctc", $cop
+            ".long 1<<30 | ", $cop, "<<26 | 6<<21 | 1<<16 | (", $reg, "-32)<<11 # ctc", $cop, "\n",
+            "nop\n",
+            "nop",
         )
     };
 }
