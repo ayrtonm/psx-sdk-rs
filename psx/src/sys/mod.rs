@@ -42,6 +42,33 @@ pub fn get_system_version() -> &'static CStr {
     unsafe { CStr::from_ptr(version) }
 }
 
+enum SystemRegion {
+    Japan,
+    NorthAmerica,
+    Europe,
+    Unknown,
+}
+
+pub fn get_system_region() -> SystemRegion {
+    const REGION_ID: *const u8 = 0xbfc7ff52 as _;
+
+    // SAFETY: Sony BIOSes always have a character at this pointer denoting the
+    // region of the console.
+    //                                   pointer --
+    //                                            v
+    // SCPH-5500: System ROM Version 3.0 09/09/96 J
+    // SCPH-5501: System ROM Version 3.0 11/18/96 A
+    // SCPH-5502: System ROM Version 3.0 01/06/97 E
+    // etc.
+    let region_char = char::from(unsafe { REGION_ID.read() });
+
+    match region_char {
+        'J' => SystemRegion::Japan,
+        'A' => SystemRegion::NorthAmerica,
+        'E' => SystemRegion::Europe,
+        _ => SystemRegion::Unknown,
+    }
+}
 /// Returns the kernel's date in BCD (e.g. 0x19951204).
 pub fn get_system_date() -> u32 {
     unsafe { kernel::psx_get_system_info(0) }

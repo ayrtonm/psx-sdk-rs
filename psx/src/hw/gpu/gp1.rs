@@ -90,4 +90,15 @@ impl GP1 {
             .horizontal_range(disp_env.horizontal_range)
             .vertical_range(disp_env.vertical_range)
     }
+
+    /// Get the current video mode of the GPU.
+    pub fn get_video_mode(&mut self) -> VideoMode {
+        self.load();
+
+        if self.any_set(1 << 20) {
+            VideoMode::PAL
+        } else {
+            VideoMode::NTSC
+        }
+    }
 }
