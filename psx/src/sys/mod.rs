@@ -51,7 +51,7 @@ enum SystemRegion {
 
 /// Returns the system's region.
 pub fn get_system_region() -> SystemRegion {
-    const REGION_ID: *const u8 = 0xbfc7ff52 as _;
+    const REGION_ID: *const u8 = 0xbfc7ff52u32 as _;
 
     // SAFETY: Sony BIOSes always have a character at this pointer denoting the
     // region of the console.
