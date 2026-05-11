@@ -42,7 +42,7 @@ pub fn get_system_version() -> &'static CStr {
     unsafe { CStr::from_ptr(version) }
 }
 
-enum SystemRegion {
+pub enum SystemRegion {
     Japan,
     NorthAmerica,
     Europe,
@@ -53,7 +53,7 @@ enum SystemRegion {
 pub fn get_system_region() -> SystemRegion {
     const REGION_ID: *const u8 = 0xbfc7ff52u32 as _;
 
-    // SAFETY: Sony BIOSes always have a character at this pointer denoting the
+    // SAFETY: Sony BIOSes usually have a character at this pointer denoting the
     // region of the console.
     //                                   pointer --
     //                                            v
