@@ -42,10 +42,15 @@ pub fn get_system_version() -> &'static CStr {
     unsafe { CStr::from_ptr(version) }
 }
 
+/// System region
 pub enum SystemRegion {
+    /// Japan
     Japan,
+    /// North America
     NorthAmerica,
+    /// Europe
     Europe,
+    /// Unknown region
     Unknown,
 }
 
