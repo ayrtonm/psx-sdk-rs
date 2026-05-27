@@ -5,6 +5,7 @@
 use crate::CriticalSection;
 use core::ffi::CStr;
 
+pub mod event;
 pub mod fs;
 pub mod gamepad;
 pub mod heap;
