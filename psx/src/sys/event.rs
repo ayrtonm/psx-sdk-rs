@@ -14,13 +14,16 @@ struct InternalEvent {
     _unused: [u8; 8],
 }
 
-/// Get a pointer to the Event Control Block belonging to a event handler.
-///
-/// This is not unsafe because all it does is calculate the pointer, it does not
-/// attempt to access the event itself.
-fn get_event_ptr(event: u32) -> *mut InternalEvent {
-    const SYS_EVCB: *const u32 = 0x120 as *const u32;
+const SYS_EVCB: *const u32 = 0x120 as _;
+const SYS_EVCB_SIZE: *const u32 = 0x124 as _;
 
+/// Get a pointer to the Event Control Block belonging to a event handler. This
+/// pointer is within the first 64 kilobytes of the system RAM.
+///
+/// SAFETY: You have to check that the handle is within the range of the EvCB
+/// table (by checking the size of the table against the handle), Otherwise, the
+/// resulting pointer may be invalid.
+unsafe fn get_event_ptr(event: u32) -> *mut InternalEvent {
     // SAFETY: This global variable should exist in all the Sony BIOSes.
     let evcb_ptr = unsafe { SYS_EVCB.read() } as *mut InternalEvent;
 
@@ -28,7 +31,7 @@ fn get_event_ptr(event: u32) -> *mut InternalEvent {
 }
 
 /// Status of the event.
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum EventStatus {
     /// The event is free/unallocated
     Unallocated,
@@ -71,9 +74,12 @@ pub struct Event<MODE: EventMode> {
 impl<MODE: EventMode> Event<MODE> {
     /// Get the status of the event.
     pub fn status(&self) -> EventStatus {
-        // SAFETY: Since the kernel does not provide a function to get the status of the
+        // Since the kernel does not provide a function to get the status of the
         // event, we have to read the kernel's global variables to get it.
-        let evcb = get_event_ptr(self.handle);
+
+        // SAFETY: Once the event has been initialized by the BIOS, we can read the mode
+        // field without synchronization.
+        let evcb = unsafe { get_event_ptr(self.handle) };
 
         match unsafe { (*evcb).mode } {
             0 => EventStatus::Unallocated,
@@ -87,19 +93,28 @@ impl<MODE: EventMode> Event<MODE> {
 
 impl Event<Poll> {
     /// Create a new polling event.
-    pub fn new(class: u32, spec: u16) -> Event<Poll> {
+    ///
+    /// Returns an error if the handle it gets from the BIOS ends up being
+    /// invalid.
+    pub fn new(class: u32, spec: u16) -> Result<Event<Poll>, ()> {
         unsafe {
-            critical_section(|t| {
+            critical_section(|_| {
                 // The BIOS should never execute the callback, so we can set it to a null
                 // pointer
                 let handle = kernel::psx_open_event(class, spec, Poll::MODE_ID, 0x0 as _);
 
+                // Check if the handle is outside the EvCB table, and return an error if it is,
+                // since it most likely means an error occurred in the BIOS.
+                if (handle & 0xFFFF) * 0x1C > SYS_EVCB_SIZE.read() {
+                    return Err(());
+                }
+
                 kernel::psx_enable_event(handle);
 
-                Event {
+                Ok(Event {
                     handle,
                     _mode: PhantomData::<Poll>,
-                }
+                })
             })
         }
     }
@@ -124,17 +139,26 @@ impl Event<Poll> {
 
 impl Event<Callback> {
     /// Create a new callback event.
-    pub fn new(class: u32, spec: u16, callback: fn()) -> Event<Callback> {
+    ///
+    /// Returns an error if the handle it gets from the BIOS ends up being
+    /// invalid.
+    pub fn new(class: u32, spec: u16, callback: fn()) -> Result<Event<Callback>, ()> {
         unsafe {
             critical_section(|_| {
                 let handle = kernel::psx_open_event(class, spec, Callback::MODE_ID, callback as _);
 
+                // Check if the handle is outside the EvCB table, and return an error if it is,
+                // since it most likely means an error occurred in the BIOS.
+                if (handle & 0xFFFF) * 0x1C > SYS_EVCB_SIZE.read() {
+                    return Err(());
+                }
+
                 kernel::psx_enable_event(handle);
 
-                Event {
+                Ok(Event {
                     handle,
                     _mode: PhantomData::<Callback>,
-                }
+                })
             })
         }
     }
