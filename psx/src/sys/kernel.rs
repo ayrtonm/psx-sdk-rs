@@ -118,6 +118,8 @@ extern "C" {
     pub fn psx_start_pad();
     /// Calls BIOS function [B(14h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_stop_pad();
+    /// Calls BIOS function [B(17h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn psx_return_from_exception();
     /// Calls BIOS function [B(18h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_set_default_exit_from_exception();
     /// Calls BIOS function [B(20h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -381,6 +383,10 @@ pub const START_PAD_TY: u8 = 0xB0;
 pub const STOP_PAD_NUM: u8 = 0x14;
 /// The BIOS function type for stop_pad
 pub const STOP_PAD_TY: u8 = 0xB0;
+/// The BIOS function number for return_from_exception
+pub const RETURN_FROM_EXCEPTION_NUM: u8 = 0x17;
+/// The BIOS function type for return_from_exception
+pub const RETURN_FROM_EXCEPTION_TY: u8 = 0xB0;
 /// The BIOS function number for set_default_exit_from_exception
 pub const SET_DEFAULT_EXIT_FROM_EXCEPTION_NUM: u8 = 0x18;
 /// The BIOS function type for set_default_exit_from_exception

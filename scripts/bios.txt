@@ -196,7 +196,10 @@ B(14h) stop_pad();
 
 //B(15h) OutdatedPadInitAndStart(type,button_dest,unused,unused)
 //B(16h) OutdatedPadGetButtons()
-//B(17h) ReturnFromException()
+
+// Return from an exception handler.
+B(17h) return_from_exception();
+
 B(18h) set_default_exit_from_exception();
 //B(19h) SetCustomExitFromException(addr)
 

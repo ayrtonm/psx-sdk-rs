@@ -393,6 +393,13 @@ psx_stop_pad:
     jr $8
     li $9, 0x14
 
+.section .text.bios.psx_return_from_exception
+.globl psx_return_from_exception
+psx_return_from_exception:
+    la $8, 0xB0
+    jr $8
+    li $9, 0x17
+
 .section .text.bios.psx_set_default_exit_from_exception
 .globl psx_set_default_exit_from_exception
 psx_set_default_exit_from_exception:
