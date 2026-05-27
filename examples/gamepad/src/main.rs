@@ -5,7 +5,7 @@ use alloc::string::String;
 use psx::gpu::VideoMode;
 use psx::sys::event::{Event, Poll};
 use psx::sys::gamepad::Gamepad;
-use psx::{Framebuffer, dprintln};
+use psx::{Framebuffer, dprintln, println};
 
 psx::sys_heap!(500 KB);
 #[unsafe(no_mangle)]
@@ -14,7 +14,7 @@ fn main() {
     // the raw IRQ register (which is impossible to use alongside the BIOS'
     // gamepad handler without taking over the kernel). So we register a polling
     // BIOS event on the VBlank IRQ.
-    let vblank_event = Event::<Poll>::new(0xF2000003, 0x0002);
+    let vblank_event = Event::<Poll>::new(0xF2000003, 0x0002).unwrap();
 
     let buf0 = (0, 0);
     let buf1 = (0, 240);
