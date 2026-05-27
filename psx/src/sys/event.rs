@@ -10,7 +10,7 @@ struct InternalEvent {
     status: u32,
     spec: u32,
     mode: u32,
-    func_ptr: fn(),
+    func_ptr: extern "C" fn(),
     _unused: [u8; 8],
 }
 
@@ -142,7 +142,7 @@ impl Event<Callback> {
     ///
     /// Returns an error if the handle it gets from the BIOS ends up being
     /// invalid.
-    pub fn new(class: u32, spec: u16, callback: fn()) -> Result<Event<Callback>, ()> {
+    pub fn new(class: u32, spec: u16, callback: extern "C" fn()) -> Result<Event<Callback>, ()> {
         unsafe {
             critical_section(|_| {
                 let handle = kernel::psx_open_event(class, spec, Callback::MODE_ID, callback as _);
