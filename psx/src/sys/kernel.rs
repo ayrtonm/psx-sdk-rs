@@ -80,6 +80,8 @@ extern "C" {
     pub fn psx_warm_boot() -> !;
     /// Calls BIOS function [A(A4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_cd_get_lbn(filename: *const i8) -> i32;
+    /// Calls BIOS function [A(A5h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn psx_cd_read_sector(count: i32, sector: i32, buffer: *mut u8) -> i32;
     /// Calls BIOS function [A(A6h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_cd_get_status(dst: *mut u32);
     /// Calls BIOS function [A(B4h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -307,6 +309,10 @@ pub const WARM_BOOT_TY: u8 = 0xA0;
 pub const CD_GET_LBN_NUM: u8 = 0xA4;
 /// The BIOS function type for cd_get_lbn
 pub const CD_GET_LBN_TY: u8 = 0xA0;
+/// The BIOS function number for cd_read_sector
+pub const CD_READ_SECTOR_NUM: u8 = 0xA5;
+/// The BIOS function type for cd_read_sector
+pub const CD_READ_SECTOR_TY: u8 = 0xA0;
 /// The BIOS function number for cd_get_status
 pub const CD_GET_STATUS_NUM: u8 = 0xA6;
 /// The BIOS function type for cd_get_status

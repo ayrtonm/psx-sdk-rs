@@ -153,7 +153,7 @@ A(A0h) warm_boot() -> !;
 //A(A2h) enqueuecdintr()  ;with prio=0 (fixed);
 //A(A3h) dequeuecdintr()  ;does NOT work due to SysDeqIntRP bug;
 A(A4h) cd_get_lbn(filename: *const i8) -> i32;
-//A(A5h) cdreadsector(count,sector,buffer);
+A(A5h) cd_read_sector(count: i32, sector: i32, buffer: *mut u8) -> i32;
 A(A6h) cd_get_status(dst: *mut u32);
 //A(A7h) bu_callback_okay();
 //A(A8h) bu_callback_err_write();

@@ -399,6 +399,25 @@ impl File<MemCard> {
     }
 }
 
+impl File<CDROM> {
+    /// Attempts to fetch the first LBN of a file in the CD.
+    pub fn first_lbn(path: &str) -> Result<usize, Error<CDROM>> {
+        // This is just here to make sure the filesystem is initialized before we
+        // continue.
+        OpenOptions::<CDROM>::new();
+
+        path.as_cstr(|path| unsafe {
+            let res = kernel::psx_cd_get_lbn(path.as_ptr());
+
+            match res {
+                i32::MIN..=-2 => Err(Error::Resolved(ErrorKind::UnknownError)),
+                -1 => Err(Error::Unresolved),
+                0..=i32::MAX => Ok(res as usize),
+            }
+        })
+    }
+}
+
 impl<T: FileTy> Drop for File<T> {
     fn drop(&mut self) {
         let _res = unsafe { kernel::psx_file_close(self.fd) };

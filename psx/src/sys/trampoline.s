@@ -260,6 +260,13 @@ psx_cd_get_lbn:
     jr $8
     li $9, 0xA4
 
+.section .text.bios.psx_cd_read_sector
+.globl psx_cd_read_sector
+psx_cd_read_sector:
+    la $8, 0xA0
+    jr $8
+    li $9, 0xA5
+
 .section .text.bios.psx_cd_get_status
 .globl psx_cd_get_status
 psx_cd_get_status:
