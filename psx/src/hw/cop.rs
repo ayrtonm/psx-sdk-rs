@@ -35,9 +35,19 @@ macro_rules! cop_move {
     };
     (c, from, $cop:expr, $reg:expr) => {
         // cfc2 not currently supported by LLVM
+        // MIPS CFCn (Move Control From Coprocessor) instruction layout:
+        // 31    26 25   21 20   16 15   11 10           0
+        // +-------+-------+-------+-------+--------------+
+        // | COPn  |  CF   |  rt   |  rd   |  Padding     |
+        // | 0100nn| 00010 | 00001 | reg-32| 000 0000 0000|
+        // +-------+-------+-------+-------+--------------+
+        //     6       5       5       5        11
+        // - COPn: Opcode prefix (0x10 | $cop) -> 1 << 30 | ($cop << 26)
+        // - CF:   Coprocessor sub-operation 'Move Control From' -> 2 << 21
+        // - rt:   General purpose register (destination). Hardcoded to 1 ($at) -> 1 << 16
+        // - rd:   Coprocessor control register (source) -> ($reg - 32) << 11
         concat!(
-            //       cop      n             CF      rt=$at   rd=$reg - 32
-            ".long 1<<30 | ", $cop, "<<26 | 2<<21 | 1<<16 | (", $reg, "-32)<<11 # cfc", $cop, "\n",
+            ".long (1 << 30) | (", $cop, " << 26) | (2 << 21) | (1 << 16) | ((", $reg, " - 32) << 11) # cfc", $cop, "\n",
             "nop\n",
             "nop\n",
             "addiu {}, $at, 0"
@@ -45,10 +55,20 @@ macro_rules! cop_move {
     };
     (c, to, $cop:expr, $reg:expr) => {
         // ctc2 not currently supported by LLVM
+        // MIPS CTCn (Move Control to Coprocessor) instruction layout:
+        // 31    26 25   21 20   16 15   11 10           0
+        // +-------+-------+-------+-------+--------------+
+        // | COPn  |  CT   |  rt   |  rd   |  Padding     |
+        // | 0100nn| 00110 | 00001 | reg-32| 000 0000 0000|
+        // +-------+-------+-------+-------+--------------+
+        //     6       5       5       5        11
+        // - COPn: Opcode prefix (0x10 | $cop) -> 1 << 30 | ($cop << 26)
+        // - CT:   Coprocessor sub-operation 'Move Control To' -> 6 << 21
+        // - rt:   General purpose register (source). Hardcoded to 1 ($at) -> 1 << 16
+        // - rd:   Coprocessor control register (destination) -> ($reg - 32) << 11
         concat!(
             "addiu $at, {}, 0\n",
-            //       cop      n             CT      rt=$at   rd=$reg - 32
-            ".long 1<<30 | ", $cop, "<<26 | 6<<21 | 1<<16 | (", $reg, "-32)<<11 # ctc", $cop, "\n",
+            ".long (1 << 30) | (", $cop, " << 26) | (6 << 21) | (1 << 16) | ((", $reg, " - 32) << 11) # ctc", $cop, "\n",
             "nop\n",
             "nop",
         )
