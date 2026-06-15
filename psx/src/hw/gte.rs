@@ -80,77 +80,77 @@ define_cop! {
     LZCR<u32>; COP: 2; R: 31,
 
     /// Rotation matrix entries RT11 and RT12
-    RT11_12<u32>; COP: 2; R: 32; "c",
+    RT11_12<u32>; COP: 2; R: 32; c,
 
     /// Rotation matrix entries RT13 and RT21
-    RT13_21<u32>; COP: 2; R: 33; "c",
+    RT13_21<u32>; COP: 2; R: 33; c,
     /// Rotation matrix entries RT22 and RT23
-    RT22_23<u32>; COP: 2; R: 34; "c",
+    RT22_23<u32>; COP: 2; R: 34; c,
     /// Rotation matrix entries RT31 and RT32
-    RT31_32<u32>; COP: 2; R: 35; "c",
+    RT31_32<u32>; COP: 2; R: 35; c,
     /// Rotation matrix entry RT33
-    RT33<i16>;    COP: 2; R: 36; "c",
+    RT33<i16>;    COP: 2; R: 36; c,
 
     /// Translation vector X
-    TRX<i32>; COP: 2; R: 37; "c",
+    TRX<i32>; COP: 2; R: 37; c,
     /// Translation vector Y
-    TRY<i32>; COP: 2; R: 38; "c",
+    TRY<i32>; COP: 2; R: 38; c,
     /// Translation vector Z
-    TRZ<i32>; COP: 2; R: 39; "c",
+    TRZ<i32>; COP: 2; R: 39; c,
 
     /// Light matrix entries L11 and L12
-    L11_12<u32>; COP: 2; R: 40; "c",
+    L11_12<u32>; COP: 2; R: 40; c,
     /// Light matrix entries L13 and L21
-    L13_21<u32>; COP: 2; R: 41; "c",
+    L13_21<u32>; COP: 2; R: 41; c,
     /// Light matrix entries L22 and L23
-    L22_23<u32>; COP: 2; R: 42; "c",
+    L22_23<u32>; COP: 2; R: 42; c,
     /// Light matrix entries L31 and L32
-    L31_32<u32>; COP: 2; R: 43; "c",
+    L31_32<u32>; COP: 2; R: 43; c,
     /// Light matrix entry L33
-    L33<i16>;    COP: 2; R: 44; "c",
+    L33<i16>;    COP: 2; R: 44; c,
 
     /// Background color red component
-    RBK<u32>; COP: 2; R: 45; "c",
+    RBK<u32>; COP: 2; R: 45; c,
     /// Background color green component
-    GBK<u32>; COP: 2; R: 46; "c",
+    GBK<u32>; COP: 2; R: 46; c,
     /// Background color blue component
-    BBK<u32>; COP: 2; R: 47; "c",
+    BBK<u32>; COP: 2; R: 47; c,
 
     /// Light color matrix entries LR11 and LR12
-    LR11_12<u32>; COP: 2; R: 48; "c",
+    LR11_12<u32>; COP: 2; R: 48; c,
     /// Light color matrix entries LR13 and LR21
-    LR13_21<u32>; COP: 2; R: 49; "c",
+    LR13_21<u32>; COP: 2; R: 49; c,
     /// Light color matrix entries LR22 and LR23
-    LR22_23<u32>; COP: 2; R: 50; "c",
+    LR22_23<u32>; COP: 2; R: 50; c,
     /// Light color matrix entries LR31 and LR32
-    LR31_32<u32>; COP: 2; R: 51; "c",
+    LR31_32<u32>; COP: 2; R: 51; c,
     /// Light color matrix entry LR33
-    LR33<i16>;    COP: 2; R: 52; "c",
+    LR33<i16>;    COP: 2; R: 52; c,
 
     /// Far color red component
-    RFC<u32>; COP: 2; R: 53; "c",
+    RFC<u32>; COP: 2; R: 53; c,
     /// Far color green component
-    GFC<u32>; COP: 2; R: 54; "c",
+    GFC<u32>; COP: 2; R: 54; c,
     /// Far color blue component
-    BFC<u32>; COP: 2; R: 55; "c",
+    BFC<u32>; COP: 2; R: 55; c,
 
     /// Screen Offset and Distance X
-    OFX<u32>; COP: 2; R: 56; "c",
+    OFX<u32>; COP: 2; R: 56; c,
     /// Screen Offset and Distance Y
-    OFY<u32>; COP: 2; R: 57; "c",
+    OFY<u32>; COP: 2; R: 57; c,
     /// Projection plane distance
-    H<i16>;   COP: 2; R: 58; "c",
+    H<i16>;   COP: 2; R: 58; c,
 
     /// Depth queuing parameter A. (coefficient)
-    DQA<u32>; COP: 2; R: 59; "c",
+    DQA<u32>; COP: 2; R: 59; c,
     /// Depth queuing parameter B. (offset)
-    DQB<u32>; COP: 2; R: 60; "c",
+    DQB<u32>; COP: 2; R: 60; c,
 
     /// Z3 average scale factor (normally 1/3)
-    ZSF3<u32>; COP: 2; R: 61; "c",
+    ZSF3<u32>; COP: 2; R: 61; c,
     /// Z4 average scale factor (normally 1/4)
-    ZSF4<u32>; COP: 2; R: 62; "c",
+    ZSF4<u32>; COP: 2; R: 62; c,
 
     /// Error code status
-    FLAG<u32>; COP: 2; R: 63; "c",
+    FLAG<u32>; COP: 2; R: 63; c,
 }

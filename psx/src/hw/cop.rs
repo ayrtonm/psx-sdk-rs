@@ -20,21 +20,21 @@ impl<T: Primitive, const COP: u32, const REG: u32> AsMut<T> for CopRegister<T, C
 }
 
 macro_rules! cop_move {
-    ("m", from, $cop:expr, $reg:expr) => {
+    (m, from, $cop:expr, $reg:expr) => {
         concat!(
             "mfc", $cop, " {}, $", $reg, "\n",
             "nop\n",
             "nop", // 2 delay slots required to ensure value is in out(reg)
         )
     };
-    ("m", to, $cop:expr, $reg:expr) => {
+    (m, to, $cop:expr, $reg:expr) => {
         concat!("mtc", $cop, " {}, $", $reg, "\n",
             "nop\n",
             "nop"
         )
     };
-    ("c", from, $cop:expr, $reg:expr) => {
-        //concat!("cfc", $cop, " {}, $", $reg) # Not currently supported by LLVM
+    (c, from, $cop:expr, $reg:expr) => {
+        // cfc2 not currently supported by LLVM
         concat!(
             //       cop      n             CF      rt=$at   rd=$reg - 32
             ".long 1<<30 | ", $cop, "<<26 | 2<<21 | 1<<16 | (", $reg, "-32)<<11 # cfc", $cop, "\n",
@@ -43,8 +43,8 @@ macro_rules! cop_move {
             "addiu {}, $at, 0"
         )
     };
-    ("c", to, $cop:expr, $reg:expr) => {
-        //concat!("ctc", $cop, " {}, $", $reg) # Not currently supported by LLVM
+    (c, to, $cop:expr, $reg:expr) => {
+        // ctc2 not currently supported by LLVM
         concat!(
             "addiu $at, {}, 0\n",
             //       cop      n             CT      rt=$at   rd=$reg - 32
@@ -57,9 +57,9 @@ macro_rules! cop_move {
 
 macro_rules! define_cop {
     ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(,)?) => {
-        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; "m");
+        define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg; m);
     };
-    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr; $cop_ty:tt $(,)?) => {
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr; $cop_ty:ident $(,)?) => {
         $(#[$($meta)*])*
         pub type $name = crate::hw::cop::CopRegister<$ty, $cop, $reg>;
 
@@ -94,7 +94,7 @@ macro_rules! define_cop {
             }
         }
     };
-    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(;$cop_ty:tt)?, $($others:tt)*) => {
+    ($(#[$($meta:meta)*])* $name:ident <$ty:ty>; COP: $cop:expr; R: $reg:expr $(;$cop_ty:ident)?, $($others:tt)*) => {
         define_cop!($(#[$($meta)*])* $name<$ty>; COP: $cop; R: $reg $(;$cop_ty)*);
         define_cop!($($others)*);
     };
