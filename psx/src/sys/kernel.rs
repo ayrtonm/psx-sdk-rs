@@ -148,6 +148,8 @@ extern "C" {
     pub fn psx_get_last_error() -> u32;
     /// Calls BIOS function [B(55h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_get_last_file_error(fd: i8) -> u32;
+    /// Calls BIOS function [B(57h)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
+    pub fn psx_get_b0_table() -> u32;
     /// Calls BIOS function [B(5Bh)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
     pub fn psx_change_clear_pad(int: u32);
     /// Calls BIOS function [C(0Ah)](http://problemkaputt.de/psx-spx.htm#biosfunctionsummary)
@@ -445,6 +447,10 @@ pub const GET_LAST_ERROR_TY: u8 = 0xB0;
 pub const GET_LAST_FILE_ERROR_NUM: u8 = 0x55;
 /// The BIOS function type for get_last_file_error
 pub const GET_LAST_FILE_ERROR_TY: u8 = 0xB0;
+/// The BIOS function number for get_b0_table
+pub const GET_B0_TABLE_NUM: u8 = 0x57;
+/// The BIOS function type for get_b0_table
+pub const GET_B0_TABLE_TY: u8 = 0xB0;
 /// The BIOS function number for change_clear_pad
 pub const CHANGE_CLEAR_PAD_NUM: u8 = 0x5B;
 /// The BIOS function type for change_clear_pad

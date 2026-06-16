@@ -498,6 +498,13 @@ psx_get_last_file_error:
     jr $8
     li $9, 0x55
 
+.section .text.bios.psx_get_b0_table
+.globl psx_get_b0_table
+psx_get_b0_table:
+    la $8, 0xB0
+    jr $8
+    li $9, 0x57
+
 .section .text.bios.psx_change_clear_pad
 .globl psx_change_clear_pad
 psx_change_clear_pad:

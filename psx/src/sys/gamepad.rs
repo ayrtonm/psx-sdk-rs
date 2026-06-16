@@ -1,8 +1,11 @@
 //! Gamepad polling operations
 use crate::sys::kernel;
+use crate::sys::patch;
+use crate::sys::patch::PadOutputFunction;
 use core::marker::PhantomData;
 use core::mem::size_of;
 use core::mem::MaybeUninit;
+use core::ptr::null;
 use core::ptr::read_volatile;
 
 // TODO: this is off by a factor of two, but I should double check whether the
@@ -21,7 +24,17 @@ pub struct Gamepad<'a> {
     buf1: *mut u16,
     buf2: *mut u16,
     _buf: PhantomData<&'a mut [u32; BUFFER_SIZE]>,
+    pad_output: PadOutputFunction,
+    vibration_p1: bool,
+    vibration_p2: bool,
 }
+
+/// Data to be sent to the controller to activate the vibration motors.
+///
+/// The first byte is set to 0xFF because the BIOS checks if it should use the
+/// output buffer by accessing the first byte of the buffer and checking if it's
+/// zero (and then checking if the buffer pointer is NULL, yeah).
+static VIBRATION_ON_BUFFER: [u8; 3] = [0xFF, 0x40, 0x01];
 
 /// This boolean is used to ensure that there's only one Gamepad at a time.
 static mut GAMEPAD_TAKEN: bool = false;
@@ -190,10 +203,14 @@ impl<'a> Gamepad<'a> {
         buf1.cast::<u32>().add(1).write_volatile(0x8080_8080);
         kernel::psx_start_pad();
         kernel::psx_change_clear_pad(1);
+
         Self {
             buf1,
             buf2,
             _buf: PhantomData,
+            pad_output: patch::send_pad_output(),
+            vibration_p1: false,
+            vibration_p2: false,
         }
     }
 
@@ -237,6 +254,40 @@ impl<'a> Gamepad<'a> {
     /// cannot be elided.
     pub fn poll_lstick_p2(&mut self) -> JoyStick {
         unsafe { JoyStick(read_volatile(self.buf2.add(3))) }
+    }
+
+    fn apply_vibration(&mut self) {
+        let p1_buffer: *const u8 = if self.vibration_p1 {
+            VIBRATION_ON_BUFFER.as_ptr()
+        } else {
+            null()
+        };
+
+        let p2_buffer: *const u8 = if self.vibration_p2 {
+            VIBRATION_ON_BUFFER.as_ptr()
+        } else {
+            null()
+        };
+
+        // The size arguments aren't used at all in the BIOS code, so they can be set to
+        // whatever.
+        (self.pad_output)(
+            p1_buffer,
+            VIBRATION_ON_BUFFER.len(),
+            p2_buffer,
+            VIBRATION_ON_BUFFER.len(),
+        );
+    }
+    /// Turn on or off the vibration motors in player 1's controller.
+    pub fn vibration_p1(&mut self, enable: bool) {
+        self.vibration_p1 = enable;
+        self.apply_vibration();
+    }
+
+    /// Turn on or off the vibration motors in player 2's controller.
+    pub fn vibration_p2(&mut self, enable: bool) {
+        self.vibration_p2 = enable;
+        self.apply_vibration();
     }
 }
 

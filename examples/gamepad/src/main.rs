@@ -32,8 +32,16 @@ fn main() {
     // Gamepad happens to auto-acknowledge VBlank IRQs, if change_clear_pad is set
     // to 1
     let mut gamepad = Gamepad::new();
+    let mut vibration = false;
+    let mut start_last_frame = false;
+    let mut start_this_frame = false;
+
     loop {
         let mut but_str = String::new();
+        let buttons = gamepad.poll_p1();
+
+        // Check if Start is held this frame.
+        start_this_frame = buttons.pressed(psx::sys::gamepad::Button::Start);
 
         for button in gamepad.poll_p1() {
             but_str += match button {
@@ -58,8 +66,26 @@ fn main() {
 
         txt.reset();
         dprintln!(txt, "Buttons: {}", but_str);
+
+        // This is just to stop the program from spamming 1-frame vibrations (which is
+        // kinda like a half-vibration).
+        if start_last_frame ^ start_this_frame {
+            vibration = !vibration;
+        }
+
+        if vibration {
+            dprintln!(txt, "Release Start to stop vibrating!");
+        } else {
+            dprintln!(txt, "Hold Start to start vibrating!");
+        }
+
         fb.draw_sync();
+        gamepad.vibration_p1(vibration);
         vblank_event.wait();
+
+        start_last_frame = start_this_frame;
+        start_this_frame = false;
+
         fb.swap();
     }
 }
