@@ -401,12 +401,12 @@ impl File<MemCard> {
 
 impl File<CDROM> {
     /// Attempts to fetch the first LBN of a file in the CD.
-    pub fn first_lbn(path: &str) -> Result<usize, Error<CDROM>> {
+    pub fn first_lbn(path: &CStr) -> Result<usize, Error<CDROM>> {
         // This is just here to make sure the filesystem is initialized before we
         // continue.
         OpenOptions::<CDROM>::new();
 
-        path.as_cstr(|path| unsafe {
+        unsafe {
             let res = kernel::psx_cd_get_lbn(path.as_ptr());
 
             match res {
@@ -414,7 +414,7 @@ impl File<CDROM> {
                 -1 => Err(Error::Unresolved),
                 0..=i32::MAX => Ok(res as usize),
             }
-        })
+        }
     }
 }
 
