@@ -1,3 +1,5 @@
+//! SPU ADSR module
+
 /// Envelope mode
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
