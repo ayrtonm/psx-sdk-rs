@@ -1,5 +1,6 @@
 //! SPU interface
 
+pub mod adsr;
 pub mod reverb;
 pub mod volume;
 
