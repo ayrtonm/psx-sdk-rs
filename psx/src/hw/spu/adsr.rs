@@ -35,12 +35,13 @@ pub struct ADSR {
 }
 
 impl ADSR {
+    /// Return the ADSR register bits from this structure.
     pub fn to_bits(&self) -> u32 {
         self.value
     }
 }
 
-/// ADSR setting builder. This lets you automatically construct an ADSR register
+/// [`ADSR`] builder. This lets you automatically construct an ADSR register
 /// value, best used in a const context for compile-time computation.
 ///
 /// # Example
@@ -93,7 +94,11 @@ impl ADSRBuilder<false, false, false, false> {
 }
 
 impl<const D: bool, const S: bool, const R: bool> ADSRBuilder<false, D, S, R> {
-    /// Set the registers related to the Attack stage of the ADSR envelope.
+    /// Set the registers related to the Attack stage of the ADSR envelope. The
+    /// envelope direction cannot be set (it's always set to
+    /// [`EnvelopeDirection::Increase`])
+    ///
+    /// # Parameters
     ///
     /// * `mode`: Whether the Attack stage should increase from `0` to `0x7FFF`
     ///   exponentially or linearly.
@@ -128,6 +133,19 @@ impl<const D: bool, const S: bool, const R: bool> ADSRBuilder<false, D, S, R> {
 }
 
 impl<const A: bool, const S: bool, const R: bool> ADSRBuilder<A, false, S, R> {
+    /// Set the registers related to the Decay stage of the ADSR envelope. Only
+    /// `shift` can be set here.
+    ///
+    /// # Fixed parameters
+    ///
+    /// * `mode`: [`EnvelopeMode::Exponential`]
+    /// * `direction`: [`EnvelopeDirection::Decrease`]
+    /// * `step`: `0`
+    ///
+    /// # Parameters
+    ///
+    /// * `shift`: Coarse speed. Cant be set within `0x00` to `0x0F` (faster to
+    ///   slower).
     pub const fn decay(self, shift: u8) -> ADSRBuilder<A, true, S, R> {
         if shift > 0x0F {
             panic!("ADSR decay shift is bigger than the maximum value possible (0x0F)");
@@ -150,6 +168,20 @@ impl<const A: bool, const S: bool, const R: bool> ADSRBuilder<A, false, S, R> {
 }
 
 impl<const A: bool, const D: bool, const R: bool> ADSRBuilder<A, D, false, R> {
+    /// Set the registers related to the Sustain stage of the ADSR envelope.
+    ///
+    /// # Parameters
+    ///
+    /// * `level`: Sustain level. This controls when the Decay stage will end
+    ///   (when the ADSR volume reaches `(level + 1) * 0x800`). Can be set
+    ///   within `0x00` to `0x0F`.
+    /// * `mode`: Whether the Sustain stage should advance the volume
+    ///   exponentially or linearly.
+    /// * `direction`: Whether the Sustain stage should increase or decrease the
+    ///   volume.
+    /// * `shift`: Coarse speed. Can be set within `0x00` to `0x1F` (faster to
+    ///   slower)
+    /// * `step`: Fine speed. Can be set within `0` to `3` (faster to slower)
     pub const fn sustain(
         self, level: u8, mode: EnvelopeMode, direction: EnvelopeDirection, shift: u8, step: u8,
     ) -> ADSRBuilder<A, D, true, R> {
@@ -182,6 +214,20 @@ impl<const A: bool, const D: bool, const R: bool> ADSRBuilder<A, D, false, R> {
 }
 
 impl<const A: bool, const D: bool, const S: bool> ADSRBuilder<A, D, S, false> {
+    /// Set the registers related to the Release stage of the ADSR envelope.
+    /// Only `mode` and `shift` can be set here.
+    ///
+    /// # Fixed parameters
+    ///
+    /// * `direction`: [`EnvelopeDirection::Decrease`]
+    /// * `step`: `0`
+    ///
+    /// # Parameters
+    ///
+    /// * `mode`: Whether the Release stage should decrease down to `0`
+    ///   exponentially or linearly.
+    /// * `shift`: Coarse speed. Cant be set within `0x00` to `0x1F` (faster to
+    ///   slower).
     pub const fn release(self, mode: EnvelopeMode, shift: u8) -> ADSRBuilder<A, D, S, true> {
         if shift > 0x1F {
             panic!("ADSR release shift is bigger than the maximum value possible (0x1F)");
@@ -204,6 +250,7 @@ impl<const A: bool, const D: bool, const S: bool> ADSRBuilder<A, D, S, false> {
 }
 
 impl ADSRBuilder<true, true, true, true> {
+    /// Build an [`ADSR`]
     pub const fn build(self) -> ADSR {
         let env_value: u32 = ((self.sustain_mode as u32) << 31) |
             ((self.sustain_direction as u32) << 30) |
