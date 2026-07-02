@@ -270,6 +270,7 @@ impl ADSRBuilder<true, true, true, true> {
     }
 }
 
+/// ADSR builder test.
 #[test_case]
 fn adsr_builder_test() {
     let env = const {
