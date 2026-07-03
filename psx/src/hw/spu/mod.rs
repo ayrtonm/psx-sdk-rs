@@ -5,6 +5,7 @@ pub mod reverb;
 pub mod volume;
 
 use crate::dma::SPU;
+use crate::hw::spu::adsr::ADSR;
 use crate::hw::spu::reverb::{ReverbBaseAddress, ReverbOutVolumeLeft, ReverbOutVolumeRight};
 use crate::hw::spu::volume::Volume;
 use core::{hint::black_box, ops::Range};
@@ -196,6 +197,13 @@ impl SpuChannel {
         }
     }
 
+    /// Sets the ADSR envelope of the channel.
+    pub fn adsr(&mut self, env: ADSR) {
+        unsafe {
+            set_volatile!((*self.regs).adsr, env.to_bits());
+        }
+    }
+
     /// Starts the ADSR envelope and automatically initializes the ADSR volume
     /// to zero
     pub fn key_on(&self) {
@@ -267,8 +275,17 @@ impl<'a> ExactSizeIterator for ChannelIterator<'a> {
 }
 
 impl Spu {
+    fn enable_and_unmute_spu(&mut self) {
+        let mut control = Control::new();
+        control.set_enable(true).set_mute(true).store();
+    }
+
     /// Initializes the SPU to default values
     pub fn reset(&mut self) {
+        // Usually the BIOS should initialize the SPU control registers for us (during
+        // the intro execution), but if we use fastboot, then we have to
+        // initialize the registers ourselves.
+        self.enable_and_unmute_spu();
         self.noise_settings(0, 0);
         self.main_volume(&Volume::Normal(0x3FFF));
 
