@@ -46,3 +46,48 @@ impl<T: Primitive, const ADDRESS: u32> Register<T> for MemRegister<T, ADDRESS> {
         self
     }
 }
+
+/// A [`u32`] memory register, split into two [`u16`]
+#[repr(C)]
+pub struct SplitU32MemRegister<const ADDRESS: u32> {
+    value: u32,
+}
+
+impl<const ADDRESS: u32> Debug for SplitU32MemRegister<ADDRESS> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MemRegister")
+            .field("bits", &self.to_bits())
+            .finish()
+    }
+}
+
+impl<const ADDRESS: u32> AsRef<u32> for SplitU32MemRegister<ADDRESS> {
+    fn as_ref(&self) -> &u32 {
+        &self.value
+    }
+}
+
+impl<const ADDRESS: u32> AsMut<u32> for SplitU32MemRegister<ADDRESS> {
+    fn as_mut(&mut self) -> &mut u32 {
+        &mut self.value
+    }
+}
+
+impl<const ADDRESS: u32> Register<u32> for SplitU32MemRegister<ADDRESS> {
+    fn skip_load() -> Self {
+        Self { value: 0 }
+    }
+
+    fn load(&mut self) -> &mut Self {
+        let low_half = unsafe { read_volatile(ADDRESS as *const u16) } as u32;
+        let upper_half = unsafe { read_volatile((ADDRESS + 2) as *const u16) } as u32;
+        self.value = (upper_half << 16) | low_half;
+        self
+    }
+
+    fn store(&mut self) -> &mut Self {
+        unsafe { write_volatile(ADDRESS as *mut u16, (self.value & 0xFFFF) as u16) };
+        unsafe { write_volatile((ADDRESS + 2) as *mut u16, (self.value >> 16) as u16) };
+        self
+    }
+}
