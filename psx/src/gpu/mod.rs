@@ -116,11 +116,7 @@ impl TexPage {
             Err(_) => panic!("Invalid TexPage offset"),
         };
         let blend = 0;
-        let bpp = match bpp {
-            Bpp::Bits4 => 0,
-            Bpp::Bits8 => 1,
-            Bpp::Bits15 => 2,
-        };
+        let bpp = bpp as u8;
         Ok(TexPage {
             _pad: 0,
             texpage: offset.data[0] | (offset.data[1] << 4) | (blend << 5) | (bpp << 7),
@@ -155,21 +151,23 @@ pub enum Depth {
 }
 
 /// Bits per pixel.
+#[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Bpp {
     /// 4 bits per pixel.
-    Bits4,
+    Bits4 = 0,
     /// 8 bits per pixel.
-    Bits8,
+    Bits8 = 1,
     /// 15 bits per pixel.
-    Bits15,
+    Bits15 = 2,
 }
 
 /// Texture Blend mode.
+#[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Blend {
     /// 0=B/2+F/2.
-    Mix,
+    Mix = 0,
     /// 1=B+F.
     Add,
     /// 2=B-F.
