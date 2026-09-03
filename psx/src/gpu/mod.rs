@@ -88,12 +88,41 @@ pub struct TexCoord {
 
 /// A VRAM texture page attribute.
 ///
-/// This is represented as a two-byte packed vertex with the following layout
+/// This is represented as a 16 bit struct with the following layout
 ///
-/// bits `0` to `3`: texture page X base
-///
-/// bit `4`: texture page Y base
-pub type TexPage = PackedVertex<2, 4, 1>;
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct TexPage {
+    /// 16 bit TexPage Attribute
+    /// bits `0` to `3`: texture page X base
+    /// bit  `4`: texture page Y base
+    /// bits `5` to `6`: semi-transparency (0=B/2+F/2, 1=B+F, 2=B-F, 3=B+F/4)
+    /// bits `7` to `8`: Bpp (0=Bpp::Bits4, 1=Bpp::Bits8, 2=Bpp::Bits15)
+    pub texpage: u16
+}
+
+
+impl TexPage {
+    /// Creates a new TexPage from an Offset vertex and bit depth, Bpp
+    pub const fn new(
+        offset: Vertex,
+        bpp: Bpp,
+        blend: Option<Blend>,
+    ) -> Result<Self, VertexError> {
+        let offset: PackedVertex<2, 4, 1> = match PackedVertex::const_try_from(offset) {
+            Ok(res) => res,
+            Err(_) => panic!("Invalid TexPage offset"),
+        };
+        let blend = match blend {
+            Some(blend) => blend,
+            None => Blend::Mix,
+        } as u16;
+        Ok(TexPage {
+            // TODO: Replace with `u32::from(offset) as u16` once From impls can be const
+            texpage: offset.data[0] as u16 | (offset.data[1] as u16) << 4 | blend << 5 | (bpp as u16) << 7,
+        })
+    }
+}
 
 /// The GPU DMA direction.
 #[derive(Debug)]
@@ -122,14 +151,29 @@ pub enum Depth {
 }
 
 /// Bits per pixel.
+#[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Bpp {
     /// 4 bits per pixel.
-    Bits4,
+    Bits4 = 0,
     /// 8 bits per pixel.
-    Bits8,
+    Bits8 = 1,
     /// 15 bits per pixel.
-    Bits15,
+    Bits15 = 2,
+}
+
+/// Texture Blend mode.
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Blend {
+    /// 0=B/2+F/2.
+    Mix = 0,
+    /// 1=B+F.
+    Add,
+    /// 2=B-F.
+    Sub,
+    /// 3=B+F/4
+    Inc,
 }
 
 /// A physical address in memory.
