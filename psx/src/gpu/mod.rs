@@ -105,7 +105,6 @@ pub struct TexPage {
 
 impl TexPage {
     /// Creates a new TexPage from an Offset vertex and bit depth, Bpp
-    /// TODO: implement transparency / blending
     pub const fn new(
         offset: Vertex,
         bpp: Bpp,
@@ -115,7 +114,10 @@ impl TexPage {
             Ok(res) => res,
             Err(_) => panic!("Invalid TexPage offset"),
         };
-        let blend = 0;
+        let blend = match blend {
+            Some(blend) => blend,
+            None => Blend::Mix,
+        } as u8;
         let bpp = bpp as u8;
         Ok(TexPage {
             _pad: 0,
