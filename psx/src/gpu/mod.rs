@@ -88,18 +88,17 @@ pub struct TexCoord {
 
 /// A VRAM texture page attribute.
 ///
-/// This is represented as a two-byte struct with the following layout
+/// This is represented as a 16 bit struct with the following layout
 ///
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct TexPage {
-    /// The first 8 bits of a TexPage Attribute
+    /// 16 bit TexPage Attribute
     /// bits `0` to `3`: texture page X base
     /// bit  `4`: texture page Y base
     /// bits `5` to `6`: semi-transparency (0=B/2+F/2, 1=B+F, 2=B-F, 3=B+F/4)
-    /// bits `7` to `8`: Bpp
-    pub texpage: u8,
-    _pad: u8,
+    /// bits `7` to `8`: Bpp (0=Bpp::Bits4, 1=Bpp::Bits8, 2=Bpp::Bits15)
+    pub texpage: u16
 }
 
 
@@ -117,11 +116,10 @@ impl TexPage {
         let blend = match blend {
             Some(blend) => blend,
             None => Blend::Mix,
-        } as u8;
-        let bpp = bpp as u8;
+        } as u16;
         Ok(TexPage {
-            _pad: 0,
-            texpage: offset.data[0] | (offset.data[1] << 4) | (blend << 5) | (bpp << 7),
+            // TODO: Replace with `u32::from(offset) as u16` once From impls can be const
+            texpage: offset.data[0] as u16 | (offset.data[1] as u16) << 4 | blend << 5 | (bpp as u16) << 7,
         })
     }
 }
